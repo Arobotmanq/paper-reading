@@ -306,7 +306,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_2_model_training_deployment_pipeline.png" alt="Figure 2: Ψ0 三阶段训练与部署流水线">
+          <img src="./images/figure_2_model_training_deployment_pipeline.webp" alt="Figure 2: Ψ0 三阶段训练与部署流水线">
           <figcaption><strong>Fig. 2（p.3）：</strong>左=Stage 1（VLM 预训练，egocentric 视频→离散 action token）；中=Stage 2（Action Expert post-training，关节空间 flow matching）；右=Deployment（System-0 RL lower-body controller 全身控制）。</figcaption>
         </figure>
       </div>
@@ -361,7 +361,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_4_realtime_chunking_system.png" alt="Figure 4: Real-Time Chunking 系统架构">
+          <img src="./images/figure_4_realtime_chunking_system.webp" alt="Figure 4: Real-Time Chunking 系统架构">
           <figcaption><strong>Fig. (p.5/14)：</strong>Client-Server 架构：robot 端 30Hz 发送 obs，server 端 Inference Loop 用 RTC inpainting inference 生成连续 action chunk，30Hz 严格同步发回。控制循环与推理循环并发，无需停顿等待。</figcaption>
         </figure>
       </div>
@@ -377,7 +377,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_3_teleoperation_setup.png" alt="Figure 5: 遥操作硬件设置">
+          <img src="./images/figure_3_teleoperation_setup.webp" alt="Figure 5: 遥操作硬件设置">
           <figcaption><strong>Fig. 5（p.5）：</strong>左=人类操作员穿戴 MANUS 手套、PICO 头显、腕部/腰部/脚部追踪器；右=Unitree G1 人形机器人执行同步全身动作（含 dexterous hand）。</figcaption>
         </figure>
       </div>
@@ -393,7 +393,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_5_realworld_tasks_benchmark.png" alt="Figure 6: 8个真实世界任务">
+          <img src="./images/figure_5_realworld_tasks_benchmark.webp" alt="Figure 6: 8个真实世界任务">
           <figcaption><strong>Fig. 6（p.6）：</strong>8 个真实 loco-manip 任务：从简单 pick-and-place、推物体、擦桌子，到灵巧的开水龙头、拉薯片托盘，再到需要全身运动（躯干旋转、下蹲）和行走的复合任务。每个任务 3-5 个子步骤，多数超 2000 步@30Hz。</figcaption>
         </figure>
       </div>

@@ -272,7 +272,7 @@
       </div>
 
       <figure>
-        <img src="./images/figure_1_overview_performance.png" alt="AnoleVLA 总览与真实机器人成功率对比">
+        <img src="./images/figure_1_overview_performance.webp" alt="AnoleVLA 总览与真实机器人成功率对比">
         <figcaption><strong>Figure 1（p.1）：</strong>左侧为 AnoleVLA 系统架构概览——Deep SSM backbone 处理多模态输入，两阶段训练策略（速度 loss + 加速度 loss）。右侧为真实机器人实验成功率 vs 推理速度散点图，AnoleVLA (0.47B) 在两个维度上同时领先 π0.5 (3.0B)，推理速度快约 3 倍。</figcaption>
       </figure>
 
@@ -322,7 +322,7 @@
           <div class="ev-gloss">即插即用的关键依据：同一 token 接口，只换骨干——这是工程上的优雅之处，也是实际可行性的基础。</div>
         </div>
         <figure>
-          <img src="./images/figure_3_architecture_mamba.png" alt="Figure 3: AnoleVLA 模型架构">
+          <img src="./images/figure_3_architecture_mamba.webp" alt="Figure 3: AnoleVLA 模型架构">
           <figcaption><strong>Figure 3（p.3）：</strong>完整架构图。左侧：多模态 token（本体感知 s、状态差分 Δs、视觉 x_v、语言 x_l）拼接后送入 Mamba-370M backbone；每个 Mamba block 做选择性 SSM 更新 z_{n,i} = A z_{n,i-1} + B h_{n,i-1}。右侧：两阶段训练的速度 loss 和加速度 loss 对应 H 步动作 chunk 的监督信号。</figcaption>
         </figure>
       </div>
@@ -377,7 +377,7 @@
           <div class="ev-gloss">真实机器人上的差距更能说明问题。特别是 Open drawer 任务（75% vs 55%）直接体现了平滑轨迹的价值——接触密集任务对抖动尤为敏感。</div>
         </div>
         <figure>
-          <img src="./images/figure_6_physical_experiments.png" alt="Figure 6: 物理实验成功执行示例">
+          <img src="./images/figure_6_physical_experiments.webp" alt="Figure 6: 物理实验成功执行示例">
           <figcaption><strong>Figure 6（p.7）：</strong>AnoleVLA 在真实 Toyota HSR 机器人上的成功执行：(a) Open the drawer — 抓住把手并完全拉出；(b) Put the lemon into the cup — 抓起柠檬放入目标容器；(c) Remove the apple from the tray — 抓苹果并移出托盘。三类任务覆盖抽屉开关、拾放、容器操作。</figcaption>
         </figure>
       </div>
@@ -403,7 +403,7 @@
           <div class="ev-gloss">空间定位弱是 Mamba 因果序列模型的潜在弱点——缺乏 Transformer 全局注意力的「任意两点关联」能力。作者计划引入显式空间推理模块或位置专用 loss 来解决。</div>
         </div>
         <figure>
-          <img src="./images/figure_4_qualitative_simulation.png" alt="Figure 4: Meta-World 定性结果对比">
+          <img src="./images/figure_4_qualitative_simulation.webp" alt="Figure 4: Meta-World 定性结果对比">
           <figcaption><strong>Figure 4（p.5–6）：</strong>Meta-World 仿真定性结果。(a) Pick and place a puck onto a shelf——AnoleVLA 成功抓取并放置，SmolVLA 未能抓起。(b) Hammer a screw on the wall——AnoleVLA 正确挥动工具完成击打，SmolVLA 轨迹偏斜错过。(c) Push the puck to a goal——两者均失败，AnoleVLA 越过了目标 puck（位置识别错误的典型案例）。</figcaption>
         </figure>
       </div>

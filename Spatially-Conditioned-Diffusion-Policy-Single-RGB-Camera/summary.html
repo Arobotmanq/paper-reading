@@ -319,14 +319,14 @@
           <li><b>③ 标准 DP 去噪</b>：把固定观测 O 换成随去噪步演化的 spatial context Fᵏ，其余沿用 Diffusion Policy 框架（DDIM 推理）。</li>
         </ul>
         <figure>
-          <a href="./images/figure_2_architecture.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_2_architecture.png" alt="Figure 2: SCDP architecture — multi-scale encoder, spatial conditioning module, action denoising network" loading="lazy">
+          <a href="./images/figure_2_architecture.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_architecture.webp" alt="Figure 2: SCDP architecture — multi-scale encoder, spatial conditioning module, action denoising network" loading="lazy">
           </a>
           <figcaption><strong>Figure 2 (p.3)：</strong>三大组件——(a) 多尺度图像编码器、(b) 空间条件模块（轨迹重建→投影→点采样）、(c) 动作去噪网络。<strong>看点：</strong>(b) 里"3D→2D 投影 + 沿 EE 参考点采样"这一步是全文创新；注意标"Every Denoising Step"——空间条件随去噪步反复刷新。</figcaption>
         </figure>
         <figure>
-          <a href="./images/figure_1_teaser_precision_robustness.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_1_teaser_precision_robustness.png" alt="Figure 1: teaser — high precision USB insertion, distractor robustness, spatial conditioning concept" loading="lazy">
+          <a href="./images/figure_1_teaser_precision_robustness.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_teaser_precision_robustness.webp" alt="Figure 1: teaser — high precision USB insertion, distractor robustness, spatial conditioning concept" loading="lazy">
           </a>
           <figcaption><strong>Figure 1 (p.1)：</strong>(a) 高精度 USB 插入、(b) 干扰物下抓杯，(c) 用扩散中间轨迹做轨迹上的空间条件。<strong>看点：</strong>(c) 那条彩色曲线就是"中间末端轨迹"，它落在多尺度特征图上的位置 = 注意力锚点。</figcaption>
         </figure>

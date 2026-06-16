@@ -241,7 +241,7 @@ querying or factorizing the same idealized joint distribution.</blockquote>
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 「World Model 作策略」按架构演进分 5 类：从解耦的 <a href="./notes.html#policy-arch" class="note-link">IDM-style</a> predict-then-act，逐步走向单骨干、MoE/MoT、统一 VLA、latent-space，耦合越来越紧。</div>
         <figure>
-          <img src="./images/figure_3.png" alt="Figure 3: IDM / Single-backbone / MoT architectures">
+          <img src="./images/figure_3.webp" alt="Figure 3: IDM / Single-backbone / MoT architectures">
           <figcaption><strong>Figure 3：</strong>三种代表性架构。(a) IDM-style：视频生成模型先预测未来观测，IDM 再从中反推动作（解耦）。(b) 单骨干：observation/action token 共享一个 backbone，联合建模。(c) MoT-style：视频专家与动作专家各自保留，通过 joint attention 深度耦合。</figcaption>
         </figure>
         <div class="evidence">
@@ -264,7 +264,7 @@ consistently superior to matched-scale VLM backbones for robotic control remains
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 「World Model 作模拟器」两类用途：当 RL 的 <a href="./notes.html#wm-rl" class="note-link">learned simulator</a>、当决策期 evaluator；且第二层认识到——模拟器本身不可靠，必须与策略 co-evolution。</div>
         <figure>
-          <img src="./images/figure_5.png" alt="Figure 5: World model for RL vs for validation">
+          <img src="./images/figure_5.webp" alt="Figure 5: World model for RL vs for validation">
           <figcaption><strong>Figure 5：</strong>(a) RL 设定：世界模型当 learned simulator，产生想象 transition 供策略改进。(b) 验证设定：世界模型为候选动作的想象后果打分，支持决策期选择（Score=0.6/0.8/0.3）。</figcaption>
         </figure>
         <div class="evidence">
@@ -287,7 +287,7 @@ reliability must themselves be continuously improved.</blockquote>
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 机器人视频世界模型的中心瓶颈，已不是"生成得真不真"，而是"是否与动作因果对齐、长程物理自洽、可执行"。</div>
         <figure>
-          <img src="./images/figure_6.png" alt="Figure 6: Unified view of robotic video world models">
+          <img src="./images/figure_6.webp" alt="Figure 6: Unified view of robotic video world models">
           <figcaption><strong>Figure 6：</strong>视频世界模型的四阶段演进：§5.2 想象引擎（监督）→ §5.3 动作可控（因果对齐）→ §5.4 结构感知（物理一致）→ §5.5 从视频骨干到 foundation 世界模型。</figcaption>
         </figure>
         <div class="evidence">
@@ -366,11 +366,11 @@ consistency over extended trajectories.</blockquote>
     <section class="card" id="map">
       <h2><span class="icon">🗺</span>领域全景（两张总图）</h2>
       <figure>
-        <img src="./images/figure_1.png" alt="Figure 1: organization overview">
+        <img src="./images/figure_1.webp" alt="Figure 1: organization overview">
         <figcaption><strong>Figure 1：</strong>综述组织。§3 从架构看世界模型如何与策略耦合；§4 从应用看世界模型当模拟器；§5 按"世界建模能力"组织机器人视频世界模型。</figcaption>
       </figure>
       <figure>
-        <img src="./images/figure_2.png" alt="Figure 2: temporal evolution">
+        <img src="./images/figure_2.webp" alt="Figure 2: temporal evolution">
         <figcaption><strong>Figure 2：</strong>代表性工作的时间演化。上支（World Model for Policy）：从早期解耦的"视频生成+IDM"流水线 → 单骨干 / MoE-MoT / 统一 VLA / latent。下支（World Model as Simulator）：从 rollout 验证/候选评估 → learned simulator 做 RL、post-training、co-evolution。趋势是主导方向而非严格替代。</figcaption>
       </figure>
     </section>

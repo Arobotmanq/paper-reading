@@ -301,7 +301,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心架构：<a href="./notes.html#dual-process" class="note-link">双进程（System 1 + System 2）</a>层级策略——高层 LeVERB-VL 以 10 Hz 输出 latent verb，低层 LeVERB-A 以 50 Hz 将其解码为关节位置动作。</div>
         <figure>
-          <img src="./images/figure_1_training_pipeline.png" alt="Figure 3: LeVERB 数据采集与训练流水线">
+          <img src="./images/figure_1_training_pipeline.webp" alt="Figure 3: LeVERB 数据采集与训练流水线">
           <figcaption><strong>Figure 3（p.5）：</strong>左：Step 1 合成数据采集（光线追踪渲染 + 语言标注）。中：Step 2 LeVERB-VL 训练，CVAE 编码视觉语言输入到 latent verb z，decoder 重建未来运动学状态。右：Step 3 LeVERB-A 训练，DAgger 将教师跟踪策略蒸馏为以 latent z 为条件的学生 Transformer。</figcaption>
         </figure>
         <div class="evidence">
@@ -356,7 +356,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 合成数据是可行性基石：MoCap → 重定向 → IsaacSim 光线追踪渲染 → 程序化场景随机化 → VLM 语言标注，完全无需真实机器人采数据，生成 17.1h 视觉语言训练数据。</div>
         <figure>
-          <img src="./images/figure_2_leverbench_sim.png" alt="Figure 1: LeVERB-Bench 仿真环境示例">
+          <img src="./images/figure_2_leverbench_sim.webp" alt="Figure 1: LeVERB-Bench 仿真环境示例">
           <figcaption><strong>Figure 1（p.2）：</strong>LeVERB-Bench 仿真环境——注意光线追踪渲染质量，粉色椅子、多视角相机、语言指令"go sit on gray chair"。这是训练和评测共用的合成环境，每条轨迹随机化 100 次场景变体。</figcaption>
         </figure>
         <div class="evidence">
@@ -388,15 +388,15 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 真实部署：LeVERB 在 Unitree G1 上 zero-shot 部署成功，System 1 在 CPU 以 ONNX C++ 50 Hz 运行，System 2 在外部 GPU 10 Hz 运行，通过 ROS2 topic 传递 latent verb；演示了词汇泛化（未见动词组合）和空间推理（从视觉判断椅子方向）。</div>
         <figure>
-          <img src="./images/figure_3_realworld_deployment.png" alt="Figure 1 上部: 零样本真实部署">
+          <img src="./images/figure_3_realworld_deployment.webp" alt="Figure 1 上部: 零样本真实部署">
           <figcaption><strong>Figure 1 上部（p.2）：</strong>"take a seat on box"——LeVERB 在真实 Unitree G1 上 zero-shot 执行坐下任务序列，完全在合成数据上训练。</figcaption>
         </figure>
         <figure>
-          <img src="./images/figure_4_vocab_generalization.png" alt="Figure 4 上部: 词汇泛化">
+          <img src="./images/figure_4_vocab_generalization.webp" alt="Figure 4 上部: 词汇泛化">
           <figcaption><strong>Figure 4 上部（p.9）：</strong>词汇泛化——"get up"/"stand up from box"（同一意图，不同表达）和 "rest on the box"/"take a seat"/"sit down" 均能正确执行，说明 latent verb space 具备语义泛化能力。</figcaption>
         </figure>
         <figure>
-          <img src="./images/figure_5_spatial_reasoning.png" alt="Figure 4 下部: 视觉空间推理">
+          <img src="./images/figure_5_spatial_reasoning.webp" alt="Figure 4 下部: 视觉空间推理">
           <figcaption><strong>Figure 4 下部（p.9）：</strong>空间推理——同一指令"sit down on blue chair"，椅子在正前方 vs. 侧方时执行不同转向策略，证明 LeVERB-VL 能从视觉输入提取方位信息并传递给低层。</figcaption>
         </figure>
         <div class="evidence">

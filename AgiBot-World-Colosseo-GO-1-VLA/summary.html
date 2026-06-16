@@ -297,7 +297,7 @@
   <div class="claim">
     <div class="claim-statement"><span class="cn">观点2</span> 解法（数据侧）：4000 m² 五场景设施 + 100 台同构双臂机器人 + 人在回路质控，产出 1M+ 条轨迹，覆盖 217 任务、87 技能、106 场景。</div>
     <figure>
-      <img src="./images/figure_1_platform_overview.png" alt="Figure 1: AgiBot World Colosseo 全栈平台概览">
+      <img src="./images/figure_1_platform_overview.webp" alt="Figure 1: AgiBot World Colosseo 全栈平台概览">
       <figcaption><strong>Fig. 1（p.1）：</strong>AgiBot World Colosseo 全栈平台——数据规模对比（7.7× BridgeDataV2）、五大场景、GO-1 性能柱状图（46→66→78，RDT→GO-1 w/o LP→GO-1）。</figcaption>
     </figure>
     <div class="evidence">
@@ -313,7 +313,7 @@
       <div class="ev-gloss">长程任务（30s~2min）是 AgiBot World 区别于 OXE/DROID 的核心——策略必须具备多步骤规划能力。</div>
     </div>
     <figure>
-      <img src="./images/figure_3_dataset_statistics.png" alt="Figure 3: 数据集统计——场景、长程任务、技能分布">
+      <img src="./images/figure_3_dataset_statistics.webp" alt="Figure 3: 数据集统计——场景、长程任务、技能分布">
       <figcaption><strong>Fig. 3（p.5）：</strong>(a) 五大领域场景覆盖 vs OXE（真实 vs 受控）；(b) 轨迹时长分布——AgiBot World 峰值在 30~60s，DROID/OXE 峰值在 &lt;5s；(c) 87 个技能均有 100+ 轨迹（红虚线）。</figcaption>
     </figure>
   </div>
@@ -328,7 +328,7 @@
       <div class="ev-gloss">ViLLA 与 VLA 的本质区别：VLA 直接预测动作；ViLLA 先预测"潜在动作 token"（中间桥梁），再由 Action Expert 基于此生成实际控制指令。这使得 VLM 适配代价极小且可利用无动作标签数据。</div>
     </div>
     <figure>
-      <img src="./images/figure_4_GO1_ViLLA_architecture.png" alt="Figure 4: GO-1 三阶段训练架构">
+      <img src="./images/figure_4_GO1_ViLLA_architecture.webp" alt="Figure 4: GO-1 三阶段训练架构">
       <figcaption><strong>Fig. 4（p.6）：</strong>GO-1 三阶段训练。Stage 1: LAM 在人类视频+跨本体数据上学潜在动作 token（VQ-VAE）；Stage 2: Latent Planner（InternVL2.5-2B 骨干）学习在潜在空间做规划；Stage 3: Action Expert（扩散）联合训练精控低层动作。</figcaption>
     </figure>
   </div>

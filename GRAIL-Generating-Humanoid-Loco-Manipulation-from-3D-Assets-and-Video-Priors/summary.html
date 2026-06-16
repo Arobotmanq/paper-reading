@@ -216,7 +216,7 @@
       <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
 
       <figure>
-        <img src="./images/figure_1_teaser.png" alt="Figure 1: GRAIL teaser">
+        <img src="./images/figure_1_teaser.webp" alt="Figure 1: GRAIL teaser">
         <figcaption><strong>Figure 1：</strong>"From Fully Digital Data Generation to Real-World Deployment"——上：仿真中 G1 执行生成的 pick-up / 全身操作 / 坐 / 地形穿越；下：仅用 GRAIL 数据训练的 egocentric 策略在真 G1 上爬楼 + 抓取。</figcaption>
       </figure>
 
@@ -239,7 +239,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 数据生成三阶段：(i) Robot-Centric Human Video Generation — 用预拟合到目标机器人的人形角色 + Blender + VFM (Kling) 静态相机生成视频；(ii) 4D HOI 重建；(iii) 重定向到 G1 并训追踪策略。</div>
         <figure>
-          <img src="./images/figure_2_4dhoi.png" alt="Figure 2: Asset-Conditioned 4D HOI Generation">
+          <img src="./images/figure_2_4dhoi.webp" alt="Figure 2: Asset-Conditioned 4D HOI Generation">
           <figcaption><strong>Figure 2：</strong>3D 资产 → 渲染首帧 → VFM 生成静态相机交互视频 → 用关键点/深度/接触损失联合优化得到度量级 4D HOI 轨迹。</figcaption>
         </figure>
         <div class="evidence">
@@ -263,7 +263,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 4D HOI 重建的联合优化目标：5 项损失（关键点对齐 + 物体投影 + 度量深度对齐 + 接触对齐 + 正则化），优化 residual 而非完整轨迹，并用 <a href="./notes.html#smplx" class="note-link">SMPL-X</a> 部件 + VLM 接触标签做接触感知。运行时依赖 <a href="./notes.html#foundationpose" class="note-link">FoundationPose</a>（6-DoF 物体追踪）和 <a href="./notes.html#genmo" class="note-link">GENMO</a>（人体 pose 估计）。</div>
         <figure>
-          <img src="./images/figure_3_trackers.png" alt="Figure 3: Task-General Tracking">
+          <img src="./images/figure_3_trackers.webp" alt="Figure 3: Task-General Tracking">
           <figcaption><strong>Figure 3：</strong>互补的两类 tracker——object-aware 适配器只学潜在残差 Δz + 手部动作（控制器冻结）；scene-aware tracker 微调控制器并加 height-map 编码器，用于地形/坐姿。</figcaption>
         </figure>
         <div class="evidence">
@@ -293,7 +293,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 数据规模与覆盖：1,000 物体 × 1,000 程序生成地形 → 20,000+ 序列；覆盖 pick-up、全身操作、坐、地形穿越四大类，是当前最大的人形 loco-manipulation 合成集之一。</div>
         <figure>
-          <img src="./images/figure_4_data.png" alt="Figure 4: Generated dataset">
+          <img src="./images/figure_4_data.webp" alt="Figure 4: Generated dataset">
           <figcaption><strong>Figure 4：</strong>仿真 G1 执行生成数据的代表样本，覆盖四大类任务和多样物体/场景几何。</figcaption>
         </figure>
         <div class="evidence">
@@ -327,7 +327,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点9</span> 真机部署：egocentric RGB 策略蒸馏自 tracker，输出 SONIC 潜在 token，相机 10 Hz 推理（RTX 5090 + OAK-D W）；爬楼 90%、抓取 84%（5 类已见物体）、未见 80%（5 类）。</div>
         <figure>
-          <img src="./images/figure_5_real.png" alt="Figure 5: Sim-to-Real">
+          <img src="./images/figure_5_real.webp" alt="Figure 5: Sim-to-Real">
           <figcaption><strong>Figure 5：</strong>仅用 GRAIL 生成数据训练的 egocentric 策略在真 G1 上完成抓取与爬楼。</figcaption>
         </figure>
         <div class="evidence">

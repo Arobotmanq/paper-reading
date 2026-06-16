@@ -300,12 +300,12 @@
         <div class="claim-statement"><span class="cn">观点2</span> 核心发现：双臂操作 VLA 的成功率随预训练数据规模（3k→20k 小时）持续上升，且在 20k 时未见饱和迹象——VLA 是 scalable 的。</div>
 
         <figure>
-          <img src="./images/figure_2_scaling_law_progress_rate.png" alt="Figure 5a: 预训练数据规模 scaling law（Progress Rate）">
+          <img src="./images/figure_2_scaling_law_progress_rate.webp" alt="Figure 5a: 预训练数据规模 scaling law（Progress Rate）">
           <figcaption><strong>Figure 5a（p.9）：</strong>Progress Rate 随预训练数据从 3,000 到 20,000 小时的变化，Agibot G1、AgileX、Galaxea R1Pro 三条曲线均单调上升，平均从约 30% 升至 59%。</figcaption>
         </figure>
 
         <figure>
-          <img src="./images/figure_3_scaling_law_success_rate.png" alt="Figure 5b: 预训练数据规模 scaling law（Success Rate）">
+          <img src="./images/figure_3_scaling_law_success_rate.webp" alt="Figure 5b: 预训练数据规模 scaling law（Success Rate）">
           <figcaption><strong>Figure 5b（p.9）：</strong>Success Rate 随数据规模同样单调上升，从约 18% 升至 39%，无饱和迹象。</figcaption>
         </figure>
 
@@ -322,7 +322,7 @@
         <div class="claim-statement"><span class="cn">观点3</span> 架构选择：<a href="./notes.html#mot" class="note-link">Mixture-of-Transformers (MoT)</a> 让 VLM（理解专家）与动作 expert（生成专家）分模态处理、共享 self-attention，避免跨模态干扰的同时保持高层语义指导。</div>
 
         <figure>
-          <img src="./images/figure_1_overview_lingbot_vla.png" alt="Figure 1: LingBot-VLA 系统总览">
+          <img src="./images/figure_1_overview_lingbot_vla.webp" alt="Figure 1: LingBot-VLA 系统总览">
           <figcaption><strong>Figure 1（p.2）：</strong>左侧为数据标注流程（自动标注 + 人工精炼），右侧为系统架构：多视角图像 + 任务指令经 understanding expert（Qwen2.5-VL）编码，proprioceptive 状态经 action expert 预测动作 chunk，通过共享 self-attention 耦合。下方为多任务演示（组装鲁班锁、折叠毛巾、削柠檬等）。</figcaption>
         </figure>
 

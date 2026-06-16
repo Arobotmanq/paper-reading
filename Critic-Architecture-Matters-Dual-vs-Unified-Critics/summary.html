@@ -319,8 +319,8 @@
           <li><b>③ 13 级 sequential curriculum</b>：站立够取 → 行走够取 → 固定朝向 → 可变朝向 cone（20°–80°），用 validated reach rate 作晋级门槛。</li>
         </ul>
         <figure>
-          <a href="./images/figure_1_dual_actor_critic.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_1_dual_actor_critic.png" alt="Figure 1: Dual Actor-Critic architecture" loading="lazy">
+          <a href="./images/figure_1_dual_actor_critic.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_dual_actor_critic.webp" alt="Figure 1: Dual Actor-Critic architecture" loading="lazy">
           </a>
           <figcaption><strong>Figure 1 (p.2)：</strong>双 actor-critic 架构——locomotion 分支（绿）与 arm 分支（橙）各持独立 critic、奖励信号互不混合；unified 变体（图未画）把两路观测拼成单个 109-dim critic 输入。<strong>看点：</strong>中间红字 "Disjoint Rewards — No Signal Mixing" + 右下 FROZEN/FRESH(Stage 7)，这就是与合并 critic 的全部分野。</figcaption>
         </figure>
@@ -430,8 +430,8 @@
           </details>
         </div>
         <figure>
-          <a href="./images/figure_2_g1_reaching.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_2_g1_reaching.png" alt="Figure 2: G1 dual-critic policy reaching" loading="lazy">
+          <a href="./images/figure_2_g1_reaching.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_g1_reaching.webp" alt="Figure 2: G1 dual-critic policy reaching" loading="lazy">
           </a>
           <figcaption><strong>Figure 2 (p.3)：</strong>训练好的 dual-critic 策略（S6s）在 play 评测中边走边够取目标（绿球为目标、红点为末端跟踪点）。<strong>看点：</strong>只是定性演示，无量化信息；真正的对照在 Table II。</figcaption>
         </figure>

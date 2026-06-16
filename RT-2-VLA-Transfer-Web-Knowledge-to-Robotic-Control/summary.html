@@ -295,7 +295,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心方法：将机器人动作离散化为整数 bin，用现有 VLM 的 token 表示——<a href="./notes.html#action-tokenization" class="note-link">action-as-text-tokens</a>——不引入任何新参数，直接用语言训练范式训机器人控制。</div>
         <figure>
-          <img src="./images/figure_1_rt2_overview_cofinetuning.png" alt="Figure 1: RT-2 overview — co-fine-tuning with action-as-text-tokens">
+          <img src="./images/figure_1_rt2_overview_cofinetuning.webp" alt="Figure 1: RT-2 overview — co-fine-tuning with action-as-text-tokens">
           <figcaption><strong>Figure 1（p.2）：</strong>左侧网页 VQA 数据与右侧机器人轨迹数据均以相同格式（text tokens）混合训练；推理时 text tokens 被 de-tokenize 为真实机器人动作，实现闭环控制。这就是 action-as-text-tokens 思路的完整流程。</figcaption>
         </figure>
         <div class="evidence">
@@ -328,7 +328,7 @@
           <div class="ev-gloss">消融明确指出：from scratch 崩塌，fine-tuning 次优，co-fine-tuning 最优——是方法选择，不是偶然结果。</div>
         </div>
         <figure>
-          <img src="./images/figure_6_emergent_ablations_page10.png" alt="Figure 6: 涌现能力与消融对比">
+          <img src="./images/figure_6_emergent_ablations_page10.webp" alt="Figure 6: 涌现能力与消融对比">
           <figcaption><strong>Figure 6（p.10）：</strong>左图：RT-2 在三类涌现能力（符号理解/推理/人物识别）上均显著超越 RT-1/VC-1；右图：co-fine-tuned（橙）> fine-tuned（蓝）> from scratch（红），尤其在泛化场景下差距明显。</figcaption>
         </figure>
       </div>
@@ -337,7 +337,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 整体泛化性能：在 seen tasks 上与 RT-1 持平，但在未见物体/场景/环境上全面领先——约 2× 于 RT-1 和 MOO，约 6× 于 R3M/VC-1。</div>
         <figure>
-          <img src="./images/figure_4_overall_performance_page8.png" alt="Figure 4: Overall performance bar chart">
+          <img src="./images/figure_4_overall_performance_page8.webp" alt="Figure 4: Overall performance bar chart">
           <figcaption><strong>Figure 4（p.8）：</strong>条形图对比 RT-2-PaLI-X-55B / RT-2-PaLM-E-12B / RT-1 / MOO / VC-1 / R3M 在 Seen Tasks、Unseen Objects、Unseen Backgrounds、Unseen Environments 及 Unseen Average 上的成功率。RT-2 在所有泛化类别上大幅领先。</figcaption>
         </figure>
         <div class="evidence">
@@ -352,7 +352,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 涌现能力（Emergent Capabilities）：RT-2 能执行<strong>机器人训练数据中从未出现过</strong>的任务，如将物体移到特定数字/图标旁、多语言指令、识别人物——这些能力纯粹从网页 VLM 预训练迁移而来。</div>
         <figure>
-          <img src="./images/figure_2_emergent_capabilities.png" alt="Figure 2: Emergent capability examples">
+          <img src="./images/figure_2_emergent_capabilities.webp" alt="Figure 2: Emergent capability examples">
           <figcaption><strong>Figure 2（p.5）：</strong>展示 RT-2 的涌现能力示例——"put strawberry into the correct bowl"（语义推理）、"pick the bag about to fall"（物理理解）、"pick object different from others"（分类推理）等，均为机器人数据中未见的语义能力。</figcaption>
         </figure>
         <div class="evidence">
@@ -373,7 +373,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> chain-of-thought 推理：通过少量数据增强，让 RT-2 先输出自然语言"Plan"再输出动作 token，实现更复杂的多步语义推理——同一个 VLA 模型既是规划器又是执行器。</div>
         <figure>
-          <img src="./images/figure_7_chain_of_thought_rollouts.png" alt="Figure 7: Chain-of-thought rollouts">
+          <img src="./images/figure_7_chain_of_thought_rollouts.webp" alt="Figure 7: Chain-of-thought rollouts">
           <figcaption><strong>Figure 7（p.10）：</strong>RT-2 with chain-of-thought 示例——"I'm hungry → Plan: pick rxbar chocolate → Action: …"；"I need to hammer a nail → Rocks → Action: …"。模型先用自然语言推理出意图，再输出动作。</figcaption>
         </figure>
         <div class="evidence">

@@ -284,11 +284,11 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点1</span> 真问题：<a href="./notes.html#ovmm" class="note-link">OVMM</a> 是家用机器人的核心挑战，但现有工作因缺乏标准化平台而无法跨实验室复现和公平比较。</div>
         <figure>
-          <img src="./images/figure_1_task_real_world.png" alt="OVMM 真实世界任务执行：在真实公寓中将玩具动物从椅子移到桌子">
+          <img src="./images/figure_1_task_real_world.webp" alt="OVMM 真实世界任务执行：在真实公寓中将玩具动物从椅子移到桌子">
           <figcaption><strong>Figure 1（p.1-2）上方：</strong>真实世界中 OVMM 任务执行——Stretch 机器人找到起始接收器上的目标对象，然后将其移至目标接收器（Chair → Table）。</figcaption>
         </figure>
         <figure>
-          <img src="./images/figure_2_task_sim_world.png" alt="OVMM 仿真任务执行：在 Habitat 环境中将水壶从抽屉移到餐车">
+          <img src="./images/figure_2_task_sim_world.webp" alt="OVMM 仿真任务执行：在 Habitat 环境中将水壶从抽屉移到餐车">
           <figcaption><strong>Figure 1（p.1-2）下方：</strong>对应仿真版本——在 Habitat HSSD 场景中执行同一类型任务（Drawer → Serving Cart）。仿真与真实任务结构完全一致。</figcaption>
         </figure>
         <div class="evidence">
@@ -309,7 +309,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心贡献：HomeRobot 提出<strong>首个可复现的移动操作真实世界基准</strong>，配套大规模仿真场景，同时提供横跨仿真和真实世界的统一软件栈。</div>
         <figure>
-          <img src="./images/figure_3_sim_real_robot.png" alt="Figure 2: 仿真与真实 Stretch 机器人的对比">
+          <img src="./images/figure_3_sim_real_robot.webp" alt="Figure 2: 仿真与真实 Stretch 机器人的对比">
           <figcaption><strong>Figure 2（p.4）：</strong>左侧仿真（Habitat），右侧真实（Stretch）——两者共享相同的任务定义和 API 接口。HomeRobot 的核心设计是让仿真结果可以直接迁移到真实机器人。</figcaption>
         </figure>
         <div class="evidence">
@@ -341,7 +341,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> HomeRobot 软件栈的核心是三层架构：高计算桌面 PC 运行感知和规划，机器人本体运行低层控制和 SLAM，通过消费级路由器连接——低门槛但功能完整。</div>
         <figure>
-          <img src="./images/figure_4_software_stack.png" alt="Figure 4: HomeRobot 软件栈系统架构图">
+          <img src="./images/figure_4_software_stack.webp" alt="Figure 4: HomeRobot 软件栈系统架构图">
           <figcaption><strong>Figure 4（p.6）：</strong>系统架构——桌面端运行感知（DETIC）、规划代码和可视化（RVIZ）；移动操控器端运行 SLAM 和低层控制；通过普通消费级路由器（NetGear Nighthawk）连接。</figcaption>
         </figure>
         <div class="evidence">
@@ -373,7 +373,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> Sim-to-real 迁移：导航和放置技能的 sim-to-real 迁移有证据支持，真实实验中 RL 放置比启发式更精准；抓取在仿真中通过"magic snap"近似，是已知局限。</div>
         <figure>
-          <img src="./images/figure_5_real_execution.png" alt="Figure 16: 真实机器人执行两个完整 OVMM episode 的过程">
+          <img src="./images/figure_5_real_execution.webp" alt="Figure 16: 真实机器人执行两个完整 OVMM episode 的过程">
           <figcaption><strong>Figure 16（Appendix，p.28）：</strong>真实机器人执行 OVMM 任务的完整过程——找玩具动物（Find Toy Animal）→ 拾取（Pick Up）→ 找餐桌（Find Dining Table）→ 放置（Place），以及另一个 Stuffed Animal → Sofa 任务。展示了 sim-to-real 迁移在实践中的工作状态。</figcaption>
         </figure>
         <div class="evidence">

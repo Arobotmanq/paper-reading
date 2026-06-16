@@ -295,7 +295,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_1_framework_overview.png" alt="Figure 1: Being-0 框架总览">
+          <img src="./images/figure_1_framework_overview.webp" alt="Figure 1: Being-0 框架总览">
           <figcaption><strong>Figure 1（p.1）：</strong>Being-0 的三层架构——顶层 Foundation Model（GPT-4o，云端）负责 Reasoning / Detection / Planning；中层 <a href="./notes.html#connector" class="note-link">Embodied Connector</a>（VideoLLaMA2，板载）负责 Navigation / Adjustment；底层 Modular Skill Library（Locomotion + Manipulation）在板载设备直接执行。</figcaption>
         </figure>
       </div>
@@ -351,7 +351,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_2_workflow_make_coffee.png" alt="Figure 2: make coffee 完整工作流">
+          <img src="./images/figure_2_workflow_make_coffee.webp" alt="Figure 2: make coffee 完整工作流">
           <figcaption><strong>Figure 2（p.3）：</strong>「泡一杯咖啡」完整工作流——FM（黄框）在关键决策点触发；Connector（绿框）处理中间所有导航/调整；底层技能（蓝框）执行具体动作。注意 FM 只在关键点介入，大量闭环由 Connector 处理。</figcaption>
         </figure>
       </div>
@@ -373,7 +373,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_3_connector_vs_noc_active_camera.png" alt="Figure 3+4: Connector 对比 + 主动相机消融">
+          <img src="./images/figure_3_connector_vs_noc_active_camera.webp" alt="Figure 3+4: Connector 对比 + 主动相机消融">
           <figcaption><strong>Figure 3（上，p.12）：</strong>w/o Connector（第一行）vs Being-0（第二行）执行「Prepare-coffee」对比——不带 Connector 的 agent 在导航阶段反复迷失；带 Connector 只用少量 FM 查询即完成。<strong>Figure 4（下，p.12）：</strong>固定相机不同俯仰角消融——没有角度能同时满足导航和操作需求，主动相机两者均 5/5。</figcaption>
         </figure>
       </div>
@@ -406,7 +406,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_4_adjustment_manipulation_skills.png" alt="Figure 5+6: Adjustment 消融 + 操作技能展示">
+          <img src="./images/figure_4_adjustment_manipulation_skills.webp" alt="Figure 5+6: Adjustment 消融 + 操作技能展示">
           <figcaption><strong>Figure 5（上，p.13）：</strong>Pose Adjustment 消融——左列（w/o Adjustment）显示导航结束后位姿不利于抓取；右列（Being-0）通过弧形接近对齐到最优抓取位置。<strong>Figure 6（下，p.13）：</strong>技能库中多个技能的第一人称录像——Play-chess（触觉）、Toy-bricks、Open-beer、Handout-snack、Grasp-bottle、Place-pole。</figcaption>
         </figure>
       </div>

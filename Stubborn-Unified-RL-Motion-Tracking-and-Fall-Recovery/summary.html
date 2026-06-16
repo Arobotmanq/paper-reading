@@ -312,8 +312,8 @@
           <li><b>③ Bernoulli 概率终止 + 误差驱动采样</b>：前者造恢复探索窗，后者把训练算力压到难片段。</li>
         </ul>
         <figure>
-          <a href="./images/figure_1_overview.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_1_overview.png" alt="Figure 1: Overview of Stubborn" loading="lazy">
+          <a href="./images/figure_1_overview.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_overview.webp" alt="Figure 1: Overview of Stubborn" loading="lazy">
           </a>
           <figcaption><strong>Figure 1 (p.2)：</strong>Stubborn 总览——yaw-aligned 表示 + 非对称 Actor-Critic + Bernoulli 概率终止 + 误差驱动自适应采样，单策略训练后直接部署到真机 G1。<strong>看点：</strong>右下角 "Probabilistic Termination" 与 "Error-Based Adaptive Sampling" 两块，是相对 BeyondMimic 式硬终止管线的两处改动。</figcaption>
         </figure>
@@ -462,8 +462,8 @@
           </details>
         </div>
         <figure>
-          <a href="./images/figure_3_adps_ablation.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_3_adps_ablation.png" alt="Figure 3: AdpS ablation error curves" loading="lazy">
+          <a href="./images/figure_3_adps_ablation.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_3_adps_ablation.webp" alt="Figure 3: AdpS ablation error curves" loading="lazy">
           </a>
           <figcaption><strong>Figure 3 (p.8)：</strong>AdpS 消融——训练过程中关节位置 / 速度 / 加速度误差曲线 + 末期箱线图（AdpS vs w/o AdpS）。<strong>看点：</strong>差距集中在中后期，且幅度很小（注意 y 轴量程很窄，如 MPJPE 仅 0.12–0.13 区间）——这正是把它列入局限的依据。</figcaption>
         </figure>
@@ -528,14 +528,14 @@
           </details>
         </div>
         <figure>
-          <a href="./images/figure_2_pt_ablation.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_2_pt_ablation.png" alt="Figure 2: PT ablation recovery success and steps" loading="lazy">
+          <a href="./images/figure_2_pt_ablation.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_pt_ablation.webp" alt="Figure 2: PT ablation recovery success and steps" loading="lazy">
           </a>
           <figcaption><strong>Figure 2 (p.7)：</strong>PT 消融——训练过程中的恢复成功率与平均恢复步数曲线 + 末期箱线图（Ours vs w/o PT，阈值 0.15/0.25 m）。<strong>看点：</strong>Ours 收敛更快、波动更小，尤其 0.15 m 严苛阈值下 w/o PT 抖动明显；箱线图右侧 Ours 中位成功率更高、恢复步数更少。</figcaption>
         </figure>
         <figure>
-          <a href="./images/figure_4_real_world.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_4_real_world.png" alt="Figure 4: real-world deployment on Unitree G1" loading="lazy">
+          <a href="./images/figure_4_real_world.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_4_real_world.webp" alt="Figure 4: real-world deployment on Unitree G1" loading="lazy">
           </a>
           <figcaption><strong>Figure 4 (p.8)：</strong>29-DoF Unitree G1 真机：Flip（空翻）/ Acrobatics（特技）/ Fall Recovery（摔倒恢复）三类序列。<strong>看点：</strong>第三行——机器人被打倒后用同一策略自主起身并恢复跟踪。</figcaption>
         </figure>

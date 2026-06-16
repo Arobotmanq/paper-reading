@@ -228,7 +228,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 配方由三个设计落地：MoT 双专家路由 + Vision-Aligned <a href="./notes.html#rvq" class="note-link">RVQ</a> tokenizer + <a href="./notes.html#action-space-supervision" class="note-link">Action-Space Supervision</a>；且保持端到端梯度（与 π₀.₅ 的 stop-gradient 路线分野）。</div>
         <figure>
-          <img src="./images/figure_2_architecture.png" alt="Figure 2: gradient-bridged co-training and MoT routing">
+          <img src="./images/figure_2_architecture.webp" alt="Figure 2: gradient-bridged co-training and MoT routing">
           <figcaption><strong>Figure 2：</strong>三目标塑形骨干（多模态 CE 接地锚 / 离散动作 CE 梯度桥 / flow matching 精确动作）+ MoT 把 VL token 与连续动作分流，Joint Attention 让梯度端到端跨两专家流动。</figcaption>
         </figure>
         <div class="evidence">
@@ -262,7 +262,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 标志性结果：预训练本身就产生可测量的真机行为——无微调即在 17 任务套件上高分完成多个任务（含一个 held-out 形变任务）。</div>
         <figure>
-          <img src="./images/figure_6_zeroshot_trends.png" alt="Figure 6: zero-shot trends across checkpoints">
+          <img src="./images/figure_6_zeroshot_trends.webp" alt="Figure 6: zero-shot trends across checkpoints">
           <figcaption><strong>Figure 6：</strong>跨预训练 checkpoint 的 zero-shot 真机评估趋势：整体 task progress 随训练上升，held-out 任务 400k 达 53.6；语义类任务是最强 zero-shot 维度。</figcaption>
         </figure>
         <div class="evidence">
@@ -286,7 +286,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 动作训练不损害（反而增强）具身多模态能力：embodied grounding +21.8pp。</div>
         <figure>
-          <img src="./images/figure_8_multimodal_capability.png" alt="Figure 8: multimodal capability changes from co-training">
+          <img src="./images/figure_8_multimodal_capability.webp" alt="Figure 8: multimodal capability changes from co-training">
           <figcaption><strong>Figure 8：</strong>co-training 带来的"专门化"效应：能力从开放域 VQA 转向与机器人执行更相关的具身感知（Embodied Grounding +21.8、Where2Place +11.0，代价 RealWorld VQA −15.0）。</figcaption>
         </figure>
         <div class="evidence">

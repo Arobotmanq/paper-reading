@@ -294,7 +294,7 @@
         </div>
 
         <figure>
-          <img src="./images/figure_2_capabilities_overview.png" alt="SpatialVLA 四大能力概览">
+          <img src="./images/figure_2_capabilities_overview.webp" alt="SpatialVLA 四大能力概览">
           <figcaption><strong>Fig. 1 (p.1, 局部)：</strong>SpatialVLA 的四大能力柱——大规模跨本体数据集、3D场景空间理解、零样本泛化、高效迁移后训练。</figcaption>
         </figure>
       </div>
@@ -315,7 +315,7 @@
         <div class="claim-statement"><span class="cn">观点3</span> Ego3D Position Encoding：在自我中心相机坐标系中估深度并反投影，无需外参标定，把3D点云融入 SigLIP 的 2D 视觉 token，跨本体通用。</div>
 
         <figure>
-          <img src="./images/figure_1_system_overview.png" alt="SpatialVLA 系统架构图">
+          <img src="./images/figure_1_system_overview.webp" alt="SpatialVLA 系统架构图">
           <figcaption><strong>Fig. 2 (p.3)：</strong>SpatialVLA 架构全景：左侧 Ego3D PE 将深度信息与 SigLIP 特征融合（O3d = X + MLP(γ(P))）；中间 Adaptive Action Grids 将连续动作编码为3个 spatial token；右侧后训练的 Gaussian re-discretization。</figcaption>
         </figure>
 
@@ -338,7 +338,7 @@
         <div class="claim-statement"><span class="cn">观点4</span> Adaptive Action Grids：对整个预训练数据拟合 Gaussian 分布，按等概率原则切分动作格子，让高频动作区域自动获得更细粒度——3 个 token 代替 7 个 token，速度快 4×，精度更高。</div>
 
         <figure>
-          <img src="./images/figure_3_adaptive_action_grids.png" alt="Adaptive Action Grids 可视化">
+          <img src="./images/figure_3_adaptive_action_grids.webp" alt="Adaptive Action Grids 可视化">
           <figcaption><strong>Fig. 3 (p.4)：</strong>左图是 ΔR/ΔT 的动作分布热力图（Gaussian 拟合）；右图是按等概率切分后的行动格子——在动作密集区域格子更细，稀疏区域格子更粗，体现自适应性。</figcaption>
         </figure>
 
@@ -372,7 +372,7 @@
         <div class="claim-statement"><span class="cn">观点6</span> 预训练数据：1.1M episodes 来自 OXE 和 RH20T 的 28 个数据集，覆盖多种机器人本体、场景和任务，训练 10 天（64× A100）。</div>
 
         <figure>
-          <img src="./images/figure_4_dataset_mixture.png" alt="SpatialVLA 训练数据集混合比例">
+          <img src="./images/figure_4_dataset_mixture.webp" alt="SpatialVLA 训练数据集混合比例">
           <figcaption><strong>Fig. 9 (Appendix p.14)：</strong>28 个数据集的比例饼图——Bridge 15.34%、Fractal 14.71%、Droid 11.66% 等，Others 31.76%。数据混合权重根据各数据集在真实环境测试性能调整（来自 OpenVLA 的设计，本文改进权重）。</figcaption>
         </figure>
 

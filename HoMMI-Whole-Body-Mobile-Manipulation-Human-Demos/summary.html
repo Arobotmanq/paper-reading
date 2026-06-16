@@ -285,7 +285,7 @@
       <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
 
       <figure>
-        <img src="./images/figure_1_teaser_system_overview.png" alt="Figure 1: HoMMI 系统全貌：数据采集装置、本体差距挑战、多样化移动操作能力">
+        <img src="./images/figure_1_teaser_system_overview.webp" alt="Figure 1: HoMMI 系统全貌：数据采集装置、本体差距挑战、多样化移动操作能力">
         <figcaption><strong>Figure 1（p.1）：</strong>左列=可扩展数据采集（人穿戴 UMI+头盔），中列=人机本体差距（视觉差+运动学差），右列=HoMMI 实现的多样化全身移动操作技能（主动搜索、长程导航、双臂协调）。</figcaption>
       </figure>
 
@@ -315,7 +315,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 视觉跨本体：把自我中心 RGB 提升为 3D 点云（DINOv3 特征 + 正弦位置编码），在夹爪坐标系下消除人臂外观、视角高度差异。</div>
         <figure>
-          <img src="./images/figure_2_system_pipeline.png" alt="Figure 2: HoMMI 系统概览：数据采集 → 跨本体手眼策略 → 全身控制器 → 机器人部署">
+          <img src="./images/figure_2_system_pipeline.webp" alt="Figure 2: HoMMI 系统概览：数据采集 → 跨本体手眼策略 → 全身控制器 → 机器人部署">
           <figcaption><strong>Figure 2（p.3）：</strong>完整 pipeline：左=数据采集（3 iPhone），中=策略（头部 3D 表示 + 腕部 2D + 本体感觉 → Diffusion Policy → look-at 点轨迹 + EEF 轨迹），右=全身控制器 + 机器人部署。</figcaption>
         </figure>
         <div class="evidence">
@@ -330,7 +330,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 运动学跨本体：头部动作从 6-DoF 姿态简化为 3D look-at 点，使 2-DoF 机器人颈部也能有效执行人类主动感知意图。</div>
         <figure>
-          <img src="./images/figure_3_look_at_point_vs_6dof.png" alt="Figure 3: Look-at Point vs 6-DoF 头部跟踪对比">
+          <img src="./images/figure_3_look_at_point_vs_6dof.webp" alt="Figure 3: Look-at Point vs 6-DoF 头部跟踪对比">
           <figcaption><strong>Figure 5（p.5）：</strong>左=look-at 点（Ours），精确双臂末端跟踪；右=6-DoF 头部跟踪，末端跟踪误差大且存在运动不可行问题。右侧稳定性约束展示：无质心约束→跌倒，无自碰撞回避→碰撞，无名义姿态正则化→关节超限。</figcaption>
         </figure>
         <div class="evidence">
@@ -362,7 +362,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 主结果：在三个长程移动操作任务上（Laundry/Delivery/Tablescape），HoMMI 大幅领先所有 baseline，且每个消融对应一个特定的失败模式。</div>
         <figure>
-          <img src="./images/figure_4_laundry_task_results.png" alt="Figure 7: Laundry 任务：策略 rollout、测试场景、基线失败模式">
+          <img src="./images/figure_4_laundry_task_results.webp" alt="Figure 7: Laundry 任务：策略 rollout、测试场景、基线失败模式">
           <figcaption><strong>Figure 7（p.6）：</strong>Laundry 任务：(a) HoMMI rollout 展示全身协调+主动搜索箱子；(b) 不同测试场景；(c) 各 baseline 典型失败模式——Wrist-Only 总是转向同一侧，RGB-Only 按压力过大触发安全保护，Head-Only 无法精确抓握。</figcaption>
         </figure>
         <div class="evidence">
@@ -383,7 +383,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 关键发现 F3：朴素添加自中心 RGB 并直接回归 6-DoF 头部动作会<strong>恶化性能</strong>（两个任务 0%），证明本体差距不可忽视。</div>
         <figure>
-          <img src="./images/figure_5_tablescape_task_results.png" alt="Figure 10: Tablescape 任务：策略 rollout、测试配置、基线失败模式">
+          <img src="./images/figure_5_tablescape_task_results.webp" alt="Figure 10: Tablescape 任务：策略 rollout、测试配置、基线失败模式">
           <figcaption><strong>Figure 10（p.8）：</strong>Tablescape 任务：Ours 展示精确双臂协调展开垫子的 recovery 行为；各 baseline 失败原因各异——印证头腕融合与 3D 表示均不可省。</figcaption>
         </figure>
         <div class="evidence">

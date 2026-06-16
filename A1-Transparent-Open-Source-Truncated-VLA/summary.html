@@ -321,7 +321,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 架构：训练时对每层 i 并行监督 action，推理时用 action 一致性阈值动态决定从哪层退出，骨干和 action head 共享参数（无多个独立策略头）。</div>
         <figure>
-          <img src="./images/figure_3_training_adaptive_inference.png" alt="Figure 2: A1 训练与自适应推理示意图">
+          <img src="./images/figure_3_training_adaptive_inference.webp" alt="Figure 2: A1 训练与自适应推理示意图">
           <figcaption><strong>Figure 2（p.4）：</strong>左＝训练时每层 i 的共享 action head 并行输出 A(i)，同时对全部层监督 loss；右＝推理时计算 Δ=d(A(i), A(i-1)) 与阈值 η_i 比较，满足一致性则提前退出，无需跑完 28 层。</figcaption>
         </figure>
         <div class="evidence">
@@ -364,7 +364,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 主结果：A1 在 RoboChallenge 上以 29.00% 成为<strong>完全透明开源系统中的第一</strong>，同时在真实四平台均值 56.7% 上超过 π0/π0.5。</div>
         <figure>
-          <img src="./images/figure_4_early_exit_visualization_results.png" alt="Figure 4 + Table 6: 早退可视化与 FM 推理对比">
+          <img src="./images/figure_4_early_exit_visualization_results.webp" alt="Figure 4 + Table 6: 早退可视化与 FM 推理对比">
           <figcaption><strong>Figure 4 + Table 6（p.9）：</strong>顶部图——LIBERO-Long 一次 episode 中 A1 的实际退出层（绿色数字）：移动帧退出在第 3、5 层，开灶/抓锅等关键帧退出在第 17、25 层。底部 Table 6——引入 ILTFM(δ=2) 后延迟从 27.5s→10.5s，成功率从 95.4%→96.4%（热启动还有正收益）。</figcaption>
         </figure>
         <div class="evidence">

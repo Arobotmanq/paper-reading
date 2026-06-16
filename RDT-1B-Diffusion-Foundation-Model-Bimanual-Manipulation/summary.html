@@ -308,7 +308,7 @@
           <div class="ev-gloss">ACT（VAE）也尝试建模分布，但论文认为 VAE 在表达能力上仍不及扩散——这解释了为什么要用 DDPM 而非 CVAE。</div>
         </div>
         <figure>
-          <img src="./images/figure_2_pretrain_boost_results.png" alt="RDT-1B 预训练提升与与 baselines 对比">
+          <img src="./images/figure_2_pretrain_boost_results.webp" alt="RDT-1B 预训练提升与与 baselines 对比">
           <figcaption><strong>Figure 1 局部（p.2）：</strong>RDT 预训练版（68.2%）vs. 从头训练（34.8%）vs. ACT（12.2%）/ OpenVLA（1.7%）/ Octo（1.6%）——预训练带来 +33.4% 绝对提升，且扩散建模本身远超离散化（OpenVLA）和 VAE（ACT）。</figcaption>
         </figure>
       </div>
@@ -329,7 +329,7 @@
           <div class="ev-gloss">ACI（Alternating Condition Injection）是本文原创的小设计——图像 token 数量通常远多于文本，同时注入会导致文本信息被淹没（即语言指令跟随能力变弱），消融实验图 4(b) 定量验证了此点。</div>
         </div>
         <figure>
-          <img src="./images/figure_1_architecture_framework.png" alt="RDT 整体架构图">
+          <img src="./images/figure_1_architecture_framework.webp" alt="RDT 整体架构图">
           <figcaption><strong>Figure 3（p.4）：</strong>左 = 统一动作空间（单臂 EEF / 双臂关节 / EEF+轮式底盘均映射到同一128维向量）；中 = DiT 主网络（L×交叉注意力块，交替注入图像/语言）；右 = 多相机图像输入（SigLIP 编码 + 多维位置嵌入区分视角/时间步）+ T5-XXL 语言编码。</figcaption>
         </figure>
       </div>
@@ -361,7 +361,7 @@
           <div class="ev-gloss">21TB 数据在 48 块 H100 上预训练一个月，1M 训练迭代步数。对比 Octo 的预训练规模（25 个数据集、93M 参数）——RDT 在数据量和模型规模上均大幅超越。</div>
         </div>
         <figure>
-          <img src="./images/figure_3_datasets_overview.png" alt="预训练与微调数据集概览">
+          <img src="./images/figure_3_datasets_overview.webp" alt="预训练与微调数据集概览">
           <figcaption><strong>Figure 1 局部（p.2）：</strong>左 = 预训练：46 个数据集、多种机器人、1M+ 轨迹；右 = 微调：自采双臂数据集、6K+ 轨迹、目标双臂机器人。预训练数据量是微调的约 166 倍。</figcaption>
         </figure>
         <div class="evidence">

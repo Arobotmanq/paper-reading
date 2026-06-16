@@ -319,7 +319,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 系统管道：iPhone 扫描建图 → VoxelMap 语义记忆 → 导航到目标 → AnyGrasp + Lang-SAM 抓取 → 启发式放置，全程无训练、到新家 10 分钟内可运行。</div>
         <figure>
-          <img src="./images/figure_1_system_overview.png" alt="Figure 1: OK-Robot 系统总览">
+          <img src="./images/figure_1_system_overview.webp" alt="Figure 1: OK-Robot 系统总览">
           <figcaption><strong>Figure 1（p.1）：</strong>OK-Robot 在真实卧室中执行"将 Takis 移到床头柜"的完整流程——① VoxelMap 导航规划，② Lang-SAM + AnyGrasp 抓取，③ Drop Primitive 放置。展示了三个不同指令的成功案例。</figcaption>
         </figure>
         <div class="evidence">
@@ -334,7 +334,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> <a href="./notes.html#voxelmap" class="note-link">VoxelMap</a> 语义记忆：对每帧运行 OWL-ViT 检测 + SAM 分割，把 CLIP 嵌入存入 5cm 体素，查询时用语言-视觉 dot product 找物体——低分辨率地图 + 允许物体小位移的设计是鲁棒性的来源。</div>
         <figure>
-          <img src="./images/figure_2a_voxelmap_localization.png" alt="Figure 2a: VoxelMap 物体定位">
+          <img src="./images/figure_2a_voxelmap_localization.webp" alt="Figure 2a: VoxelMap 物体定位">
           <figcaption><strong>Figure 2a（p.4）：</strong>VoxelMap 在真实房间点云中用自然语言定位物体——"伞"、"棕色帽子"、"床"等均能被正确检索到对应的 3D 位置。</figcaption>
         </figure>
         <div class="evidence">
@@ -349,7 +349,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 抓取过滤启发式是关键工程细节：AnyGrasp 生成所有候选后，用 Lang-SAM 掩码过滤 + "偏向水平抓取"评分——水平抓取对手眼标定误差鲁棒，跨家庭迁移时成功率更高。</div>
         <figure>
-          <img src="./images/figure_3_grasp_pipeline.png" alt="Figure 3: 抓取管道">
+          <img src="./images/figure_3_grasp_pipeline.webp" alt="Figure 3: 抓取管道">
           <figcaption><strong>Figure 3（p.5）：</strong>从左至右：机器人视角图 → AnyGrasp 生成全场景所有候选抓取（蓝色线条）→ Lang-SAM 分割目标物体掩码 → 掩码过滤后的候选 → 最终选定执行的抓取姿态。</figcaption>
         </figure>
         <div class="evidence">
@@ -375,7 +375,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 故障模式分解：操作失败（73/375）是最主要失败来源，其中 AnyGrasp 失败（30 次）+ LangSAM 识别错目标（17 次）占主导；导航失败（42 次）中语义记忆定位错误（35 次）为最主要原因。</div>
         <figure>
-          <img src="./images/figure_4_failure_sankey.png" alt="Figure 4: 故障模式 Sankey 图">
+          <img src="./images/figure_4_failure_sankey.webp" alt="Figure 4: 故障模式 Sankey 图">
           <figcaption><strong>Figure 4（p.6）：</strong>全部 375 次试验的故障模式 Sankey 流图——从总试验经导航/操作/放置三级分解，再细化到 AnyGrasp 失败、LangSAM 识别错目标、手眼标定问题等叶节点失败原因。操作失败是最大瓶颈。</figcaption>
         </figure>
         <div class="evidence">

@@ -293,8 +293,8 @@
         <div class="gb-label">🧭 背景 · 为什么重要（不熟此子方向先读我）</div>
         <p>足球射门是「运动型人形交互」的一个浓缩 benchmark：要单腿支撑稳住、要把球踢得又准又快，而踢击是一次 <strong>sub-10ms 的高冲量碰撞</strong>，跟搬运/推门这种「持续接触」任务完全不同。现有人形踢球系统要么用 <span class="term" tabindex="0" data-gloss="让策略 RL 模仿一段参考动作轨迹，继承稳定的全身协调，但被固定参考束缚">motion tracking RL</span> 拿到稳定但只会复读固定参考，要么用 <span class="term" tabindex="0" data-gloss="只给 task 奖励（球进不进/距目标多远），让 RL 从零探索，信号稀疏难学">task-reward RL</span> 却探索不出有效踢击。本文要同时拿下稳定、精准、力量、泛化。</p>
         <figure>
-          <a href="./images/figure_1_teaser.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_1_teaser.png" alt="Figure 1: Unitree G1 penalty kick on grass" loading="lazy">
+          <a href="./images/figure_1_teaser.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_teaser.webp" alt="Figure 1: Unitree G1 penalty kick on grass" loading="lazy">
           </a>
           <figcaption><strong>Figure 1 (p.1)：</strong>Unitree G1 在真实草地踢出一记定向点球的 ghost 叠帧时序。<strong>看点：</strong>支撑腿单脚承重 + 摆腿击球 + 手臂反向配平——这是一次全身协调的高冲量接触，不是上肢孤立动作。</figcaption>
         </figure>
@@ -326,8 +326,8 @@
           <li><b>③ 为高冲量接触定制奖励</b>：<a href="./notes.html#instant-interaction-reward" class="note-link" data-gloss="对接近-冲击-接触后球态全生命周期分别给奖，避免 sub-10ms 接触窗口奖励塌缩">Instant Interaction Reward</a> + <a href="./notes.html#densified-shooting-reward" class="note-link" data-gloss="弹道外推球态到球门线，每个击后步给预测落点误差奖励，密集化稀疏的长程落点信号（不改评测指标）">弹道外推的密集落点奖励</a> + 近球 proximity 放松 + 击后稳定相。</li>
         </ul>
         <figure>
-          <a href="./images/figure_2_curriculum.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_2_curriculum.png" alt="Figure 2: RoboNaldo three-stage motion-guided curriculum" loading="lazy">
+          <a href="./images/figure_2_curriculum.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_curriculum.webp" alt="Figure 2: RoboNaldo three-stage motion-guided curriculum" loading="lazy">
           </a>
           <figcaption><strong>Figure 2 (p.4)：</strong>单条 low-level 策略顺序跨三阶段训练；底部为 Stage 3 自适应参考与触发（ball far→locomotion，ball near→kick，击后→stabilization）。<strong>看点：</strong>中间「Tracking↓ / Task↑」那条渐变箭头——课程的本质就是这条权重迁移；右侧是 free-kick / moving-ball 两类代表输出。</figcaption>
         </figure>
@@ -552,20 +552,20 @@
           </details>
         </div>
         <figure>
-          <a href="./images/figure_4_results.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_4_results.png" alt="Figure 4: real-robot shooting overview" loading="lazy">
+          <a href="./images/figure_4_results.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_4_results.webp" alt="Figure 4: real-robot shooting overview" loading="lazy">
           </a>
           <figcaption><strong>Figure 4 (p.7)：</strong>真机射门总览。A 正门视角落点散布；B free-kick 轨迹；C 左/中/右分区成功率与球速；D 动球轨迹。<strong>看点：</strong>面板 C——center 最准（35.4% @0.5m），左侧球速更大、右脚自然偏置；off-center 1m 成功率仍接近。</figcaption>
         </figure>
         <figure>
-          <a href="./images/figure_3_perception.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_3_perception.png" alt="Figure 3: real-world perception stack" loading="lazy">
+          <a href="./images/figure_3_perception.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_3_perception.webp" alt="Figure 3: real-world perception stack" loading="lazy">
           </a>
           <figcaption><strong>Figure 3 (p.7)：</strong>onboard 感知栈。头戴 MID-360 LiDAR 近场跟反光球，胸前 D435 IR 补远场，常速 Kalman 融合并变换到 pelvis 系；目标用同一相机的 AprilTag 定位。<strong>看点：</strong>全靠「反光亮度」keying 而非 RGB 外观检测——避开 HSV/YOLO 在光照与运动模糊下的失效。</figcaption>
         </figure>
         <figure>
-          <a href="./images/figure_5_showcase.png" target="_blank" title="点击看原图">
-            <img src="./images/figure_5_showcase.png" alt="Figure 5: real-robot shooting showcase" loading="lazy">
+          <a href="./images/figure_5_showcase.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_5_showcase.webp" alt="Figure 5: real-robot shooting showcase" loading="lazy">
           </a>
           <figcaption><strong>Figure 5 (p.8)：</strong>真机展示。(a) 户外 free-kick、(b) 动球一脚射门时序；(c)–(f) 四次 free-kick（上接触帧/下落点），落点误差 31.5/38.7/45.3/35.9 cm。<strong>看点：</strong>(b) one-touch——人传球后单脚直接射，是 Stage 3 触发接口的真机体现。</figcaption>
         </figure>

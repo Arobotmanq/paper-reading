@@ -314,7 +314,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 核心解法：<a href="./notes.html#lam" class="note-link">统一潜学习（unified latent learning）</a>——用 LAM 把廉价的人类 egocentric 视频压缩为离散潜动作，以此作为 VLA 预训练的伪标签，无需任何 action 标注。</div>
         <figure>
-          <img src="./images/figure_4_lam_data_collection.png" alt="Figure 4: LAM 数据采集流程与预训练 pipeline">
+          <img src="./images/figure_4_lam_data_collection.webp" alt="Figure 4: LAM 数据采集流程与预训练 pipeline">
           <figcaption><strong>Figure 4（p.14）：</strong>左侧——单人头戴摄像机采集 egocentric locomotion 视频（低成本，只需执行 8 种典型动作朝向潜在操作目标移动）；右侧——LAM 以 VQ-VAE 方式训练，将相邻帧对 (o_t, o_{t+k}) 编码为量化潜动作码字，再解码重建未来帧 o_{t+k}。</figcaption>
         </figure>
         <div class="evidence">
@@ -335,7 +335,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 系统架构：VLM 主干 + 双 LAM 联合预训练 + 轻量 action decoder finetune，运行时 VLA 以 ~10 Hz 输出上身关节角和离散 locomotion 指令，LMO 以 50 Hz 将指令转为下肢力矩。</div>
         <figure>
-          <img src="./images/figure_2_pipeline_overview.png" alt="Figure 2: WholeBodyVLA 整体 pipeline">
+          <img src="./images/figure_2_pipeline_overview.webp" alt="Figure 2: WholeBodyVLA 整体 pipeline">
           <figcaption><strong>Figure 2（p.5）：</strong>LAM 在视频上预训练产生 latent 监督信号（预训练阶段，图左）；LMO RL 在仿真中独立训练（图中）；运行时，VLM 接收 egocentric 图像和语言指令，经 action decoder 输出 a_upper（双臂关节位置）和离散 locomotion command，后者由 LMO RL Policy 以 50 Hz 转换为 a_lower（下肢力矩），实现全身 loco-manipulation。</figcaption>
         </figure>
         <div class="evidence">
@@ -367,7 +367,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 量化验证：LAM 预训练将成功率提升 38.7%，且更多的 locomotion 视频预训练可以大幅<strong>减少对遥操数据的依赖</strong>——50%+ 视频预训练后，25 条遥操轨迹即可媲美无预训练时 200 条的效果。</div>
         <figure>
-          <img src="./images/figure_3_generalization_results.png" alt="Figure 3: 真实世界泛化结果">
+          <img src="./images/figure_3_generalization_results.webp" alt="Figure 3: 真实世界泛化结果">
           <figcaption><strong>Figure 3（p.9）：</strong>上排——起始位姿泛化和场景泛化数据量曲线，颜色越深表示 LAM 预训练数据越多，曲线整体越高；下排——在额外 5 个挑战性扩展任务上的结果（长流程 / 地形穿越 / 视觉导航 / 吸尘 / 擦桌），WholeBodyVLA 在所有场景均领先。</figcaption>
         </figure>
         <div class="evidence">
@@ -388,7 +388,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 潜动作码字在人类视频和机器人视频之间展示出跨域语义对应——同一个 latent action code 在人类和机器人数据中对应相似的运动语义（向前行进、左转、蹲下）。</div>
         <figure>
-          <img src="./images/figure_5_latent_action_correspondence.png" alt="Figure 5: 人类-机器人潜动作跨域对应">
+          <img src="./images/figure_5_latent_action_correspondence.webp" alt="Figure 5: 人类-机器人潜动作跨域对应">
           <figcaption><strong>（p.22 Appendix C.2）：</strong>LAM codebook 学到的潜动作在人类 egocentric 视频（左三列）和机器人数据（右三列）之间展现出一致的语义对应：Latent Action 1 = 向前行进、Latent Action 2 = 左转、Latent Action 3 = 蹲下——这正是跨域迁移的直接证明。</figcaption>
         </figure>
         <div class="evidence">

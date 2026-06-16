@@ -323,7 +323,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 解法二：<a href="./notes.html#dual-system" class="note-link">G0 双系统</a>将 VLM（慢思考，2 Hz）与 VLA（快执行，200 Hz）异步耦合，分别承担规划与控制，无需共享权重。</div>
         <figure>
-          <img src="./images/figure_1_dual_system_overview.png" alt="Figure 1: G0 双系统架构总览">
+          <img src="./images/figure_1_dual_system_overview.webp" alt="Figure 1: G0 双系统架构总览">
           <figcaption><strong>Figure 1（p.1）：</strong>G0 双系统全图。左：输入（视觉观察、语言指令、本体感知）；中：G0-VLM（Slow Thinking，2 Hz 子任务规划）→ G0-VLA（Fast Execution，200 Hz 闭环控制）；右：应用场景（零样本泛化、少样本学习、长程任务）。</figcaption>
         </figure>
         <div class="evidence">
@@ -338,11 +338,11 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 三阶段训练课程的核心洞见：<strong>Stage-2 单一本体预训练</strong>是关键，而非 Stage-1 跨本体预训练；Stage-1 仅学习通用动作先验，无法习得本体专属技能。</div>
         <figure>
-          <img src="./images/figure_7a_pretrain_stage1_arch.png" alt="Figure 7a: Stage-1 架构">
+          <img src="./images/figure_7a_pretrain_stage1_arch.webp" alt="Figure 7a: Stage-1 架构">
           <figcaption><strong>Figure 7（p.8）Stage-1：</strong>VLM（PaLiGemma：SigLIP + Transformer）以 FAST 离散 token 做自回归预训练，吃三路图像+高层任务指令+本体感知，输出离散动作 token。此阶段只训 VLM，不训 Action Transformer。</figcaption>
         </figure>
         <figure>
-          <img src="./images/figure_7b_pretrain_stage2_arch.png" alt="Figure 7b: Stage-2/Post-train 架构">
+          <img src="./images/figure_7b_pretrain_stage2_arch.webp" alt="Figure 7b: Stage-2/Post-train 架构">
           <figcaption><strong>Figure 7（p.8）Stage-2 &amp; Post-train：</strong>增加 Action Transformer，用 flow matching loss 训练连续动作输出。输入新增子任务级精细指令（subtask instruction）。色块标注 token 模态。</figcaption>
         </figure>
         <div class="evidence">
@@ -357,7 +357,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 意外发现：当跨本体预训练数据与目标机器人本体差异大时，Stage-1 不仅无助，甚至<strong>损害</strong>本体专属动作（如底盘、躯干控制）的学习。</div>
         <figure>
-          <img src="./images/figure_11_bedmaking_skills.png" alt="Figure 11: Bed Making 技能进度分析">
+          <img src="./images/figure_11_bedmaking_skills.webp" alt="Figure 11: Bed Making 技能进度分析">
           <figcaption><strong>Figure 11（p.11）：</strong>Bed Making 任务各子技能分解。"Torso Lift and Grasp" 和 "Move and Flatten Quilt" 上，Stage-1 / π0（两者都含跨本体数据）甚至低于 G0 (Scratch)（从头训练），证明 OXE 数据与 R1 Lite 机器人的底盘/躯干动作存在严重 embodiment gap。</figcaption>
         </figure>
         <div class="evidence">
@@ -372,11 +372,11 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> G0 (Full)（Stage-1 + Stage-2 预训练）在 4 个基准任务上综合表现最优，在 pick-and-place 类任务上尤为突出；少样本（20 条）场景下 Stage-2 预训练优势更明显。</div>
         <figure>
-          <img src="./images/figure_9_finetuning_results.png" alt="Figure 9: 微调基准结果">
+          <img src="./images/figure_9_finetuning_results.webp" alt="Figure 9: 微调基准结果">
           <figcaption><strong>Figure 9（p.10）：</strong>不同预训练权重微调后的基准对比（100 条轨迹/任务）。G0 (Full) 在平均 progress score 最高；G0 (Stage-1) 最差，凸显单一本体预训练的必要性。π0 作为基线，在部分任务上不及 G0 (Stage-2) 变体。</figcaption>
         </figure>
         <figure>
-          <img src="./images/figure_10_fewshot_results.png" alt="Figure 10: 少样本迁移结果">
+          <img src="./images/figure_10_fewshot_results.webp" alt="Figure 10: 少样本迁移结果">
           <figcaption><strong>Figure 10（p.11）：</strong>少样本（20 条轨迹）迁移结果。Stage-2 预训练模型显著优于其他变体；Stage-1 单独预训练相对从头训练无明显优势，强调单一本体数据的关键性。</figcaption>
         </figure>
         <div class="evidence">

@@ -301,7 +301,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心思路：不重新训练移动操作 VLA，而是把 VLA 当路径点生成器，通过物理可行性约束下的轨迹优化将路径点转化为可执行的底盘+臂协同轨迹。</div>
         <figure>
-          <img src="./images/figure_1_overview_pipeline.png" alt="MoManipVLA 总体流水线：VLA 预测路径点 → 双层轨迹优化 → 底盘+臂动作">
+          <img src="./images/figure_1_overview_pipeline.webp" alt="MoManipVLA 总体流水线：VLA 预测路径点 → 双层轨迹优化 → 底盘+臂动作">
           <figcaption><strong>Figure 2（p.4）：</strong>MoManipVLA 完整流水线。左侧 VLA 模型接收 RGB 帧输出 waypoint \([Δx, Δθ, ΔG]\)；中间双层轨迹优化框架分别优化底盘轨迹（上层）和臂轨迹（下层），目标函数含可达性、平滑性和碰撞三项。</figcaption>
         </figure>
         <div class="evidence">
@@ -372,7 +372,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 真实世界只需 50 条示范即可完成微调，实现在 hexman echo 底盘 + RM65 机械臂平台上的部署，验证了「低成本迁移」的实际可行性。</div>
         <figure>
-          <img src="./images/figure_4_realworld_pickplace.png" alt="真实世界 Pick-and-Place 序列可视化">
+          <img src="./images/figure_4_realworld_pickplace.webp" alt="真实世界 Pick-and-Place 序列可视化">
           <figcaption><strong>Figure 3（p.8）：</strong>真实世界 Pick-and-Place 任务序列。机器人先导航接近目标，底盘与臂基于 VLA 路径点协同生成轨迹：初始阶段目标在臂的工作空间内可直接执行；放置阶段底盘需移动以扩大工作空间，之后再精炼臂轨迹。</figcaption>
         </figure>
         <div class="evidence">

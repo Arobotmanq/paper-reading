@@ -301,7 +301,7 @@
           <div class="ev-gloss">作者用一个玩具三次样条插值任务（Section IV）做了干净的控制变量实验：改的只是采样频率，数据复杂度不变。naive 方案随频率 MSE 指数上升，DCT 方案全频率段低误差——直接钉死根因是 tokenization。</div>
         </div>
         <figure>
-          <img src="./images/figure_3_prediction_error_vs_frequency.png" alt="Figure 3: 预测误差 vs 频率">
+          <img src="./images/figure_3_prediction_error_vs_frequency.webp" alt="Figure 3: 预测误差 vs 频率">
           <figcaption><strong>Figure 3（p.3）：</strong>上图：L2 误差 vs 采样频率（25→800 步/序列）。Naive（黄）随频率指数上升；<a href="./notes.html#dct" class="note-link">DCT</a>（绿）全程低位稳定。下图左：Naive 在高频下退化为"复制第一个动作"的水平线。下图右：DCT 方案正确拟合曲线形状。</figcaption>
         </figure>
       </div>
@@ -316,7 +316,7 @@
           <div class="ev-gloss">低频优先的列展平是关键设计：让模型先预测动作轨迹的整体形状（低频），再预测局部细节（高频），类比语言模型先预测句子大意再预测具体用词。</div>
         </div>
         <figure>
-          <img src="./images/figure_4_fast_tokenization_pipeline.png" alt="Figure 4: FAST tokenization pipeline">
+          <img src="./images/figure_4_fast_tokenization_pipeline.webp" alt="Figure 4: FAST tokenization pipeline">
           <figcaption><strong>Figure 4（p.4-5）：</strong>完整 FAST pipeline：①归一化 action chunk → ②对每个 action 维度独立做 DCT → ③量化（round(γ·C)，γ=10）得稀疏矩阵 → ④低频优先列展平 → ⑤BPE 压缩为最终离散 token 序列。</figcaption>
         </figure>
       </div>
@@ -353,7 +353,7 @@
           <div class="ev-gloss">关键含义：自回归 + FAST 不再是"比扩散差但更快"的权衡——在大数据制度下它们等效，FAST 是理性默认选择。唯一劣势是推理速度（~750ms vs ~100ms/chunk）。</div>
         </div>
         <figure>
-          <img src="./images/figure_9_fast_vs_diffusion_single_task.png" alt="Figure 9: FAST vs diffusion single-task">
+          <img src="./images/figure_9_fast_vs_diffusion_single_task.webp" alt="Figure 9: FAST vs diffusion single-task">
           <figcaption><strong>Figure 9（p.9）：</strong>单任务训练对比。Libero/T-shirt（小数据集）两者接近；Table Bussing（大数据集）FAST 用 3× 更少 step 就达到同等性能；DROID 上 FAST 语言跟随更好。π0(3x compute) 即 diffusion π0 用 3 倍算力时的表现，仍不及 FAST 同等 step 结果。</figcaption>
         </figure>
         <div class="evidence">
@@ -363,7 +363,7 @@
           <div class="ev-gloss">Figure 1（paper 首图）直观展示了这 5× 加速曲线——π0-FAST 在 100k-200k steps 附近就达到 diffusion π0 需要 700k steps 才达到的评估分数。</div>
         </div>
         <figure>
-          <img src="./images/figure_1_training_speed_comparison.png" alt="Figure 1: 训练速度对比曲线">
+          <img src="./images/figure_1_training_speed_comparison.webp" alt="Figure 1: 训练速度对比曲线">
           <figcaption><strong>Figure 1（p.1）：</strong>π0-FAST（绿）vs π0 diffusion（黄）训练曲线。横轴为训练 iteration，纵轴为评估得分。π0-FAST 大约在 200k step 就达到 π0 在 700k step 的水平，即 5× 更高效。</figcaption>
         </figure>
       </div>
@@ -378,7 +378,7 @@
           <div class="ev-gloss">这是 FAST 价值最直接的展示：不是微调评估，而是真正的零样本泛化。策略在 Berkeley、Stanford、UWashington 三个校园跨环境测试成功（Figure 7）。</div>
         </div>
         <figure>
-          <img src="./images/figure_7_droid_zero_shot_generalization.png" alt="Figure 7: DROID零样本泛化">
+          <img src="./images/figure_7_droid_zero_shot_generalization.webp" alt="Figure 7: DROID零样本泛化">
           <figcaption><strong>Figure 7（p.8）：</strong>同一个 FAST 策略 checkpoint 在 Berkeley、Stanford、U.Washington 三个校园的桌面场景零样本执行操作任务，无任何微调，仅靠自然语言提示。</figcaption>
         </figure>
       </div>

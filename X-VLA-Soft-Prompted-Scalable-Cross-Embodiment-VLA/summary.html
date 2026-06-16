@@ -305,7 +305,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 解法：<a href="./notes.html#soft-prompt" class="note-link">Soft Prompt</a> 将每个数据源的硬件配置编码为一组随机初始化、端到端学习的嵌入向量，注入编码器早期，主干完全共享——仅 0.04% 新参数但全维度解决异构性。</div>
         <figure>
-          <img src="./images/figure_3_comparison_methods.png" alt="Figure 2: 四种异构性处理方法对比 + Figure 3 数据配方 + Figure 4 训练曲线">
+          <img src="./images/figure_3_comparison_methods.webp" alt="Figure 2: 四种异构性处理方法对比 + Figure 3 数据配方 + Figure 4 训练曲线">
           <figcaption><strong>Figure 2（p.4）：</strong>左上=仅换动作头（现有主流）；右上=HPT-style 投影层（中间特征对齐）；左下=自然语言描述；右下=Soft Prompt（本文）。Figure 4 的训练曲线直观显示 soft prompt 收敛最稳。</figcaption>
         </figure>
         <div class="evidence">
@@ -315,7 +315,7 @@
           <div class="ev-gloss">关键在于"随机初始化 + 端到端优化"：不需要人手工写硬件描述，让模型自己学会编码 embodiment 差异。</div>
         </div>
         <figure>
-          <img src="./images/figure_1_architecture_detail.png" alt="Figure C1: X-VLA 完整架构图">
+          <img src="./images/figure_1_architecture_detail.webp" alt="Figure C1: X-VLA 完整架构图">
           <figcaption><strong>架构详图（Appendix C）：</strong>顶部=Soft Prompt Library + Input/Output Linear Projection Library（共 0.04% 参数）；下方=Model Forward Path：Lang+Main View 走预训练 VLM，Other Views 走 Shared ViT，Proprio + Noise Action 走 Input Projection，Soft Prompt 与 Multi-modal Tokens + Control Tokens 共同进入 N 层标准 self-attention Transformer Block，最后 Output Projection 产出 Action Chunk。</figcaption>
         </figure>
       </div>
@@ -346,7 +346,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> Scaling 行为：沿模型规模、数据多样性、数据量三个维度，X-VLA 的预训练验证误差均单调下降，且在最大测试配置（0.9B · 290K ep · 7 数据源）处<strong>没有饱和迹象</strong>——暗示进一步 scaling 仍有空间。</div>
         <figure>
-          <img src="./images/figure_4_scaling_behavior.png" alt="Figure 5: X-VLA 三轴 Scaling 行为">
+          <img src="./images/figure_4_scaling_behavior.webp" alt="Figure 5: X-VLA 三轴 Scaling 行为">
           <figcaption><strong>Figure 5（p.8）：</strong>三列分别为模型规模、数据多样性（数据源数量）、数据量 scaling，纵轴均为验证预测误差（越低越好）。三条曲线末端均未显示趋于水平，说明当前配置尚未饱和。</figcaption>
         </figure>
         <div class="evidence">
@@ -361,7 +361,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 可解释性验证：T-SNE 可视化显示，soft prompt 形成与硬件配置高度吻合的聚类——且同类硬件（Franka 左/右视角）的提示向量互相交织，说明模型学到了跨本体相似性而非简单的数据分区。</div>
         <figure>
-          <img src="./images/figure_5_tsne_softprompt.png" alt="Figure 8+9: T-SNE 可视化 + PEFT 对比">
+          <img src="./images/figure_5_tsne_softprompt.webp" alt="Figure 8+9: T-SNE 可视化 + PEFT 对比">
           <figcaption><strong>Figure 8（p.10–11）：</strong>T-SNE 显示 7 个数据源的 soft prompt 形成清晰聚类；两个 Franka 视角（Droid-Left/Right）的提示向量交织在一起，而非分离——证明提示编码了物理相似性而非纯粹的 dataset id 标记。Figure 9：预训练提示 vs. 随机初始化提示 vs. 两步适配——预训练提示早期收敛最快。</figcaption>
         </figure>
         <div class="evidence">

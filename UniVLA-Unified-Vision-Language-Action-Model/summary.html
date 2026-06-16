@@ -298,7 +298,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心方案：把视觉、语言、动作全部离散化成同一词表内的 token，用单一自回归 Transformer 做 next-token prediction——这是真正的"统一"建模。</div>
         <figure>
-          <img src="./images/figure_1_teaser_overview.png" alt="Figure 1: UniVLA 统一建模框架总览">
+          <img src="./images/figure_1_teaser_overview.webp" alt="Figure 1: UniVLA 统一建模框架总览">
           <figcaption><strong>Figure 1（p.1）：</strong>左：传统 VLA = ViT 编码器 + LM + 动作输出（异构组件）。右：UniVLA = 视觉/语言/动作全部变成离散 token，统一序列建模，支持 text grounding（文本输出）、world modeling（视觉输出）、policy learning（动作输出）。</figcaption>
         </figure>
         <div class="evidence">
@@ -319,7 +319,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 世界模型后训练是关键"催化剂"：用 instruction + video 序列（无需动作标注）预测未来视觉 token，让模型学到时序因果动态——这一步的增益远超其他后训练策略。</div>
         <figure>
-          <img src="./images/figure_2_framework_overview.png" alt="Figure 2: UniVLA 训练框架与三阶段">
+          <img src="./images/figure_2_framework_overview.webp" alt="Figure 2: UniVLA 训练框架与三阶段">
           <figcaption><strong>Figure 2（p.4）：</strong>训练三阶段：① VL-Align 预训练（初始化自 Emu3），② 世界模型后训练（622K 机器人视频，无动作监督），③ 策略微调（动作监督）。图中 Text/Vision/Action tokens 交错序列即为统一建模的核心数据格式。</figcaption>
         </figure>
         <div class="evidence">
@@ -368,7 +368,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 同一模型天然支持多模态输出——spatial grounding（输出 bounding box）、future frame prediction（输出视觉 token）、action prediction（输出动作 token）——靠不同的 loss mask 切换，不需要多个专用模型。</div>
         <figure>
-          <img src="./images/figure_3_multimodal_capabilities.png" alt="Figure 3: UniVLA 多模态能力展示">
+          <img src="./images/figure_3_multimodal_capabilities.webp" alt="Figure 3: UniVLA 多模态能力展示">
           <figcaption><strong>Figure 3（p.9）：</strong>上：LIBERO 长程任务的动作输出序列（pick → place 等步骤）。下左：视觉预测——给定当前帧和指令，预测操作后的下一帧（红框=当前，绿框=预测检测结果）。下右：spatial grounding——输出目标物体的 bounding box 坐标。同一模型，不同输出模态。</figcaption>
         </figure>
         <div class="evidence">

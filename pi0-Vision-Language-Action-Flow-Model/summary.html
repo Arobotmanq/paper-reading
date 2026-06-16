@@ -295,7 +295,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心架构：<a href="./notes.html#action-expert" class="note-link">动作专家（action expert）</a>是一组独立权重，处理动作和状态 token，在同一 transformer 内与 VLM backbone 共享 forward——类 <a href="./notes.html#moe" class="note-link">MoE</a> 的双路由设计。</div>
         <figure>
-          <img src="./images/figure_2_architecture.png" alt="Figure 3: π0 架构总览">
+          <img src="./images/figure_2_architecture.webp" alt="Figure 3: π0 架构总览">
           <figcaption><strong>Figure 3（p.4）：</strong>左侧数据混合（π 数据集 + OXE），中间 VLM backbone（SigLIP ViT 图像编码 + Gemma 2.6B）接收图像和语言，右侧 action expert（300M）接收状态和 noisy action chunk，输出 flow field 预测。两侧共享同一 transformer，但权重分离。</figcaption>
         </figure>
         <div class="evidence">
@@ -344,7 +344,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> VLM 预训练的价值体现在<strong>语言跟随能力</strong>上：π0 的语言指令跟随率远高于无 VLM 初始化的 π0-small，使高层 VLM 策略的收益可以传递下来。</div>
         <figure>
-          <img src="./images/figure_4_language_following.png" alt="Figure 9: 语言跟随与任务性能">
+          <img src="./images/figure_4_language_following.webp" alt="Figure 9: 语言跟随与任务性能">
           <figcaption><strong>Figure 9（p.9）：</strong>左：language following rate，π0 显著优于 π0-small（无 VLM 初始化）。右：任务完成分，π0-Human（有专家中间指令）和 π0-HL（有高层 VLM 策略）都受益，而 π0-small-Human 几乎无收益——因为它听不懂中间指令。</figcaption>
         </figure>
         <div class="evidence">
@@ -359,7 +359,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 预训练后直接 prompting：π0 在所有 out-of-box 任务上大幅领先所有 baseline，即使仅训练 160k 步（parity）也超越训练更久的 OpenVLA 和 Octo。</div>
         <figure>
-          <img src="./images/figure_3_outofbox_results.png" alt="Figure 7: Out-of-box 评测结果">
+          <img src="./images/figure_3_outofbox_results.webp" alt="Figure 7: Out-of-box 评测结果">
           <figcaption><strong>Figure 7（p.8）：</strong>π0（全量）在 Shirt Folding、Bussing 等任务得分约 0.85–1.0；parity 版（160k steps）仍全面超越 OpenVLA 和 Octo；π0-small 也优于两个 baseline——说明收益来自架构而非单纯算力。</figcaption>
         </figure>
         <div class="evidence">
@@ -374,7 +374,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 后训练配方使 π0 能完成 5–20 分钟的长程灵巧任务（洗衣折叠、装箱等）——据作者所知是端到端学习策略中最长的灵巧任务。</div>
         <figure>
-          <img src="./images/figure_5_complex_tasks_results.png" alt="Figure 13: 后训练复杂任务结果">
+          <img src="./images/figure_5_complex_tasks_results.webp" alt="Figure 13: 后训练复杂任务结果">
           <figcaption><strong>Figure 13（p.11）：</strong>全量 π0（fine-tuned）在所有任务超越 scratch 和 out-of-box 版本；特别是对预训练中没有的任务（box building、to-go box、packing eggs），scratch 版几乎为 0，而 fine-tuned 达 0.65–0.85——预训练的正迁移至关重要。</figcaption>
         </figure>
         <div class="evidence">

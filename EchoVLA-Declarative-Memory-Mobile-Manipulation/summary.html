@@ -306,7 +306,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心设计：仿人脑海马旁回–海马体的双记忆——场景记忆维护持久 voxel map，情节记忆维护时间索引 token buffer，两者通过粗细双级交叉注意力融合。</div>
         <figure>
-          <img src="./images/figure_2_neuro_memory_system.png" alt="Figure: 神经启发的双记忆系统架构图">
+          <img src="./images/figure_2_neuro_memory_system.webp" alt="Figure: 神经启发的双记忆系统架构图">
           <figcaption><strong>EchoVLA 神经启发架构（p.2）：</strong>左侧多模态编码器输出 token 序列，分别送入 Voxel-Map Scene Memory（仿 PHC）和 Token-Buffer Episodic Memory（仿海马体），经 coarse- and fine-grained cross attention 融合后驱动 Per-part Diffusion Policy（Arm/Base）。</figcaption>
         </figure>
         <div class="evidence">
@@ -327,7 +327,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 场景记忆通过差异驱动更新规则增量累积跨 episode 的 voxel 3D 特征，在推理时亦在线更新，适应环境变化。</div>
         <figure>
-          <img src="./images/figure_1_echovla_architecture_overview.png" alt="Figure 2: EchoVLA 整体架构">
+          <img src="./images/figure_1_echovla_architecture_overview.webp" alt="Figure 2: EchoVLA 整体架构">
           <figcaption><strong>Figure 2（p.5）：EchoVLA 整体流程。</strong>左侧多模态输入（RGB-D 多视角、point cloud、语言、本体感知）→ 统一 token 序列 → Memory Bank（Scene Memory + Episodic Memory）→ 粗/细双级 cross-attention 检索 → 融合表示条件化 per-part DiT 去噪器 → Base Action + Arm Action。</figcaption>
         </figure>
         <div class="evidence">
@@ -353,7 +353,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> MoMani 是首个同时支持仿真自动生成和真机数据、覆盖完整"导航+操作"流程的移动操作基准，包含 9089 episodes。</div>
         <figure>
-          <img src="./images/figure_3_momani_pipeline_stage1.png" alt="Figure 5: MoMani 数据生成流水线 Stage I">
+          <img src="./images/figure_3_momani_pipeline_stage1.webp" alt="Figure 5: MoMani 数据生成流水线 Stage I">
           <figcaption><strong>MoMani 生成流水线 Stage I（p.9）：</strong>输入任务规格 → MLLM prompter → Target-Aligned Departure Sampling (L1) → Safety-Aware Multi-Detour Navigation (L2) → Continuous Nav-Manip Stitching (L3) → Hard Quality Gates（零碰撞、精对齐、100% 任务成功）→ 可行候选池 D_pool。</figcaption>
         </figure>
         <div class="evidence">

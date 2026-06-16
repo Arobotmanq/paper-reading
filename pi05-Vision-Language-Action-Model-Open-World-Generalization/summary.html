@@ -287,7 +287,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 架构：<strong>同一个模型</strong>做<a href="./notes.html#hl-ll" class="note-link">两级推理</a>——先预测语义子任务（high-level），再据此预测低层动作 chunk（low-level），类似 chain-of-thought。</div>
         <figure>
-          <img src="./images/figure_3_model_overview.png" alt="Figure 3: π0.5 两阶段训练与两级推理总览">
+          <img src="./images/figure_3_model_overview.webp" alt="Figure 3: π0.5 两阶段训练与两级推理总览">
           <figcaption><strong>Figure 3（p.4）：</strong>左＝预训练，所有任务（含动作）都用<a href="./notes.html#fast" class="note-link">FAST</a>离散 token 做下一 token 预测；右＝后训练 + 推理，加入 300M <a href="./notes.html#action-expert" class="note-link">action expert</a> 用 <a href="./notes.html#flow-matching" class="note-link">flow matching</a> 出连续动作。骨干＝SigLIP(400M)+Gemma(2.6B)。</figcaption>
         </figure>
         <div class="evidence">
@@ -324,7 +324,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 泛化随训练场景数单调增长，且 104 个场景的模型≈「直接在测试家训练」的上界——co-training 几乎补平了泛化鸿沟。</div>
         <figure>
-          <img src="./images/figure_8_scaling_locations.png" alt="Figure 8: 性能随训练场景数增长">
+          <img src="./images/figure_8_scaling_locations.webp" alt="Figure 8: 性能随训练场景数增长">
           <figcaption><strong>Figure 8（p.9）：</strong>平均任务进度随训练地点数（3→104）上升；绿色虚线/柱＝把测试家纳入训练的对照，最终 104-场景模型与之持平。下方浅黄柱＝无 co-training 预训练，性能崩塌。</figcaption>
         </figure>
         <div class="evidence">
@@ -339,7 +339,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 消融：跨本体数据（其它环境 ME + 实验室 CE）对成功率最关键；网络数据（WD）主要提升对未见物体（OOD）的语言跟随。</div>
         <figure>
-          <img src="./images/figure_10_recipe_ablations.png" alt="Figure 10: 训练配方消融（mock homes）">
+          <img src="./images/figure_10_recipe_ablations.webp" alt="Figure 10: 训练配方消融（mock homes）">
           <figcaption><strong>Figure 10（p.10）：</strong>去掉 CE 或 ME 任一都显著掉点（p&lt;0.001），同时去掉更糟；去 WD 在整体任务上不显著（但见下条对 OOD 的影响）。</figcaption>
         </figure>
         <div class="evidence">
@@ -354,7 +354,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点8</span> 高层推理很重要：完整 π0.5 甚至<strong>超过人类「oracle」高层策略</strong>；仅占 11% 的口头指令（VI）数据虽小却关键；同时 π0.5 显著优于 π0。</div>
         <figure>
-          <img src="./images/figure_13_high_level_inference.png" alt="Figure 13: 高层推理评测">
+          <img src="./images/figure_13_high_level_inference.webp" alt="Figure 13: 高层推理评测">
           <figcaption><strong>Figure 13（p.11）：</strong>full π0.5 最高，甚至高过 human HL；次优是 implicit HL（训练含子任务数据但推理不显式分层）；去 VI / 去 WD / 用 GPT-4 当高层都显著更差。</figcaption>
         </figure>
         <div class="evidence">

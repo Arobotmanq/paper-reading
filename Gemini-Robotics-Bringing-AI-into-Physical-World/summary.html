@@ -282,7 +282,7 @@
 
       <!-- 图1: 模型家族总览 -->
       <figure>
-        <img src="./images/figure_1_model_family_overview.png" alt="Figure 1: Gemini Robotics 模型家族总览">
+        <img src="./images/figure_1_model_family_overview.webp" alt="Figure 1: Gemini Robotics 模型家族总览">
         <figcaption><strong>Figure 1（p.2）：</strong>Gemini Robotics 家族总览。Gemini 2.0 → Gemini Robotics-ER（具身推理强化）→ Gemini Robotics（VLA）；可选专项化阶段适配新任务/新本体。右侧展示四类能力：灵巧操作、复杂长流程、推理增强动作、新本体适配。</figcaption>
       </figure>
 
@@ -318,7 +318,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> Gemini Robotics 的架构：<a href="./notes.html#cloud-local" class="note-link">云端 backbone + 本地 decoder</a>——将 Gemini Robotics-ER 蒸馏压缩使云端查询延迟 &lt;160ms，本地 action decoder 补偿延迟，组合后端到端 ~250ms、50Hz 控制。</div>
         <figure>
-          <img src="./images/figure_14_arch_overview.png" alt="Figure 14: Gemini Robotics 架构总览">
+          <img src="./images/figure_14_arch_overview.webp" alt="Figure 14: Gemini Robotics 架构总览">
           <figcaption><strong>Figure 14（p.14）：</strong>Gemini Robotics 架构。左为 multimodal prompt 输入（图像 + 文本任务指令 + proprioception），中为云端 VLA backbone，右为本地 action decoder；输出 action chunk 由机器人执行。</figcaption>
         </figure>
         <div class="evidence">
@@ -344,7 +344,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 泛化能力：Gemini Robotics 在视觉/指令/动作三类分布偏移下均优于 baseline，在"新语言指令"这一 baseline 完全崩溃的场景中仍保持非零性能。</div>
         <figure>
-          <img src="./images/figure_21_generalization.png" alt="Figure 21: 泛化能力 breakdown">
+          <img src="./images/figure_21_generalization.webp" alt="Figure 21: 泛化能力 breakdown">
           <figcaption><strong>Figure 21（p.19）：</strong>泛化能力三维 breakdown（指令/视觉/动作）。Gemini Robotics（蓝色）在所有子类别中均最优，baseline 在"new language"等极端 OOD 场景中进度接近 0，Gemini Robotics 仍有 0.33。</figcaption>
         </figure>
         <div class="evidence">
@@ -359,7 +359,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 极端灵巧专项化：在 generalist 基础上 fine-tune，可以解锁折纸狐狸（4次精确折叠）、2分钟 lunch-box 等超出 generalist 能力的长流程任务；<strong>从头训练 Gemini Robotics specialist 则 0% 成功率</strong>——证明 generalist 预训练的表征价值。</div>
         <figure>
-          <img src="./images/figure_22_dexterous_tasks.png" alt="Figure 22: 长流程灵巧任务">
+          <img src="./images/figure_22_dexterous_tasks.webp" alt="Figure 22: 长流程灵巧任务">
           <figcaption><strong>Figure 22（p.20）：</strong>Gemini Robotics 完成 6 个长流程灵巧任务：折纸狐狸、打包午餐盒、拼写棋盘游戏、扑克牌游戏、加豌豆、加坚果。每行展示完整任务执行过程（从上到下）。</figcaption>
         </figure>
         <div class="evidence">
@@ -385,7 +385,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点8</span> 快速适配新任务：≤100 次示范即可在 7/8 任务达 70%+；新本体适配（Apollo 人形、bi-arm Franka）——<strong>泛化能力可跨本体迁移</strong>，适配后在视觉/动作 OOD 测试中仍显著超过单任务 diffusion baseline。</div>
         <figure>
-          <img src="./images/figure_5_new_embodiments_humanoid.png" alt="Apollo 人形机器人和双臂 Franka 适配">
+          <img src="./images/figure_5_new_embodiments_humanoid.webp" alt="Apollo 人形机器人和双臂 Franka 适配">
           <figcaption><strong>Figure 27（p.25）：</strong>Gemini Robotics 适配新本体。上：Apollo 人形机器人（Apptronik）完成 lunch bag 打包；下：bi-arm Franka 工业机器人完成橡皮筋装配。两者均从 ALOHA 2 训练的 checkpoint fine-tune 而来。</figcaption>
         </figure>
         <div class="evidence">

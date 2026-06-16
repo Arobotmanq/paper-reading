@@ -297,7 +297,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 骨干选择：<a href="./notes.html#prismatic" class="note-link">Prismatic-7B VLM</a> 的 SigLIP+DINOv2 融合视觉编码器对机器人控制特别有益，提供了语义与空间的双重表征。</div>
         <figure>
-          <img src="./images/figure_1_architecture.png" alt="Figure 2: OpenVLA 模型架构">
+          <img src="./images/figure_1_architecture.webp" alt="Figure 2: OpenVLA 模型架构">
           <figcaption><strong>Figure 2（p.4）：</strong>三大组件：① DINOv2+SigLIP 双编码器（通道维拼接）；② MLP 投影到语言空间；③ Llama 2 7B 骨干。输出端 Action De-Tokenizer 把 token 序列还原为 7D 连续动作。</figcaption>
         </figure>
         <div class="evidence">
@@ -335,11 +335,11 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 开箱即用表现：7B OpenVLA 在 WidowX 上比 55B RT-2-X 高 16.5%，在 Google Robot 上持平——以 1/7 参数量超越或匹配闭源最强基准。</div>
         <figure>
-          <img src="./images/figure_2_bridge_results.png" alt="Figure 3: BridgeData V2 WidowX 评测结果">
+          <img src="./images/figure_2_bridge_results.webp" alt="Figure 3: BridgeData V2 WidowX 评测结果">
           <figcaption><strong>Figure 3（p.7）：</strong>五类泛化轴对比。OpenVLA（红）在视觉/运动/物理/语言接地均领先，仅语义泛化（未见物体/互联网概念）略低于 RT-2-X——因 RT-2-X 在推理时仍混合互联网数据 co-fine-tune。</figcaption>
         </figure>
         <figure>
-          <img src="./images/figure_3_google_robot_results.png" alt="Figure 4: Google Robot 评测结果">
+          <img src="./images/figure_3_google_robot_results.webp" alt="Figure 4: Google Robot 评测结果">
           <figcaption><strong>Figure 4（p.8）：</strong>Google Robot 平均成功率 OpenVLA 85.0% vs RT-2-X 78.3%，OOD 泛化持平（82.9%），显著优于 RT-1-X（33.3%）和 Octo（26.7%）。</figcaption>
         </figure>
         <div class="evidence">
@@ -354,7 +354,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 微调泛化：OpenVLA 是唯一在所有测试 Franka 任务上都能达到 ≥50% 成功率的方法，尤其在多指令多物体任务上比 Diffusion Policy 高 20.4%——OXE 预训练赋予了语言接地能力。</div>
         <figure>
-          <img src="./images/figure_5_finetune_tasks.png" alt="Figure 5: 微调任务示例">
+          <img src="./images/figure_5_finetune_tasks.webp" alt="Figure 5: 微调任务示例">
           <figcaption><strong>Figure 5 任务图（p.9）：</strong>Franka-Tabletop（上）和 Franka-DROID（下）的 7 类任务，涵盖 narrow 单指令与 diverse 多指令两种难度，后者更能体现 VLA 语言接地优势。</figcaption>
         </figure>
         <div class="evidence">
@@ -386,7 +386,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> int4 量化无损，int8 反而掉速掉分：4-bit 量化把显存压到 7GB（bfloat16 的 41%），成功率基本不变；8-bit 因量化操作开销导致推理速度从 6Hz 降到 1.2Hz，触发性能崩溃。</div>
         <figure>
-          <img src="./images/figure_4_quantization_efficiency.png" alt="Figure 6 + Table 2: 量化推理效率">
+          <img src="./images/figure_4_quantization_efficiency.webp" alt="Figure 6 + Table 2: 量化推理效率">
           <figcaption><strong>Figure 6 + Table 2（p.10-11）：</strong>左图：各 GPU 的 actions/sec（RTX 4090 的 bfloat16 和 int4 最快，约 6 Hz）。右表：int4 成功率 71.9% ≈ bfloat16 71.3%，显存仅 7.0 GB；int8 成功率跌至 58.1%（速度慢至 1.2Hz 导致）。</figcaption>
         </figure>
         <div class="evidence">

@@ -303,7 +303,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心解法：在 shared VLM backbone 上挂 5 路<a href="./notes.html#spatial-grounding" class="note-link">辅助解码器</a>，重建可解释的空间中间信号，提供密集监督逼出「操作感知」的 latent representation。</div>
         <figure>
-          <img src="./images/figure_1_architecture.png" alt="Figure 2: SG-VLA Architecture Overview">
+          <img src="./images/figure_1_architecture.webp" alt="Figure 2: SG-VLA Architecture Overview">
           <figcaption><strong>Figure 2（p.3）：</strong>完整架构图。左侧输入（Head/Hand RGB + Depth + language），中间 Prismatic VLM backbone（DINOv2+SigLIP+Qwen2.5-0.5B），右侧辅助解码器模块（5路）和动作输出（13D）。辅助解码器<strong>仅在训练时激活</strong>。</figcaption>
         </figure>
         <div class="evidence">
@@ -313,7 +313,7 @@
           <div class="ev-gloss">五路辅助监督各司其职：segmentation 给目标定位，object pose 给放置精度，joint pose 给运动规划，global pos 给导航，grasp label 给状态感知。</div>
         </div>
         <figure>
-          <img src="./images/figure_4_auxiliary_decoders.png" alt="Figure 2 Auxiliary Module Detail">
+          <img src="./images/figure_4_auxiliary_decoders.webp" alt="Figure 2 Auxiliary Module Detail">
           <figcaption><strong>辅助解码器模块放大图（p.3）：</strong>5 路解码器接收同一份 latent representation，各自重建对应的 GT 监督信号。不同解码器架构各异——低维目标用 MLP，高维关节角用 Transformer，分割掩码用 CNN 上采样。</figcaption>
         </figure>
       </div>
@@ -339,7 +339,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 渐进式三阶段训练是辅助解码器 co-training 成功的关键——直接共训会使成功率从 0.60 跌到 0.51，渐进训练则提升至 0.73。</div>
         <figure>
-          <img src="./images/figure_2_training_scheme.png" alt="Figure 3: Multi-stage Training Scheme">
+          <img src="./images/figure_2_training_scheme.webp" alt="Figure 3: Multi-stage Training Scheme">
           <figcaption><strong>Figure 3（p.5）：</strong>三阶段训练示意。Stage 1 stop gradient（锁住 backbone）只训解码器；Stage 2 全梯度联合精调；Stage 3 冻结 backbone 单独训练 flow matching action head。三个阶段缺一不可。</figcaption>
         </figure>
         <div class="evidence">
@@ -394,7 +394,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 执行轨迹可视化证实了系统能完成 6 类家务 subtask（Close Fridge / Close Kitchen Counter / Open Fridge / Open Kitchen Counter / Pick / Place），base + arm 协调运动流畅。</div>
         <figure>
-          <img src="./images/figure_3_execution_trajectories.png" alt="Figure 4: Execution Trajectories">
+          <img src="./images/figure_3_execution_trajectories.webp" alt="Figure 4: Execution Trajectories">
           <figcaption><strong>Figure 4（p.6）：</strong>六类家务操作的执行轨迹。每行从左到右为时序帧，大图显示全局环境，小插图（从上到下）为 head depth / head RGB / hand depth / hand RGB 四路感知输入。可见 base 向目标移动、arm 精确执行抓取/开关动作的协调过程。</figcaption>
         </figure>
         <div class="evidence">

@@ -326,7 +326,7 @@
       </ul>
 
       <figure>
-        <img src="./images/figure_1_overview.png" alt="Figure 1: CoCo-InEKF Overview">
+        <img src="./images/figure_1_overview.webp" alt="Figure 1: CoCo-InEKF Overview">
         <figcaption><strong>Figure 1：CoCo-InEKF 总览。</strong>给定一组预定义的接触候选点和 IMU + 关节编码器本体感觉数据，<strong>Learned Contact Module</strong>（蓝色，紫色椭球示意协方差）输出每个接触点的速度协方差，注入标准的 Invariant EKF 形成状态估计。</figcaption>
       </figure>
     </section>
@@ -351,7 +351,7 @@
       <p>包括 base 姿态/速度/位置、N 个接触候选点位置（在世界系）以及 IMU 偏置。<strong>关键修改</strong>：不再事件驱动地添加/删除接触点，所有 N 个候选点持续存在；过程噪声中的接触点速度协方差由神经模块预测。</p>
 
       <figure>
-        <img src="./images/algorithm_1_coco_inekf.png" alt="Algorithm 1: CoCo-InEKF">
+        <img src="./images/algorithm_1_coco_inekf.webp" alt="Algorithm 1: CoCo-InEKF">
         <figcaption><strong>Algorithm 1：</strong>每个时步先用 ContactNet 预测协方差 \({}^{B}\boldsymbol{\Sigma}_{C_i}\)，再做 InEKF 的预测/校正。所有步骤可微（无离散增删 → 计算图常驻）。</figcaption>
       </figure>
 
@@ -376,7 +376,7 @@
 
       <h3>训练 Pipeline (BPTT)</h3>
       <figure>
-        <img src="./images/figure_2_training_setup.png" alt="Figure 2: Training Setup">
+        <img src="./images/figure_2_training_setup.webp" alt="Figure 2: Training Setup">
         <figcaption><strong>Figure 2：</strong>训练流程。每个 iteration 在 \(E=1280\) 个并行环境里用一个预训练策略 rollout，收集 \(L=128\) 步的 (observation, ground-truth state) 数据；ContactNet → InEKF 一路 rollout，红色箭头表示梯度沿时间反传到 ContactNet 参数。</figcaption>
       </figure>
 
@@ -408,7 +408,7 @@
 
       <h3>仿真基准：Dancing Motions</h3>
       <figure>
-        <img src="./images/table_3_dancing_ATE.png" alt="Table III: Dancing ATE">
+        <img src="./images/table_3_dancing_ATE.webp" alt="Table III: Dancing ATE">
         <figcaption><strong>Table III：</strong>仿真舞蹈动作上的 ATE。CoCo-InEKF 在线速度上以 RMSE 0.046 大幅领先（次优 Hybrid Baseline+ 0.121）。位置/姿态略输给 Hybrid Baseline+，作者归因于损失只监督速度。</figcaption>
       </figure>
 
@@ -423,29 +423,29 @@
 
       <h3>仿真基准：Ground Motions（全身接触）</h3>
       <figure>
-        <img src="./images/table_4_ground_ATE.png" alt="Table IV: Ground motions ATE">
+        <img src="./images/table_4_ground_ATE.webp" alt="Table IV: Ground motions ATE">
         <figcaption><strong>Table IV：</strong>全身接触场景。CoCo-InEKF 线速度 RMSE 0.099 与 SET-large 0.096 持平，但 SET-large 是 4.77M 参数、3.06 ms 推理；CoCo-InEKF 只用 240K + 0.42 ms。</figcaption>
       </figure>
 
       <h3>滤波器一致性（NEES）</h3>
       <figure>
-        <img src="./images/figure_6_NEES_consistency.png" alt="Figure 6: NEES Consistency">
+        <img src="./images/figure_6_NEES_consistency.webp" alt="Figure 6: NEES Consistency">
         <figcaption><strong>Figure 6：</strong>100 条 dance 序列的 NEES（log 坐标）。基线（heuristic、Hybrid+）大部分时间在 95% 区间之外、低于下界 → <strong>过保守 (under-confident)</strong>。CoCo-InEKF 的 NEES 集中在期望 (绿色) 附近，<strong>分布与 \(\chi^2\) 理论值吻合</strong>。</figcaption>
       </figure>
       <figure>
-        <img src="./images/table_10_NEES_eval.png" alt="Table X: NEES consistency">
+        <img src="./images/table_10_NEES_eval.webp" alt="Table X: NEES consistency">
         <figcaption><strong>Table X：</strong>NEES 落在 95% 区间内的时步比例。CoCo-InEKF 的 Core 52.1% 不仅超所有学习/启发式基线，甚至<strong>胜过有 ground-truth 接触的 InEKF (37.7%)</strong>——这说明"加大不确定度的接触建模"比"理想布尔接触"在概率意义下更诚实。</figcaption>
       </figure>
 
       <h3>接触协方差的可解释性</h3>
       <figure>
-        <img src="./images/figure_3_contact_covariance.png" alt="Figure 3: Contact Covariance">
+        <img src="./images/figure_3_contact_covariance.webp" alt="Figure 3: Contact Covariance">
         <figcaption><strong>Figure 3：</strong>正向行走中 right toe/heel 的协方差总 std 与速度大小。可见：脚一离地（ground-truth contact bar 消失）协方差立刻上升 → 与物理一致；左右 dashed line 间的"部分接触"瞬间，两脚协方差出现差异（toe 与 heel 受力分布不同）；协方差椭球的<strong>方向性</strong>与脚跟/脚尖位移方向吻合。<em>注意：作者并未显式监督这些特征，它们是端到端从 body-vel loss 中自发涌现的。</em></figcaption>
       </figure>
 
       <h3>消融研究</h3>
       <figure>
-        <img src="./images/table_5_arch_ablation.png" alt="Table V: Architecture ablation">
+        <img src="./images/table_5_arch_ablation.webp" alt="Table V: Architecture ablation">
         <figcaption><strong>Table V：</strong>把 Lin 2022 Hybrid Baseline（2.47M 参数，CNN）替换成 MLP + 去 slip 类 + 减小隐层后得到 Hybrid Baseline+（240K，提速 5×）；CoCo-InEKF 用同样大小但换损失 → RMSE 从 0.121 直降到 0.046。<strong>"从布尔分类换成连续协方差 + state-error loss"是收益主要来源，而非更大模型。</strong></figcaption>
       </figure>
 
@@ -461,12 +461,12 @@
 
       <h3>实机评估（Real-World）</h3>
       <figure>
-        <img src="./images/table_11_realworld_ATE.png" alt="Table XI: Real-world ATE">
+        <img src="./images/table_11_realworld_ATE.webp" alt="Table XI: Real-world ATE">
         <figcaption><strong>Table XI：</strong>20 条 MoCap 真值的 messy ground motion 序列（10 分钟）。CoCo-InEKF 在线速度 RMSE 0.0805 大幅领先；位置 0.1665 同样最优。SET 模型即便 large 0.0974 也输给 CoCo，且 SET-large 在真机上跑不动（标 *）。</figcaption>
       </figure>
 
       <figure>
-        <img src="./images/table_12_dance_success.png" alt="Table XII: Dance success rate">
+        <img src="./images/table_12_dance_success.webp" alt="Table XII: Dance success rate">
         <figcaption><strong>Table XII：</strong>13 段实机舞蹈控制环 in-the-loop 测试。CoCo-InEKF 在训练集舞步上成功率 95（5 次 × 13 段 = 65 次试验），未见的 Pirouette（10×）和 Moonwalk（10×）均 100%；启发式 InEKF 仅 60% 旋转、Hybrid Baseline 50% 旋转——动态动作下基线接触错判导致摔倒。MoCap-based 估计器是上限 (90, 100)，CoCo-InEKF 实际超过了 MoCap 的训练舞步成功率。</figcaption>
       </figure>
 

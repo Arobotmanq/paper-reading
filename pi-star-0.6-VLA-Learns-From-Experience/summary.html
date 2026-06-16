@@ -303,7 +303,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 方法核心：advantage conditioning 把价值函数信号变成文本 token 注入 VLA，无需计算 log-likelihood，训练简单且可扩展到 flow matching 模型。</div>
         <figure>
-          <img src="./images/figure_3_model_architecture.png" alt="Figure 3: π*₀.₆ 模型架构与 advantage conditioning 机制">
+          <img src="./images/figure_3_model_architecture.webp" alt="Figure 3: π*₀.₆ 模型架构与 advantage conditioning 机制">
           <figcaption><strong>Figure 3（p.4）：</strong>π*₀.₆ VLA（SigLIP 400M + Gemma 3 4B）与 Value Function（SigLIP 400M + Gemma 270M）的交互。advantage 经 binarization 后作为文本 prefix 注入 VLA，action expert（860M）用 flow matching 生成连续动作。</figcaption>
         </figure>
         <div class="evidence">
@@ -324,7 +324,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 价值函数设计：多任务语言条件分布式价值函数预测"距成功剩余步数"的分布，支撑跨任务 advantage 估计，泛化性强于点估计 Q-function。</div>
         <figure>
-          <img src="./images/figure_4_value_function_visualization.png" alt="Figure 4: Value function 在成功/失败轨迹上的可视化">
+          <img src="./images/figure_4_value_function_visualization.webp" alt="Figure 4: Value function 在成功/失败轨迹上的可视化">
           <figcaption><strong>Figure 4（p.5）：</strong>左：洗衣成功轨迹，价值函数平滑上升；右：失败轨迹（开冰箱取滤水器），红色标注价值骤降点——说明价值函数正确识别了关键失败时刻。</figcaption>
         </figure>
         <div class="evidence">
@@ -345,7 +345,7 @@
           <div class="ev-gloss">优雅的工程决策：人类干预数据不需要特殊处理，只需把它的 advantage indicator 强制置为 True 即可——统一的数据格式是这个框架可扩展的关键。</div>
         </div>
         <figure>
-          <img src="./images/figure_1_recap_system_overview.png" alt="Figure 1: RECAP 系统整体流程">
+          <img src="./images/figure_1_recap_system_overview.webp" alt="Figure 1: RECAP 系统整体流程">
           <figcaption><strong>Figure 1（p.1）：</strong>RECAP 整体架构。左侧数据输入：diverse robotics data + sub-task commands + multimodal web data。中：π*₀.₆ VLA（含 advantage token）与 value function 交互；右：三类评测任务 + rollouts / interventions / RL training 循环。</figcaption>
         </figure>
       </div>
@@ -365,7 +365,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 主要实验结果：RECAP 在所有任务上均显著超越 SFT 基线、offline RL + SFT 以及 AWR、PPO 替代方案，复杂任务吞吐量翻倍、失败率减半。</div>
         <figure>
-          <img src="./images/figure_7_tasks_illustration.png" alt="Figure 7 (实际为 tasks illustration): 任务示意图">
+          <img src="./images/figure_7_tasks_illustration.webp" alt="Figure 7 (实际为 tasks illustration): 任务示意图">
           <figcaption><strong>Figure 6（p.8）：</strong>实验任务示意图。从左到右：洗衣（T恤/短裤）、洗衣（多样）、洗衣消融、箱子组装、咖啡制作。每类任务均要求多步骤、长时间（5-15分钟）的精细操作。</figcaption>
         </figure>
         <div class="evidence">

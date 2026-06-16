@@ -298,7 +298,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点2</span> 核心架构：<a href="./notes.html#dual-system" class="note-link">Dual-System</a> 设计——System 2（VLM）在 10Hz 做环境理解，System 1（<a href="./notes.html#dit" class="note-link">Diffusion Transformer</a>）在 120Hz 生成闭环动作，两者联合优化。</div>
         <figure>
-          <img src="./images/figure_2_dual_system_arch.png" alt="Figure 2: GR00T N1 Model Overview，dual-system架构">
+          <img src="./images/figure_2_dual_system_arch.webp" alt="Figure 2: GR00T N1 Model Overview，dual-system架构">
           <figcaption><strong>Figure 2（p.3）：</strong>GR00T N1 整体架构。左侧输入（图像+语言+机器人状态）经 Eagle-2 VLM 编码为 tokens，随后 Diffusion Transformer cross-attend 到这些 tokens，并通过 denoising 生成 Motor Action。</figcaption>
         </figure>
         <div class="evidence">
@@ -313,7 +313,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 架构细节：<a href="./notes.html#eagle2" class="note-link">Eagle-2 VLM</a> 提供中间层（第12层而非最后层）embedding，同时 DiT 交替 cross-attention（条件化 VLM tokens）和 self-attention（处理动作/状态），K=4 步去噪推理。</div>
         <figure>
-          <img src="./images/figure_3_dit_arch.png" alt="Figure 3: GR00T N1 详细架构">
+          <img src="./images/figure_3_dit_arch.webp" alt="Figure 3: GR00T N1 详细架构">
           <figcaption><strong>Figure 3（p.4）：</strong>左为 Eagle-2 VLM（Vision Encoder + Text Tokenizer），右为 DiT blocks（交替 Cross-Attention 和 Self-Attention），底部为 embodiment-specific 的 State Encoder、Action Encoder/Decoder。预训练冻结的权重用蓝色标注。</figcaption>
         </figure>
         <div class="evidence">
@@ -334,7 +334,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点4</span> 数据金字塔的核心技术：<a href="./notes.html#latent-action" class="note-link">VQ-VAE latent action</a> 把无动作视频统一编码为跨 embodiment 的潜动作空间，实现同一 codebook 对人类、单臂、双臂、人形的语义统一。</div>
         <figure>
-          <img src="./images/figure_4_latent_actions.png" alt="Figure 4: Latent Actions 跨 embodiment 共享">
+          <img src="./images/figure_4_latent_actions.webp" alt="Figure 4: Latent Actions 跨 embodiment 共享">
           <figcaption><strong>Figure 4（p.6）：</strong>同一个 latent action 在 8 种不同 embodiment（含人类）上检索到语义一致的帧对：左列=右臂向左运动，右列=右臂向右运动。VQ-VAE codebook 实现了跨 embodiment 的动作语义统一。</figcaption>
         </figure>
         <div class="evidence">
@@ -372,7 +372,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 主要定量结果：GR00T-N1-2B 在三个仿真基准全面超越基线，尤其在人形任务（GR-1）上超 Diffusion Policy 17%+；真机任务全量数据下达 76.8%，仅 10% 数据时仍优于 Diffusion Policy 全量。</div>
         <figure>
-          <img src="./images/figure_real_results.png" alt="Table 2 & 3: 仿真与真机结果对比">
+          <img src="./images/figure_real_results.webp" alt="Table 2 & 3: 仿真与真机结果对比">
           <figcaption><strong>Table 2 & 3（p.15）：</strong>上表=仿真结果（100 demos/task）；下表=真机 GR-1 任务结果。GR00T-N1-2B 在所有任务分类和数据量级下均显著优于 Diffusion Policy，真机 Pick-and-Place 全量数据达 82%。</figcaption>
         </figure>
         <div class="evidence">

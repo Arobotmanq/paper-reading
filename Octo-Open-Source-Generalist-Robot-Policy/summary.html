@@ -306,7 +306,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点3</span> 架构核心：<a href="./notes.html#readout-token" class="note-link">readout token</a> 被动汇聚观测嵌入、不影响其他 token，配合 block-wise 因果 attention 实现无痛插拔新模态。</div>
         <figure>
-          <img src="./images/figure_1_architecture_full.png" alt="Fig 2: Octo 模型架构图">
+          <img src="./images/figure_1_architecture_full.webp" alt="Fig 2: Octo 模型架构图">
           <figcaption><strong>Fig. 2（p.3–4）：</strong>左：Task token（绿）+ Observation token（蓝）分别用语言 encoder 和 CNN patch 生成；上：Transformer 骨干 + readout token（紫）被动读取后送入 diffusion action head；下：微调时新增 tokenizer/head 不修改骨干权重。</figcaption>
         </figure>
         <div class="evidence">
@@ -344,7 +344,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点5</span> 数据宽度比单一数据集更重要——使用 25 个多样化数据集比 RT-X 的 11 个子集和单一机器人数据集都强，且性能随数据集数量单调增加。</div>
         <figure>
-          <img src="./images/figure_2_dataset.png" alt="Fig 3: 训练数据集构成及架构图">
+          <img src="./images/figure_2_dataset.webp" alt="Fig 3: 训练数据集构成及架构图">
           <figcaption><strong>Fig. 3（p.4）：</strong>25 个 OXE 数据集的采样权重饼图。Fractal、Kuka、Bridge 各占约 17%，剩余分散于多个小数据集。多样化数据集被双倍加权以平衡分布。</figcaption>
         </figure>
         <div class="evidence">
@@ -359,7 +359,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点6</span> 零样本控制多机器人：Octo 平均成功率高于 RT-1-X 29%，且性能接近 55B 参数的 RT-2-X；微调后 72% 平均成功率超越所有基线逾 52%。</div>
         <figure>
-          <img src="./images/figure_3_eval.png" alt="Fig 4-5: 评测任务和零样本结果">
+          <img src="./images/figure_3_eval.webp" alt="Fig 4-5: 评测任务和零样本结果">
           <figcaption><strong>Fig. 4–5（p.6）：</strong>9 个机器人平台跨 4 机构的评测设置（左）和零样本成功率对比（右）。Octo 93M 在 WidowX、UR5、RT-1 Robot 上均大幅超越 RT-1-X 35M，并与 RT-2-X 55B 持平。</figcaption>
         </figure>
         <div class="evidence">
@@ -380,7 +380,7 @@
       <div class="claim">
         <div class="claim-statement"><span class="cn">观点7</span> 模型规模与性能正相关：Octo-Tiny (10M) → Small (27M) → Base (93M) 零样本性能单调提升，Base 对场景配置更鲁棒。</div>
         <figure>
-          <img src="./images/figure_4_scaling_ablation.png" alt="Fig 6: 模型规模扩展曲线">
+          <img src="./images/figure_4_scaling_ablation.webp" alt="Fig 6: 模型规模扩展曲线">
           <figcaption><strong>Fig. 6（p.8）：</strong>Octo-Tiny/Small/Base 在 UR5 和 WidowX 上的零样本成功率随参数量增长而提升。ViT-B 骨干（93M）在大数据下展现出更好的视觉场景感知能力。</figcaption>
         </figure>
         <div class="evidence">
