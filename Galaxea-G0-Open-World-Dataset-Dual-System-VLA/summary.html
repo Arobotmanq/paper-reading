@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galaxea G0 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #7c2d12 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(251, 146, 60, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(251,146,60,0.18); color: #fdba74; border: 1px solid rgba(251,146,60,0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: #fb923c; box-shadow: 0 0 12px #fb923c; }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+  .kpi.orange .value { color: #ea580c; }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, #fb923c, var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid #fb923c; }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: #ea580c; margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(251,146,60,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: #ea580c; }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.valuable { background: linear-gradient(135deg, #f0f9ff, #bae6fd); color: #0369a1; border-color: #0ea5e9; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th { text-align: left; padding: 0.7em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65em 1em; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Galaxea Dynamics · 双系统 VLA · 开放世界</span>
+    <h1>Galaxea G0:<br>双系统 VLA 与<br>开放世界数据集</h1>
+    <p class="subtitle">VLA 泛化的瓶颈是<strong>数据质量</strong>，不仅是规模——用 500 小时真实场景<strong>单一本体</strong>数据做 Stage-2 预训练，然后让<a href="./notes.html#dual-system" class="note-link" style="color:#fdba74;">双系统</a>（VLM 慢思考 + VLA 快执行）跑移动双臂机器人，比通用跨本体预训练更有效。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 项目相关 · Track A 移动操作 VLA · 已深读</span>
+      <span class="pill">📅 2025-08</span>
+      <span class="pill">🏢 Galaxea Dynamics（国内产业界）</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2509.00576">arXiv:2509.00576</a></span>
+      <span class="pill">⭐ <a href="https://github.com/OpenGalaxea/GalaxeaVLA">GalaxeaVLA (Apache-2.0 / G0-Plus License)</a></span>
+      <span class="pill">🤗 <a href="https://huggingface.co/OpenGalaxea">HF: OpenGalaxea</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi orange">
+    <div class="label">数据集规模</div>
+    <div class="value">500<span class="unit">h</span></div>
+    <div class="desc">100K 轨迹 · 150 任务 · 50 场景</div>
+  </div>
+  <div class="kpi green">
+    <div class="label">G0-VLM 指令精度</div>
+    <div class="value">74–83<span class="unit">%</span></div>
+    <div class="desc">vs Gemini-2.5-pro ≤54%（平均提升 >50%）</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">实时控制频率</div>
+    <div class="value">200<span class="unit">Hz</span></div>
+    <div class="desc">G0-VLA flow matching 动作执行</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">开源状态</div>
+    <div class="value">部分</div>
+    <div class="desc">代码+权重已开源；数据集 CC BY-NC-SA 4.0 门控</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层: 思想 · 逻辑 · 方法 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">VLA 泛化的真正瓶颈是<strong>数据太不像真实世界</strong>——现有数据集要么受控实验室、要么多本体混杂质量差。G0 的答案：<strong>花大力气在真实开放世界收一批单一本体、精细标注的高质量数据（500h）</strong>，以此驱动一个<a href="./notes.html#dual-system" class="note-link">双系统</a>（VLM 规划 + <a href="./notes.html#vla-executor" class="note-link">VLA 执行</a>）——慢思考规划、快执行动作——而不是靠蛮力堆跨本体数据。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>Open-X Embodiment 等现有大规模数据集<strong>在受控/人工场景采集</strong>，存在严重 domain gap，导致真实世界泛化失效。</li>
+          <li>跨本体预训练（Cross-embodiment Stage-1）只能迁移通用 pick-and-place 等简单动作先验；<strong>当本体差异大时不仅无益，甚至有害</strong>（如底盘、躯干控制）。</li>
+          <li>关键缺失：专属于目标平台的<strong>单一本体、真实场景、精细子任务标注数据</strong>。Stage-2 预训练正好填补这个缺口。</li>
+          <li>高层任务规划（VLM）与低层动作执行（VLA）各司其职、<strong>异步运行</strong>：VLM 以 2 Hz 发子任务指令，VLA 以 200 Hz 执行闭环控制。</li>
+          <li>G0-VLM 经过微调后指令精度超 Gemini-2.5-pro 约 50%+，<strong>证明通用模型不能直接用于机器人原子动作规划</strong>，必须领域适配。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>Galaxea 开放世界数据集</strong>：500h、100K 轨迹、150 任务、50 场景，统一 R1 Lite 双臂移动机器人采集，子任务级语言标注；场景覆盖住宅、餐饮、零售、办公室。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>三阶段训练课程</strong>：Stage-1（跨本体 FAST 自回归预训练，~1700h 多源数据）→ Stage-2（单一本体 <a href="./notes.html#flow-matching" class="note-link">flow matching</a> 预训练，500h Galaxea 数据）→ Post-train（任务级微调，≤100 条轨迹/任务）。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>双系统架构</strong>：<a href="./notes.html#dual-system" class="note-link">G0-VLM</a>（基于 Qwen2.5-VL，DeepSeek-R1 合成高层指令微调）以 2 Hz 做慢思考规划；<a href="./notes.html#vla-executor" class="note-link">G0-VLA</a>（PaLiGemma backbone + Action Transformer，flow matching head）以 200 Hz 做快执行。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">G0 (Full) 在 4 个基准任务的平均 progress score 最高；G0-VLM 微调后指令精度 74–83%，大幅超过 Gemini-2.5-pro (16–55%) 和 Qwen2.5-VL 系列。消融证明：<strong>Stage-2 单一本体预训练是关键</strong>；Stage-1 跨本体预训练对底盘/躯干等本体专属动作帮助有限甚至有害。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>G0 (Full) vs G0 (Scratch)：各任务平均 progress score 约 75% vs ~55%（由图估算）。</li>
+            <li>Few-shot（20 条）：Stage-2 预训练模型明显优于 Stage-1 或从头训练。</li>
+            <li>Bed Making 底盘控制：Stage-1 / π0 甚至低于从头训练（embodiment gap 太大）。</li>
+            <li>G0-VLM 在 Table Bussing：83.3% vs Gemini-2.5-pro 32.0%。</li>
+            <li>G0-VLM 在 Microwave Operation：74.2% vs Gemini-2.5-pro 15.8%。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）直接命中</strong>：这是国内产业界在移动双臂机器人上落地双系统 VLA 的代表工作，500h 开放世界数据集 + 三阶段训练课程可直接参考。关键教训是「Stage-2 单一本体预训练比 Stage-1 跨本体预训练更重要」，对设计自己训练流程有直接指导价值。Track B（足式控制算法）<strong>不相关</strong>——本文不涉及 locomotion。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 数据瓶颈 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：VLA 泛化的核心瓶颈是缺乏大规模、高质量的<strong>开放世界</strong>机器人数据，而非模型架构本身。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">Despite significant progress, a substantial bottleneck persists due to the scarcity of large-scale, high-quality, open-world robot data. Existing datasets, exemplified by Open-X Embodiment, are predominantly restricted by their limited task realism and insufficient environmental richness.</blockquote>
+          <div class="ev-trans">尽管取得了显著进步，由于缺乏大规模、高质量的开放世界机器人数据，一个重大瓶颈仍然存在。现有数据集（以 Open-X Embodiment 为代表）主要受限于任务真实性不足和环境多样性不够。</div>
+          <div class="ev-gloss">论文把「数据」而非「模型」立为主角——这决定了整个工作的重心在数据集构建上，而非新的网络架构创新。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 数据集设计 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 解法一：构建 Galaxea 开放世界数据集——500h、150 类任务、50 个真实场景、单一本体、子任务级语言标注，是当前开放世界移动操作数据的重要基准。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2–3 · §1 Introduction, §3 Galaxea Open-World Dataset</div>
+          <blockquote class="ev-quote">Galaxea Open-World Dataset comprises 500 hours of high-fidelity data systematically gathered in real-world scenarios where human individuals live and work, incorporating more than 150 distinct tasks across 50 different scenes. Uniquely, Galaxea Open-World Dataset was consistently captured using a single robotic embodiment, thereby ensuring uniformity and reliability.</blockquote>
+          <div class="ev-trans">Galaxea 开放世界数据集包含 500 小时高保真数据，系统地采集于人类实际生活和工作的真实场景，涵盖 50 个不同场景中的 150 余种不同任务。独特之处在于，Galaxea 开放世界数据集始终使用单一机器人本体采集，从而确保了统一性和可靠性。</div>
+          <div class="ev-gloss">「单一本体」是核心设计选择：感知-动作-语言标注完全对齐，消除了多本体数据混合时的噪声问题。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §3 Galaxea Open-World Dataset</div>
+          <blockquote class="ev-quote">It contains 100K demonstration trajectories spanning 150 task categories performed in 50 distinct real-world scenes. These demonstrations cover more than 1,600 unique objects and 58 operational skills, ranging from fine-grained pick-and-place to coordinated whole-body manipulation.</blockquote>
+          <div class="ev-trans">它包含 10 万条示范轨迹，涵盖在 50 个不同真实场景中执行的 150 个任务类别。这些示范涉及超过 1600 种独特物体和 58 种操作技能，从精细的拾放操作到协调的全身操作。</div>
+          <div class="ev-gloss">1600+ 物体、58 种技能的覆盖度，使其与 BridgeData / RT-1 / OXE 等先驱数据集的主要差异化在于「真实场景多样性」。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 双系统架构 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 解法二：<a href="./notes.html#dual-system" class="note-link">G0 双系统</a>将 VLM（慢思考，2 Hz）与 VLA（快执行，200 Hz）异步耦合，分别承担规划与控制，无需共享权重。</div>
+        <figure>
+          <img src="./images/figure_1_dual_system_overview.png" alt="Figure 1: G0 双系统架构总览">
+          <figcaption><strong>Figure 1（p.1）：</strong>G0 双系统全图。左：输入（视觉观察、语言指令、本体感知）；中：G0-VLM（Slow Thinking，2 Hz 子任务规划）→ G0-VLA（Fast Execution，200 Hz 闭环控制）；右：应用场景（零样本泛化、少样本学习、长程任务）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §4.1 Dual System Overview</div>
+          <blockquote class="ev-quote">G0 capitalizes on System 2 (G0-VLM) for generalized multimodal planning, directing System 1 (G0-VLA) to perform precise action execution. These two models run asynchronously at different frequencies, enabling both efficient training and real-world deployment.</blockquote>
+          <div class="ev-trans">G0 利用 System 2（G0-VLM）进行通用多模态规划，指导 System 1（G0-VLA）执行精确动作。这两个模型以不同频率异步运行，既支持高效训练，又支持真实世界部署。</div>
+          <div class="ev-gloss">与 π0.5「同一套权重做两级推理」不同，G0 是两个独立模型：训练解耦、推理频率解耦——工程上更灵活，但高层指令质量对整体影响更大。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 三阶段训练 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 三阶段训练课程的核心洞见：<strong>Stage-2 单一本体预训练</strong>是关键，而非 Stage-1 跨本体预训练；Stage-1 仅学习通用动作先验，无法习得本体专属技能。</div>
+        <figure>
+          <img src="./images/figure_7a_pretrain_stage1_arch.png" alt="Figure 7a: Stage-1 架构">
+          <figcaption><strong>Figure 7（p.8）Stage-1：</strong>VLM（PaLiGemma：SigLIP + Transformer）以 FAST 离散 token 做自回归预训练，吃三路图像+高层任务指令+本体感知，输出离散动作 token。此阶段只训 VLM，不训 Action Transformer。</figcaption>
+        </figure>
+        <figure>
+          <img src="./images/figure_7b_pretrain_stage2_arch.png" alt="Figure 7b: Stage-2/Post-train 架构">
+          <figcaption><strong>Figure 7（p.8）Stage-2 &amp; Post-train：</strong>增加 Action Transformer，用 flow matching loss 训练连续动作输出。输入新增子任务级精细指令（subtask instruction）。色块标注 token 模态。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §4.1 Dual System Overview</div>
+          <blockquote class="ev-quote">we propose a 3-stage training curriculum for G0-VLA: (1) cross-embodiment pre-training on large-scale unlabeled datasets to acquire general world knowledge priors; (2) single-embodiment pre-training on our Galaxea Open-World Dataset to specialize in the perceptual-action pairs on the target platform; and (3) post-training on high-quality task demonstrations for the mastery of specific complex skills.</blockquote>
+          <div class="ev-trans">我们为 G0-VLA 提出了三阶段训练课程：（1）在大规模未标注数据集上进行跨本体预训练，以获取通用世界知识先验；（2）在我们的 Galaxea 开放世界数据集上进行单一本体预训练，以专项学习目标平台上的感知-动作对；（3）在高质量任务示范上进行后训练，以掌握特定复杂技能。</div>
+          <div class="ev-gloss">三阶段是「从宽到窄」的课程学习——Stage-1 给通用先验，Stage-2 做本体专项化，Post-train 做任务精调。关键是 Stage-2 必不可少。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 Stage-1 局限性 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 意外发现：当跨本体预训练数据与目标机器人本体差异大时，Stage-1 不仅无助，甚至<strong>损害</strong>本体专属动作（如底盘、躯干控制）的学习。</div>
+        <figure>
+          <img src="./images/figure_11_bedmaking_skills.png" alt="Figure 11: Bed Making 技能进度分析">
+          <figcaption><strong>Figure 11（p.11）：</strong>Bed Making 任务各子技能分解。"Torso Lift and Grasp" 和 "Move and Flatten Quilt" 上，Stage-1 / π0（两者都含跨本体数据）甚至低于 G0 (Scratch)（从头训练），证明 OXE 数据与 R1 Lite 机器人的底盘/躯干动作存在严重 embodiment gap。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §5.3 Embodiment-specific Actions</div>
+          <blockquote class="ev-quote">models trained with cross-embodiment data (e.g., Stage-1 pre-training and π0) demonstrate substantially weaker instruction following for chassis-related actions and less accurate torso control. In some cases, they even underperform compared to models trained from scratch. We hypothesize that the large embodiment gap between our robot and those in the OXE dataset used for Stage-1 pre-training hinders the model's ability to acquire embodiment-specific skills.</blockquote>
+          <div class="ev-trans">使用跨本体数据训练的模型（如 Stage-1 预训练和 π0）在底盘相关动作的指令跟随上表现明显更弱，躯干控制也不够精确。在某些情况下，它们的表现甚至不如从头训练的模型。我们假设，我们的机器人与 Stage-1 预训练所用 OXE 数据集中的机器人之间存在较大的本体差距，这阻碍了模型习得本体专属技能。</div>
+          <div class="ev-gloss">这是本文最有价值的负面发现：「跨本体预训练」不是万能药，本体差异大时可能引入有害偏置。需要高质量单一本体数据来「覆写」错误先验。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 主实验结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> G0 (Full)（Stage-1 + Stage-2 预训练）在 4 个基准任务上综合表现最优，在 pick-and-place 类任务上尤为突出；少样本（20 条）场景下 Stage-2 预训练优势更明显。</div>
+        <figure>
+          <img src="./images/figure_9_finetuning_results.png" alt="Figure 9: 微调基准结果">
+          <figcaption><strong>Figure 9（p.10）：</strong>不同预训练权重微调后的基准对比（100 条轨迹/任务）。G0 (Full) 在平均 progress score 最高；G0 (Stage-1) 最差，凸显单一本体预训练的必要性。π0 作为基线，在部分任务上不及 G0 (Stage-2) 变体。</figcaption>
+        </figure>
+        <figure>
+          <img src="./images/figure_10_fewshot_results.png" alt="Figure 10: 少样本迁移结果">
+          <figcaption><strong>Figure 10（p.11）：</strong>少样本（20 条轨迹）迁移结果。Stage-2 预训练模型显著优于其他变体；Stage-1 单独预训练相对从头训练无明显优势，强调单一本体数据的关键性。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §5.1 Pre-trained Weights</div>
+          <blockquote class="ev-quote">Overall, G0 (Full) achieves the highest average progress score. In particular, it demonstrates superior object-picking ability in Table Bussing, Microwave Operation, and Bed Making. G0 (Stage-2 400h) and G0 (Stage-2 200h) achieve the best performance in language following and action consistency, as well as the strongest whole-body control capabilities.</blockquote>
+          <div class="ev-trans">总体而言，G0 (Full) 达到最高平均进度得分。特别是在 Table Bussing、Microwave Operation 和 Bed Making 中，它展示了出色的物体拾取能力。G0 (Stage-2 400h) 和 G0 (Stage-2 200h) 在语言跟随和动作一致性方面表现最佳，同时全身控制能力最强。</div>
+          <div class="ev-gloss">Stage-1 对 pick-and-place 有增益（Stage-2 专注精度，Stage-1 提供广义动作先验）；Stage-2 负责本体专属动作的精准控制。两者互补，Full 版综合最优。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 G0-VLM 的价值 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> G0-VLM 微调后指令精度大幅超越通用大模型（Gemini-2.5-pro、Qwen2.5-VL），证明机器人原子动作规划必须进行领域适配，通用 VLM 不能直接作为机器人规划器。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.12 · §6 Evaluating G0-VLM</div>
+          <blockquote class="ev-quote">Table 1 demonstrates that our fine-tuned model surpasses baseline accuracy by over 50%, with task-specific tuning enabling language instructions that are directly executable by VLAs. This validates our key hypothesis that robotic applications require not just general-purpose vision-language understanding, but precisely aligned action primitives through domain adaptation.</blockquote>
+          <div class="ev-trans">表 1 表明，我们微调的模型在基线精度上超出 50% 以上，任务专项微调产生了 VLA 可直接执行的语言指令。这验证了我们的核心假设：机器人应用不只需要通用视觉-语言理解，还需要通过领域适配实现精确对齐的动作原语。</div>
+          <div class="ev-gloss">G0-VLM 基于 Qwen2.5-VL 微调，用 DeepSeek-R1 合成高层指令数据——这是一个利用推理型 LLM 生成训练数据的典型用法，成本低但杠杆高。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 flow matching action expert -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> G0-VLA 采用「<a href="./notes.html#flow-matching" class="note-link">flow matching</a> action expert + VLM KV cache 条件」架构：Stage-1 用 FAST 离散 token 预训练 VLM，Stage-2 冻结 VLM、新增 Action Transformer 用 flow matching 出连续动作。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §4.1 Dual System Overview</div>
+          <blockquote class="ev-quote">G0-VLA first embeds the robot's visual observations and language instructions with the pre-trained VLM, then generates continuous action with an flow matching action expert conditioned on VLM's KV cache.</blockquote>
+          <div class="ev-trans">G0-VLA 首先用预训练 VLM 嵌入机器人的视觉观察和语言指令，然后用以 VLM KV cache 为条件的 flow matching action expert 生成连续动作。</div>
+          <div class="ev-gloss">KV cache 作为条件信号（而非重新推理），使 VLM 推理成本只需支付一次，Action Transformer 则高频地在此基础上出动作——这是效率关键。类似 π0/π0.5 的 action expert 设计。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §4.2 G0-VLA Pre-training Stage-1</div>
+          <blockquote class="ev-quote">To enable the VLM's language model backbone to predict robot actions, we adopt FAST tokenizer as our action tokenizer, which converts raw continuous action chunks into a sequence of discrete indices. In this way, we can train VLM with a standard cross-entropy loss to predict the next action tokens in an autoregressive fashion.</blockquote>
+          <div class="ev-trans">为使 VLM 的语言模型主干能预测机器人动作，我们采用 FAST tokenizer 作为动作分词器，将原始连续动作 chunk 转换为离散索引序列。这样，我们可以用标准交叉熵损失训练 VLM，以自回归方式预测下一个动作 token。</div>
+          <div class="ev-gloss">Stage-1 不训 Action Transformer——原因：跨本体数据标注质量参差，扩散 loss 过早引入会损害 VLM 表征收敛。先让 VLM 学会「看」，再让 Action Transformer 学会「动」。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态（实时核查，截至 2026-06）</h2>
+      <p class="lead">论文发布时（2025-08）承诺「数周内开源」；目前已在 <strong>OpenGalaxea</strong> 组织（GitHub + HuggingFace）正式发布，并持续更新至 G0-Plus。</p>
+      <dl class="os-grid">
+        <dt>代码</dt>
+        <dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/OpenGalaxea/GalaxeaVLA">github.com/OpenGalaxea/GalaxeaVLA</a>（双许可证：2026-01-04 前 Apache-2.0；之后 G0 PLUS Community License，非商业免费，商用需另授权）。含训练/微调/推理代码，LeRobot 格式兼容。</dd>
+        <dt>权重</dt>
+        <dd><span class="os-tag os-yes">已开源</span> HuggingFace <a href="https://huggingface.co/OpenGalaxea">OpenGalaxea</a> 组织下：<code>G0_3B_base</code>（Stage-2 预训练）、<code>G0Plus_3B_base</code>（2k+ 小时数据升级版，2026-01 发布）、<code>G0Tiny_250M_base</code>（轻量边缘版）、<code>G0Plus_3B-pick_and_place</code>（部署就绪版）。</dd>
+        <dt>数据集</dt>
+        <dd><span class="os-tag os-part">门控开放</span> <a href="https://huggingface.co/datasets/OpenGalaxea/Galaxea-Open-World-Dataset">HF: OpenGalaxea/Galaxea-Open-World-Dataset</a>——CC BY-NC-SA 4.0，需登录并同意隐私政策后访问。格式：LeRobot v2.1，2.87 TB，227 个 tar.gz 压缩包，4 路摄像头视频（720×1280, 15 fps, AV1 编码）+ parquet 状态/动作数据。</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚠️ 许可证变化注意</div>
+        <p>GalaxeaVLA 仓库从 <strong>Apache-2.0（2026-01-04 前）</strong> 切换到 <strong>G0 PLUS Community License</strong>（仅非商业）。若需商业部署，需向 Galaxea 申请单独授权。数据集 CC BY-NC-SA 4.0 同样限制商业使用。</p>
+      </div>
+      <div class="callout">
+        <div class="callout-head">🚀 G0-Plus 进展</div>
+        <p>2026 年 1 月发布 G0-Plus，预训练数据从 500h 扩展至 <strong>2000+ 小时</strong>机器人遥操作数据 + 网络数据，支持 OpenPI 兼容配置。同时提供轻量版 G0Tiny（250M 参数）供边缘设备部署。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.2 · §1 Introduction（原文承诺）</div>
+        <blockquote class="ev-quote">The Galaxea Open-World Dataset and the models will be open-sourced in the coming weeks. This release represents Galaxea team's first step in open-sourcing robot datasets and models.</blockquote>
+        <div class="ev-trans">Galaxea 开放世界数据集和模型将在未来几周内开源。本次发布代表了 Galaxea 团队开源机器人数据集和模型的第一步。</div>
+        <div class="ev-gloss">论文发布时（2025-08）的承诺——已兑现，且后续持续更新到 G0-Plus，开源路线图在执行中。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 · 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>① <strong>「单一本体预训练 > 跨本体预训练」</strong>这一反直觉结论有扎实的消融支撑，且与跨本体本体差异大小强相关——对设计自己的预训练流程有直接指导意义。② 500h 真实开放世界数据集（含 100K 轨迹、1600+ 物体）及双系统部署细节在国内产业界较为罕见地公开，数据集本身具有独立研究价值。③ G0-VLM 用 DeepSeek-R1 合成高层指令数据的方案成本低、可复现，是一种可借鉴的「低成本 VLM 领域适配」方法。④ 已落地真实移动双臂机器人（R1 Lite），不止是仿真验证。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>评测设计自建、可信度有限</strong>：4 个基准均为 Galaxea 自家任务，使用 progress score（部分得分制），每任务仅 10 次重复，绝对成功率未披露。② <strong>与先进工作对比不足</strong>：仅将 π0 作为 VLA 基线，未与 RDT-1B、OpenVLA 等同类工作系统对比。③ <strong>G0-VLM 评测仅测「指令精度」，未测端到端成功率</strong>——两个系统未做联合评测，很难判断整体系统性能。④ <strong>数据集门控访问</strong>且 2.87 TB 体量，在带宽受限地区使用门槛较高。⑤ Stage-1 跨本体预训练的负面影响的机制未被深入分析（仅假设为 embodiment gap，未给出解决方案）。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;开放世界数据集 + 「单一本体预训练」关键洞见 + 真实部署的组合，是国内产业界移动操作 VLA 的标志性工作，但评测深度和与先进工作的横向对比不足，不达 Breakthrough 级。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · Galaxea G0 (arXiv:2509.00576)</footer>
+
+</body>
+</html>

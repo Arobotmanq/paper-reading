@@ -1,0 +1,45 @@
+{
+  "title": "SG-VLA: Learning Spatially-Grounded Vision-Language-Action Models for Mobile Manipulation",
+  "title_cn": "SG-VLA：学习用于移动操作的空间感知视觉-语言-动作模型",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2026",
+  "one_liner": "在 VLA backbone 上挂 5 路辅助解码器（分割/位姿/关节/抓取/全局位置）提供密集空间监督，配合多视角 RGB+depth 输入，将 mobile manipulation 成功率从 60% 提升至 73%。",
+  "framework": "idea-first",
+  "idea": "标准 imitation learning 的单一动作监督信号不足以让 VLA 模型学到 mobile manipulation 所需的空间感知表征；在 shared backbone 上 co-train 可解释的空间辅助解码器可以提供密集的结构化监督，逼出真正的空间感知 latent representation。",
+  "logic_chain": [
+    "Mobile manipulation 需要同时理解全局场景布局、精细物体几何和 13D 高维连续动作，远超桌面操作复杂度",
+    "标准 VLA 直接 imitation learning 只有动作监督，模型没有压力学习空间信息——导致 OpenVLA 7B 在 ManiSkill-HAB 只有 4% 成功率",
+    "在 shared VLM backbone 上挂辅助解码器（重建 seg/obj pose/joint pose/grasp/global pos），用显式空间监督逼出 backbone 的空间感知表征",
+    "随机初始化的解码器直接共训会破坏预训练 VLM（成功率从 0.60 跌至 0.51），必须用渐进式三阶段训练",
+    "组合 multi-view RGB+depth 输入 + 渐进辅助 co-training，最终达到 73% 成功率（vs 基线 60%）"
+  ],
+  "method_skeleton": [
+    "空间辅助解码器 co-training：5 路解码器（MLP/Transformer/CNN）重建全局位置、抓取状态、物体位姿、关节角、分割掩码，仅训练时激活",
+    "Multi-view RGB + 归一化 Depth 输入：Head（全局）+ Hand（近景）各提供 RGB+Depth，共 4 路，用 DINOv2+SigLIP 双编码器融合",
+    "三阶段渐进训练：Stage 1 冻结 backbone 适应解码器 → Stage 2 全梯度联合精调 → Stage 3 单独训练 flow matching action head"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中：正是 mobile manipulation VLA 的空间感知增强方案，辅助解码器设计、multi-view depth 输入、渐进训练策略均可借鉴",
+    "track_B_legged": "不相关：不涉及足式控制或 locomotion 算法"
+  },
+  "validation": "ManiSkill-HAB benchmark（TidyHouse/PrepareGroceries/SetTable），每任务 30 episodes，SG-VLA 73% vs 直接 IL 60%（+22%）；vs OpenVLA 7B 4%（+18×）",
+  "core_points": [
+    "Mobile manipulation 的 13D 协调动作空间 + 部分可观测性使标准 VLA imitation learning 严重欠监督",
+    "5 路空间辅助解码器提供密集监督，逼出 backbone 的空间感知表征，推理时不增加代价",
+    "Multi-view（Head+Hand）+ Depth 组合是最佳输入配置，历史帧反而有损性能",
+    "直接共训随机初始化解码器会破坏预训练 VLM，渐进三阶段训练是必要前提",
+    "Flow Matching action head 对精细操作（pick +108%）有益，但对导航密集动作（open drawer -22%）有损——应按任务类型自适应选择"
+  ],
+  "effects": [
+    "SG-VLA（全辅助任务+渐进训练）平均成功率 73%，vs 直接 IL 60%（+22%）",
+    "Multi-view+Depth 输入使 OpenVLA 从 0.04 → 0.32（8×），换 Qwen backbone 后进一步 → 0.60",
+    "Joint pose decoder 单独使用时平均 0.71，是最稳定的单辅助任务",
+    "Seg+Obj pose 对 TidyHouse place 从 0.40 → 0.73，提升 83%"
+  ],
+  "open_source": "none",
+  "rating": "Valuable",
+  "summary": "summary.html",
+  "open_source_detail": "未见开源",
+  "open_source_checked": "2026-06-02"
+}

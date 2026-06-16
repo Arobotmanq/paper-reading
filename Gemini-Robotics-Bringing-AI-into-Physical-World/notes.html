@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gemini Robotics 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff; padding: 4em 1.5em 3.5em; position: relative; overflow: hidden;
+  }
+  .hero::before { content: ""; position: absolute; top: -120px; right: -120px; width: 460px; height: 460px; background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -180px; left: -80px; width: 520px; height: 520px; background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(168, 85, 247, 0.18); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: #a855f7; box-shadow: 0 0 12px #a855f7; }
+  .hero h1 { font-size: 2.6em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.15em; color: #cbd5e1; max-width: 720px; margin: 0 0 1.5em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .back-link a { color: var(--nv-green-dark); font-weight: 600; }
+  .toc .back-link a:hover { border-left-color: var(--nv-green-dark); }
+
+  /* ---------- CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.8em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.3em; display: flex; align-items: center; gap: 0.6em; }
+  section.card h2 .tag { font-family: "JetBrains Mono", monospace; background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; padding: 0.15em 0.55em; border-radius: 6px; font-size: 0.55em; font-weight: 600; letter-spacing: 0.03em; }
+  section.card .full-name { color: var(--muted); font-size: 1em; font-weight: 500; margin: 0 0 1.4em; font-style: italic; }
+  section.card h3 { font-size: 1.2em; font-weight: 700; margin: 1.6em 0 0.6em; color: var(--text); display: flex; align-items: center; gap: 0.4em; }
+  section.card h3 .num { background: var(--code-bg); color: var(--accent); font-size: 0.85em; padding: 0.05em 0.55em; border-radius: 6px; font-family: "JetBrains Mono", monospace; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } section.card h2 { font-size: 1.4em; } }
+
+  /* ---------- CALLOUT ---------- */
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.tldr { background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04)); border-color: var(--accent); }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note { background: var(--gold-bg); border-color: var(--gold); }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.compare { background: var(--success-bg); border-color: var(--success); }
+  .callout.compare .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th { text-align: left; padding: 0.8em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.7em 1em; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE ---------- */
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+
+  /* ---------- FOOTER ---------- */
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>Gemini Robotics 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文中反复出现、需要背景知识才能理解的关键概念。每个概念均给出定义、本文用法、类比与对比。共 <strong>8 个概念</strong>。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 Gemini Robotics 综述</a>
+      <span class="pill">📚 8 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.20020" style="color: #93c5fd; text-decoration: none;">arXiv:2503.20020</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. 具身推理 (Embodied Reasoning, ER) ============ -->
+    <section class="card" id="er">
+      <h2>具身推理 <span class="tag">Embodied Reasoning</span></h2>
+      <p class="full-name">Embodied Reasoning (ER) · 具身推理</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>ER 是 VLM 理解和推理物理世界的能力集合——不只是"看图说话"，而是能预测 3D 结构、判断物体关系、预测动作轨迹和抓取点。本文将其定义为机器人操作的"感知+理解"层。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>论文原文定义（p.4 · §2）：</p>
+      <blockquote style="margin: 0.5em 0; padding: 0.7em 1em; background: #f8fafc; border-left: 3px solid #d1d5db; border-radius: 0 8px 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; color: #1e293b;">
+        "We define ER as the ability of a Vision-Language Model to ground objects and spatial concepts in the real world, and the ability to synthesize those signals for downstream robotics applications."
+      </blockquote>
+      <p>即：<strong>把视觉输入中的对象与空间概念"锚定"到现实世界，并将这些信号综合用于下游机器人应用的能力。</strong></p>
+
+      <h3><span class="num">2</span>具体能力列表</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>能力</th><th>输入</th><th>输出</th><th>典型用途</th></tr></thead>
+          <tbody>
+            <tr><td>2D Object Detection</td><td>图像 + 文字描述（open-vocab）</td><td>2D bounding box (y0,x0,y1,x1)</td><td>定位目标物体</td></tr>
+            <tr><td>2D Pointing</td><td>图像 + 自然语言（可为 affordance）</td><td>点坐标 (y,x)</td><td>精确指向物体部位、空闲空间</td></tr>
+            <tr><td>2D Trajectory Prediction</td><td>图像 + 运动描述</td><td>一系列 waypoints</td><td>给机械臂生成路径</td></tr>
+            <tr><td>Grasp Prediction</td><td>图像 + 抓取对象描述</td><td>顶视抓取点 (y,x,θ)</td><td>直接驱动末端执行器</td></tr>
+            <tr><td>Multi-view Correspondence</td><td>两张不同视角图 + 已标注点</td><td>第二视角中对应点坐标</td><td>立体/双目感知，3D 重建</td></tr>
+            <tr><td>3D Bounding Box Detection</td><td>单张图像 + 文字描述</td><td>3D bbox (x,y,z,w,h,l,r1,r2,r3)</td><td>三维场景理解，抓取规划</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>本文用法</h3>
+      <p>Gemini 2.0 已原生具备上述能力。<strong>Gemini Robotics-ER</strong> 是 Gemini 2.0 Flash 的强化变体，在 ERQA（具身推理问答 benchmark）、Paco-LVIS、Pixmo-Point、SUN-RGBD 等 benchmark 上达到 SOTA，并增加了 Grasp Prediction 能力。ER 是 Gemini Robotics VLA 的 backbone 来源。</p>
+
+      <h3><span class="num">4</span>与传统感知的区别</h3>
+      <div class="callout compare">
+        <div class="callout-head">对比：ER 与传统 perception pipeline</div>
+        <p><strong>传统方案</strong>：Object Detection Model + Pose Estimation Model + Motion Planner + Grasping Module——多个专家模型，各自封闭的 vocabulary 和任务格式，无法泛化到 unseen 物体和 open-vocab 指令。<br>
+        <strong>ER（Gemini 2.0）方案</strong>：统一的 foundation model，所有上述能力通过 prompting 触发，支持 open-vocabulary 指令，可以推理 affordances（"抓哪里"）而不仅是检测（"在哪里"）。</p>
+      </div>
+
+      <h3><span class="num">5</span>类比</h3>
+      <p>类比于人类：当你看到一把剪刀，你不仅知道它"在桌上左侧"（2D Detection），还知道"手应该从手环处插入"（Affordance Pointing），且"刃部向右旋转可剪断绳子"（Trajectory Reasoning）。这整套理解就是具身推理。</p>
+    </section>
+
+    <!-- ============ 2. VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">Vision-Language-Action</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 是把 VLM（vision-language model）扩展到能输出机器人动作的模型。输入：图像 + 语言指令；输出：可直接执行的机器人动作序列（关节角、末端位姿等）。核心思想：用 VLM 的世界知识替代手工设计的感知-规划-控制 pipeline。</p>
+      </div>
+
+      <h3><span class="num">1</span>结构</h3>
+      <p>VLA 的典型结构 = <strong>VLM backbone + action head（动作输出头）</strong>。VLM backbone 处理图像和语言，生成 embedding；action head 将 embedding 解码为机器人动作（可以是回归、diffusion、flow matching 等方式）。</p>
+
+      <h3><span class="num">2</span>本文的 Gemini Robotics VLA</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>组件</th><th>内容</th><th>位置</th></tr></thead>
+          <tbody>
+            <tr><td>Backbone</td><td>Gemini Robotics-ER 的蒸馏版（保留泛化能力，降低延迟 &lt;160ms）</td><td>云端（Google Cloud）</td></tr>
+            <tr><td>Action Decoder</td><td>本地轻量 decoder，将 backbone 输出转为 action chunk</td><td>机器人本地 PC</td></tr>
+            <tr><td>输入</td><td>机器人多视角图像 + 文字任务描述 + proprioception</td><td>—</td></tr>
+            <tr><td>输出</td><td>Action chunk（多步动作序列），50Hz 有效控制频率</td><td>—</td></tr>
+            <tr><td>训练数据</td><td>数千小时 ALOHA 2 遥操作数据 + web 文档/图像/视频 + VQA 数据</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>与 SayCan / RT-2 等前辈的区别</h3>
+      <p><strong>SayCan（2022）</strong>：LLM 只做 high-level 规划（选择哪个技能），低层执行靠分离的 primitive skills。不是端到端，且 primitive skills 需预先定义。<br>
+      <strong>RT-2（2023）</strong>：VLM 直接输出动作 token，但依赖文字化的动作 tokenization，精度和控制频率受限。<br>
+      <strong>Gemini Robotics（2025）</strong>：用 cloud + local decoder 架构同时实现 VLM 的泛化能力（cloud backbone）和实时控制频率（local decoder）；动作头不依赖文字 tokenization。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>VLA 类比于"会开车的导航"：普通导航（VLM）知道路线，但不会踩油门；VLA 把"知道去哪里"和"如何动手脚"统一在一个模型里。</p>
+    </section>
+
+    <!-- ============ 3. Gemini 2.0 多模态 backbone ============ -->
+    <section class="card" id="gemini20">
+      <h2>Gemini 2.0 <span class="tag">Multimodal Backbone</span></h2>
+      <p class="full-name">Gemini 2.0 · Google DeepMind 的 frontier 多模态基础模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Gemini 2.0 是 Google DeepMind 的 frontier 多模态 LLM，同时处理文本、图像、音频、视频，并具备 long context、代码生成、Chain-of-Thought 推理等能力。Gemini Robotics 系列完全构建于其之上。</p>
+      </div>
+
+      <h3><span class="num">1</span>相关版本</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>版本</th><th>定位</th><th>在本文中的角色</th></tr></thead>
+          <tbody>
+            <tr><td>Gemini 2.0 Flash</td><td>低延迟、高性价比</td><td>ER 能力的基础版，零样本控制实验的 baseline</td></tr>
+            <tr><td>Gemini 2.0 Pro Experimental</td><td>最强推理能力</td><td>ERQA benchmark 的最高分（54.8 with CoT）</td></tr>
+            <tr><td>Gemini Robotics-ER</td><td>Flash 的具身推理增强版</td><td>grasp 预测、ERQA SOTA、3D detection SOTA；VLA 的 backbone 来源</td></tr>
+            <tr><td>Gemini Robotics（VLA backbone）</td><td>ER 的蒸馏压缩版</td><td>云端推理，延迟 &lt;160ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>与机器人的关系</h3>
+      <p>Gemini 2.0 原生已有具身推理的萌芽能力（参见 Figure 2，2D 检测/pointing/轨迹/3D 检测均能开箱即用）。Gemini Robotics-ER 的训练不需要机器人动作数据，只需强化已有的感知能力。这使得 Google 能够用互联网规模的多模态数据为机器人"奠基"，避免了从头构建感知模型。</p>
+
+      <h3><span class="num">3</span>ERQA benchmark 结果</h3>
+      <p>Gemini 2.0 Flash 46.3（无 CoT）→ 50.3（CoT）；Pro Experimental 48.3（无 CoT）→ 54.8（CoT）。均优于 GPT-4o、Claude 3.5 Sonnet（同期）。CoT 在 ERQA 上有显著提升，说明具身推理问题本质上是需要多步推理的。</p>
+    </section>
+
+    <!-- ============ 4. Cloud+Local 架构 ============ -->
+    <section class="card" id="cloud-local">
+      <h2>云端+本地 <span class="tag">Cloud+Local Architecture</span></h2>
+      <p class="full-name">Cloud Backbone + Local Action Decoder · 云端 backbone + 本地动作 decoder 架构</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Gemini Robotics 的工程核心：把计算量大的 VLM backbone 放在云端，把需要实时响应的动作 decoder 放在机器人本地。两者协同，实现既有 VLM 泛化能力又能 50Hz 控制的系统。</p>
+      </div>
+
+      <h3><span class="num">1</span>架构拆分的原因</h3>
+      <p>大型 VLM 推理需要数十亿参数，运行在云端 TPU/GPU 上；但机器人控制需要 50Hz 实时性，网络往返延迟无法满足直接流式控制。解决方案：<strong>把"想什么"放云端，把"怎么动"放本地</strong>。</p>
+
+      <h3><span class="num">2</span>延迟分析</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>环节</th><th>延迟</th><th>运行位置</th></tr></thead>
+          <tbody>
+            <tr><td>云端 backbone 查询延迟</td><td>&lt;160ms</td><td>Google Cloud（蒸馏版 Gemini Robotics-ER）</td></tr>
+            <tr><td>端到端延迟（观测→动作 chunk）</td><td>~250ms</td><td>cloud backbone + 本地 decoder 组合</td></tr>
+            <tr><td>有效控制频率</td><td>50Hz</td><td>action chunk 中含多步动作，本地顺序执行</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>Action Chunk 的关键作用</h3>
+      <p>Action Chunk（参考 ACT：Zhao et al., 2023）是指一次推理输出多个时间步的动作序列，而非只输出下一步。这样云端 backbone 只需以较低频率运行（如 4Hz），而本地 decoder 以 50Hz 顺序执行 chunk 中的动作，从而在不降低控制频率的前提下容忍云端延迟。</p>
+
+      <h3><span class="num">4</span>局限性</h3>
+      <p>依赖网络连接（云端故障或高延迟时系统降级）；chunk 执行期间无法对快速变化的场景实时响应；私有化部署需要本地 GPU 资源承担 backbone 计算（论文中 baseline 使用 RTX 4090）。</p>
+    </section>
+
+    <!-- ============ 5. Zero-shot / Few-shot 控制 ============ -->
+    <section class="card" id="zero-few-shot">
+      <h2>零/少样本控制 <span class="tag">Zero/Few-Shot Control</span></h2>
+      <p class="full-name">Zero-shot &amp; Few-shot Robot Control · 零样本与少样本机器人控制</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>零样本控制 = 不需要任何机器人示范数据，仅靠模型内置知识完成任务（通常通过代码生成）；少样本控制 = 提供少量（如 10 次）示范在 context 中，模型即可模仿并泛化。两者体现了 Gemini Robotics-ER 作为 ER 模型的"即插即用"价值。</p>
+      </div>
+
+      <h3><span class="num">1</span>零样本控制（代码生成方式）</h3>
+      <p>Gemini 2.0 接收机器人 API 文档 + 任务描述，迭代生成并执行代码。API 暴露了：物体检测（<code>detect_object()</code>）、抓取点预测（<code>get_grasp_pose()</code>）、末端执行器控制（<code>move_gripper()</code>）等函数。模型调用这些工具，感知当前状态，生成控制代码，接收执行反馈，在必要时重新规划。</p>
+      <p>效果（ALOHA 2 仿真 7 任务）：Gemini 2.0 Flash 27%，Gemini Robotics-ER 53%（几乎 2 倍）。</p>
+
+      <h3><span class="num">2</span>少样本控制（In-Context Learning 方式）</h3>
+      <p>Di Palo &amp; Johns (2024) 方法的扩展：把 k 次示范轨迹（图像帧 + 末端执行器位姿 + 语言描述）放进 prompt，模型直接输出新场景下的末端位姿序列。Gemini Robotics-ER 自身就能提取 keypoints 和对象位姿（无需外部模型）。10 次示范下，Gemini Robotics-ER 在仿真和真实机器人上均达 65%。</p>
+
+      <h3><span class="num">3</span>与 Gemini Robotics VLA 的定位差异</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>零/少样本（ER）</th><th>Gemini Robotics VLA</th></tr></thead>
+          <tbody>
+            <tr><td>机器人数据需求</td><td>零（代码生成）或极少（10 demos ICL）</td><td>数千小时遥操作数据</td></tr>
+            <tr><td>控制精度</td><td>较低（中间步骤引入误差）</td><td>高（端到端，50Hz）</td></tr>
+            <tr><td>灵巧度</td><td>有限（精细任务如折叠衣物失败）</td><td>高（可变形物体、双手协调）</td></tr>
+            <tr><td>适用场景</td><td>快速原型、新任务探索</td><td>高频部署、灵巧操作</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 6. 具身推理模型 (Gemini Robotics-ER) ============ -->
+    <section class="card" id="action-decoder">
+      <h2>Action Decoder <span class="tag">Local Action Decoder</span></h2>
+      <p class="full-name">Gemini Robotics Decoder · 本地动作 decoder</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>运行在机器人本地 PC 上的轻量模块，负责把云端 backbone 的高层语义输出转化为低层连续动作 chunk。它弥补了云端延迟与机器人实时控制之间的鸿沟。</p>
+      </div>
+
+      <h3><span class="num">1</span>功能</h3>
+      <p>云端 backbone 输出包含丰富语义信息的 embedding（类似"我要把杯子放到盘子左边"的高层理解）。本地 action decoder 将这个 embedding 解码为机器人可以直接执行的 action chunk——关节角 / 末端位姿序列，以 50Hz 频率执行。</p>
+
+      <h3><span class="num">2</span>推理增强版 decoder</h3>
+      <p>Section 4.2 中，decoder 被扩展以支持"reasoning intermediate"——即模型先输出关键点轨迹（可视化为手臂运动路径的中间表征），再将其转换为连续低层动作。这使得模型可以利用 ER 的空间推理能力作为动作生成的 chain-of-thought，在 OOD 场景（语义理解、空间推理任务）中提升成功率。</p>
+
+      <h3><span class="num">3</span>类比</h3>
+      <p>类比于驾驶：云端 backbone 是"导航大脑"（决定去哪、走哪条路）；本地 decoder 是"驾驶员双手"（把路线指令转化为方向盘/油门的实时操作）。两者必须协同才能安全驾驶。</p>
+    </section>
+
+    <!-- ============ 7. Specialization vs Generalization ============ -->
+    <section class="card" id="specialization">
+      <h2>专项化 <span class="tag">Specialization</span></h2>
+      <p class="full-name">Specialization · 从 generalist 到 specialist 的 fine-tuning 过程</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在 generalist 模型基础上，用特定任务的高质量数据 fine-tune，使模型解锁超出 generalist 能力边界的极端灵巧或长流程任务。关键发现：从头训练同模型则 0% 成功——generalist 预训练带来的"物理常识"表征是不可或缺的基础。</p>
+      </div>
+
+      <h3><span class="num">1</span>三层能力阶梯</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>层级</th><th>训练策略</th><th>能力</th><th>典型任务</th></tr></thead>
+          <tbody>
+            <tr><td>Generalist</td><td>大规模多任务预训练（数千小时）</td><td>多任务开箱即用，泛化强</td><td>pick &amp; place，fold cloth，20 类灵巧任务</td></tr>
+            <tr><td>Specialist</td><td>Generalist 基础上 fine-tune（2000-5000 episodes per task）</td><td>极端灵巧，长流程，100% 成功率</td><td>origami fox，lunch-box（2 分钟），spelling game</td></tr>
+            <tr><td>New Embodiment</td><td>ALOHA 2 checkpoint → 新本体 fine-tune（少量数据）</td><td>泛化能力跨本体迁移</td><td>Apollo 人形，bi-arm Franka</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>关键消融结果</h3>
+      <p>在相同 specialization 数据下：</p>
+      <ul>
+        <li><strong>Gemini Robotics (Specialist)</strong>：origami 45%，lunch-box <strong>100%</strong>，spelling game 83%</li>
+        <li><strong>π0 re-implement (Specialist)</strong>：origami 0%，lunch-box 0%，spelling game 0%</li>
+        <li><strong>Gemini Robotics from scratch</strong>：所有任务 <strong>0%</strong>（未在图中展示）</li>
+      </ul>
+      <p>差距源于 generalist 预训练带来的"物理常识"表征，而非模型容量——这一表征无法用 specialization 数据从头习得。</p>
+
+      <h3><span class="num">3</span>与 π0 的类比</h3>
+      <p>类似 π0 (Black et al., 2024) 的"generalist→specialist"思路，但 Gemini Robotics 的 backbone 更大（frontier VLM 级），带来更强的任务理解，尤其在 spelling game（需要读取图像内容并映射到物理动作）这类需要 VL 理解的任务上有决定性优势。</p>
+    </section>
+
+    <!-- ============ 8. ERQA benchmark ============ -->
+    <section class="card" id="erqa">
+      <h2>ERQA <span class="tag">Embodied Reasoning QA</span></h2>
+      <p class="full-name">Embodied Reasoning Question Answering · 具身推理问答 benchmark</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>本文开源的具身推理评测 benchmark，400 道多选 VQA 题，覆盖 8 类具身推理能力，是目前该领域最难的多模态 benchmark 之一（比 RealworldQA 和 BLINK 更难）。</p>
+      </div>
+
+      <h3><span class="num">1</span>题目类别分布</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>类别</th><th>题数</th><th>典型题型</th></tr></thead>
+          <tbody>
+            <tr><td>Spatial Reasoning</td><td>84</td><td>判断物体位置关系、遮挡关系</td></tr>
+            <tr><td>Action Reasoning</td><td>72</td><td>判断动作结果、操作是否合适</td></tr>
+            <tr><td>Trajectory Reasoning</td><td>66</td><td>判断机械臂轨迹的效果</td></tr>
+            <tr><td>State Estimation</td><td>55</td><td>估计物体当前状态（开/关，满/空）</td></tr>
+            <tr><td>Task Reasoning</td><td>38</td><td>判断任务是否可行</td></tr>
+            <tr><td>Multi-view Reasoning</td><td>37</td><td>从多视角识别同一物体</td></tr>
+            <tr><td>Pointing</td><td>34</td><td>在多选项中选择正确的抓取点</td></tr>
+            <tr><td>Other</td><td>14</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>与现有 benchmark 的对比</h3>
+      <p>RealworldQA 和 BLINK 倾向于测试原子能力（物体识别、计数、定位）。ERQA 更强调跨帧理解、多步推理、affordance 判断——这些是机器人操作实际需要的能力。28% 的题目包含多张图像（更难）。</p>
+
+      <h3><span class="num">3</span>开源信息</h3>
+      <p>ERQA 已开源：<a href="https://github.com/embodiedreasoning/ERQA">github.com/embodiedreasoning/ERQA</a>。图像来源于 OXE、UMI-Data、MECCANO 等已公开数据集或自采集，问题由人工标注。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 为何发布 ERQA？</div>
+        <p>现有 VLM benchmark 无法充分评估具身推理能力，导致研究者只能用下游任务成功率来间接评估 ER 进展。ERQA 提供了一个<strong>直接、标准化</strong>的 ER 评测工具，使不同模型（包括未来的开源模型）可以在统一标准下比较。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表 (8)</div>
+    <ul>
+      <li><a href="#er">具身推理 (ER)</a></li>
+      <li><a href="#vla">VLA</a></li>
+      <li><a href="#gemini20">Gemini 2.0 backbone</a></li>
+      <li><a href="#cloud-local">云端+本地架构</a></li>
+      <li><a href="#zero-few-shot">零/少样本控制</a></li>
+      <li><a href="#action-decoder">Action Decoder</a></li>
+      <li><a href="#specialization">专项化 (Specialization)</a></li>
+      <li><a href="#erqa">ERQA benchmark</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · Gemini Robotics (arXiv:2503.20020) · Google DeepMind 2025 · 配套笔记
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Octo 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>UC Berkeley · Open-Source Generalist Robot Policy</span>
+    <h1>Octo: 开源<br>通用机器人策略</h1>
+    <p class="subtitle">与其为每个机器人从头训练，不如用 <strong>800k OXE 轨迹</strong> 预训练一个 transformer，再以 <strong>readout token + 模块化 tokenizer</strong> 让任意观测/动作空间插拔自如——diffusion action head 则让连续多模态动作既精确又稳定。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 移动操作 VLA · 重要参考 · 建议深读</span>
+      <span class="pill">📅 2024-05</span>
+      <span class="pill">🏢 UC Berkeley / Stanford / CMU / Google DeepMind</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2405.12213">arXiv:2405.12213</a></span>
+      <span class="pill">⭐ <a href="https://github.com/octo-models/octo">octo-models/octo</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">预训练数据规模</div>
+    <div class="value">800<span class="unit">k 轨迹</span></div>
+    <div class="desc">来自 OXE 25 个数据集</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">零样本优势</div>
+    <div class="value">+29<span class="unit">%</span></div>
+    <div class="desc">vs RT-1-X 平均成功率</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">微调平均成功率</div>
+    <div class="value">72<span class="unit">%</span></div>
+    <div class="desc">6 域平均，次佳仅 20%</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">开源状态</div>
+    <div class="value">全<span class="unit">开源</span></div>
+    <div class="desc">代码 + 权重 + 数据管道</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走——只讲<strong>思想、逻辑、方法</strong>；效果作验证。要核对原文再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">每个机器人从头训练策略既费数据又难泛化——那就把 800k 跨本体轨迹<strong>统一成 token 序列</strong>，用 <a href="./notes.html#readout-token" class="note-link">readout token</a> 把观测信息压缩成紧凑嵌入，再用 <a href="./notes.html#diffusion-head" class="note-link">diffusion action head</a> 输出连续多模态动作；新机器人接入时只需<strong>插一个新 tokenizer + 新 head</strong>，骨干权重完全保留，几小时微调搞定。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>机器人操作数据获取昂贵，单机器人训练的策略泛化性差；<strong>需要一个能跨本体预训练、下游高效微调的通用策略</strong>。</li>
+          <li>现有 GRP（RT-1-X、RoboCat 等）<strong>锁死了输入/输出格式</strong>，换观测或动作空间就得重训大量参数，实用性受限。</li>
+          <li>Octo 的解法：用 <a href="./notes.html#block-attention" class="note-link">block-wise 因果 attention</a> 让 transformer 同时处理多模态输入，readout token 作为模块化输出接口——<strong>新增/移除 token 块不影响骨干权重</strong>。</li>
+          <li>动作 head 用 <a href="./notes.html#diffusion-head" class="note-link">diffusion decoding</a> 而非 MSE/离散分类——能拟合多模态动作分布，兼顾连续动作的精度。</li>
+          <li>在最大机器人操作数据集（<a href="./notes.html#oxe" class="note-link">OXE 800k 轨迹</a>）上预训练后，<strong>仅需 ~100 示范 + &lt;5h 单卡微调</strong>就能适配新任务/新观测/新动作空间。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 四个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>Transformer backbone + readout tokens</strong>：task token（语言/目标图像）和 observation token（图像 patch）拼成序列，readout token 被动读取并压缩嵌入，送入 action head。block-wise causal mask 允许无痛插拔。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>Diffusion action head</strong>：从 Gaussian 噪声出发，20 步 DDPM 去噪，预测 action chunk（多步连续动作）。比 MSE 更精确、比离散更连贯。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>模块化 tokenizer</strong>：语言走 T5-base（冻结），图像走浅层 CNN → patch；缺失模态全零 mask 而非重训。新观测/任务类型只加一个轻量 encoder + position embedding。</span></div>
+          <div class="method-item"><span class="mi-num">④</span><span class="mi-body"><strong>OXE 800k 数据预训练</strong>：从 25 个人工筛选的数据集混合训练（含语言/目标图像双条件，hindsight goal relabeling 扩充无语言数据集）。越多数据、越宽数据混合，效果越好。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">零样本下 Octo 平均高于 RT-1-X <strong>29%</strong>，接近 RT-2-X（55B 参数）；6 个微调域平均 <strong>72%</strong> 成功率，次佳基线仅 20%；模型大小（27M→93M）单调提升性能；消融证明 diffusion head &gt; MSE &gt; 离散，宽数据混合 &gt; 单一数据集，ViT 架构在大数据下比 ResNet 更优。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>零样本：WidowX 上 Octo 93M 远超 RT-1-X 35M；WidowX + RT-1 Robot 任务与 RT-2-X 55B 持平。</li>
+            <li>微调：Berkeley Peg Insertion 70%（新力矩观测）；Berkeley Pick-Up 60%（新关节控制）；Berkeley Coke 100%（新机器人本体）；Berkeley Bimanual 80%（双臂 14DoF）。从头训练平均 20%，VC-1 平均 15%。</li>
+            <li>消融（WidowX 40 trials）：diffusion 83% vs MSE 35% vs 离散 18%；OXE 25 数据集 83% vs RT-X mix 60% vs 单 Bridge 43%。</li>
+            <li>零样本泛化分析（WidowX）：已见分布 85%；新物体 80%；新环境 40%；新技能 5%——在新技能上仍明显落后。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）重要参考</strong>：Octo 是"跨本体预训练 + 灵活微调"这一范式的基石实现，其 readout token 设计、diffusion action head、OXE 数据混合策略被后续 GR00T N1、π0 等广泛引用。理解 Octo 是理解后续 VLA 的前提。Track B（足式控制）<strong>不直接相关</strong>——Octo 只做操作，不涉及 locomotion。建议<strong>深读</strong>架构设计与消融，跳过实验细节。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真正的问题：现有 GRP 缺乏灵活性——锁死输入格式、不支持有效微调到新域，且最大的模型不公开。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §II</div>
+          <blockquote class="ev-quote">they typically require users to stick to the sensory inputs and action space used during pretraining and do not support adaptation to new observation and action spaces. Furthermore, the largest models are not publicly accessible.</blockquote>
+          <div class="ev-trans">它们通常要求用户固守预训练时使用的感觉输入和动作空间，不支持向新观测和动作空间的适应。此外，最大的模型不公开可及。</div>
+          <div class="ev-gloss">这是 Octo 诞生的动机：RT-X、RoboCat 等模型固锁接口、不开源——Octo 要解决这两个问题。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心贡献：Octo 是第一个既能有效微调到新观测/动作空间、又完全开源的通用机器人操作策略。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §I</div>
+          <blockquote class="ev-quote">Octo is the first GRP that can be effectively finetuned to new observations and action spaces and the first generalist robot manipulation policy that is fully open-source, including the training pipeline, model checkpoints, and data.</blockquote>
+          <div class="ev-trans">Octo 是第一个能有效微调到新观测和动作空间的 GRP，也是第一个完全开源的通用机器人操作策略，包括训练管道、模型检查点和数据。</div>
+          <div class="ev-gloss">双重"第一"：灵活微调 + 全开源。这也是为什么 Octo 成为后续工作的重要基线和起点。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 架构：readout token -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 架构核心：<a href="./notes.html#readout-token" class="note-link">readout token</a> 被动汇聚观测嵌入、不影响其他 token，配合 block-wise 因果 attention 实现无痛插拔新模态。</div>
+        <figure>
+          <img src="./images/figure_1_architecture_full.png" alt="Fig 2: Octo 模型架构图">
+          <figcaption><strong>Fig. 2（p.3–4）：</strong>左：Task token（绿）+ Observation token（蓝）分别用语言 encoder 和 CNN patch 生成；上：Transformer 骨干 + readout token（紫）被动读取后送入 diffusion action head；下：微调时新增 tokenizer/head 不修改骨干权重。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §III-A</div>
+          <blockquote class="ev-quote">A readout token at TR,t attends to observation and task tokens before it in the sequence, but is not attended to by any observation or task token — hence, they can only passively read and process internal embeddings without influencing them.</blockquote>
+          <div class="ev-trans">位于 TR,t 的 readout token 关注序列中在其之前的观测和任务 token，但不被任何观测或任务 token 所关注——因此，它们只能被动地读取和处理内部嵌入而不影响它们。</div>
+          <div class="ev-gloss">类似 BERT 的 [CLS] token：readout 只读不写，把整个序列的信息压缩成紧凑嵌入，再由轻量 action head 解码。这让插拔新 head 时骨干完全不受影响。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §III-A</div>
+          <blockquote class="ev-quote">The attention pattern of the Octo transformer is block-wise masked: observation tokens can only attend causally to tokens from the same or earlier time steps To,0:t as well as task tokens TT (green). Tokens corresponding to non-existing observations are fully masked out</blockquote>
+          <div class="ev-trans">Octo transformer 的注意力模式是分块掩码的：观测 token 只能因果地关注来自相同或更早时间步的 token 以及任务 token（绿色）。与不存在观测对应的 token 被完全掩码。</div>
+          <div class="ev-gloss">缺失模态全掩码而非删除——模型结构不变，只是那个 token 贡献为零。这是"无痛插拔"的具体实现机制。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 diffusion head -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> <a href="./notes.html#diffusion-head" class="note-link">Diffusion action head</a> 显著优于 MSE 和离散动作头——能拟合多模态分布同时保持连续动作精度。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §III-C</div>
+          <blockquote class="ev-quote">We found this policy parameterization to outperform policies trained with MSE action heads or discretized action distributions in both zero-shot and finetuning evaluations.</blockquote>
+          <div class="ev-trans">我们发现这种策略参数化在零样本和微调评估中均优于用 MSE 动作头或离散动作分布训练的策略。</div>
+          <div class="ev-gloss">消融结果：diffusion 83% vs MSE 35% vs 离散 18%（WidowX 40 trials）。MSE"对冲"导致动作迟缓，离散精度不足。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §IV-C</div>
+          <blockquote class="ev-quote">This improvement is likely because the diffusion head can model multi-modal action distributions (unlike the MSE head) while retaining the precision of continuous actions (unlike the discrete head). Qualitatively, the policy acts more decisively than MSE-trained policies, and more precisely than those trained with discretized actions.</blockquote>
+          <div class="ev-trans">这种改进可能是因为 diffusion head 能建模多模态动作分布（不同于 MSE head），同时保留连续动作的精度（不同于离散 head）。定性地说，策略比 MSE 训练的策略更果断，比离散动作训练的策略更精确。</div>
+          <div class="ev-gloss">两全其美：连续动作精度 + 多模态分布拟合。这解释了为什么 diffusion policy 在操作任务上成为主流选择。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 数据宽度决定性能 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 数据宽度比单一数据集更重要——使用 25 个多样化数据集比 RT-X 的 11 个子集和单一机器人数据集都强，且性能随数据集数量单调增加。</div>
+        <figure>
+          <img src="./images/figure_2_dataset.png" alt="Fig 3: 训练数据集构成及架构图">
+          <figcaption><strong>Fig. 3（p.4）：</strong>25 个 OXE 数据集的采样权重饼图。Fractal、Kuka、Bridge 各占约 17%，剩余分散于多个小数据集。多样化数据集被双倍加权以平衡分布。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §IV-C</div>
+          <blockquote class="ev-quote">In Table II we show that the performance of Octo increases as we increase the number of training datasets. This suggests that expanding the data mix to even more datasets may further improve policy performance.</blockquote>
+          <div class="ev-trans">在表 II 中，我们展示了随着训练数据集数量的增加，Octo 的性能也随之提升。这表明将数据混合扩展到更多数据集可能进一步提高策略性能。</div>
+          <div class="ev-gloss">OXE 25 数据集 83% > RT-X mix 11 数据集 60% > 单 Bridge 43%——多样性比规模更重要（同等计算预算下）。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 零样本 + 微调结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 零样本控制多机器人：Octo 平均成功率高于 RT-1-X 29%，且性能接近 55B 参数的 RT-2-X；微调后 72% 平均成功率超越所有基线逾 52%。</div>
+        <figure>
+          <img src="./images/figure_3_eval.png" alt="Fig 4-5: 评测任务和零样本结果">
+          <figcaption><strong>Fig. 4–5（p.6）：</strong>9 个机器人平台跨 4 机构的评测设置（左）和零样本成功率对比（右）。Octo 93M 在 WidowX、UR5、RT-1 Robot 上均大幅超越 RT-1-X 35M，并与 RT-2-X 55B 持平。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §IV-A</div>
+          <blockquote class="ev-quote">we found that on average Octo had a 29% higher success rate than RT-1-X (35M parameters). For the WidowX and RT-1 Robot evaluations, we also compared to RT-2-X (55 billion parameters) and found that Octo performed similarly.</blockquote>
+          <div class="ev-trans">我们发现平均而言 Octo 比 RT-1-X（35M 参数）的成功率高 29%。对于 WidowX 和 RT-1 Robot 评测，我们还与 RT-2-X（550 亿参数）进行了比较，发现 Octo 表现相近。</div>
+          <div class="ev-gloss">93M 参数的 Octo 与 55B 参数的 RT-2-X 持平——证明架构和数据选择比模型规模更重要。同时表明开源小模型可以匹敌闭源巨模型。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §IV-B</div>
+          <blockquote class="ev-quote">On average across the six evaluation setups (detailed in Appendix F), Octo outperforms the next best baseline by 52%.</blockquote>
+          <div class="ev-trans">在六个评测设置中平均而言，Octo 比次佳基线高出 52%。</div>
+          <div class="ev-gloss">微调结果极其突出：从头训练 20%，VC-1 15%，Octo 72%——预训练权重初始化的价值比预训练视觉表征更大。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 模型规模 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 模型规模与性能正相关：Octo-Tiny (10M) → Small (27M) → Base (93M) 零样本性能单调提升，Base 对场景配置更鲁棒。</div>
+        <figure>
+          <img src="./images/figure_4_scaling_ablation.png" alt="Fig 6: 模型规模扩展曲线">
+          <figcaption><strong>Fig. 6（p.8）：</strong>Octo-Tiny/Small/Base 在 UR5 和 WidowX 上的零样本成功率随参数量增长而提升。ViT-B 骨干（93M）在大数据下展现出更好的视觉场景感知能力。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §IV-C</div>
+          <blockquote class="ev-quote">We find that the Base model is more robust to initial scene configuration than the Small model, and is less prone to early grasp attempts, indicating the larger model has better visual scene perception.</blockquote>
+          <div class="ev-trans">我们发现 Base 模型比 Small 模型对初始场景配置更鲁棒，且更少出现过早抓取尝试，这表明更大的模型具有更好的视觉场景感知能力。</div>
+          <div class="ev-gloss">规模效益不只体现在成功率数字——还体现在行为质量（更少冲动抓取）。这与 VLM 领域的 scaling law 一致。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 架构对比 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> ViT-first 架构在大数据下优于 ResNet+Transformer——但在小数据集上 ResNet 仍更优，指明了 ViT 的适用条件。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7–8 · §IV-C</div>
+          <blockquote class="ev-quote">we opt for a "transformer-first" architecture that uses very shallow CNN patch encoders and concentrates most of the parameters and FLOPS in the transformer backbone... we found ResNet-based architectures to perform better than ViTs when training on small datasets, e.g., in our "from scratch" comparisons, underlining that large transformer policies are uniquely suited for scalable training on diverse datasets.</blockquote>
+          <div class="ev-trans">我们选择"transformer 优先"架构，使用非常浅的 CNN patch 编码器，将大部分参数和 FLOPS 集中在 transformer 骨干中……我们发现基于 ResNet 的架构在小数据集上训练时比 ViT 表现更好，如我们的"从头训练"对比，突出表明大 transformer 策略特别适合在多样数据集上进行可扩展训练。</div>
+          <div class="ev-gloss">重要的适用条件：ViT 需要大数据激活其优势；小数据场景下 ResNet 的归纳偏置反而有帮助。这是从头训练 baseline 用 ResNet 而非 ViT 的原因。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">Octo 是第一个完全开源的大规模通用机器人策略。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/octo-models/octo">github.com/octo-models/octo</a>（JAX 实现；含预训练、微调、数据加载完整管道）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-yes">已开源</span> Octo-Small (27M) + Octo-Base (93M)，托管于 HuggingFace <code>rail-berkeley/octo-base</code></dd>
+        <dt>数据</dt><dd><span class="os-tag os-yes">已开源</span> 训练数据来自公开的 Open X-Embodiment 数据集；独立数据加载器兼容 JAX/PyTorch</dd>
+        <dt>推理示例</dt><dd><span class="os-tag os-yes">已开源</span> 3 行代码加载并运行（见 Appendix B）</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.5 · §III-E</div>
+        <blockquote class="ev-quote">We open-source all resources required to train, finetune and run our model (see https://octo-models.github.io): Pretrained Octo checkpoints for Octo-Small (27M params) and Octo-Base (93M params). Finetuning scripts for Octo models, in JAX. Model pretraining pipeline for Octo pretraining on the Open X-Embodiment dataset, in JAX. Standalone data loaders for Open X-Embodiment data, compatible with JAX and PyTorch.</blockquote>
+        <div class="ev-trans">我们开源了训练、微调和运行模型所需的所有资源：Octo-Small (27M) 和 Octo-Base (93M) 的预训练检查点；JAX 实现的 Octo 模型微调脚本；JAX 实现的 OXE 数据集预训练管道；兼容 JAX 和 PyTorch 的独立数据加载器。</div>
+        <div class="ev-gloss">这是 Octo 区别于 RT-X/RT-2-X 等闭源模型的最重要特征——研究者可以直接在其权重上微调，无需重新预训练。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 · 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>Octo 是"开源通用机器人策略"这一研究范式的<strong>奠基性工作</strong>：readout token + block-wise attention 的模块化设计被后续大量工作（GR00T N1、π0 等）直接引用或借鉴；diffusion action head 成为操作策略的标准选择；OXE 800k 数据混合是迄今规模最大的公开机器人预训练数据集使用记录。消融研究扎实：同一套 hyperparameter 跑遍 6 个微调域，设计决策的分析（data宽度 / architecture / objective）具有高参考价值。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>任务局限</strong>：仅做单/双臂操作，未涉及移动操作、导航或人形；"generalist"的范围有限。② <strong>泛化上限明显</strong>：零样本新技能（翻杯、精确插入）成功率仅 5–40%，说明跨任务泛化仍是瓶颈。③ <strong>数据不均衡的影响</strong>：仅 27% 含手腕相机，56% 含语言标注，导致这两个模态的性能明显较弱——论文坦诚但无解法。④ <strong>JAX 生态门槛</strong>：代码全用 JAX 写，PyTorch 用户需要适配，社区贡献门槛较高（后续 lerobot 等做了 PyTorch 移植）。⑤ <strong>Diffusion head 推理速度</strong>：20 步 DDPM 去噪在实时控制上有延迟压力，论文未详细讨论（后续 DDIM / consistency model 可缓解）。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;在通用机器人策略领域具有标志性意义，尤其开源贡献极大推动了社区研究，但能力边界和泛化局限也清晰可见。对于理解后续 VLA 工作（GR00T N1、π0、OpenVLA）是<strong>必读的前置基础</strong>。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · Octo (arXiv:2405.12213) · UC Berkeley 2024</footer>
+
+</body>
+</html>

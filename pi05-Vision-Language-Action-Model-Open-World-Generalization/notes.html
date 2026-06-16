@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>π0.5 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+  .hero { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%); color: #fff; padding: 4em 1.5em 3.5em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -120px; right: -120px; width: 460px; height: 460px; background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -180px; left: -80px; width: 520px; height: 520px; background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(168, 85, 247, 0.18); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: #a855f7; box-shadow: 0 0 12px #a855f7; }
+  .hero h1 { font-size: 2.6em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.15em; color: #cbd5e1; max-width: 720px; margin: 0 0 1.5em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .back-link a { color: var(--nv-green-dark); font-weight: 600; }
+  .toc .back-link a:hover { border-left-color: var(--nv-green-dark); }
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.8em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.3em; display: flex; align-items: center; gap: 0.6em; }
+  section.card h2 .tag { font-family: "JetBrains Mono", monospace; background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; padding: 0.15em 0.55em; border-radius: 6px; font-size: 0.55em; font-weight: 600; letter-spacing: 0.03em; }
+  section.card .full-name { color: var(--muted); font-size: 1em; font-weight: 500; margin: 0 0 1.4em; font-style: italic; }
+  section.card h3 { font-size: 1.2em; font-weight: 700; margin: 1.6em 0 0.6em; color: var(--text); display: flex; align-items: center; gap: 0.4em; }
+  section.card h3 .num { background: var(--code-bg); color: var(--accent); font-size: 0.85em; padding: 0.05em 0.55em; border-radius: 6px; font-family: "JetBrains Mono", monospace; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } section.card h2 { font-size: 1.4em; } }
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.tldr { background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04)); border-color: var(--accent); }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note { background: var(--gold-bg); border-color: var(--gold); }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th { text-align: left; padding: 0.8em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.7em 1em; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  pre { background: #0f172a; color: #e2e8f0; padding: 1.2em 1.4em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; line-height: 1.55; font-size: 0.88em; box-shadow: var(--shadow-sm); }
+  pre code { background: none; color: inherit; padding: 0; border: 0; font-family: "JetBrains Mono", monospace; }
+  .pre-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: -1px; background: #1e293b; color: #94a3b8; border: 1px solid #1e293b; border-radius: var(--radius) var(--radius) 0 0; padding: 0.5em 1.2em; font-size: 0.78em; font-family: "JetBrains Mono", monospace; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pre-label + pre { border-top-left-radius: 0; border-top-right-radius: 0; margin-top: 0; }
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 0.9em 1.4em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>π0.5 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">论文里反复出现、需要一定背景才好理解的关键概念。每个给出定义、原理、在 π0.5 中的具体用法，以及彼此关系。</p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 π0.5 综述</a>
+      <span class="pill">📚 当前 4 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2504.16054" style="color: #93c5fd; text-decoration: none;">arXiv:2504.16054</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 异构 co-training 配方 ============ -->
+    <section class="card" id="co-training">
+      <h2>异构 co-training <span class="tag">Heterogeneous Data</span></h2>
+      <p class="full-name">Co-training on heterogeneous data sources · 多源异构数据联合训练</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把「别的机器人采的动作」「网页图文问答」「人给的口头指令」「高层子任务标注」等<strong>完全不同类型</strong>的数据，全部铸成同一种 token 序列，丢进<strong>同一个模型一起训练</strong>。π0.5 的关键发现：直采移动操作数据只占 2.4%，泛化能力主要来自其余 97.6% 的异构迁移。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么能混在一起训</h3>
+      <p>VLA 的核心技巧是「<strong>万物皆 token 序列</strong>」：图像 patch、文本、bounding box、离散动作 token，都映射进同一个 transformer 的输入/输出序列。于是「机器人模仿学习」就退化成「下一 token 预测」——和训练一个语言模型没有本质区别。既然如此，任何能写成这种序列的数据都能拼进同一个 batch 联合优化。</p>
+
+      <h3><span class="num">2</span>π0.5 的六类数据源</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>代号</th><th>含义</th><th>主要作用</th></tr></thead>
+          <tbody>
+            <tr><td><strong>MM</strong></td><td>Mobile Manipulator：~400h 移动双臂机器人在 ~100 个真实家庭采的家务数据</td><td>最贴近评测任务，但仅占 2.4%</td></tr>
+            <tr><td><strong>ME</strong></td><td>Multi-Environment：非移动（固定）单/双臂在多样家庭采的数据</td><td>跨「环境」迁移，便携故覆盖面更广</td></tr>
+            <tr><td><strong>CE</strong></td><td>Cross-Embodiment：实验室桌面多种机型的多任务数据 + 公开 OXE</td><td>跨「任务/本体」迁移</td></tr>
+            <tr><td><strong>HL</strong></td><td>High-Level：把「打扫卧室」拆成「捡起枕头」等子任务的标注</td><td>教模型做高层语义推理</td></tr>
+            <tr><td><strong>WD</strong></td><td>Web Data：captioning、VQA、物体定位等网页多模态数据</td><td>带来对物体的广博语义（尤其 OOD）</td></tr>
+            <tr><td><strong>VI</strong></td><td>Verbal Instruction：专家实时用语言「遥操作」给已训策略示范好的子任务（仅后训练）</td><td>低成本高杠杆地校准高层策略</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>预训练用 MM+ME+CE+HL+WD（动作全离散化）；后训练聚焦移动操作，去掉 CE、加入 VI，并引入 flow matching action expert。</p>
+
+      <h3><span class="num">3</span>为什么「97.6% 非目标数据」反而有用</h3>
+      <p>核心论点：复杂长程任务（扫整个厨房）<strong>无法靠在目标平台蛮力采数据覆盖所有场景</strong>——成本不可行。于是改为「迁移」：从其它机器人学会怎么抓盘子、从网页学会认识没见过的物体、从口头指令学会怎么把大任务拆成步骤。论文 Figure 8 的反事实证明：只用 104 个场景的纯移动数据、不做完整 co-training 预训练，性能崩塌；而完整配方达到了「直接在测试家训练」的上界。</p>
+
+      <div class="callout note">
+        <div class="callout-head">🎯 与 π0 / 一般 VLM co-training 的区别</div>
+        <p>过去 VLA 多是「用 VLM 的图文数据 co-train」改善物体/背景泛化。π0.5 把范围扩到<strong>机器人相关的更广监督源</strong>（其它机器人、高层子任务、口头指令），并实证：正是这套特定组合让移动机器人能在全新环境完成长程行为。详见 <a href="#hl-ll">两级分层推理</a> 与 <a href="#fast">FAST</a>。</p>
+      </div>
+    </section>
+
+    <!-- ============ 两级分层推理 ============ -->
+    <section class="card" id="hl-ll">
+      <h2>两级分层推理 <span class="tag">High/Low-Level</span></h2>
+      <p class="full-name">Hierarchical high-level / low-level inference · 同一模型的语义子任务 → 低层动作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>推理时模型先回答「现在该干哪个子任务」（如 <code>pick up the plate</code>），再以这句话为条件生成低层动作 chunk。<strong>关键：高层和低层是同一套权重</strong>，不是两个模型——更像 chain-of-thought 把「思考」和「行动」串在一个模型里。</p>
+      </div>
+
+      <h3><span class="num">1</span>形式化分解</h3>
+      <p>模型联合分布按链式法则拆成两部分：</p>
+      <div class="math-display">\[ \pi_\theta(a_{t:t+H}, \hat{\ell}\,|\,o_t, \ell) = \underbrace{\pi_\theta(a_{t:t+H}\,|\,o_t, \hat{\ell})}_{\text{low-level: 动作}} \cdot \underbrace{\pi_\theta(\hat{\ell}\,|\,o_t, \ell)}_{\text{high-level: 子任务}} \]</div>
+      <ul>
+        <li>\(\ell\)：人给的总指令（如「把碗碟放进水槽」）；</li>
+        <li>\(\hat{\ell}\)：模型自己预测出的语义子任务（如「拿起杯子」）；</li>
+        <li><strong>注意</strong>：低层动作分布<strong>只依赖 \(\hat{\ell}\)，不直接依赖 \(\ell\)</strong>——总指令的语义被「蒸馏」进了子任务这个文本瓶颈。</li>
+      </ul>
+
+      <h3><span class="num">2</span>运行节奏</h3>
+      <p>高层子任务以<strong>较低频率</strong>更新（一个子任务管一小段），低层动作 chunk 以 50 Hz 高频输出。这与「embodied chain-of-thought」每步都推理不同，省算力且更稳定。一次低层推理＝自回归解出子任务文本 → 10 步 flow matching 去噪出连续动作（见 <a href="#flow-matching">flow matching action expert</a>）。</p>
+
+      <h3><span class="num">3</span>为什么不用两个模型</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>π0.5：单模型两级</th><th>常见方案：VLM 规划 + 独立低层策略</th></tr></thead>
+          <tbody>
+            <tr><td>权重</td><td>同一套（高/低共享表征）</td><td>两套，分别训练</td></tr>
+            <tr><td>知识来源</td><td>高低两级都吃同一异构数据，互相塑造</td><td>规划器靠 LLM 常识，低层靠机器人数据，割裂</td></tr>
+            <tr><td>类比</td><td>chain-of-thought / test-time compute</td><td>经典 task-and-motion 分层</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">🤯 最反直觉的发现</div>
+        <p>Figure 13：完整 π0.5 甚至<strong>超过人类 oracle 高层策略</strong>；而次优的是 <em>implicit HL</em>——推理时根本不显式分层，但训练里包含了子任务预测数据。这说明显式分层有增益，<strong>但大部分好处只靠「把高层数据放进 <a href="#co-training">co-training</a> 混合」就已获得</strong>——分层数据在悄悄塑造低层表征。用 GPT-4 零样本当高层策略反而最差，印证「高层也必须用机器人数据适配」。</p>
+      </div>
+    </section>
+
+    <!-- ============ FAST action tokenizer ============ -->
+    <section class="card" id="fast">
+      <h2>FAST <span class="tag">Action Tokenizer</span></h2>
+      <p class="full-name">压缩式离散动作分词（Pertsch et al. 2025，π0.5 预训练阶段使用）</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把连续动作 chunk 用类似「频域变换 + 压缩编码」的方式压成一串<strong>离散 token</strong>，于是动作就能像文字一样进自回归 transformer 训练。π0.5 <strong>预训练阶段</strong>全靠它把动作变成文本 token，训练又快又稳。</p>
+      </div>
+
+      <h3><span class="num">1</span>解决什么痛点</h3>
+      <p>动作是连续高维向量，还是 chunk（一段未来轨迹）。若朴素地每维离散成一个 token，序列又长又冗余，自回归训练慢。FAST 借鉴信号压缩思路（DCT 频域 + 熵编码类压缩），把一个动作 chunk 压成<strong>少量、信息密集</strong>的离散 token，大幅缩短序列、提高训练效率。</p>
+
+      <h3><span class="num">2</span>在 π0.5 里的角色</h3>
+      <div class="pre-label"><span>π0.5 两阶段的动作表示</span><span>对照</span></div>
+<pre><code>预训练 (alpha=0)：动作 --FAST--> 离散 token --> 和文本一样做下一token预测
+                ↑ 训练快、与 VLM 自回归接口同构、语言跟随强
+
+后训练 (alpha=10)：保留文本/FAST 的交叉熵 + 新增 action expert 走 flow matching
+                ↑ 推理时改用连续动作，实时、细粒度</code></pre>
+      <p>论文用注意力矩阵保证「FAST 离散表示」与「flow matching 连续表示」<strong>互不注意</strong>，两条动作通路共存于一个模型。</p>
+
+      <h3><span class="num">3</span>为什么不直接全程用 FAST</h3>
+      <p>离散 token 推理时要<strong>逐 token 自回归解码</strong>，对实时控制太慢；而且离散化损失细粒度。所以 π0.5 的设计是「<strong>离散训练 + 连续推理</strong>」：用 FAST 拿到快而稳的预训练，再用 <a href="#flow-matching">flow matching</a> 拿到实时连续控制。论文也指出（引 Pertsch et al.）：按计算量算，FAST token 训练比纯 diffusion 训练更高效，这也是 π0.5 优于 π0 的原因之一。</p>
+    </section>
+
+    <!-- ============ Flow matching action expert ============ -->
+    <section class="card" id="flow-matching">
+      <span id="action-expert"></span>
+      <h2>Flow Matching Action Expert <span class="tag">Continuous Action</span></h2>
+      <p class="full-name">流匹配 + 专属 action-expert 权重 · 连续动作生成（继承自 π0）</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p><strong>Flow matching</strong> 是一种类 diffusion 的连续生成方法：学一个「向量场」，从纯噪声出发迭代积分若干步，得到平滑连续动作 chunk。<strong>Action expert</strong> 是 transformer 里专门处理动作 token 的一套独立权重（300M，类 MoE），让动作生成用比主干小得多的模型实时跑。π0.5 <strong>后训练</strong>才加入它。</p>
+      </div>
+
+      <h3><span class="num">1</span>Flow matching 怎么生成动作</h3>
+      <p>构造从噪声到真动作的线性插值轨迹：</p>
+      <div class="math-display">\[ a^{\tau,\omega}_{t:t+H} = \tau\, a_{t:t+H} + (1-\tau)\,\omega,\qquad \omega \sim \mathcal{N}(0, I),\ \tau \in [0,1] \]</div>
+      <p>模型被训练去预测流场（向量场）\(\omega - a_t\)；推理时从噪声 \(\omega\) 出发，沿预测的流场<strong>积分 10 步</strong>即得连续动作 chunk。相比逐 token 自回归，这是<strong>非自回归、并行</strong>的，适合实时控制。</p>
+
+      <h3><span class="num">2</span>Action Expert：动作的「专科医生」</h3>
+      <ul>
+        <li>沿用 π0 设计：动作 token 线性投影进 transformer 嵌入空间，<strong>用一套独立的专家权重</strong>处理（类似 mixture-of-experts）。</li>
+        <li>它可以<strong>显著小于</strong>主干 LLM（这里 300M vs 主干 ~3B），因为只需专注「把条件 + 噪声映射成流场」。</li>
+        <li>后训练时它<strong>随机初始化</strong>从头学，主干则继承预训练好的 VLA 权重。</li>
+      </ul>
+
+      <h3><span class="num">3</span>联合损失（Eq. 1）</h3>
+      <div class="math-display">\[ \mathbb{E}\Big[\, \underbrace{H\big(x_{1:M}, f^\ell_\theta(o_t,\ell)\big)}_{\text{文本/FAST 交叉熵}} + \alpha\, \underbrace{\big\| \omega - a_{t:t+H} - f^a_\theta(a^{\tau,\omega}_{t:t+H}, o_t, \ell)\big\|^2}_{\text{flow matching 回归}} \Big] \]</div>
+      <ul>
+        <li><strong>预训练 \(\alpha=0\)</strong>：退化成纯 VLM 自回归训练（动作即 FAST 文本 token），稳、且语言跟随强；</li>
+        <li><strong>后训练 \(\alpha=10\)</strong>：开启 flow matching，让 action expert 学连续动作，同时保留交叉熵以不丢文本能力。</li>
+      </ul>
+
+      <div class="callout note">
+        <div class="callout-head">🔗 与 <a href="#fast">FAST</a> 的分工</div>
+        <p>FAST＝<strong>训练期</strong>的离散动作表示（快、稳、利于预训练）；flow matching action expert＝<strong>推理期</strong>的连续动作生成（实时、细粒度）。两者在同一模型里靠注意力掩码隔离，是 π0.5「离散训练 + 连续推理」混合方案的两半。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#co-training">异构 co-training 配方</a></li>
+      <li><a href="#hl-ll">两级分层推理</a></li>
+      <li><a href="#fast">FAST — 动作分词器</a></li>
+      <li><a href="#flow-matching">Flow Matching Action Expert</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link"><li><a href="./summary.html">← 返回综述</a></li></ul>
+  </aside>
+</div>
+
+<footer>Reading Notes · π0.5 (arXiv:2504.16054) · 配套笔记</footer>
+
+</body>
+</html>

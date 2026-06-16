@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Being-0 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Peking University · BAAI · BeingBeyond · Embodied Agent</span>
+    <h1>Being-0:<br>Humanoid Agent via<br>VLM + Modular Skills</h1>
+    <p class="subtitle">想让人形机器人完成「去找杯子、泡咖啡、送过来」这类长程任务：直接把 GPT-4o 接底层技能效果很差——<strong>双足不稳、FM 感知慢、导航停位不对</strong>。解法是插一个轻量 <strong>Connector VLM</strong>，专门把 FM 的语言计划翻译成实时技能命令并精调停止位姿，把系统效率提升 <strong>4.2×</strong>、长程任务完成率达 <strong>84.4%</strong>。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 人形移动操作 · 深读 · Track B 触及 locomotion skill</span>
+      <span class="pill">📅 2025-03 (v2: 2025-05)</span>
+      <span class="pill">🏢 Peking University / BAAI / BeingBeyond</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.12533">arXiv:2503.12533</a></span>
+      <span class="pill">🌐 <a href="https://beingbeyond.github.io/Being-0">项目页面</a></span>
+      <span class="pill">⭐ <a href="https://github.com/BeingBeyond/Being-0">GitHub (MIT, code TBD)</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">长程任务完成率</div>
+    <div class="value">84.4<span class="unit">%</span></div>
+    <div class="desc">5 类长程任务平均</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">导航效率提升</div>
+    <div class="value">4.2<span class="unit">×</span></div>
+    <div class="desc">vs 纯 FM-based agent</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">Connector 推理延迟</div>
+    <div class="value">~1<span class="unit">s</span></div>
+    <div class="desc">板载 Jetson AGX</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">操作技能采集成本</div>
+    <div class="value">&lt;1<span class="unit">h</span></div>
+    <div class="desc">50–150 条轨迹/技能</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">人形机器人的长程任务失败，<strong>不是因为高层没想法、低层没技能</strong>，而是两者之间缺一个能处理「双足不稳、FM 感知慢、停位不对」三重问题的<strong>实时中间层</strong>。用一个轻量 <a href="./notes.html#connector" class="note-link">Connector VLM</a> 专门填这个鸿沟——把抽象语言计划转成精确的、闭环的技能命令——是性价比最高的工程解法。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>人形机器人已有 RL 训好的稳健<a href="./notes.html#locomotion-skill" class="note-link">locomotion skill</a>，也有遥操+模仿学习训的<a href="./notes.html#modular-skills" class="note-link">manipulation skill</a>；缺的是「怎么把它们串起来」。</li>
+          <li>直接用 GPT-4o 串接：① 双足不稳导致每步都需频繁纠偏，但 FM 推理太慢；② FM 的 3D 空间理解差，方向/深度判断错误；③ 导航结束停止位置可能不适合后续抓取。</li>
+          <li>解法：训一个<strong>轻量 VLM（VideoLLaMA2 backbone）</strong>专门处理第一人称导航图像，学会：目标检测 + 双目深度估计 + 技能预测 + 位姿对齐方向预测，以约 1s/帧推理速度闭环。</li>
+          <li>这个 Connector 不替代 FM，而是在 FM 给出语言计划后，<strong>实时把计划落地</strong>：把「找杯子」翻译成一系列 joystick 指令直到到位，然后触发抓取技能。</li>
+          <li>结果：FM 调用频率大幅降低，导航速度 4.2×，长程任务从 0% 提升到 75–90%。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#foundation-model" class="note-link">Foundation Model</a>（GPT-4o，云端）</strong>：负责 Reasoning（理解场景）+ Detection（判断技能是否成功）+ Planning（从技能库选下一个技能）。高延迟但只在关键决策点触发。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#connector" class="note-link">Connector VLM</a>（VideoLLaMA2，板载 Jetson）</strong>：Grounded Skill Planning（把 FM 的语言计划接地到可执行技能）+ Visual Navigation（闭环发 joystick 指令）+ Pose Adjustment（导航终止时微调位姿以利抓取）。~1s/帧，低延迟。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#modular-skills" class="note-link">Modular Skill Library</a>（板载）</strong>：locomotion skill（RL + sim-to-real，50 Hz，<a href="./notes.html#joystick-command" class="note-link">joystick command</a>接口）+ manipulation skills（Apple VisionPro 遥操采数据 + <a href="./notes.html#act" class="note-link">ACT</a> 行为克隆，10 Hz，语言描述接口）。两者解耦，下身走路上身抓取。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">去掉 Connector，Fetch-bottle / Deliver-basket / Prepare-coffee 全部 <strong>0% 完成</strong>；加上 Connector 分别达到 90% / 80% / 75%。Active camera 能让导航+抓取同时满分，固定相机角度无法两全。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>Fetch-bottle: w/o Connector 0.00 → Being-0 0.90</li>
+            <li>Deliver-basket: 0.00 → 0.80；Prepare-coffee: 0.00 → 0.75</li>
+            <li>Make-coffee: 0.90 → 0.90；Deliver-coffee: 0.33 → 0.87</li>
+            <li>平均完成率 84.4%（5 任务）</li>
+            <li>导航效率：w/o Connector 2.3 cm/s（成功率 0/5）→ Being-0 9.6 cm/s（5/5）</li>
+            <li>Pose Adjustment：Grasp-bottle 2/5 → 4/5；Grasp-coffee 1/5 → 4/5</li>
+            <li>Active camera vs 最优固定角：导航+操作全部 5/5（固定角无法两全）</li>
+            <li>操作技能（seen objects）：Grasp-bottle 0.86，Handout-snack 0.90，Play-chess 0.90</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（人形移动操作）直接命中</strong>：这是人形机器人上「FM + Connector + 模块化技能」三层 agent 框架的代表性系统实现，Connector 模块的设计思路和 pose adjustment 策略可直接借鉴。<strong>Track B（足式算法）浅触及</strong>：locomotion skill 用 RL + sim-to-real 训练（joystick command 接口），但论文重心不在 locomotion 算法本身，只作为 skill library 的一个组件——如关注 locomotion 算法细节请查阅其引用的 Ha et al. 2024。本文应<strong>深读</strong>（Track A 核心样本）。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
+
+      <!-- 观点1：真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：FM + 技能库直连在人形机器人上效果差，原因是三重挑战的叠加：双足不稳需频繁纠偏、FM 推理太慢、导航停位不利于后续抓取。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">Unlike wheeled robots, which can precisely follow planned navigation trajectories and stop at specific positions for object manipulation, humanoid robots face inherent instability in bipedal locomotion. This instability necessitates frequent adjustments to locomotion commands for error correction. However, existing FMs, such as GPT-4o, suffer from limitations in inference efficiency and embodied scene understanding, making humanoid agents less reactive and robust during the alternating phases of navigation and manipulation in long-horizon tasks.</blockquote>
+          <div class="ev-trans">与轮式机器人不同——轮式机器人可以精确跟随规划好的导航轨迹并在特定位置停下来进行物体操作——人形机器人在双足运动中面临内在的不稳定性。这种不稳定性需要频繁调整运动指令以纠正误差。然而，现有的 FM（如 GPT-4o）在推理效率和具身场景理解方面存在局限性，使得人形 agent 在长程任务中交替执行导航和操作阶段时反应较慢、鲁棒性较差。</div>
+          <div class="ev-gloss">这三重挑战（不稳定 → 需高频纠偏；FM 慢 → 无法高频；FM 3D 理解差 → 方向错）共同造成系统失效，是提出 Connector 的动机。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_1_framework_overview.png" alt="Figure 1: Being-0 框架总览">
+          <figcaption><strong>Figure 1（p.1）：</strong>Being-0 的三层架构——顶层 Foundation Model（GPT-4o，云端）负责 Reasoning / Detection / Planning；中层 <a href="./notes.html#connector" class="note-link">Embodied Connector</a>（VideoLLaMA2，板载）负责 Navigation / Adjustment；底层 Modular Skill Library（Locomotion + Manipulation）在板载设备直接执行。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点2：Connector 核心定位 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心创新：Connector 是一个用第一人称导航图像微调的轻量 VLM，专门负责把 FM 的语言计划翻译成可执行技能命令，并以约 1 秒推理延迟实现闭环导航。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">To address these challenges, we propose a novel Connector module, which serves as an intermediate layer between the FM and skill library in Being-0. The Connector generates real-time commands for both locomotion and manipulation skills based on the FM's language plan and visual observations. We model the Connector as a vision-language model (VLM) and train it using first-person images of indoor navigation annotated with language instructions, object labels, and bounding boxes.</blockquote>
+          <div class="ev-trans">为了应对这些挑战，我们提出了一个新颖的 Connector 模块，它在 Being-0 中充当 FM 与技能库之间的中间层。Connector 基于 FM 的语言计划和视觉观测，为运动和操作技能生成实时命令。我们将 Connector 建模为一个视觉-语言模型（VLM），并使用标注了语言指令、物体标签和边界框的室内导航第一人称图像对其进行训练。</div>
+          <div class="ev-gloss">关键词：「中间层」「实时」「第一人称图像微调」——Connector 不是通用 VLM，而是针对导航场景定制训练的具身决策器。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §4.1 Training the VLM</div>
+          <blockquote class="ev-quote">The trained VLM achieves an average inference time of approximately 1 second on onboard devices across all tasks, significantly outperforming the latency of GPT-4o on cloud services.</blockquote>
+          <div class="ev-trans">训练好的 VLM 在板载设备上所有任务的平均推理时间约为 1 秒，显著优于 GPT-4o 云服务的延迟。</div>
+          <div class="ev-gloss">~1s vs GPT-4o（数秒至十几秒）的延迟差异直接决定了闭环导航的频率——这是 4.2× 效率提升的底层原因。</div>
+        </div>
+      </div>
+
+      <!-- 观点3：技能库设计——解耦上下体 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 技能库设计：上下体功能解耦——下体用 RL sim-to-real 训 locomotion（joystick command 接口）；上体用 Apple VisionPro 遥操 + ACT 行为克隆训操作技能——两者独立，新技能 50–150 条轨迹即可。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §3.1 Modular Skill Library</div>
+          <blockquote class="ev-quote">For most tasks, we observe that the lower body and upper body serve distinct functionalities: the lower body is primarily used for navigation, while the upper body is used for manipulation. This observation motivates us to develop separate skills for stable lower-body locomotion and upper-body manipulation, building on recent advances that have demonstrated the feasibility of acquiring abundant upper-body manipulation skills while keeping the lower body fixed.</blockquote>
+          <div class="ev-trans">对于大多数任务，我们观察到下体和上体具有不同的功能：下体主要用于导航，而上体用于操作。这一观察促使我们分别为稳定的下体运动和上体操作开发独立技能，基于最近证明了在保持下体固定的同时可以获取大量上体操作技能的可行性的进展。</div>
+          <div class="ev-gloss">解耦是可扩展性的关键：操作技能可独立增加而不影响locomotion。这与 whole-body control 将两者合并进一个策略的路线形成对比。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §3.1 Acquiring Manipulation Skills</div>
+          <blockquote class="ev-quote">This approach ensures scalability of the skill library, as a new skill can be acquired with 50 ∼150 trajectories, requiring less than 1 hour of teleoperation.</blockquote>
+          <div class="ev-trans">这种方法确保了技能库的可扩展性，因为一个新技能只需 50~150 条轨迹即可获得，只需不到 1 小时的遥操作。</div>
+          <div class="ev-gloss">50–150 条轨迹 + &lt;1小时遥操是系统实用性的重要指标——说明技能库可以低成本快速扩展。</div>
+        </div>
+      </div>
+
+      <!-- 观点4：Connector 的三项功能 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> Connector 的三项具体功能：Grounded Skill Planning（把 FM 语言计划接地到可执行技能并纠错）、Visual Navigation（用双目深度+边界框闭环发 joystick 命令）、Pose Adjustment（导航结束时微调位姿以利操作）。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §4.2 Grounded Skill Planning</div>
+          <blockquote class="ev-quote">By leveraging its enhanced understanding of relative 3D object locations, the VLM not only grounds the FM's plans into executable skills but also corrects or refines them when necessary. For example: If the FM generates a plan to "grasp a cup" but the robot is still far from the table, the VLM interprets "grasp a cup" as a long-term goal and outputs the feasible skill (e.g., "move towards(table).").</blockquote>
+          <div class="ev-trans">通过利用其对相对 3D 物体位置的增强理解，VLM 不仅将 FM 的计划接地到可执行技能，还在必要时对其进行纠正或细化。例如：如果 FM 生成了「抓取杯子」的计划，但机器人仍然离桌子很远，VLM 将「抓取杯子」解读为长期目标，并输出可行技能（如「向桌子移动」）。</div>
+          <div class="ev-gloss">这是 Connector 的核心价值之一：它能识别 FM 计划的「时机不对」，并自动选择更低层次的可行动作，避免 FM 频繁轮询。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §4.4 Coordinating Navigation and Manipulation</div>
+          <blockquote class="ev-quote">To address the challenge that navigation processes may terminate in suboptimal poses for subsequent manipulation skills, we propose a pose adjustment method using the VLM. During navigation, the VLM predicts not only the object's bounding box but also the optimal alignment direction for the robot relative to the object.</blockquote>
+          <div class="ev-trans">为了解决导航过程可能在对后续操作技能不利的姿态下终止的挑战，我们提出了一种使用 VLM 的位姿调整方法。在导航过程中，VLM 不仅预测物体的边界框，还预测机器人相对于物体的最优对齐方向。</div>
+          <div class="ev-gloss">Pose Adjustment 是一个常被忽视的关键细节：导航「到了」不等于「到了能抓」，这个微调决定了操作成功率（Grasp-coffee 从 1/5 → 4/5）。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_2_workflow_make_coffee.png" alt="Figure 2: make coffee 完整工作流">
+          <figcaption><strong>Figure 2（p.3）：</strong>「泡一杯咖啡」完整工作流——FM（黄框）在关键决策点触发；Connector（绿框）处理中间所有导航/调整；底层技能（蓝框）执行具体动作。注意 FM 只在关键点介入，大量闭环由 Connector 处理。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点5：Connector ablation 主结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> Connector 是系统的核心贡献：去掉 Connector 后，需要导航的 3 类任务（Fetch-bottle、Deliver-basket、Prepare-coffee）完成率全部降为 0，导航速度降至 2.3 cm/s 且 5 次全部失败。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §5.2 Solving Long-Horizon Embodied Tasks</div>
+          <blockquote class="ev-quote">The results demonstrate a significant performance improvement when the Connector module is utilized, particularly for tasks requiring multiple steps and integration of different skills. For example, in the Fetch-bottle task, the baseline system (w/o Connector) achieves a score of 0.00, whereas the system with the Connector attains a remarkable score of 0.90.</blockquote>
+          <div class="ev-trans">结果表明，使用 Connector 模块时性能显著提升，尤其是对于需要多步骤和整合不同技能的任务。例如，在 Fetch-bottle 任务中，基线系统（不带 Connector）得分为 0.00，而带 Connector 的系统达到了令人瞩目的 0.90 分。</div>
+          <div class="ev-gloss">Table 1 的「w/o Connector」一列有三个 0.00——这是论文最有说服力的数据点：没有 Connector，系统对需要导航的任务完全无效。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §5.3 Ablation Study · Efficiency</div>
+          <blockquote class="ev-quote">The results indicate that Being-0 with the Connector achieves a 4.2× increase in moving speed compared to the configuration without the Connector, along with a perfect success rate of 5/5. In contrast, the agent without the Connector consistently fails to reach the distant target. This is because GPT-4o alone frequently makes errors in planning locomotion directions, leading to inefficient or incorrect navigation paths.</blockquote>
+          <div class="ev-trans">结果表明，带 Connector 的 Being-0 与不带 Connector 的配置相比，移动速度提高了 4.2 倍，同时成功率达到完美的 5/5。相比之下，不带 Connector 的 agent 始终无法到达遥远目标。这是因为 GPT-4o 单独使用时频繁在规划运动方向上出错，导致导航路径低效或错误。</div>
+          <div class="ev-gloss">4.2× 提速来自 Connector 的闭环频率（~1s）vs GPT-4o 的高延迟（数秒+）。「GPT-4o 频繁方向规划出错」是直接证据，说明 FM 不适合做低层导航闭环。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_3_connector_vs_noc_active_camera.png" alt="Figure 3+4: Connector 对比 + 主动相机消融">
+          <figcaption><strong>Figure 3（上，p.12）：</strong>w/o Connector（第一行）vs Being-0（第二行）执行「Prepare-coffee」对比——不带 Connector 的 agent 在导航阶段反复迷失；带 Connector 只用少量 FM 查询即完成。<strong>Figure 4（下，p.12）：</strong>固定相机不同俯仰角消融——没有角度能同时满足导航和操作需求，主动相机两者均 5/5。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点6：Active Camera 的必要性 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 主动相机（Active Camera）是系统的硬件关键：任何固定角度都无法同时满足导航（需小俯仰角看远处目标）和操作（需大俯仰角看桌面物体）的需求，只有主动相机能在两者之间动态切换，实现全 5/5 满分。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §5.3 Ablation Study · Active Vision</div>
+          <blockquote class="ev-quote">However, no fixed camera configuration achieves high success rates for both navigation and manipulation tasks. In comparison, Being-0 with an active camera consistently achieves perfect success rates across all tasks. These results underscore the significant advantage of an active camera, enabling the robot to dynamically adapt its field of view to meet the requirements of diverse tasks.</blockquote>
+          <div class="ev-trans">然而，没有任何固定相机配置能在导航和操作任务上同时取得高成功率。相比之下，带主动相机的 Being-0 在所有任务上始终达到完美的成功率。这些结果突显了主动相机的显著优势，使机器人能够动态调整视野以满足多样化任务的需求。</div>
+          <div class="ev-gloss">Table 3：Fixed Cam (0.3) 导航 5/5 但抓咖啡 0/5；Fixed Cam (0.9) 抓咖啡 5/5 但导航 0/5——主动相机是唯一解。这也反映了系统设计的务实性：用 2-DoF 颈关节解决一个看似简单但实际关键的工程问题。</div>
+        </div>
+      </div>
+
+      <!-- 观点7：鲁棒性与可扩展性 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 系统具备导航鲁棒性（跨房间 83%）和技能库可扩展性（扩展到触觉传感器的 Play-chess 技能、未见物体 Handout-snack 100%），但当前仅限平地，不含蹲坐跳等复杂运动。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7–8 · §5.4 Robustness and Scalability</div>
+          <blockquote class="ev-quote">Furthermore, the same framework used for acquiring manipulation skills can be extended to dexterous hands equipped with tactile sensors (the Play-chess task in Table 6) and tasks requiring precise manipulation of small objects, demonstrating the scalability of the skill library to support more complex and challenging manipulation tasks.</blockquote>
+          <div class="ev-trans">此外，用于获取操作技能的同一框架可以扩展到配备触觉传感器的灵巧手（Table 6 中的 Play-chess 任务）以及需要精确操作小物体的任务，展示了技能库支持更复杂和更有挑战性的操作任务的可扩展性。</div>
+          <div class="ev-gloss">触觉传感器 + 相同框架 = skill library 的「接口」设计足够通用，新传感模态只需修改 skill 本身不需改动 Connector 或 FM。这是模块化设计价值的具体体现。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8–9 · §7 Conclusion and Limitations</div>
+          <blockquote class="ev-quote">Despite these advancements, the current system does not incorporate complex locomotion skills such as crouching, sitting, or jumping. These skills could extend the humanoid's functionality beyond flat-ground settings, enabling tasks like climbing stairs, working from seated positions, or manipulating objects at varying heights.</blockquote>
+          <div class="ev-trans">尽管取得了这些进展，当前系统没有纳入复杂的运动技能，如蹲下、坐下或跳跃。这些技能可以将人形机器人的功能扩展到平地以外，支持爬楼梯、从坐姿工作或在不同高度操作物体等任务。</div>
+          <div class="ev-gloss">作者自我披露的主要局限：locomotion skill 仍局限于平地 joystick 控制，缺乏多样化下肢行为。这也意味着 Track B 的 locomotion 算法改进有很大的接入空间。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_4_adjustment_manipulation_skills.png" alt="Figure 5+6: Adjustment 消融 + 操作技能展示">
+          <figcaption><strong>Figure 5（上，p.13）：</strong>Pose Adjustment 消融——左列（w/o Adjustment）显示导航结束后位姿不利于抓取；右列（Being-0）通过弧形接近对齐到最优抓取位置。<strong>Figure 6（下，p.13）：</strong>技能库中多个技能的第一人称录像——Play-chess（触觉）、Toy-bricks、Open-beer、Handout-snack、Grasp-bottle、Place-pole。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点8：部署架构——云端+板载分层 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 部署架构：唯独 FM（GPT-4o）在云端，其余所有模块（Connector、locomotion、manipulation）均在板载 NVIDIA Jetson AGX 运行——这是实现实时性的关键工程决策。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">By deploying all modules – except for the FM on the cloud – on onboard computation devices, Being-0 achieves 4.2× efficiency in navigation compared to fully FM-based agents.</blockquote>
+          <div class="ev-trans">通过将所有模块——除了在云端的 FM——都部署在板载计算设备上，Being-0 在导航方面与完全基于 FM 的 agent 相比实现了 4.2 倍的效率提升。</div>
+          <div class="ev-gloss">「除 FM 外全部板载」是系统实用化的工程基础。Jetson AGX 运行 ~1s 推理的轻量 VLM（VideoLLaMA2）——选择 backbone 时的轻量化考量与板载部署需求直接挂钩。</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">项目页面提供了 GitHub 链接，但截至当前代码尚未实际发布——仅有占位文档和 MIT license 声明。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-part">承诺开源</span> <a href="https://github.com/BeingBeyond/Being-0">github.com/BeingBeyond/Being-0</a>（MIT license；README 声明「We will release our code within this year」；截至 2026-06 尚未实际发布）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未公开</span> Connector VLM / manipulation policy 权重均未发布</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> 导航图像数据集、操作遥操轨迹均未发布</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚙️ 开源状态说明</div>
+        <p>论文正文只写「visit our project page」，项目页面（<a href="https://beingbeyond.github.io/Being-0">beingbeyond.github.io/Being-0</a>）有 GitHub 链接，但 repo 当前仅含 README 和 MIT license 占位文件，实际代码尚未推送。如项目上有代码依赖需求，建议<strong>定期关注该 GitHub repo</strong>。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.2 · Abstract</div>
+        <blockquote class="ev-quote">For further details and videos, visit our project page.</blockquote>
+        <div class="ev-trans">欲了解更多详情和视频，请访问我们的项目页面。</div>
+        <div class="ev-gloss">论文正文对代码/权重不做开源承诺，项目页面仅提供视频演示。GitHub repo 的代码承诺来自 repo README，不在论文 PDF 中。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>① <strong>清晰的工程 gap 定位</strong>：直接指出「FM + skill library 直连在人形机器人上失败的三个原因」，并用消融实验一一对照验证。② <strong>Connector + Pose Adjustment 是实用创新</strong>：把导航终止位姿调整纳入系统设计，是移动操作系统中容易被忽视的关键细节，消融结果（Grasp-coffee 1/5 → 4/5）有说服力。③ <strong>完整系统评测</strong>：在真实办公环境做了多类长程任务（5 类，涵盖导航+操作+时序规划），比纯技能评测更有参考价值。④ 系统架构层次清晰（FM 云端 + Connector + 技能库板载），对搭建类似系统有直接参考价值。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>任务规模偏小</strong>：只评测了 5 类任务，每类约 5–10 次，在单一 20×20m 办公环境，泛化性有限。② <strong>Locomotion skill 极其基础</strong>：仅支持平地 joystick 命令（直走/后退/转向/侧步），不涉及复杂地形、避障、动态障碍——locomotion 不是本文贡献重点。③ <strong>代码 / 权重未开源</strong>：复现难度高；虽硬件（Unitree H1-2 + Inspire Hands + ZED-mini + Jetson AGX）公开，但 Connector 训练数据和权重未释出。④ <strong>Connector 训练数据来源不详</strong>：论文描述用「室内导航第一人称图像」微调，但数据量、来源、多样性未详细披露，难以评估 Connector 的泛化边界。⑤ FM（GPT-4o）依赖云服务，存在延迟和成本问题，作者坦承未来需轻量化 FM。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;以「Connector 填鸿沟」为核心思路，是人形机器人 agent 系统的一个清晰且有实验支撑的实现范式；不是 locomotion 算法突破，而是系统集成的工程贡献。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · Being-0 (arXiv:2503.12533)</footer>
+
+</body>
+</html>

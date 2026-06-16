@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>论文推荐 · Paper Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --accent:#0ea5e9; --accent-dark:#0369a1; --purple:#6366f1; --bg:#fafafa; --card:#fff; --border:#e5e7eb; --text:#0f172a; --text-soft:#334155; --muted:#64748b; --code-bg:#f1f5f9; --shadow-sm:0 1px 2px rgba(15,23,42,.04); --shadow:0 4px 16px rgba(15,23,42,.06); --radius:12px; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:"Inter","Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; font-size:16px; line-height:1.7; }
+  .hero { background:linear-gradient(135deg,#0c4a6e 0%,#1e1b4b 70%,#312e81 100%); color:#fff; padding:3.2em 1.5em 2.8em; position:relative; overflow:hidden; }
+  .hero::before { content:""; position:absolute; top:-100px; right:-90px; width:380px; height:380px; background:radial-gradient(circle,rgba(14,165,233,.4),transparent 70%); }
+  .hero-inner { max-width:980px; margin:0 auto; position:relative; z-index:1; }
+  .eyebrow { display:inline-flex; align-items:center; gap:.5em; background:rgba(14,165,233,.18); color:#7dd3fc; border:1px solid rgba(14,165,233,.4); padding:.35em .9em; border-radius:999px; font-size:.82em; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+  .eyebrow .dot { width:8px; height:8px; border-radius:50%; background:#38bdf8; box-shadow:0 0 12px #38bdf8; }
+  .hero h1 { font-size:2.3em; font-weight:800; margin:.4em 0 .2em; background:linear-gradient(135deg,#fff,#cbd5e1); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .hero .sub { color:#cbd5e1; max-width:660px; margin:0; }
+  .hero .pills { margin-top:1em; display:flex; gap:.5em; flex-wrap:wrap; }
+  .hero .pill { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); color:#e2e8f0; padding:.35em .85em; border-radius:8px; font-size:.83em; text-decoration:none; }
+  .wrap { max-width:980px; margin:2.4em auto 5em; padding:0 1.5em; }
+  .group { margin-bottom:2.2em; }
+  .group h2 { font-size:1.3em; font-weight:700; display:flex; align-items:center; gap:.5em; margin:0 0 .8em; padding-bottom:.4em; border-bottom:2px solid var(--border); }
+  .group h2 .dot { width:10px; height:10px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--purple)); }
+  .group h2 .cnt { font-family:"JetBrains Mono",monospace; font-size:.6em; font-weight:700; color:var(--muted); background:var(--code-bg); border:1px solid var(--border); border-radius:999px; padding:.1em .6em; }
+  .rec { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:1em 1.2em; margin:.7em 0; box-shadow:var(--shadow-sm); transition:box-shadow .2s; }
+  .rec:hover { box-shadow:var(--shadow); }
+  .rec-top { display:flex; align-items:baseline; gap:.6em; }
+  .rec-title { font-weight:700; color:var(--text); text-decoration:none; font-size:1.05em; }
+  .rec-title:hover { color:var(--accent-dark); }
+  .tag-new { font-size:.7em; font-weight:700; color:#fff; background:linear-gradient(135deg,#f43f5e,#fb7185); border-radius:999px; padding:.1em .55em; }
+  .rec-meta { color:var(--muted); font-size:.84em; margin:.3em 0; }
+  .rec-meta a { color:var(--accent-dark); text-decoration:none; }
+  .rec-why { font-size:.84em; color:var(--text-soft); margin:.35em 0; }
+  .kw { display:inline-block; font-size:.92em; background:rgba(99,102,241,.1); color:var(--purple); border:1px solid rgba(99,102,241,.25); border-radius:6px; padding:.05em .5em; margin:0 .25em .25em 0; }
+  .rec-abs { font-size:.9em; color:var(--text-soft); margin:.5em 0 0; }
+  .empty { color:var(--muted); padding:.5em 0; }
+  footer { text-align:center; color:var(--muted); font-size:.85em; padding:1em; }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Paper Reading · 论文推荐</span>
+    <h1>每日论文推荐</h1>
+    <p class="sub">每天从 arXiv (cs.RO) 拉取最新论文，按你的领域(VLA / 人形控制 / 操作)分类并标注"新"。想深读哪篇，跟我说篇名即可。</p>
+    <div class="pills">
+      <span class="pill">🆕 本次 18 篇新</span>
+      <span class="pill">📄 共 18 篇候选</span>
+      <span class="pill">🕒 更新于 2026-06-16 08:57</span>
+      <a class="pill" href="./recommendations-curated.html">🎯 策展版推荐</a>
+      <a class="pill" href="./index.html">📚 返回阅读索引</a>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+<section class="group" id="f-vla"><h2><span class="dot"></span>具身智能 / VLA <span class="cnt">6</span></h2>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14409v1" target="_blank">Hy-Embodied-0.5-VLA: From Vision-Language-Action Models to a Real-World Robot Learning Stack</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">He Zhang, Lingzhu Xiang, Haitao Lin et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14409v1" target="_blank">arXiv:2606.14409</a></div>
+          <div class="rec-why">为何相关：<span class="kw">vision-language-action</span><span class="kw">vla</span></div>
+          <p class="rec-abs">In this report, we present Hy-Embodied-0.5-VLA, abbreviated as HyVLA-0.5, an end-to-end system that spans the full robot learning stack: data collection, model design, continued pre-training and supervised fine-tuning, RL post-training, and real-world deployment. Each component serves a distinct role in this stack.</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14375v1" target="_blank">Elastic Queries Reinforcement Learning: Self-Aware Policy Execution for VLA Models</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Ge Wang, Xinyu Tan, Xiang Li et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14375v1" target="_blank">arXiv:2606.14375</a></div>
+          <div class="rec-why">为何相关：<span class="kw">vision-language-action</span><span class="kw">vla</span></div>
+          <p class="rec-abs">Vision-language-action (VLA) models are powerful action generators for robot manipulation, but they are typically executed with fixed inference and replanning schedules. This rigidity ignores the uneven difficulty of robot control: contact-rich or uncertain states may need more computation and fresher feedback, while easier states can oft…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14255v1" target="_blank">ReactVLA: Fast and Lightweight Reactive Robot Manipulation via Improved Mean Flow Action Generation</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Yanzhao Guo, Wenkai Chen, Jianwei Zhang et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14255v1" target="_blank">arXiv:2606.14255</a></div>
+          <div class="rec-why">为何相关：<span class="kw">vision-language-action</span><span class="kw">vla</span></div>
+          <p class="rec-abs">Diffusion-based Vision-Language-Action (VLA) policies have demonstrated strong capability in modeling expressive and multimodal action distributions. However, their reliance on iterative sampling introduces substantial inference latency, which limits their applicability to reactive closed-loop robot manipulation. To address this limitatio…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14238v1" target="_blank">When and How Severely: Scenario-Specific Safety Envelopes for Driving VLAs</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Abhinaw Priyadershi, Jelena Frtunikj · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14238v1" target="_blank">arXiv:2606.14238</a></div>
+          <div class="rec-why">为何相关：<span class="kw">vision-language-action</span><span class="kw">vla</span></div>
+          <p class="rec-abs">Safety certification of Vision-Language-Action (VLA) driving planners under ISO 21448 (SOTIF) rests on an Operational Design Domain (ODD) specification that answers two complementary questions: when does the planner start to fail, and how severely does it fail once it does? We evaluate Alpamayo R1, a 10B-parameter open-weight driving VLA,…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14153v1" target="_blank">Encoder Winners Do Not Reliably Transfer Across VLA Backbone Scale: A Frozen-Backbone Grafting Diagnostic</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Qingping Zeng, Fei She · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14153v1" target="_blank">arXiv:2606.14153</a></div>
+          <div class="rec-why">为何相关：<span class="kw">vision-language-action</span><span class="kw">vla</span></div>
+          <p class="rec-abs">Vision-language-action (VLA) policies typically inherit their vision encoder from upstream VLM releases, but it is unclear whether an encoder choice validated on a small VLA transfers to a larger backbone. We introduce a frozen-backbone grafting diagnostic: the vision tower of a released VLA is replaced by a candidate encoder under a fixe…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14084v1" target="_blank">Self-Improving VLA Policies: Selected Diffusion Noise for Spurious-Robust Action Smoothing</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Duc Minh Nguyen, Bao-Ngoc Dao, Tung M. Luu et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14084v1" target="_blank">arXiv:2606.14084</a></div>
+          <div class="rec-why">为何相关：<span class="kw">vision-language-action</span><span class="kw">vla</span></div>
+          <p class="rec-abs">Diffusion-based Vision-Language-Action (VLA) policies enable strong generalization in robotic manipulation, but remain sensitive to spurious visual correlations and noisy action generation, leading to brittle behavior under perturbations. We introduce Selected Diffusion Noise (SDN), a simple, training-free test-time method that improves b…</p>
+        </article></section>
+<section class="group" id="f-humanoid"><h2><span class="dot"></span>人形机器人控制 / sim2real / RL <span class="cnt">6</span></h2>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14270v1" target="_blank">Robust Fall Recovery for Armless Bipedal-Wheeled Robots Via Force-Guided Learning</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Haidong Hou, Zhangguo Yu, Tao Han et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14270v1" target="_blank">arXiv:2606.14270</a></div>
+          <div class="rec-why">为何相关：<span class="kw">humanoid</span><span class="kw">bipedal</span><span class="kw">legged</span><span class="kw">locomotion</span></div>
+          <p class="rec-abs">Fall recovery is critical for autonomous legged locomotion. Existing methods have demonstrated that some legged robots, such as humanoids and quadrupeds, are capable of fall recovery from diverse postures by utilizing arms or coordinating multi-legs to generate support forces. Without arms or other legs to provide supportive assistance, a…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14617v1" target="_blank">Whole-Body Impedance Model Predictive Control for Safe Physical Human--Robot Interaction on Floating-Base Platforms</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Yongyan Cao · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14617v1" target="_blank">arXiv:2606.14617</a></div>
+          <div class="rec-why">为何相关：<span class="kw">humanoid</span><span class="kw">locomotion</span><span class="kw">whole-body</span></div>
+          <p class="rec-abs">Floating-base robots must balance under rigid contact constraints while interacting safely with humans. Existing whole-body control~(WBC) frameworks allocate the full joint space to locomotion or rely on fixed-gain impedance feedback that accumulates steady-state error under sustained physical human--robot interaction~(pHRI) forces. This …</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14609v1" target="_blank">Safe Reinforcement Learning of Autonomous Highway Driving: A Unified Framework for Safety and Efficiency</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Chufei Yan, Zhihao Cui, Yiyan Lv et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14609v1" target="_blank">arXiv:2606.14609</a></div>
+          <div class="rec-why">为何相关：<span class="kw">reinforcement learning</span></div>
+          <p class="rec-abs">Deep reinforcement learning (DRL) offers a compelling route to decision-making for advanced autonomous vehicles (AVs), yet its trial-and-error nature makes it difficult to guarantee safety during training and to achieve both safety and efficiency at deployment. We propose a unified safe reinforcement learning (SRL) framework that integrat…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14536v1" target="_blank">Provably Safe, Yet Scalable Reinforcement Learning</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Kai S. Yun, Zeyang Li, Navid Azizan et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14536v1" target="_blank">arXiv:2606.14536</a></div>
+          <div class="rec-why">为何相关：<span class="kw">reinforcement learning</span></div>
+          <p class="rec-abs">Safe reinforcement learning (RL) aims to learn policies that optimize rewards while satisfying constraints. Predominant approaches rely on soft-constrained policy optimization, which has achieved empirical success but does not provide formal safety guarantees for the learned policy. In contrast, methods with strict guarantees typically re…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14433v1" target="_blank">Kine2Go: Kinematic dataset for the Unitree Go2 robot with diverse gaits and motions</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Władysław Pałucki, Paweł Siwak, Krzysztof Ciebiera et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14433v1" target="_blank">arXiv:2606.14433</a></div>
+          <div class="rec-why">为何相关：<span class="kw">locomotion</span><span class="kw">reinforcement learning</span><span class="kw">quadruped</span></div>
+          <p class="rec-abs">The recent popularity of robotics, combined with the steadily decreasing cost of robotic hardware, has lowered the entry barrier to robotics research and enabled rapid advancements in the field. One of the primary examples is the Unitree Go2 quadruped robot, which is often used by researchers in the areas of locomotion, navigation, contro…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14160v1" target="_blank">GAIT: Legged Robot Proprioceptive State Estimation with Attention over Inertial-Leg Tokens</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Young-Rang Seo, Hajun Kim, Sangmin Kim et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14160v1" target="_blank">arXiv:2606.14160</a></div>
+          <div class="rec-why">为何相关：<span class="kw">legged</span></div>
+          <p class="rec-abs">In this paper, we propose a method that applies Inertial-Leg (IL) tokenization to an attention-based network for proprioceptive state estimation in legged robots. Unlike existing learning-based state estimators that concatenate all sensor measurements into a single flat vector, the proposed architecture represents inertial measurements an…</p>
+        </article></section>
+<section class="group" id="f-manipulation"><h2><span class="dot"></span>机器人操作 / 模仿学习 <span class="cnt">6</span></h2>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14535v1" target="_blank">Spatially Conditioned Diffusion Policy: Learning Precise and Robust Manipulation with a Single RGB Camera</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Seoyoon Kim, Kanghyun Kim, Dongwoo Ko et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14535v1" target="_blank">arXiv:2606.14535</a></div>
+          <div class="rec-why">为何相关：<span class="kw">imitation learning</span><span class="kw">diffusion policy</span><span class="kw">manipulation</span><span class="kw">visuomotor</span></div>
+          <p class="rec-abs">Recent visual imitation learning systems have widely adopted multi-camera setups with wrist-mounted cameras as the de facto standard. However, manipulation from a single global view remains challenging, as the policy should capture fine-grained interaction details and identify task-relevant regions without local wrist views. To address th…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14218v1" target="_blank">Universal Manipulation Exoskeleton: Learning Compliant Whole-body Policies with Real-time Torque Feedback</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Litian Liang, Jingxi Xu, Xinda Qi et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14218v1" target="_blank">arXiv:2606.14218</a></div>
+          <div class="rec-why">为何相关：<span class="kw">manipulation</span><span class="kw">bimanual</span><span class="kw">teleoperation</span></div>
+          <p class="rec-abs">For robots to work safely in household environments, they need to be compliant and react to torque and force feedback during contact. However, the majority of existing data collection pipelines still lack the ability to capture force and torque data for learning active compliant policies. In this paper, we present Universal Manipulation E…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14606v1" target="_blank">Impedance MPC with Disturbance Estimation for Dexterous Hand Control</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Yongyan Cao · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14606v1" target="_blank">arXiv:2606.14606</a></div>
+          <div class="rec-why">为何相关：<span class="kw">dexterous</span><span class="kw">grasp</span></div>
+          <p class="rec-abs">Dexterous hands must simultaneously track precise finger trajectories and maintain safe, compliant contact -- objectives in tension for any fixed-gain controller. We present an actuator-agnostic Impedance Model Predictive Control (Impedance MPC) framework for dexterous fingers, instantiating the constant-$A_d$ offset-free architecture est…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14561v1" target="_blank">ORCA: A Platform for Open-Source Dexterity Research</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Francesco Capuano, Maximilian Eberlein, Fabrice Bourquin et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14561v1" target="_blank">arXiv:2606.14561</a></div>
+          <div class="rec-why">为何相关：<span class="kw">manipulation</span><span class="kw">dexterous</span><span class="kw">bimanual</span><span class="kw">teleoperation</span></div>
+          <p class="rec-abs">Robotics manipulation research increasingly focuses on two-finger parallel grippers for their effectiveness, affordability, and ease of teleoperation. Grippers are nonetheless limited by their form factor, often requiring bimanual setups even for simple reorientation tasks. Anthropomorphic hands are a more natural platform for dexterous r…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14551v1" target="_blank">TRACE: Trajectory-Routed Causal Memory for Delayed-Evidence Visuomotor Imitation</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Zihao Li, Ranpeng Qiu, Yincong Chen et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14551v1" target="_blank">arXiv:2606.14551</a></div>
+          <div class="rec-why">为何相关：<span class="kw">manipulation</span><span class="kw">visuomotor</span></div>
+          <p class="rec-abs">Robots under autonomous operation may require decisions based on evidence that is no longer visible. We study \emph{delayed-evidence} tasks, where an early cue disappears before a later decision point, so visually similar observations can require different actions. In these settings, the current observation is not a sufficient state for c…</p>
+        </article>
+        <article class="rec">
+          <div class="rec-top"><a class="rec-title" href="http://arxiv.org/abs/2606.14083v1" target="_blank">The N2D Haptic Glove: A Multi-Finger Glove for 2D Directional Force Feedback for Contact Rich Manipulation</a><span class="tag-new">新</span></div>
+          <div class="rec-meta">Yao-Ting Huang, Jake Honma, Omar Hernandez et al. · 2026-06-12 · 4 天前 · <a href="http://arxiv.org/abs/2606.14083v1" target="_blank">arXiv:2606.14083</a></div>
+          <div class="rec-why">为何相关：<span class="kw">manipulation</span><span class="kw">teleoperation</span></div>
+          <p class="rec-abs">Humans rely on directional fingertip forces to probe and regulate contact during manipulation, yet most wearable haptic gloves render only vibration or single-axis force, leaving force direction ambiguous. Without directional cues, users must infer contact force from vision alone, often leading to over-pressing, inconsistent control, and …</p>
+        </article></section>
+  <p style="color:var(--muted);font-size:.82em;margin-top:2em;">说明：这是 arXiv cs.RO 的"最新"feed（按关键词相关度分类排序）。想要"经典/高引"或更深入的"为何值得读"判断，随时让我做一次定制筛选。</p>
+</div>
+<footer>Paper Reading · 每日 arXiv 推荐 · 自动生成</footer>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "title": "HomeRobot: Open-Vocabulary Mobile Manipulation",
+  "title_cn": "HomeRobot：开放词汇移动操作",
+  "field": "vla",
+  "venue": "CoRL 2023",
+  "date": "2023",
+  "one_liner": "首个可复现的开放词汇移动操作基准：形式化 OVMM 任务定义，提供 Habitat 仿真 + Hello Robot Stretch 真实机器人的共享软件栈，让不同实验室能在同一基准上公平比较。",
+  "framework": "idea-first",
+  "idea": "移动操作研究的瓶颈不只是算法缺乏，而是缺少统一任务定义和可复现基础设施——HomeRobot 通过形式化 OVMM 任务和提供 sim+real 共享软件栈解决这一基础设施问题。",
+  "logic_chain": [
+    "家庭机器人助手需要整合感知、语言理解、导航和操作，但现有工作因平台分散而无法跨实验室复现",
+    "近年视觉-语言模型（CLIP 等）使 open-vocabulary 泛化成为可能，但对比方法变得更难，因测试环境/机器人未标准化",
+    "因此需要统一的 OVMM 任务定义（四阶段评分协议）和横跨仿真+真实的 identical API 软件栈",
+    "HomeRobot 用 HSSD 200 场景 + 2535 对象 + Hello Robot Stretch + 共享 API，填补这个空白",
+    "baseline 对比揭示感知（DETIC vs GT 分割性能差 30 倍）是当前最大瓶颈，为后续研究指出方向"
+  ],
+  "method_skeleton": [
+    "OVMM 任务形式化：统一指令格式 + 四阶段阶段性评分（FindObj / Pick / FindRec / Place）+ seen/unseen 类别/实例划分",
+    "Habitat 仿真 + Stretch 真实共享 API：home_robot 核心库提供 identical state/action 接口，分别后接 home_robot_sim 和 home_robot_hw",
+    "模块化启发式 vs RL baseline：OVMMAgent 状态机驱动，均使用 DETIC 作为 open-vocabulary 感知前端；RL 用 DDPPO 训练"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "背景/基准参考，非直接方法借鉴——定义了后续 VLA 被评测的任务空间和基础设施，理解 OVMM 评测协议对看懂 VLA 论文至关重要",
+    "track_B_legged": "完全不相关"
+  },
+  "validation": "真实世界 RL baseline 达 20% 总体成功率；仿真 GT 分割最高 14.8%；DETIC 分割下所有配置降至 0.4-0.6%，证明感知是主要瓶颈",
+  "core_points": [
+    "OVMM 是首个形式化的开放词汇移动操作任务定义，统一了评测协议",
+    "HomeRobot 是同期唯一同时具备大规模对象、连续动作空间、sim-to-real 验证和多用途真实软件栈的基准",
+    "identical API 设计使仿真训练的策略无需修改即可在真实 Stretch 上运行",
+    "最大实验发现：感知（DETIC）是比导航/操作算法选择更大的性能瓶颈（差距 30 倍以上）",
+    "Sim-to-real 迁移有证据支持（导航和放置技能），但抓取因仿真 magic snap 仍是已知局限"
+  ],
+  "effects": [
+    "真实世界 RL baseline 总体成功率 20%（20 次实验，3 房间控制公寓）",
+    "仿真 Ground Truth 分割 + RL 全配置：总体 SR 14.8%，部分成功率 48.3%",
+    "DETIC 分割下总体 SR 降至 0.4-0.5%——感知误差是主要瓶颈",
+    "仿真数据集：200 场景、129 类别、2535 对象实例、7892 个 episodes"
+  ],
+  "open_source": "partial",
+  "rating": "Valuable",
+  "summary": "summary.html",
+  "open_source_detail": "代码 MIT 开源, 无统一策略权重",
+  "open_source_checked": "2026-06-02"
+}

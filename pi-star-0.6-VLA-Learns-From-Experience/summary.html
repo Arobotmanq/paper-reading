@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>π*₀.₆ 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Physical Intelligence · Vision-Language-Action · RL</span>
+    <h1>π*₀.₆: a VLA That<br>Learns From Experience</h1>
+    <p class="subtitle">机器人不该永远停在模仿人类的水平——<strong>让 VLA 在自己的部署中反复练习</strong>，用 RL 从失败轨迹和人类干预里榨取提升信号，最终把困难任务的成功率翻倍。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 NEW · Track A 移动操作 VLA · 直接命中</span>
+      <span class="pill">📅 2025-11（arXiv v2 2025-11-19）</span>
+      <span class="pill">🏢 Physical Intelligence</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2511.14759">arXiv:2511.14759</a></span>
+      <span class="pill">🌐 <a href="https://pi.website/blog/pistar06">pi.website/blog/pistar06</a></span>
+      <span class="pill">📦 <a href="https://github.com/Physical-Intelligence/openpi">openpi</a>（π*₀.₆ 未含）</span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">吞吐量提升</div>
+    <div class="value">&gt;2×<span class="unit">throughput</span></div>
+    <div class="desc">复杂任务每小时完成数翻倍以上</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">失败率降低</div>
+    <div class="value">~2×<span class="unit">failure↓</span></div>
+    <div class="desc">难任务失败次数减半</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">最终成功率</div>
+    <div class="value">90%+</div>
+    <div class="desc">洗衣/咖啡/箱子组装达到实用级</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">开源状态</div>
+    <div class="value" style="font-size:1.1em;">未开源</div>
+    <div class="desc">代码/权重均未公开（2026-06）</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文 / 钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">模仿学习天花板太低——人类示范只有人类水平，而人类本身也不完美。要让机器人<strong>超越示范</strong>，必须让它在自己的部署中<strong>练习、犯错、被纠正、再练习</strong>。<a href="./notes.html#recap" class="note-link">RECAP</a> 把这套循环正式化为 RL：用<a href="./notes.html#advantage-conditioning" class="note-link">advantage conditioning</a>（而非 PPO / AWR）把价值函数信号直接注入 flow matching VLA，让整个大模型端到端地从经验中学习。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>模仿学习（SFT）受限于<strong>示范数据质量上界</strong>：策略充其量学到人类遥操作水平，累积误差还会让它比人类更差。</li>
+          <li>RL 可以突破这个天花板，但大型 flow matching VLA 没有可直接计算的 log-likelihood，PPO / REINFORCE 极难稳定扩展。</li>
+          <li>关键洞察：<strong>把"这个动作是否比平均更优"这个二元标记作为文本 token 输入给 VLA</strong>——模型用 classifier-free guidance 风格同时学条件与无条件策略，无需显式计算 likelihood。</li>
+          <li>数据来源多元：demonstrations + 自主 rollout（成功/失败）+ 人类在线干预（DAgger 风格），全部统一到同一个 offline RL 框架里。</li>
+          <li>迭代循环：采数据 → 更新 value function → 重估 advantage → 更新 VLA → 重新采数据，重复即可持续提升。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#advantage-conditioning" class="note-link">Advantage conditioning</a></strong>：不用 PPO，而是把 binarized advantage indicator（"Advantage: positive/negative"）作为文本前缀输入给 <a href="./notes.html#pi0-lineage" class="note-link">π*₀.₆</a>。训练时两路并行（带/不带 indicator），推理时强制 I=True 或用 CFG 放大优势。这使整个 flow matching VLA 端到端可训，无需可计算 likelihood。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#distributional-vf" class="note-link">Distributional value function</a></strong>：用与 VLA 同架构但更小（670M backbone）的 VLM 预测"距离成功还剩多少步"的分布（B=201 个 bin），语言条件化，多任务共享，泛化性强。advantage = n-step 估计 − V(当前状态)。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#recap" class="note-link">RECAP 迭代循环</a></strong>：预训练（全数据集做 offline RL）→ 任务 SFT（I=True）→ 循环 K 次：自主 rollout + 人类干预采数据 → 微调 VF → 微调 π → 重复。每次迭代从预训练 checkpoint 微调，避免 drift。实践中 K=1 已有显著提升。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在洗衣（多样）、咖啡制作、箱子组装三类任务上，<strong>RECAP 相比 offline RL + SFT 基线将吞吐量翻倍以上，并将失败率减半</strong>；最终 90%+ 成功率达到实用级别（连续运行 13 小时制作咖啡）。与 AWR、PPO 相比，advantage conditioning 显著更优。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>Diverse laundry + espresso：吞吐量 &gt;2× 提升（on-robot RL 迭代后 vs. SFT 基线）。</li>
+            <li>Box assembly：2 次迭代后吞吐量 2× 提升；espresso + box 成功率约 90%。</li>
+            <li>T-shirt folding（严格 collar-up）：2 次 RECAP 迭代 + 600 rollout/iter → 97% 成功率。</li>
+            <li>Espresso 连续运行 13 小时无中断；laundry 在新家连续 2 小时无中断。</li>
+            <li>价值函数：Gemma 3 670M backbone，201 个 bin，负步数到成功的分布。</li>
+            <li>π*₀.₆ VLA backbone：SigLIP 400M + Gemma 3 4B；action expert 860M。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（人形/移动操作 VLA）高度相关</strong>：这是 π0 家族的最新成员，直接展示了如何让大型 flow matching VLA 从部署经验中通过 RL 持续提升——advantage conditioning 是无需改变 VLA 架构即可引入 RL 训练的简洁入口，对人形机器人操作任务的提升路径有直接参考价值。<strong>Track B（足式控制算法）不相关</strong>——本文聚焦固定双臂操作，不涉及 locomotion。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：VLA 靠模仿学习的天花板受限于示范质量，而 RL 对大型 flow matching VLA 难以直接应用——RECAP 要打通这两者。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">We present a general-purpose method, RL with Experience and Corrections via Advantage-conditioned Policies (RECAP), that provides for RL training of VLAs via advantage conditioning.</blockquote>
+          <div class="ev-trans">我们提出一种通用方法——通过优势条件化策略进行经验与纠正式强化学习（RECAP），为 VLA 通过 advantage conditioning 进行 RL 训练提供了路径。</div>
+          <div class="ev-gloss">题名即问题：imitation learning 之后还需要 RL，但 flow matching 模型没有可直接优化的 log-likelihood——RECAP 用 advantage conditioning 绕过这一障碍。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §III（Related Work）</div>
+          <blockquote class="ev-quote">A critical distinction is that we train an entire VLA end-to-end using (iterated) offline RL, with an expressive flow matching VLA model. This is made possible by a simple and scalable advantage-conditioned policy extraction method, which removes much of the complexity of using policy gradient style objectives with large VLA models.</blockquote>
+          <div class="ev-trans">一个关键区别是：我们使用（迭代的）offline RL 对整个 VLA 进行端到端训练，且使用的是表达能力强的 flow matching VLA 模型。这得益于一种简单且可扩展的 advantage-conditioned 策略提取方法，该方法消除了在大型 VLA 模型上使用策略梯度类目标的大部分复杂性。</div>
+          <div class="ev-gloss">作者自陈的核心创新点：advantage conditioning 让整个 flow matching VLA 端到端训练成为可能，而非仅微调 action head。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 方法核心：advantage conditioning 把价值函数信号变成文本 token 注入 VLA，无需计算 log-likelihood，训练简单且可扩展到 flow matching 模型。</div>
+        <figure>
+          <img src="./images/figure_3_model_architecture.png" alt="Figure 3: π*₀.₆ 模型架构与 advantage conditioning 机制">
+          <figcaption><strong>Figure 3（p.4）：</strong>π*₀.₆ VLA（SigLIP 400M + Gemma 3 4B）与 Value Function（SigLIP 400M + Gemma 270M）的交互。advantage 经 binarization 后作为文本 prefix 注入 VLA，action expert（860M）用 flow matching 生成连续动作。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §V-B</div>
+          <blockquote class="ev-quote">To incorporate information about the advantage into the policy, we expand the model inputs to contain an additional improvement indicator as an additional text input, inputting "Advantage: positive" when It = True, and "Advantage: negative" otherwise.</blockquote>
+          <div class="ev-trans">为了将 advantage 信息纳入策略，我们扩展模型输入，加入一个额外的改进指示符作为文本输入：当 It = True 时输入"Advantage: positive"，否则输入"Advantage: negative"。</div>
+          <div class="ev-gloss">极度简洁的实现：advantage 信号完全通过文本 token 编码，不需要任何模型结构改动——这是为何能端到端训练整个 VLA 的根本原因。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §IV-B</div>
+          <blockquote class="ev-quote">We use a variant of advantage conditioning [48], where the policy is trained on all of the data with supervised learning, but with an additional input indicating how optimal the action is based on the advantage.</blockquote>
+          <div class="ev-trans">我们使用 advantage conditioning 的一个变体，其中策略在所有数据上以监督学习方式训练，但额外增加一个输入，指示该动作基于 advantage 有多优。</div>
+          <div class="ev-gloss">对比 AWR（丢掉低优数据）和 PPO（需要 on-policy log-likelihood），advantage conditioning 保留全部数据，只是给数据打上"好/坏"标记——数据效率更高，对 offline/off-policy 数据更友好。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 价值函数设计：多任务语言条件分布式价值函数预测"距成功剩余步数"的分布，支撑跨任务 advantage 估计，泛化性强于点估计 Q-function。</div>
+        <figure>
+          <img src="./images/figure_4_value_function_visualization.png" alt="Figure 4: Value function 在成功/失败轨迹上的可视化">
+          <figcaption><strong>Figure 4（p.5）：</strong>左：洗衣成功轨迹，价值函数平滑上升；右：失败轨迹（开冰箱取滤水器），红色标注价值骤降点——说明价值函数正确识别了关键失败时刻。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §IV-A</div>
+          <blockquote class="ev-quote">we represent V πref with a multi-task distributional value function pϕ(V |ot, ℓ) ∈ ΔB, mapping the observations ot and language command ℓ to a distribution over B discretized value bins.</blockquote>
+          <div class="ev-trans">我们用多任务分布式价值函数 pϕ(V|ot, ℓ) ∈ ΔB 来表示 V πref，将观测 ot 和语言指令 ℓ 映射到 B 个离散价值 bin 的分布上。</div>
+          <div class="ev-gloss">分布式 VF（B=201 bins）比点估计更稳定，可表示不确定性；用 cross-entropy 而非 MSE 训练，天然适配 VLM 架构的分类 head——这也是为何可以用 Gemma 3 做 VF backbone 的原因。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 数据整合策略：RECAP 统一处理 demonstrations、autonomous rollouts 和 expert interventions，interventions 强制标记为 I=True（视为最优），实现异构数据的无缝融合。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §IV-B</div>
+          <blockquote class="ev-quote">To include human corrections, we found it useful to force It = True (i.e., positive) for actions provided as human corrections during autonomous rollouts. This choice is reasonable if we assume that human experts always provide good corrective actions.</blockquote>
+          <div class="ev-trans">为了纳入人类纠正，我们发现将自主 rollout 期间人类纠正所提供的动作强制设置为 It = True（即正向）是有用的。这一选择在假设人类专家总能提供良好纠正动作的情况下是合理的。</div>
+          <div class="ev-gloss">优雅的工程决策：人类干预数据不需要特殊处理，只需把它的 advantage indicator 强制置为 True 即可——统一的数据格式是这个框架可扩展的关键。</div>
+        </div>
+        <figure>
+          <img src="./images/figure_1_recap_system_overview.png" alt="Figure 1: RECAP 系统整体流程">
+          <figcaption><strong>Figure 1（p.1）：</strong>RECAP 整体架构。左侧数据输入：diverse robotics data + sub-task commands + multimodal web data。中：π*₀.₆ VLA（含 advantage token）与 value function 交互；右：三类评测任务 + rollouts / interventions / RL training 循环。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点5 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> π*₀.₆ 模型基础：继承 π0.5 的 flow matching VLA 架构，但升级 backbone 为 Gemma 3 4B、action expert 扩展至 860M 参数，再加 advantage conditioning 输入。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §V-A</div>
+          <blockquote class="ev-quote">π0.6 improves on π0.5 in several ways: (i) The pre-training dataset is augmented with additional data from multiple robot platforms. (ii) The base VLM is Gemma 3 [78] 4B model. (iii) The size of the action expert is increased to 860M parameters.</blockquote>
+          <div class="ev-trans">π0.6 在以下几个方面改进了 π0.5：(i) 预训练数据集增加了来自多个机器人平台的额外数据；(ii) 基础 VLM 更换为 Gemma 3 4B 模型；(iii) action expert 的规模扩展至 860M 参数。</div>
+          <div class="ev-gloss">π0.6 是 π0.5 的工程迭代（更大模型 + 更多数据），π*₀.₆ 则在此基础上加入 advantage conditioning 以支持 RL 训练——两者的关系清晰。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 主要实验结果：RECAP 在所有任务上均显著超越 SFT 基线、offline RL + SFT 以及 AWR、PPO 替代方案，复杂任务吞吐量翻倍、失败率减半。</div>
+        <figure>
+          <img src="./images/figure_7_tasks_illustration.png" alt="Figure 7 (实际为 tasks illustration): 任务示意图">
+          <figcaption><strong>Figure 6（p.8）：</strong>实验任务示意图。从左到右：洗衣（T恤/短裤）、洗衣（多样）、洗衣消融、箱子组装、咖啡制作。每类任务均要求多步骤、长时间（5-15分钟）的精细操作。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §VI-C</div>
+          <blockquote class="ev-quote">Throughput more than doubles on the diverse laundry folding and espresso tasks from including on-robot data (the improvement from offline RL + SFT to the final π∗0.6 model), and the rate of failure reduces by about a factor of two.</blockquote>
+          <div class="ev-trans">在多样洗衣折叠和咖啡制作任务上，通过纳入在机器人上收集的数据（从 offline RL + SFT 到最终 π*₀.₆ 模型的提升），吞吐量翻倍以上，失败率降低了约两倍。</div>
+          <div class="ev-gloss">这里的 2× 吞吐量提升是从"offline RL + SFT"到"full RECAP"的增量，不包含 SFT 本身带来的提升——完整收益更大。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §VI-C-4</div>
+          <blockquote class="ev-quote">applying RECAP in this setting for two iterations (collecting 600 trajectories in each iteration) results in a policy that succeeds 97% of the time, and with high speed.</blockquote>
+          <div class="ev-trans">在该设置下应用 RECAP 进行两次迭代（每次迭代收集 600 条轨迹）后，得到的策略成功率达到 97%，且速度很快。</div>
+          <div class="ev-gloss">这是"消除特定失败模式"的实验——完全依靠 RL（无 intervention），证明 advantage conditioning 足以从错误中自主学习。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> Advantage conditioning 显著优于 AWR 和 PPO：AWR 丢弃低优数据导致吞吐量低，PPO 在 off-policy 设置下需极小 trust-region 才能稳定，两者均无法超越 offline RL + SFT 基线。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10-11 · §VI-C-3</div>
+          <blockquote class="ev-quote">While both AWR and PPO can attain reasonable results, they both fall far short of our method, and struggle to improve over the offline RL + SFT π∗0.6 model. For PPO, we had to use a small trust-region constraint (η = 0.01) to stabilize training in this off-policy setting, and while this makes training stable, the method does not achieve good performance. AWR can achieve a reasonable success rate, but leads to much slower polies with lower throughput.</blockquote>
+          <div class="ev-trans">尽管 AWR 和 PPO 都能取得合理结果，但两者均远落后于我们的方法，且难以超越 offline RL + SFT 的 π*₀.₆ 基线。对于 PPO，在 off-policy 设置下我们需要使用很小的 trust-region 约束（η=0.01）来稳定训练，但这样训练虽然稳定，效果却不好。AWR 能取得合理的成功率，但导致策略速度很慢，吞吐量偏低。</div>
+          <div class="ev-gloss">这个对比坚实地支撑了全文核心论点：对 flow matching VLA 而言，advantage conditioning 是目前最适配的 RL policy extraction 方法。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 局限性坦诚：系统仍依赖人工标注奖励、人工干预和人工 reset，并非完全自主；探索策略较为贪婪；迭代更新而非完全在线 RL。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §VII</div>
+          <blockquote class="ev-quote">First, our system is not fully autonomous: it relies on human labeling and effort for reward feedback, interventions, and episode resets. A number of prior works have explored ways to automate these components, and VLAs offer new ways to provide for more automated data collection, for example by using high-level policies to reason through resetting the scene.</blockquote>
+          <div class="ev-trans">首先，我们的系统不是完全自主的：它依赖人工标注和人力来提供奖励反馈、干预以及 episode reset。多项先前工作探索了自动化这些组件的方法，而 VLA 提供了新的途径来实现更自动化的数据收集，例如利用高层策略对场景重置进行推理。</div>
+          <div class="ev-gloss">作者诚实地列出了三个未来方向：奖励自动化、更好的探索、完全在线 RL。这些是 π*₀.₆ 的边界，也是下一代工作的路线图。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">基于<strong>实时网络核查</strong>（2026-06-02）：论文无开源声明，openpi 仓库截至目前<strong>未包含 π*₀.₆ / π0.6 的代码或权重</strong>。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未开源</span> 论文无 GitHub 链接；openpi 仅含 π0 / π0-FAST / π0.5</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未开源</span> openpi 无 pi06 / pistar06 checkpoint（GitHub issue #860 确认为未实现状态）</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> 预训练数据集未释出</dd>
+        <dt>博客/视频</dt><dd><span class="os-tag os-part">部分</span> <a href="https://pi.website/blog/pistar06">pi.website/blog/pistar06</a> + 演示视频（模型卡 PDF 已公开）</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚙️ openpi 当前状态</div>
+        <p>openpi 最新版本（截至 2026-06）支持 π0、π0-FAST、π0.5。π0.6 / π*₀.₆ 未包含，社区已有 issue（#860）询问实现方案，官方尚未回应。如需复现，需自行从 π0.5 出发实现 advantage conditioning 扩展。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 arXiv:2511.14759 · p.1（论文全文）</div>
+        <blockquote class="ev-quote">https://pi.website/blog/pistar06</blockquote>
+        <div class="ev-trans">论文仅提供项目博客链接，无代码仓库链接。</div>
+        <div class="ev-gloss">与 π0.5（后来在 openpi 开源）的发布模式相同，π*₀.₆ 目前仅有博客，开源状态存在不确定性。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>首个在大型 flow matching VLA 上端到端实施 iterated offline RL 的完整系统，且结果达到实用级别（13 小时连续咖啡制作）。<strong>Advantage conditioning</strong> 是绕过 PPO log-likelihood 难题的优雅工程解——思想简单、实现轻量，对 flow matching 模型族系通用。π0 家族的直接延续，与 π0.5（库内已读）形成明确的继承关系，读完本文即掌握 π 系列从"模仿学习泛化"到"RL 自主提升"的全链条。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>非完全自主</strong>：reward labeling、interventions、reset 均需人工，大规模部署成本不小。② <strong>任务范围较窄</strong>：评测集中在固定双臂平台上的三类操作任务，泛化到移动平台/人形尚待验证。③ <strong>探索策略贪婪</strong>：强依赖初始策略有合理行为，从头探索能力弱。④ <strong>未开源</strong>：无法直接复现，只能借鉴方法。⑤ 价值函数假设 episode-level 稀疏奖励，对奖励定义本身存在局限。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;方法清晰、结果实用、π 家族必读——但任务范围和平台限制使其尚未达到 Breakthrough 级别。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · π*₀.₆ (arXiv:2511.14759)</footer>
+
+</body>
+</html>

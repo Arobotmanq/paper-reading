@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HoMMI 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0e4429 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+  .badge.valuable { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; border-color: #3b82f6; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Stanford / Toyota Research Institute · Mobile Manipulation</span>
+    <h1>HoMMI: Whole-Body<br>Mobile Manipulation</h1>
+    <p class="subtitle">想让机器人从<strong>人类自由示范</strong>中学会整体身体的移动操作：与其费力遥控机器人采数据，不如让人戴着 <strong>UMI 手持夹爪 + 头盔摄像头</strong>直接演示，再用<strong>跨本体手眼策略</strong>把人类示范迁移到真实机器人上。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 项目强相关 · Track A 移动操作 · NEW 2026</span>
+      <span class="pill">📅 2026 · RSS 2026</span>
+      <span class="pill">🏢 Stanford University / TRI</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2603.03243">arXiv:2603.03243</a></span>
+      <span class="pill">⭐ <a href="https://github.com/xxm19/hommi">github.com/xxm19/hommi</a> · MIT</span>
+      <span class="pill">🌐 <a href="https://hommi-robot.github.io">hommi-robot.github.io</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">Laundry 成功率</div>
+    <div class="value">90<span class="unit">%</span></div>
+    <div class="desc">vs. Wrist-Only 20%</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">Delivery 成功率</div>
+    <div class="value">85<span class="unit">%</span></div>
+    <div class="desc">6×6m 大空间导航</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">Tablescape 成功率</div>
+    <div class="value">80<span class="unit">%</span></div>
+    <div class="desc">精密双臂协调</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">开源状态</div>
+    <div class="value" style="font-size:1.2em;">全开源</div>
+    <div class="desc">代码+数据+硬件·MIT</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文或钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">移动操作需要「全身协调 + 主动感知」，但现有采数据方式要么靠遥控机器人（慢、贵、不便于移动场景），要么只用腕部摄像头（缺乏全局视野）。HoMMI 的答案是：<strong>给 UMI 手持夹爪加一颗头戴 iPhone</strong>，让人自然演示——然后用<strong>三个跨本体设计</strong>（3D 点云视觉、look-at 点头部动作、夹爪中心坐标系）把人类示范无缝迁移到真实机器人，<strong>完全不需要机器人遥操作数据</strong>。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>移动操作 = 导航 + 双臂操作 + 主动感知，<strong>腕部摄像头（UMI 原版）给不了全局视野</strong>，遥控机器人采数据又受限于场所与成本。</li>
+          <li>加头戴摄像头自然解决全局视野，但引入了新的<strong>本体差距</strong>（视觉：人臂与机器人臂外观不同；运动学：人脖子 6-DoF，机器人只有 2-DoF）。</li>
+          <li><strong>视觉差距</strong>：用 3D 点云表示代替 RGB，把外观差异消除，并在夹爪坐标系下裁掉人臂点。</li>
+          <li><strong>运动学差距</strong>：不回归 6-DoF 头部姿态，而是预测一个<strong>3D look-at 点</strong>，让全身控制器自行求解可行关节角。</li>
+          <li>以上三个设计共同让<strong>全身控制器</strong>（差分 IK + 约束）精确跟踪末端轨迹与头部视线，最终实现零机器人遥操数据的直接迁移。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#hommi-device" class="note-link">HoMMI 数据采集装置</a></strong>：3 部 iPhone（两腕 + 一头盔），Apple ARKit 多设备协同，60 Hz 同步 RGB + 深度 + 6-DoF 姿态 + 夹爪宽度，建立统一全局坐标系。无需机器人参与，可在任意场景快速部署。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#cross-embodiment" class="note-link">跨本体手眼策略</a></strong>：头部 RGB → 3D 点云（DINOv3 + 点图位置编码）→ 夹爪坐标系下注意力池化，消除本体外观；头部动作 → <a href="./notes.html#look-at-point" class="note-link">3D look-at point</a> 而非 6-DoF 姿态，绕过运动学约束；所有观测与动作共用左夹爪坐标系，保持空间一致性。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#whole-body-ctrl" class="note-link">约束感知全身控制器</a></strong>：差分全身 IK（Mink）+ 质心约束 + 自碰撞回避 + 名义姿态正则化，100 Hz 异步运行桥接 10 Hz 策略与 500 Hz 机器人控制。策略只需输出末端位姿 + look-at 点，控制器负责全身协调。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 RB-Y1（双臂全身移动机器人）上测三个长程任务，<strong>Ours 在所有任务均大幅领先所有 baseline</strong>；去掉任意一个设计（纯腕部/纯 RGB 头部/纯头部/无主动颈部）均显著掉点——消融反向证明了三个设计的必要性。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>Laundry: Ours 90% vs. Wrist-Only 20% / RGB-Only 0% / Head-Only 0% / w/o Neck 75%</li>
+            <li>Delivery: Ours 85% vs. Wrist-Only 15% / RGB-Only 45% / Head-Only 5% / w/o Neck 55%</li>
+            <li>Tablescape: Ours 80% vs. Wrist-Only 0% / RGB-Only 0% / Head-Only 0% / w/o Neck 55%</li>
+            <li>深度噪声鲁棒性：噪声标准差 10mm 无性能损失，20mm 降至 50%</li>
+            <li>未见物体泛化：90.63%±12.10%；未见光照：93.75%±10.83%</li>
+            <li>iPhone ARKit 姿态误差：位置 5.0mm / 旋转 0.8°</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）直接命中且高度新颖</strong>：HoMMI 提供了一套完整的「人类示范 → 移动操作策略」pipeline，其跨本体手眼设计、look-at 点头部动作表示、以及全身控制器与策略的解耦架构，对任何移动操作学习框架都有直接参考价值。<strong>Track B（足式控制）不相关</strong>——本文聚焦轮式底盘的移动双臂平台，不涉及 locomotion。</p>
+        <p>特别值得注意：<strong>全开源（MIT）</strong>，代码 + 数据 + 硬件设计均已发布，可直接复现或基于其构建。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <figure>
+        <img src="./images/figure_1_teaser_system_overview.png" alt="Figure 1: HoMMI 系统全貌：数据采集装置、本体差距挑战、多样化移动操作能力">
+        <figcaption><strong>Figure 1（p.1）：</strong>左列=可扩展数据采集（人穿戴 UMI+头盔），中列=人机本体差距（视觉差+运动学差），右列=HoMMI 实现的多样化全身移动操作技能（主动搜索、长程导航、双臂协调）。</figcaption>
+      </figure>
+
+      <!-- 观点1：真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：移动操作需要全身协调与主动感知，但现有人类示范范式无法兼顾数据可扩展性与全局视野。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">We augment UMI interfaces with egocentric sensing to capture the global context required for mobile manipulation, enabling portable, robot-free, and scalable data collection. However, naively incorporating egocentric sensing introduces a larger human-to-robot embodiment gap in both observation and action spaces, making policy transfer difficult.</blockquote>
+          <div class="ev-trans">我们在 UMI 接口上增加了以自我为中心的感知，以捕获移动操作所需的全局上下文，实现可携带、无需机器人、可扩展的数据采集。然而，简单地引入自中心感知会在观测和动作空间中引入更大的人机本体差距，使策略迁移变得困难。</div>
+          <div class="ev-gloss">这是全文的核心矛盾：添加头部摄像头解决了感知问题，却放大了人机迁移难度——论文的三个贡献都是在化解这个矛盾。</div>
+        </div>
+      </div>
+
+      <!-- 观点2：数据采集系统 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 数据采集：3 部 iPhone（两腕 + 一头盔）+ ARKit 多设备协同构建统一坐标系，60 Hz 同步采集多模态数据，完全无需机器人参与。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §IV</div>
+          <blockquote class="ev-quote">the data collection system uses three iPhones: two mounted on the grippers and one mounted on a cap (Fig. 2 left). We leverage Apple's ARKit multi-device collaboration to establish a shared coordinate frame across phones. During each demonstration, we record RGB video, depth maps, 6-DoF poses, and gripper widths at 60 Hz on all three iPhones, producing synchronized multimodal trajectories</blockquote>
+          <div class="ev-trans">数据采集系统使用三部 iPhone：两部安装在夹爪上，一部安装在帽子上。我们利用 Apple ARKit 多设备协作在各手机间建立共享坐标系。在每次示范过程中，在所有三部 iPhone 上以 60 Hz 记录 RGB 视频、深度图、6-DoF 姿态和夹爪宽度，生成同步的多模态轨迹。</div>
+          <div class="ev-gloss">ARKit 多设备协同是关键：它把三部手机的时空数据对齐到同一全局坐标系，使头-腕的手眼关系在训练数据中完全可知。</div>
+        </div>
+      </div>
+
+      <!-- 观点3: 3D视觉表示 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 视觉跨本体：把自我中心 RGB 提升为 3D 点云（DINOv3 特征 + 正弦位置编码），在夹爪坐标系下消除人臂外观、视角高度差异。</div>
+        <figure>
+          <img src="./images/figure_2_system_pipeline.png" alt="Figure 2: HoMMI 系统概览：数据采集 → 跨本体手眼策略 → 全身控制器 → 机器人部署">
+          <figcaption><strong>Figure 2（p.3）：</strong>完整 pipeline：左=数据采集（3 iPhone），中=策略（头部 3D 表示 + 腕部 2D + 本体感觉 → Diffusion Policy → look-at 点轨迹 + EEF 轨迹），右=全身控制器 + 机器人部署。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §V-A</div>
+          <blockquote class="ev-quote">instead of directly feeding head RGB to the policy, we lift the egocentric observations into 3D and encode them with geometry-aware tokens, inspired by Adapt3R. Specifically, for each head camera frame, we first obtain a pointmap (from iPhone depth or stereo depth estimation on the robot), and patchify and downsample it via nearest neighbor interpolation s.t. each 16 × 16 patch corresponds to one 3D point.</blockquote>
+          <div class="ev-trans">我们不是直接将头部 RGB 输入策略，而是将自中心观测提升到 3D 并用几何感知 token 编码，受 Adapt3R 启发。具体地，对于每一帧头部摄像头图像，我们首先获取点图（来自 iPhone 深度或机器人上的立体深度估计），然后通过最近邻插值对其进行分块和下采样，使每个 16×16 块对应一个 3D 点。</div>
+          <div class="ev-gloss">关键：点云在夹爪坐标系下裁掉 z&lt;0 的人臂点，使策略看到的是「悬空的场景点」而非带人臂的 RGB 图——彻底消除外观本体差距。</div>
+        </div>
+      </div>
+
+      <!-- 观点4: look-at point -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 运动学跨本体：头部动作从 6-DoF 姿态简化为 3D look-at 点，使 2-DoF 机器人颈部也能有效执行人类主动感知意图。</div>
+        <figure>
+          <img src="./images/figure_3_look_at_point_vs_6dof.png" alt="Figure 3: Look-at Point vs 6-DoF 头部跟踪对比">
+          <figcaption><strong>Figure 5（p.5）：</strong>左=look-at 点（Ours），精确双臂末端跟踪；右=6-DoF 头部跟踪，末端跟踪误差大且存在运动不可行问题。右侧稳定性约束展示：无质心约束→跌倒，无自碰撞回避→碰撞，无名义姿态正则化→关节超限。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §V-B</div>
+          <blockquote class="ev-quote">Mobile robots have different kinematics than human demonstrators (e.g., shorter torso and fewer degrees of freedom in the neck). As a result, directly mimicking 6-DoF head poses from human data can easily produce infeasible motions. We instead control head motion via a 3D look-at point ℓt ∈ R3 (Fig. 4). This relaxed representation preserves active perception intent while respecting kinematic constraints</blockquote>
+          <div class="ev-trans">移动机器人与人类示范者有不同的运动学（例如躯干更短、颈部自由度更少）。因此，直接模仿人类数据中的 6-DoF 头部姿态很容易产生不可行的运动。我们改用 3D look-at 点 ℓt ∈ R3 来控制头部运动。这种松弛表示在保留主动感知意图的同时，尊重了运动学约束。</div>
+          <div class="ev-gloss">look-at 点的优雅性在于：它是一个纯语义意图（「我想看这里」），而不是硬性绑定的关节角——全身控制器可以自由选择可行的颈部姿态来实现这个意图。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §VIII (Findings)</div>
+          <blockquote class="ev-quote">Our system allows transfer from human demonstrators with different body proportions. Demonstrations were collected from two operators with different heights (167 cm and 182 cm) and both transferred successfully. This supports that our 3D look-at point action representation mitigates the height difference among operators.</blockquote>
+          <div class="ev-trans">我们的系统允许从体型不同的人类示范者迁移。示范由两名不同身高（167 cm 和 182 cm）的操作员采集，两者均成功迁移。这支持了我们的 3D look-at 点动作表示缓解了操作员之间身高差异的论点。</div>
+          <div class="ev-gloss">不仅跨人机本体，也跨人与人之间的体型差异——说明 look-at 点确实是一种本体无关的意图表示。</div>
+        </div>
+      </div>
+
+      <!-- 观点5: 全身控制器 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 约束感知全身控制器：差分 IK（Mink）+ 质心约束 + 自碰撞回避 + 名义姿态正则化，100 Hz 异步桥接策略（10 Hz）与机器人控制（500 Hz）。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §VI-B</div>
+          <blockquote class="ev-quote">we implement a differential whole-body IK solver using Mink [45] with (i) high-weight bimanual SE(3) tracking terms to prioritize accuracy, (ii) temporal command interpolation combined with posture and velocity regularization to encourage smooth motions, (iii) explicit constraints and tasks such as torso upright orientation, center-of-mass (CoM) support, and self-collision avoidance, to ensure stability; and (iv) regularization toward a nominal "human" posture</blockquote>
+          <div class="ev-trans">我们使用 Mink 实现了一个差分全身 IK 求解器，包含：(i) 高权重双臂 SE(3) 跟踪项以优先保证精度，(ii) 时间命令插值结合姿态和速度正则化以鼓励平滑运动，(iii) 显式约束和任务如躯干直立方向、质心（CoM）支撑和自碰撞回避以确保稳定性，(iv) 向名义"人类"姿态的正则化。</div>
+          <div class="ev-gloss">控制器是系统中唯一知道机器人物理约束的组件，这种「策略只输出意图，控制器负责可行性」的解耦设计是本文可扩展性的关键。</div>
+        </div>
+      </div>
+
+      <!-- 观点6: 实验结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 主结果：在三个长程移动操作任务上（Laundry/Delivery/Tablescape），HoMMI 大幅领先所有 baseline，且每个消融对应一个特定的失败模式。</div>
+        <figure>
+          <img src="./images/figure_4_laundry_task_results.png" alt="Figure 7: Laundry 任务：策略 rollout、测试场景、基线失败模式">
+          <figcaption><strong>Figure 7（p.6）：</strong>Laundry 任务：(a) HoMMI rollout 展示全身协调+主动搜索箱子；(b) 不同测试场景；(c) 各 baseline 典型失败模式——Wrist-Only 总是转向同一侧，RGB-Only 按压力过大触发安全保护，Head-Only 无法精确抓握。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §VII-A</div>
+          <blockquote class="ev-quote">Ours achieves a 90% success rate. It flexibly coordinates whole-body motion to navigate the workspace and place the cloth in the bin, robustly searches the environment to find the bin, and always turns correctly. Occasional failures result from not grasping the cloth firmly enough, causing it to slip halfway.</blockquote>
+          <div class="ev-trans">我们的方法达到 90% 成功率。它灵活协调全身运动以在工作空间中导航并将布料放入箱中，鲁棒地搜索环境以找到箱子，并始终正确转向。偶尔的失败是由于未能充分牢固地抓握布料，导致中途滑落。</div>
+          <div class="ev-gloss">90% 是真实机器人上的结果，含不同物体和箱子位置的随机测试。对比 RGB-Only 0% 最能说明 3D 视觉表示的必要性。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §VII-B</div>
+          <blockquote class="ev-quote">Ours achieves 85% success. The policy robustly performs visual servoing and long-horizon navigation, always approaching the correct direction towards the trolley. It also reactively adjusts the robot's approaching direction midway if the initial alignment is inaccurate.</blockquote>
+          <div class="ev-trans">我们的方法达到 85% 成功率。该策略鲁棒地执行视觉伺服和长程导航，始终从正确方向接近小车。如果初始对准不准确，还能在途中反应性地调整接近方向。</div>
+          <div class="ev-gloss">6×6m 大空间导航仍能达到 85%，而 Head-Only 仅 5%——证明头腕融合缺一不可：头提供方向，腕提供接触精度。</div>
+        </div>
+      </div>
+
+      <!-- 观点7: 关键发现 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 关键发现 F3：朴素添加自中心 RGB 并直接回归 6-DoF 头部动作会<strong>恶化性能</strong>（两个任务 0%），证明本体差距不可忽视。</div>
+        <figure>
+          <img src="./images/figure_5_tablescape_task_results.png" alt="Figure 10: Tablescape 任务：策略 rollout、测试配置、基线失败模式">
+          <figcaption><strong>Figure 10（p.8）：</strong>Tablescape 任务：Ours 展示精确双臂协调展开垫子的 recovery 行为；各 baseline 失败原因各异——印证头腕融合与 3D 表示均不可省。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §VII (F3)</div>
+          <blockquote class="ev-quote">Naively adding egocentric RGB can degrade performance under embodiment mismatch. Directly feeding the head RGB to the policy and regressing the head motion leads to brittle grasping and unstable motions, yielding a 0% success rate on two tasks, indicating a significant OOD shift due to viewpoint/appearance mismatch. Tracking 6-DoF head and hand trajectories together often leads to large tracking errors and violates the robot's kinematic constraints</blockquote>
+          <div class="ev-trans">在本体不匹配情况下，朴素添加自中心 RGB 会降低性能。将头部 RGB 直接输入策略并回归头部运动导致抓握脆弱和运动不稳定，在两个任务上成功率为 0%，表明由于视角/外观不匹配导致了显著的分布外偏移。同时跟踪 6-DoF 头部和手部轨迹通常会导致大跟踪误差并违反机器人的运动学约束。</div>
+          <div class="ev-gloss">这是最重要的反事实：加了头部摄像头但不处理本体差距，比不加还差——强调了论文三个设计的必要性而非可选性。</div>
+        </div>
+      </div>
+
+      <!-- 观点8: 泛化性 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 泛化鲁棒性：对未见物体 90.6%、未见光照 93.8%，深度噪声 10mm 以内无损失——3D 点云表示赋予了天然的外观鲁棒性。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.14 · Appendix §IV-B</div>
+          <blockquote class="ev-quote">Object variation yields 90.63%±12.10% success, and lighting variation yields 93.75%±10.83%, indicating robustness of our policy.</blockquote>
+          <div class="ev-trans">物体变化带来 90.63%±12.10% 的成功率，光照变化带来 93.75%±10.83% 的成功率，表明我们的策略具有鲁棒性。</div>
+          <div class="ev-gloss">3D 表示的附带好处：几何信息比 RGB 纹理更稳定，对颜色/光照变化天然鲁棒；深度噪声 10mm 无影响也验证了算法设计对深度质量的容忍度。</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查</h2>
+      <p class="lead">⚠️ 以下状态基于 <strong>2026-06-02 实时抓取</strong> GitHub 与项目页面，非仅论文自述。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/xxm19/hommi">github.com/xxm19/hommi</a>（MIT 许可证；含训练、部署、示范处理脚本；依赖 UMI 和 rby1-wbc 子模块）</dd>
+        <dt>数据</dt><dd><span class="os-tag os-yes">已开源</span> 论文 Abstract 明确："All code, <strong>data</strong>, and hardware design are publicly available at https://github.com/xxm19/hommi"（GitHub README 亦确认）</dd>
+        <dt>硬件设计</dt><dd><span class="os-tag os-part">部分</span> 存于 Google Drive 外链（CAD 文件等），非直接托管于 GitHub，需独立访问</dd>
+        <dt>预训练权重</dt><dd><span class="os-tag os-no">未公开</span> GitHub README 及项目页均未提及权重下载；需自行训练</dd>
+        <dt>许可证</dt><dd><span class="os-tag os-yes">MIT</span> 最宽松开源许可，商业使用无限制</dd>
+      </dl>
+      <div class="callout success">
+        <div class="callout-head">✅ 关键评估</div>
+        <p>这是论文正文明确承诺「code + data + hardware all public」并在论文发布同期上线的案例，不是"后续开源"。代码是真实可用的训练框架（基于 Diffusion Policy + DiT），数据包含三个评测任务的示范数据。<strong>但没有预训练权重</strong>，使用者需完整走数据采集 → 训练流程。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · Abstract</div>
+        <blockquote class="ev-quote">All code, data, and hardware design are publicly available at https://github.com/xxm19/hommi.</blockquote>
+        <div class="ev-trans">所有代码、数据和硬件设计均已在 https://github.com/xxm19/hommi 公开发布。</div>
+        <div class="ev-gloss">论文摘要中的明确承诺，已通过实时 GitHub 访问确认代码库存在且包含完整训练/部署脚本。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>首个实现<strong>从纯人类（非机器人）示范学习全身移动操作</strong>的完整系统，且在真实平台上达到 80-90% 成功率。三个设计决策（3D 视觉、look-at 动作、夹爪坐标系）每一个都有独立的消融证明，不是经验之谈。全开源（MIT）含数据，社区可直接复现扩展。对于任何希望避免昂贵移动机器人遥操数据采集的团队，这是当前最直接可用的参考。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>评测规模有限</strong>：每个任务仅 20 rollout，3 个任务，单一机器人平台（RB-Y1），无跨平台验证。② <strong>无预训练权重</strong>：数据采集需要专用硬件（3 部 iPhone + UMI 夹爪 + 头盔），入门门槛不低。③ <strong>短观测窗口</strong>：仅用 2 帧历史，论文自承长时任务恢复能力有限。④ <strong>无力觉/触觉</strong>：仅视觉，接触丰富任务（如插销、精密装配）尚未验证。⑤ 策略是纯 <a href="./notes.html#diffusion-policy" class="note-link">Diffusion Policy</a>（非 VLA），未利用语言或大规模预训练，泛化边界尚不清晰。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;方法论上的重要贡献（跨本体手眼设计完整成立），但不是 Breakthrough——任务规模和泛化范围仍较窄，await 更大规模验证。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · HoMMI (arXiv:2603.03243) · RSS 2026</footer>
+</body>
+</html>

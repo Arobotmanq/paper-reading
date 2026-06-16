@@ -1,0 +1,47 @@
+{
+  "title": "GR00T N1: An Open Foundation Model for Generalist Humanoid Robots",
+  "title_cn": "GR00T N1：面向通用人形机器人的开放基础模型",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2025",
+  "one_liner": "NVIDIA 提出双系统 VLA（VLM推理 + DiT执行），用数据金字塔策略整合网络视频/仿真/神经轨迹/真机数据，实现跨 embodiment 的通用人形机器人操作，2.2B 模型完全开源。",
+  "framework": "idea-first",
+  "idea": "人形机器人数据天然形成「数据孤岛」，GR00T N1 用数据金字塔（底层网络视频 + 中层仿真/神经轨迹 + 顶层真机演示）+ dual-system 架构（VLM System 2 + DiT System 1）统一建模，借 latent action/IDM 把无动作视频纳入训练，以泛化和数据效率取代蛮力数据堆量。",
+  "logic_chain": [
+    "人形机器人数据量级远低于 VLA 所需，且跨机型不互通，形成「数据孤岛」",
+    "网络视频和仿真规模大但无动作标签，VQ-VAE latent action（自监督）+ IDM（监督）解决标注问题",
+    "视频生成模型可以从少量真机演示扩增 10× 神经轨迹，捕获反事实场景",
+    "Dual-System：VLM（System 2，10Hz 推理）+ DiT（System 1，120Hz 执行），cross-attention 耦合，联合端到端训练",
+    "Embodiment-specific encoder/decoder + 共享 DiT backbone，一套权重支持单臂/双臂/人形多种机器体"
+  ],
+  "method_skeleton": [
+    "Dual-System 架构：Eagle-2 VLM（1.34B，中间层第12层 embedding）→ cross-attention → DiT（flow-matching，K=4步，H=16 action chunk）",
+    "数据金字塔三层 + 双通道无动作标注（LAPA VQ-VAE 自监督 / IDM 监督，低数据用 LAPA，高数据用 IDM）",
+    "神经轨迹扩增（88h → 827h，image-to-video fine-tune）+ DexMimicGen 仿真（78万条/6500h，11小时生成）+ 1:1 co-training"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中——这是 NVIDIA 官方人形 VLA 基础模型，双系统架构/数据金字塔/latent action/IDM/神经轨迹扩增均为 VLA 研究核心范式",
+    "track_B_legged": "部分相关——专注 manipulation，无 locomotion；但数据生成策略（仿真+神经轨迹）和 co-training 思路对足式策略有迁移价值"
+  },
+  "validation": "仿真：GR00T-N1-2B 平均 45.0% vs Diffusion Policy 33.4%（100 demos/task）；GR-1 任务超基线 17%+；真机全量 76.8% vs 46.4%（+30.4%）；真机 10% 数据 42.6% vs 10.2%（+32.4%）；预训练零样本 76.6%（双手协调）",
+  "core_points": [
+    "数据孤岛问题：人形机器人数据的跨机型割裂是根本瓶颈，数据金字塔策略系统性解决",
+    "Dual-System 架构：VLM（慢速推理）+ DiT（高频执行）频率解耦，cross-attention 耦合，联合端到端训练",
+    "Latent Action（VQ-VAE）+ IDM 双通道：无动作视频统一标注，跨 embodiment 共享 codebook",
+    "神经轨迹扩增（10×）：视频生成模型从少量真机数据扩增到 827h，co-training 贡献 +4~9%",
+    "数据效率：10% 数据时仍优于 Diffusion Policy 全量（+3.8%），预训练大幅降低下游数据需求",
+    "后训练遗忘：post-trained 模型丢失预训练中涌现的跨手协调能力，continual learning 仍是挑战"
+  ],
+  "effects": [
+    "真机全量数据平均成功率 76.8%（GR-1，4类任务）",
+    "仅 10% 数据时比 Diffusion Policy 全量高 3.8%（数据效率）",
+    "仿真 GR-1 任务超 Diffusion Policy 17%+（100 demos/task）",
+    "预训练零样本：双手协调 76.6%，新物体/新容器 73.3%",
+    "神经轨迹 co-training：RoboCasa +4.2~8.8%，真机 +5.8%"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "N1/N1.5/N1.6 权重开放但 NVIDIA 非商用许可；N1.7(2026)转 Apache-2.0 可商用；Isaac-GR00T 代码开放；数据部分开放",
+  "open_source_checked": "2026-06-02"
+}

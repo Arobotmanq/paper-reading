@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gemini Robotics 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- FOOTER ---------- */
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Google DeepMind · Vision-Language-Action</span>
+    <h1>Gemini Robotics:<br>AI 入物理世界</h1>
+    <p class="subtitle">想让机器人真正通用：与其给每个任务/机器人手工设计管线，不如把 <strong>Gemini 2.0 的世界知识与具身推理</strong>（Gemini Robotics-ER）直接接到 VLA 动作模型上——泛化、灵巧、快速适配，三者来自同一个 frontier 模型家族。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 项目强相关 · Track A 移动操作/人形 VLA · 建议深读</span>
+      <span class="pill">📅 2025-03</span>
+      <span class="pill">🏢 Google DeepMind</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.20020">arXiv:2503.20020</a></span>
+      <span class="pill">🔒 闭源（trusted-tester / API）</span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">零样本控制提升</div>
+    <div class="value">2×<span class="unit">vs Gemini 2.0 Flash</span></div>
+    <div class="desc">ER 增强后零样本完成率 53% vs 27%</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">端到端延迟</div>
+    <div class="value">250<span class="unit">ms</span></div>
+    <div class="desc">云端 backbone + 本地 decoder，控制频率 50Hz</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">长流程任务成功率</div>
+    <div class="value">100<span class="unit">%</span></div>
+    <div class="desc">专项化后 lunch-box packing（2 分钟）</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">快速适配</div>
+    <div class="value">100<span class="unit">demos</span></div>
+    <div class="desc">≤100 示范在 7/8 任务达 70%+ 成功率</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">让机器人通用的关键阻碍是<strong>具身推理与物理动作执行之间的鸿沟</strong>——现有模型要么会"想"却不会"动"，要么会"动"却没有真正理解世界。Google DeepMind 的解法：<strong>把 Gemini 2.0 的 frontier 世界知识先强化为具身推理模型（Gemini Robotics-ER），再以此为基础构建直接输出动作的 VLA（Gemini Robotics）</strong>——同一个 Gemini backbone，两层能力分层递进，泛化靠的是 frontier 语言-视觉先验，而非蛮力堆机器人数据。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>通用机器人需要「具身推理」：感知 3D 结构、理解物体关系、预测动作轨迹——这些能力本质上是 VLM 的能力延伸，不需要从头设计。</li>
+          <li>Gemini 2.0 已经具备 2D/3D 检测、pointing、轨迹预测等多项<strong>具身推理原生能力</strong>；Gemini Robotics-ER 进一步强化这些能力，使零样本机器人控制成为可能。</li>
+          <li>但纯 VLM 做机器人控制存在根本限制：<strong>中间转换步骤（感知→规划→代码→执行）引入延迟与误差</strong>，精细操作尤其失败。</li>
+          <li>因此需要将具身推理<strong>直接接地到低层动作</strong>：用 Gemini Robotics-ER 的 distilled backbone + 本地 action decoder，端到端输出动作 chunk。</li>
+          <li>专项化（specialization）时，在强大的 generalist 基础上<strong>用少量高质量数据 fine-tune</strong>，可以解锁极端灵巧和长流程任务——直接从头训练则完全失败（0% 成功率）。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#er" class="note-link">Gemini Robotics-ER</a>（具身推理模型）</strong>：Gemini 2.0 Flash 的强化版，新增 grasp 预测，在 ERQA/SUN-RGBD 等 benchmark 上 state-of-the-art；可零样本 / 少样本控制机器人（代码生成或 in-context 轨迹）。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#vla" class="note-link">Gemini Robotics（VLA）</a></strong>：云端 backbone（ER 的蒸馏版，查询延迟 &lt;160ms）+ 本地 <a href="./notes.html#action-decoder" class="note-link">action decoder</a>；端到端延迟 ~250ms，有效控制频率 50Hz；训练数据含数千小时 ALOHA 2 遥操作 + 多模态非动作数据。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>三级能力阶梯</strong>：Generalist（开箱即用，多任务）→ Specialist（少量高质量数据 fine-tune，极端灵巧）→ New Embodiment（适配双臂 Franka / Apollo 人形，泛化能力跨本体迁移）。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">Gemini Robotics 在 20 个灵巧任务上<strong>显著超过 π0 re-implement 和 multi-task diffusion baseline</strong>；专项化后 lunch-box packing（2 分钟长流程）100% 成功；fast adaptation 在 7/8 任务中 ≤100 次示范即达 70%+；reasoning-enhanced 版在需要语义/空间推理的 OOD 场景提升明显。</p>
+        <details class="numbers">
+          <summary>展开具体数字</summary>
+          <ul>
+            <li>ERQA benchmark：Gemini 2.0 Flash 46.3，Pro Experimental 48.3（无 CoT），CoT 后升至 50.3 / 54.8，均为当时 SOTA。</li>
+            <li>零样本控制（ALOHA 2 仿真）：Gemini 2.0 Flash 27%，Gemini Robotics-ER 53%（几乎 2 倍）。</li>
+            <li>少样本控制（10 次 in-context demo）：Gemini Robotics-ER 仿真 65%，真实机器人 65%。</li>
+            <li>泛化 benchmark（85 任务）：Gemini Robotics 在所有三类（视觉/指令/动作）变体下均最优；在新语言指令下基线崩溃而 Gemini Robotics 非零。</li>
+            <li>专项化成功率：origami fox 45%，lunch-box 100%，spelling game 83%（baseline 0%）。</li>
+            <li>3D detection SUN-RGBD AP@15：Gemini Robotics-ER 48.3，优于所有专家模型。</li>
+            <li>新本体（bi-arm Franka）平均成功率 63%，视觉/动作泛化明显超过 single-task diffusion。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（人形/移动操作 VLA）强相关</strong>：Gemini Robotics 是目前最强闭源 VLA 之一，云端 backbone + 本地 decoder 的架构、ER 具身推理先验、embodiment 适配方案均与人形机器人操作 VLA 研究直接相关。文中 Apollo 人形机器人适配实验（Section 4.4）尤其值得关注。<br>
+        <strong>Track B（足式算法）不相关</strong>——本文完全聚焦 manipulation，不涉及 locomotion / 底盘控制。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍真实页码/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 图1: 模型家族总览 -->
+      <figure>
+        <img src="./images/figure_1_model_family_overview.png" alt="Figure 1: Gemini Robotics 模型家族总览">
+        <figcaption><strong>Figure 1（p.2）：</strong>Gemini Robotics 家族总览。Gemini 2.0 → Gemini Robotics-ER（具身推理强化）→ Gemini Robotics（VLA）；可选专项化阶段适配新任务/新本体。右侧展示四类能力：灵巧操作、复杂长流程、推理增强动作、新本体适配。</figcaption>
+      </figure>
+
+      <!-- 观点1 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 核心 thesis：把 Gemini 2.0 的 frontier 多模态推理引入物理世界，需要两步——先让模型具备具身推理能力，再把具身推理接地到物理动作。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">This report introduces a new family of AI models purposefully designed for robotics and built upon the foundation of Gemini 2.0. We present Gemini Robotics, an advanced Vision-Language-Action (VLA) generalist model capable of directly controlling robots.</blockquote>
+          <div class="ev-trans">本报告介绍了一系列专为机器人设计、构建于 Gemini 2.0 基础之上的 AI 模型。我们提出 Gemini Robotics，一个能够直接控制机器人的先进 VLA 通用模型。</div>
+          <div class="ev-gloss">关键词是"built upon the foundation of Gemini 2.0"——这不是从头训练的机器人模型，而是把 frontier 基础模型的能力迁移进来。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1</div>
+          <blockquote class="ev-quote">This endeavor hinges on two fundamental components. First, Gemini needs to acquire robust embodied reasoning, gaining the ability to understand the rich geometric and temporal-spatial details of the physical world. Second, we must ground this embodied reasoning in the physical world by enabling Gemini to speak the language of physical actions, understanding contact physics, dynamics, and the intricacies of real-world interactions.</blockquote>
+          <div class="ev-trans">这一工作取决于两个基本组件。第一，Gemini 需要获得鲁棒的具身推理能力，即理解物理世界丰富的几何和时空细节的能力。第二，我们必须通过让 Gemini "说物理动作的语言"，来将具身推理接地到物理世界——理解接触物理、动力学及真实世界交互的复杂性。</div>
+          <div class="ev-gloss">这两步对应文章结构：Gemini Robotics-ER（第2节）= 具身推理，Gemini Robotics（第3节）= 动作接地。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> Gemini Robotics-ER 让 VLM 获得具身推理能力，并可<a href="./notes.html#zero-few-shot" class="note-link">零/少样本</a>直接控制机器人——Gemini Robotics-ER 的零样本完成率几乎是 Gemini 2.0 Flash 的 2 倍。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §2.3</div>
+          <blockquote class="ev-quote">Gemini Robotics-ER achieves good performance across a range of different tasks in both settings, and we find that especially zero-shot robot control performance is strongly correlated with better embodied understanding: Gemini Robotics-ER, which has received more comprehensive training to this end, improves task completion by almost 2x compared to Gemini 2.0.</blockquote>
+          <div class="ev-trans">Gemini Robotics-ER 在两种设置下的多种任务中均取得良好性能，我们发现零样本机器人控制性能与更好的具身理解强相关：经过更全面训练的 Gemini Robotics-ER，与 Gemini 2.0 相比，任务完成率提升近 2 倍。</div>
+          <div class="ev-gloss">零样本控制 = 不需要任何机器人动作数据；数字来自 ALOHA 2 仿真 7 任务，ER 27%→53%，无需 fine-tune。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> Gemini Robotics 的架构：<a href="./notes.html#cloud-local" class="note-link">云端 backbone + 本地 decoder</a>——将 Gemini Robotics-ER 蒸馏压缩使云端查询延迟 &lt;160ms，本地 action decoder 补偿延迟，组合后端到端 ~250ms、50Hz 控制。</div>
+        <figure>
+          <img src="./images/figure_14_arch_overview.png" alt="Figure 14: Gemini Robotics 架构总览">
+          <figcaption><strong>Figure 14（p.14）：</strong>Gemini Robotics 架构。左为 multimodal prompt 输入（图像 + 文本任务指令 + proprioception），中为云端 VLA backbone，右为本地 action decoder；输出 action chunk 由机器人执行。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.14 · §3.1</div>
+          <blockquote class="ev-quote">The Gemini Robotics backbone is formed by a distilled version of Gemini Robotics-ER and its query-to-response latency has been optimized from seconds to under 160ms. The on-robot Gemini Robotics decoder compensates for the latency of the backbone. When the backbone and local decoder are combined, the end-to-end latency from raw observations to low-level action chunks is approximately 250ms. With multiple actions in the chunk (Zhao et al., 2023), the effective control frequency is 50Hz.</blockquote>
+          <div class="ev-trans">Gemini Robotics backbone 由 Gemini Robotics-ER 的蒸馏版本构成，其查询到响应的延迟已从数秒优化至 160ms 以下。机器人本地的 Gemini Robotics decoder 补偿 backbone 的延迟。当 backbone 与本地 decoder 结合时，从原始观测到低层动作 chunk 的端到端延迟约为 250ms。借助 chunk 中的多个动作，有效控制频率为 50Hz。</div>
+          <div class="ev-gloss">蒸馏 + 本地 decoder 是关键工程创新：既保留 ER 的泛化能力，又实现实时控制。这一架构对有云端算力但需实时控制的人形机器人场景有直接参考价值。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> Generalist 能力：Gemini Robotics 开箱即用在 20 个灵巧任务中超过所有 baseline，尤其在可变形物体操作（π0 re-implement 和 diffusion 完全失败的任务）上取得非零成功率。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.16 · §3.2</div>
+          <blockquote class="ev-quote">We find that the Gemini Robotics model is proficient at half of the tasks out of the box with a success rate exceeding 80%. Notably, our model excels at deformable object manipulation ( "fold pink cloth", "wrap the wire around the headphone"), while the baselines struggle with these tasks. For the more challenging tasks, (e.g., "open pink folder", "insert red block", "wrap the wire around the headphone"), we find that Gemini Robotics is the only method that can achieve non-zero success, highlighting that a combination of a high-capacity model architecture along with high-quality diverse data across all modalities (vision, language, and action) is essential for multi-task policy learning.</blockquote>
+          <div class="ev-trans">我们发现 Gemini Robotics 模型开箱即用能胜任一半任务，成功率超过 80%。值得注意的是，我们的模型在可变形物体操作（"折叠粉色布料"、"将电线绕在耳机上"）上表现出色，而 baseline 在这些任务上举步维艰。对于更有挑战性的任务，Gemini Robotics 是唯一能实现非零成功率的方法，凸显了高容量模型架构与跨模态高质量多样化数据的组合对多任务策略学习的必要性。</div>
+          <div class="ev-gloss">关键 insight：不是 baseline 数据不够，而是 backbone 容量和模态多样性不够——这直接支持了用 frontier VLM 做 VLA 的核心论点。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 泛化能力：Gemini Robotics 在视觉/指令/动作三类分布偏移下均优于 baseline，在"新语言指令"这一 baseline 完全崩溃的场景中仍保持非零性能。</div>
+        <figure>
+          <img src="./images/figure_21_generalization.png" alt="Figure 21: 泛化能力 breakdown">
+          <figcaption><strong>Figure 21（p.19）：</strong>泛化能力三维 breakdown（指令/视觉/动作）。Gemini Robotics（蓝色）在所有子类别中均最优，baseline 在"new language"等极端 OOD 场景中进度接近 0，Gemini Robotics 仍有 0.33。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.18-19 · §3.4</div>
+          <blockquote class="ev-quote">Gemini Robotics consistently outperforms the baselines and handles all three types of variations more effectively as shown in Fig. 21. Gemini Robotics even achieves non-zero performance in those cases where the baselines fail catastrophically, e.g., instructions in a new language. We speculate that these improvements result from the larger and more powerful VLM backbone, including the state-of-the-art vision encoder used in Gemini 2.0, combined with diverse training data.</blockquote>
+          <div class="ev-trans">Gemini Robotics 始终优于 baseline，如图 21 所示，能更有效应对所有三类变体。Gemini Robotics 甚至在 baseline 灾难性失败的场景（如新语言指令）中实现非零性能。我们推测这些改进来自于更大更强的 VLM backbone（包括 Gemini 2.0 中使用的 SOTA 视觉编码器）与多样化训练数据的结合。</div>
+          <div class="ev-gloss">"catastrophically fail"是作者原话，说明泛化鸿沟是真实的、且 VLM backbone 强度是决定因素。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 极端灵巧专项化：在 generalist 基础上 fine-tune，可以解锁折纸狐狸（4次精确折叠）、2分钟 lunch-box 等超出 generalist 能力的长流程任务；<strong>从头训练 Gemini Robotics specialist 则 0% 成功率</strong>——证明 generalist 预训练的表征价值。</div>
+        <figure>
+          <img src="./images/figure_22_dexterous_tasks.png" alt="Figure 22: 长流程灵巧任务">
+          <figcaption><strong>Figure 22（p.20）：</strong>Gemini Robotics 完成 6 个长流程灵巧任务：折纸狐狸、打包午餐盒、拼写棋盘游戏、扑克牌游戏、加豌豆、加坚果。每行展示完整任务执行过程（从上到下）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.22 · §4.1</div>
+          <blockquote class="ev-quote">when we directly train the Gemini Robotics specialist model from scratch using the specialization datasets, we find that it is unable to solve any of these tasks (0% success rates across the board, and plot not included in Fig. 23), suggesting that in addition to the high-capacity model architecture, the representation, or the physical common sense, learned from diverse robot action datasets in Section 3 is another key component for the model to specialize in challenging long-horizon tasks that require a high level of dexterity.</blockquote>
+          <div class="ev-trans">当我们直接使用专项化数据集从头训练 Gemini Robotics specialist 模型时，发现它无法完成任何这些任务（全部成功率为 0%，图 23 中未包含此图），这表明除了高容量模型架构外，在第 3 节中从多样化机器人动作数据集中学到的表征（即"物理常识"）是模型专项化于需要高度灵巧性的挑战性长流程任务的另一关键要素。</div>
+          <div class="ev-gloss">这是全文最有力的消融结果之一：specialist 数据相同，有无 generalist 预训练天壤之别——证明"物理常识"表征不可跳过。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 推理增强变体：将 ER 的空间推理能力作为 chain-of-thought 的中间步骤引入 VLA，在需要语义/空间/单步推理的 OOD 场景中大幅提升成功率。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.22-23 · §4.2</div>
+          <blockquote class="ev-quote">While the vanilla model still performs reasonably, the reasoning-enhanced version pushes the success rate much higher in out-of-distribution scenarios which require single-step reasoning or planning, semantic knowledge, and spatial understanding of the world. Additionally, beyond improvements in the model's ability to deploy its skills in novel settings, we also see increased interpretability as the model can output intermediate steps that closely resemble the human-interpretable embodied reasoning traces of Gemini Robotics-ER</blockquote>
+          <div class="ev-trans">虽然原始模型表现尚可，但推理增强版本在需要单步推理/规划、语义知识和空间世界理解的分布外场景中，显著提升了成功率。此外，除了在新场景中部署技能的能力提升外，我们还观察到可解释性增强——模型能输出与 Gemini Robotics-ER 的具身推理轨迹类似的人类可读中间步骤。</div>
+          <div class="ev-gloss">具体数字：1-step reasoning 任务 0.29→0.79，Semantics 任务 0.45→0.80，Spatial Understanding 任务（如 smallest soda）0.40→1.00。可解释性的提升是副产品。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 快速适配新任务：≤100 次示范即可在 7/8 任务达 70%+；新本体适配（Apollo 人形、bi-arm Franka）——<strong>泛化能力可跨本体迁移</strong>，适配后在视觉/动作 OOD 测试中仍显著超过单任务 diffusion baseline。</div>
+        <figure>
+          <img src="./images/figure_5_new_embodiments_humanoid.png" alt="Apollo 人形机器人和双臂 Franka 适配">
+          <figcaption><strong>Figure 27（p.25）：</strong>Gemini Robotics 适配新本体。上：Apollo 人形机器人（Apptronik）完成 lunch bag 打包；下：bi-arm Franka 工业机器人完成橡皮筋装配。两者均从 ALOHA 2 训练的 checkpoint fine-tune 而来。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.25 · §4.3-4.4</div>
+          <blockquote class="ev-quote">For 7 out of 8 tasks, fine-tuning was effective at achieving success rate above 70% with at most 100 demonstrations (equivalent to 15 minutes to 1 hour of demonstrations depending on the complexity of the task).</blockquote>
+          <div class="ev-trans">在 8 个任务中有 7 个，在最多 100 次示范的情况下（根据任务复杂度，相当于 15 分钟到 1 小时的示范），fine-tuning 能有效实现 70% 以上的成功率。</div>
+          <div class="ev-gloss">100 次示范约等于 15min-1h 的遥操作——这是工业部署的关键指标。人形适配（Apollo）的数据和详细成功率在 Section 4.4 / Appendix D.4 中，未全部列出。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.25 · §4.4</div>
+          <blockquote class="ev-quote">Remarkably, this suggests that the Gemini Robotics model is able to transfer its robustness and generalization capabilities across different embodiments, even after being fine-tuned for the new embodiment.</blockquote>
+          <div class="ev-trans">值得注意的是，这表明 Gemini Robotics 模型能够在不同本体之间迁移其鲁棒性和泛化能力，即使在为新本体 fine-tuned 之后也是如此。</div>
+          <div class="ev-gloss">这一发现对人形机器人 VLA 研究尤为重要：从 bimanual 操作臂学到的"物理常识"能在 fine-tune 后保留并在人形上发挥作用。</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">Gemini Robotics 系列属 Google DeepMind 商业产品，基础模型闭源，仅通过 API 提供受限访问。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未开源</span> Gemini Robotics / Gemini Robotics-ER 推理/训练代码未公开</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未开源</span> 模型权重不公开，通过 trusted-tester 或 Google Cloud API 访问</dd>
+        <dt>Benchmark</dt><dd><span class="os-tag os-yes">已开源</span> ERQA benchmark: <a href="https://github.com/embodiedreasoning/ERQA">github.com/embodiedreasoning/ERQA</a>（400 题 VQA）</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> ALOHA 2 数千小时遥操作数据为内部数据集</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚙️ 访问方式</div>
+        <p>论文发布时（2025-03）模型通过 trusted-tester 计划访问，后续计划通过 Google Cloud API / Gemini SDK 提供。基础 Gemini 2.0 模型本身可通过 Google AI Studio 和 Vertex AI 使用，但机器人专用能力（ER / VLA）需额外申请。ERQA benchmark 和提示示例代码已在论文中链接并开放。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.3 · §1</div>
+        <blockquote class="ev-quote">We also introduce Gemini Robotics-ER, a version of Gemini 2.0 Flash that has enhanced embodied reasoning. These can be used in robotics applications without the need for any additional robot-specific data or training.</blockquote>
+        <div class="ev-trans">我们还介绍了 Gemini Robotics-ER，一个具有增强具身推理能力的 Gemini 2.0 Flash 版本。这些模型可用于机器人应用，无需任何额外的机器人专用数据或训练。</div>
+        <div class="ev-gloss">ER 定位为"增强的 Gemini 2.0 Flash"，可通过提示使用（见 Section 2.3 中的 API/代码示例链接）。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 · 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>这是目前最完整的 frontier VLM → VLA 技术路线报告：① ER → VLA 两级架构清晰，每层能力有独立评测支撑；② 云端 backbone + 本地 decoder 的低延迟方案工程细节翔实，可供人形机器人系统设计参考；③ 专项化消融（从头训练 0% vs fine-tune 79%+）以强有力证据钉死了 generalist 预训练的必要性；④ Apollo 人形适配实验是极为罕见的 frontier VLM 接人形机器人的公开记录，说明该路线对 Track A 研究的可行性已有实机验证。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>全部闭源</strong>：Gemini Robotics 的权重、训练代码、ALOHA 2 数据集均不公开，社区无法复现或在此基础上研究，影响学术价值；② <strong>评测高度自建</strong>：大量实验在自建数据集和 benchmark 上，外部可验证性有限；③ 人形适配实验（Section 4.4）仅"preliminary experiments"——成功率数字在 Appendix，无详细失败分析；④ 论文是 tech report 而非同行评审论文，部分结论（如 ER 对 downstream 控制的贡献）因数据未公开难以独立验证；⑤ 系统依赖云端推理，网络延迟和稳定性在实际部署中是额外的工程挑战，文中未深入讨论。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;技术路线新颖且工程完整，但闭源限制了直接复用；理解其架构思路对 Track A 研究有重要参考价值，但无法在此基础上直接开展开源研究。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · Gemini Robotics (arXiv:2503.20020) · Google DeepMind 2025</footer>
+
+</body>
+</html>

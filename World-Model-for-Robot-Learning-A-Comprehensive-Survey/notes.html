@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GR00T N1 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO (variant: 紫蓝调) ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>World Model for Robot Learning 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      这篇综述里反复出现、但需要背景才好理解的关键概念（action-conditioned WM、IDM-style、MoE/MoT、JEPA/latent world modeling、flow matching、GRPO、MPC/TD-MPC 等）。本页按需生长：你选哪个，我补哪个。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回综述</a>
+      <span class="pill">📚 当前 4 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2605.00080" style="color: #93c5fd; text-decoration: none;">arXiv:2605.00080</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 统一联合分布视角 ============ -->
+    <section class="card" id="joint-dist">
+      <h2>统一联合分布视角 <span class="tag">Predictive-Control Joint</span></h2>
+      <p class="full-name">Policy / Passive WM / Controllable WM / IDM = 同一分布的不同查询</p>
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>本综述最核心的"思想"：先写下一个<strong>未来观测与未来动作的联合分布</strong> \(p(o_{t+1:t+k}, a_{t+1:t+k}\mid o_t, l)\)，再把策略、被动世界模型、可控世界模型、逆动力学模型都解释成"对它做不同 marginal / conditional"。四个看似独立的范式，其实是<strong>一棵分布树上的不同枝</strong>——这就解释了为什么 world model 与 policy 能天然耦合。</p>
+      </div>
+      <h3><span class="num">1</span>四种查询</h3>
+      <p>令 \(o_t\) 当前观测、\(a\) 动作、\(l\) 指令。从联合分布出发（§3.1 式 4–8）：</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>范式</th><th>表达式</th><th>怎么从联合分布来</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Policy</strong></td><td>\(p(a_{t+1:t+k}\mid o_t, l)\)</td><td>对未来观测 \(o\) <strong>积分掉</strong></td></tr>
+          <tr><td><strong>Passive WM</strong>（视频生成）</td><td>\(p(o_{t+1:t+k}\mid o_t, l)\)</td><td>对动作 \(a\) <strong>积分掉</strong></td></tr>
+          <tr><td><strong>Controllable WM</strong></td><td>\(p(o_{t+1:t+k}\mid o_t, a_{t+1:t+k})\)</td><td>以动作为<strong>条件</strong>（不积分）</td></tr>
+          <tr><td><strong>IDM</strong></td><td>\(p(a_{t+1:t+k}\mid o_{t:t+k})\)</td><td>给定首尾观测<strong>反推</strong>动作</td></tr>
+        </tbody>
+      </table></div>
+      <h3><span class="num">2</span>为什么这个视角重要</h3>
+      <p>它把"策略到底要不要内含世界模型"这个争论降维成"<strong>你查询联合分布的哪一面</strong>"：</p>
+      <ul>
+        <li>策略可以把"世界模型生成的未来观测"当作一个<strong>中间潜变量</strong>，再用 IDM-style 解码器从预测的未来里恢复可执行动作（解耦流水线就是这么干的）。</li>
+        <li>而"统一 VLA / 单骨干"则直接学整个联合分布、同一生成过程里出 \(o\) 和 \(a\)。</li>
+        <li>关键子类是 <strong>action-conditioned world model</strong>：因为"视觉合理但对动作不一致"的未来（passive WM 容易产生）对闭环控制几乎无用——综述反复强调这点。</li>
+      </ul>
+      <h3><span class="num">3</span>一句话记忆</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 直觉</div>
+        <p>同一张"世界如何在动作下演化"的概率图：<strong>挡住动作看未来 = 视频生成；挡住未来看动作 = 策略；两头都给看中间 = 逆动力学；以动作为条件看未来 = 可控世界模型。</strong>四者不是四个模型，是四种提问方式。</p>
+      </div>
+    </section>
+
+    <!-- ============ IDM / 单骨干 / MoT ============ -->
+    <section class="card" id="policy-arch">
+      <h2>IDM-style vs 单骨干 vs MoT <span class="tag">Policy Architectures</span></h2>
+      <p class="full-name">"世界模型作策略"的三种耦合方式（Figure 3）</p>
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>同样是"用视频世界模型的预测先验帮策略"，三种架构的差别在于<strong>预测与动作生成耦合得多紧</strong>：IDM-style 完全解耦（先想象未来视频、再反推动作）；单骨干把观测/动作 token 塞进同一个 backbone 联合建模；MoT 保留视频专家与动作专家、靠 joint attention 深度交互。耦合越紧，越能端到端传播时空约束，但训练/推理也越重。</p>
+      </div>
+      <h3><span class="num">1</span>三种架构对照</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th></th><th>IDM-style（解耦）</th><th>Single-backbone（单骨干）</th><th>MoE/MoT（专家）</th></tr></thead>
+        <tbody>
+          <tr><td>结构</td><td>WM 先预测未来观测 → 独立 IDM/策略头反推动作</td><td>observation+action token 共享一个生成 backbone</td><td>视频专家 + 动作专家各自保留，逐层 joint/cross-attention 融合</td></tr>
+          <tr><td>耦合</td><td>Decoupled（WM 常先预训练再冻结）</td><td>参数全共享、联合去噪/生成</td><td>路由分解：参数不全共享，但梯度跨专家流动</td></tr>
+          <tr><td>代表</td><td>UniPi, VidMan, Vidar, VPP, Gen2Act</td><td>UVA, UWA, VideoVLA, Cosmos Policy, DreamZero</td><td>GE-Act, Motus, LingBot-VA, BagelVLA, LDA-1B</td></tr>
+          <tr><td>优点</td><td>模块化、可复用视频先验、未来可解释</td><td>时空先验直接注入控制、接口最简</td><td>兼顾"共享先验"与"模态特化"（视频/动作频率、尺度不同）</td></tr>
+          <tr><td>痛点</td><td>受生成保真度上限制约；视觉合理≠动作一致→误差累积</td><td>训练/推理重；是否优于同规模 VLM 仍开放</td><td>架构复杂；好处可能更多来自训练期共训而非推理期想象</td></tr>
+        </tbody>
+      </table></div>
+      <h3><span class="num">2</span>为什么会从解耦走向耦合</h3>
+      <p>解耦路线（predict-then-act）最早、最有影响，但有个本质问题：世界模型只对"像不像"负责、不对"动作一不一致"负责，于是常生成"看着对、执行起来错"的未来，误差在闭环里累积。后续工作就是不断把"预测"和"动作"<strong>拉近</strong>：单骨干让二者共享一个生成过程；MoT 在保留专家特化的同时，用注意力反复把视频分支的 foresight 注入动作分支。</p>
+      <div class="callout note">
+        <div class="callout-head">⚖️ 综述的克制</div>
+        <p>它明确说："视频预训练 backbone 是否一致优于同规模 VLM backbone，仍是开放经验问题"。所以这套 taxonomy 是<strong>组织地图</strong>，不是优劣排名——这也是它好用的地方。</p>
+      </div>
+    </section>
+
+    <!-- ============ JEPA / latent world modeling ============ -->
+    <section class="card" id="jepa">
+      <h2>JEPA / Latent World Modeling <span class="tag">Predict in Embedding</span></h2>
+      <p class="full-name">Joint-Embedding Predictive Architecture · 表征空间里的世界建模</p>
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>第四条"世界模型作策略"的路线：<strong>完全不生成未来图像/视频</strong>，而是在<strong>表征（embedding）空间</strong>里预测"未来会变成什么样"。既保留了"给动作生成注入预测结构"的核心收益，又省掉了像素级生成解码的算力与冗余。思想源自 LeCun 力推的 JEPA 家族（在嵌入空间而非像素空间做预测）。</p>
+      </div>
+      <h3><span class="num">1</span>核心动机</h3>
+      <p>像素空间预测有两个老问题：① <strong>算力贵</strong>（扩散迭代去噪、长视频）；② <strong>预测目标里大量是与控制无关的视觉细节</strong>（光照、纹理），模型容易"抄近路"靠像素变化拟合而学不到动作相关的状态转移。JEPA 路线把预测目标换成"未来观测的 latent 表征"，强迫模型学<strong>动作相关的状态演化</strong>。</p>
+      <h3><span class="num">2</span>这一族的代表与差异</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>方法</th><th>关键设计</th></tr></thead>
+        <tbody>
+          <tr><td><strong>FLARE</strong></td><td>Future Latent Representation Alignment：把动作去噪网络的隐特征与"未来观测的 latent"对齐，让策略隐式预判未来而不显式生成</td></tr>
+          <tr><td><strong>VLA-JEPA</strong></td><td>JEPA 式预训练 + leakage-free 状态预测：未来帧只用来产生 latent 监督目标，避免靠像素变化抄近路</td></tr>
+          <tr><td><strong>JEPA-VLA</strong></td><td>反过来——直接把 V-JEPA 2 学到的预测式 embedding 当更强的 VLA backbone（而非加预测头）</td></tr>
+          <tr><td><strong>WoG / DIAL</strong></td><td>把世界建模搬进动作生成的"条件空间"：只预测对精确控制最有用的那部分紧凑未来条件</td></tr>
+        </tbody>
+      </table></div>
+      <h3><span class="num">3</span>和像素路线的关系</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 不是对立，是光谱</div>
+        <p>从"显式渲染整段未来视频"（IDM-style）→"训练时生成、推理时跳过"（Fast-WAM）→"只在 latent 里预测"（JEPA）是一条<strong>由重到轻的连续光谱</strong>。综述把 latent/symbolic 列为"非像素路线"，强调：控制相关的预测可以用紧凑的 latent 或抽象变量表达，往往是更直接的动作接口。也连接到效率挑战（§8.2）与符号结构（§8.5）。</p>
+      </div>
+    </section>
+
+    <!-- ============ WM 作模拟器的 RL ============ -->
+    <section class="card" id="wm-rl">
+      <h2>WM 作模拟器的 RL <span class="tag">Learned Simulator</span></h2>
+      <p class="full-name">在世界模型里做强化学习 + 世界模型–策略 co-evolution</p>
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把学到的世界模型<strong>当环境本身</strong>：VLA 策略在"想象"里 rollout、拿 reward、用 GRPO 这类目标更新——替代又慢又贵又不安全的真机交互。综述指出一个关键升级：<strong>simulator 本身不可靠</strong>，所以最新工作让"世界模型"和"策略"<strong>交替互相改进（co-evolution）</strong>，而不是把世界模型当一个固定的完美环境。</p>
+      </div>
+      <h3><span class="num">1</span>基本配方</h3>
+      <p>世界模型 \(p_\phi\) 产生想象的 transition、可选 reward 与终止信号：</p>
+      <div class="math-display">\[(\hat o_{t+1}, \hat r_t, \hat d_t) \sim p_\phi(\cdot \mid o_{\le t}, a_{\le t}, l)\]</div>
+      <p>策略在想象 rollout 上最大化回报，实践中常用 <strong>GRPO 式</strong>的 clipped 目标（适配 chunk / flow-based 动作头）。代表：UniSim、World-Env、VLA-RFT、DiWA、WMPO、RISE、GigaBrain。</p>
+      <h3><span class="num">2</span>两层认识</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>层级</th><th>核心主张</th><th>代表</th></tr></thead>
+        <tbody>
+          <tr><td>第一层</td><td>世界模型 = learned simulator，在里面做 RL。差异主要在 reward 设计、rollout 表示、优化兼容性</td><td>World-Env, VLA-RFT, WMPO, World-Gymnast</td></tr>
+          <tr><td>第二层</td><td>承认 simulator 不完美 → 必须和策略一起改进：策略失败 rollout 回头修世界模型，更好的世界模型再产更好的想象数据</td><td>World-VLA-Loop, VLAW, WoVR</td></tr>
+        </tbody>
+      </table></div>
+      <p>WoVR 的 co-evolution 写得最直白：</p>
+      <div class="math-display">\[\phi_{k+1} \leftarrow \text{UpdateWM}(\phi_k,\, D_{\text{real}} \cup D_{\text{policy}}(\pi_{\theta_k})),\quad \theta_{k+1} \leftarrow \text{UpdatePolicy}(\theta_k,\, \hat D(\phi_{k+1}))\]</div>
+      <h3><span class="num">3</span>同一能力的另一面：evaluator</h3>
+      <div class="callout note">
+        <div class="callout-head">🔁 一体两用</div>
+        <p>能 rollout 动作条件未来的世界模型，既能<strong>训练时当模拟器</strong>，也能<strong>决策时当评估器</strong>（给候选动作打分、排序、拒绝，甚至离线评估不同策略/checkpoint，如 WorldEval）。综述强调：评估场景下，realism 不够——rollout 必须<strong>可靠到能支撑排序与选择</strong>，否则幻觉会直接污染评估信号本身（WoVR 的警告）。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#joint-dist">统一联合分布视角</a></li>
+      <li><a href="#policy-arch">IDM-style vs 单骨干 vs MoT</a></li>
+      <li><a href="#jepa">JEPA / Latent World Modeling</a></li>
+      <li><a href="#wm-rl">WM 作模拟器的 RL</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · World Model for Robot Learning (arXiv:2605.00080v1) · 配套笔记
+</footer>
+
+</body>
+</html>

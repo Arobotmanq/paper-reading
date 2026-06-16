@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RDT-1B 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>RDT-1B 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      RDT-1B 论文中出现的关键技术概念——扩散策略、DiT 架构、统一动作空间、双臂操作、跨本体预训练等。每个概念给出定义、原理、在本文的具体用法，以及与相关方法的对比。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 RDT-1B 综述</a>
+      <span class="pill">📚 当前 7 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2410.07864" style="color: #93c5fd; text-decoration: none;">arXiv:2410.07864</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 扩散策略 / DDPM ============ -->
+    <section class="card" id="diffusion-policy">
+      <h2>扩散策略 <span class="tag">Diffusion Policy</span></h2>
+      <p class="full-name">Denoising Diffusion Probabilistic Model for Robot Control · 扩散概率模型用于机器人控制</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>扩散策略把机器人动作生成建模为「从高斯噪声出发，逐步去噪还原出干净动作」的过程，天然能建模<strong>多峰动作分布</strong>——双臂操作完成同一任务有多种等效方式，传统均值回归会给出「不可行的平均动作」，而扩散直接学整条分布。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念 · 为什么需要它</h3>
+      <p>机器人操作中，给定语言指令和观测，合法动作往往有多种：</p>
+      <ul>
+        <li>单臂抓杯子：可从左侧抓、右侧抓、正面抓……</li>
+        <li>双臂换手：右→左有多条关节轨迹都是合法的</li>
+      </ul>
+      <p>如果用<strong>均值回归</strong>（MSE loss 训练确定性网络），模型输出的是「所有合法动作的加权平均」——这个平均动作往往<strong>不可行</strong>（例如手臂位于两个峰值之间的空中）。</p>
+      <p>扩散模型学的是条件分布 \(p(a_t | \ell, o_t)\)，通过 DDPM 的去噪过程可以<strong>采样</strong>出分布上的任意一个合法峰值动作。</p>
+
+      <h3><span class="num">2</span>DDPM 原理</h3>
+      <p>DDPM（Ho et al., 2020）分两个过程：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>过程</th><th>方向</th><th>描述</th></tr></thead>
+          <tbody>
+            <tr><td><strong>前向过程</strong></td><td>数据 → 噪声</td><td>逐步给干净动作 \(a^0\) 加噪声：\(a^k = \sqrt{\bar\alpha_k}\,a^0 + \sqrt{1-\bar\alpha_k}\,\epsilon\)</td></tr>
+            <tr><td><strong>反向过程</strong></td><td>噪声 → 数据</td><td>训练网络 \(f_\theta\) 预测干净动作：\(a^0 \leftarrow f_\theta(\ell, o_t, a^k, k)\)；推理时从 \(a^K \sim \mathcal{N}(0,I)\) 开始迭代去噪</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>训练目标是最小化去噪误差：</p>
+      <div class="math-display">
+        \[\mathcal{L}(\theta) = \mathbb{E}\left[\left\|a_t - f_\theta\!\left(\ell,\, o_t,\, \sqrt{\bar\alpha_k}\,a_t + \sqrt{1-\bar\alpha_k}\,\epsilon,\, k\right)\right\|^2\right]\]
+      </div>
+
+      <h3><span class="num">3</span>在 RDT-1B 里的用法</h3>
+      <ul>
+        <li><strong>输入</strong>：语言 \(\ell\)（T5-XXL 编码）+ 图像观测 \(X_{t-1:t+1}\)（SigLIP 编码）+ 带噪动作 chunk \(\tilde{a}_{t:t+T_a}\) + 本体感知 \(z_t\)</li>
+        <li><strong>输出</strong>：去噪后的动作 chunk \(a_{t:t+T_a}\)（\(T_a = 64\) 个连续动作）</li>
+        <li><strong>推理加速</strong>：DPM-Solver++ 将去噪步数从 100 压缩到 5，在 RTX 4090 上实现 6 Hz</li>
+      </ul>
+
+      <h3><span class="num">4</span>与 VAE（ACT）/ 离散化（OpenVLA）的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方法</th><th>表征</th><th>优点</th><th>局限</th></tr></thead>
+          <tbody>
+            <tr><td><strong>扩散（RDT）</strong></td><td>连续分布采样</td><td>精确建模多峰；连续动作无量化误差</td><td>推理需多步去噪（已用加速器缓解）</td></tr>
+            <tr><td>VAE（ACT）</td><td>连续 latent</td><td>采样快</td><td>KL 约束限制表达能力；复杂分布建模弱</td></tr>
+            <tr><td>离散化（OpenVLA/RT-2）</td><td>动作 token</td><td>兼容 LLM 词表</td><td>量化误差；高维动作精度差；不协调双臂</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>扩散策略用于机器人控制最早见于 <strong>Chi et al. 2023 "Diffusion Policy"（RSS 2023）</strong>，该工作将 DDPM 应用于视觉运动策略学习，发现扩散在精细操作上显著优于 CVAE。RDT-1B 在此基础上进行了大规模预训练扩展，同时针对机器人数据的特殊性（非线性、高频、数值不稳定）对 DiT 架构做了专门改进。</p>
+      </div>
+    </section>
+
+    <!-- ============ DiT ============ -->
+    <section class="card" id="dit">
+      <h2>DiT <span class="tag">Diffusion Transformer</span></h2>
+      <p class="full-name">Diffusion Transformer · 扩散变换器</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>DiT 是把扩散模型的去噪网络换成 Transformer 的架构——原来用 U-Net，现在用可扩展的 ViT-style Transformer。RDT-1B 以 DiT 为骨干，但针对机器人数据做了三项关键修改（QKNorm、MLP Decoder、交替条件注入），才能在 1.2B 规模上稳定训练。</p>
+      </div>
+
+      <h3><span class="num">1</span>原始 DiT（Peebles & Xie, 2023）</h3>
+      <p>Peebles 等人用 Transformer 替换 DDPM 里的 U-Net，证明 ViT backbone 在图像生成上可扩展（遵循 scaling laws）。条件（类别标签 / 时间步）通过 <strong>adaptive layer norm (adaLN)</strong> 注入——将条件嵌入到 LayerNorm 的 scale/shift 参数中。</p>
+      <p>优势：Transformer 扩展性好，可以轻松堆叠到 billions 参数；与视觉语言模型接口兼容。</p>
+
+      <h3><span class="num">2</span>RDT-1B 对 DiT 的三项改进</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>改进</th><th>原因</th><th>效果</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>QKNorm + RMSNorm</strong></td>
+              <td>机器人物理量（关节角、速度）数值范围不稳定，含极端值；LayerNorm 的中心化操作破坏时间序列对称性</td>
+              <td>防止大规模预训练时梯度爆炸/溢出；论文 Fig 4(a) 展示无此修改时训练 loss 直接爆炸</td>
+            </tr>
+            <tr>
+              <td><strong>MLP Decoder</strong></td>
+              <td>原 DiT 用线性投影从 latent 解码；机器人动作有非线性动力学（关节角不是 latent 的线性函数）</td>
+              <td>提升精细动作能力；消融：无 MLP Decoder 时 Robot Dog Walk Straight 从 32% 跌至 12%</td>
+            </tr>
+            <tr>
+              <td><strong>交替条件注入 ACI</strong></td>
+              <td>图像 token 数量远多于文本 token；同时注入时，cross-attention 被图像主导，文本跟随能力退化</td>
+              <td>奇数层注入图像、偶数层注入语言（或反之），让两个模态都能充分影响去噪过程；消融：无 ACI 时 Pour Water-L-1/3「正确手」从 100% 跌至 62.5%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>多模态位置嵌入</h3>
+      <p>为了让模型区分「哪个相机」「哪个时间步」「哪个 patch」，RDT-1B 将传统正弦位置嵌入扩展到多维网格：维度 \((T_\text{img}, N_\text{cam}, N_\text{patch}, D)\)，分别对应时间步、相机（外置/右腕/左腕）、patch 序号、嵌入维度。这让模型隐式知道「我现在看的是左腕相机第 3 时间步的第 7 号 patch」。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>原始 DiT 见 <strong>Peebles & Xie, 2023 "Scalable Diffusion Models with Transformers"（ICCV 2023）</strong>，首次在 ImageNet 生成上用 ViT 代替 U-Net，建立了扩散模型的 scaling law。RDT-1B 的 DiT backbone 参考了 <strong>Bao et al. 2023 "All are Worth Words"（U-ViT，CVPR 2023）</strong>，采用全 Transformer 结构处理噪声 token + 条件 token。</p>
+      </div>
+    </section>
+
+    <!-- ============ 统一动作空间 ============ -->
+    <section class="card" id="unified-action-space">
+      <h2>统一动作空间 <span class="tag">Unified Action Space</span></h2>
+      <p class="full-name">Physically Interpretable Unified Action Space · 物理可解释统一动作空间</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>128 维向量，每个维度对应明确的物理量（关节位置、末端位姿、底盘速度……）。各机器人按物理含义把自己的动作「填入」对应位置，其余补零。物理单位保持一致（m, rad 等），<strong>不做 min-max 归一化</strong>——让跨机器人的物理先验（「1m 就是 1m」）可以迁移。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要它</h3>
+      <p>训练数据来自 46 个不同机器人——有 6-DoF 单臂 EEF 控制的，有 7-DoF 关节控制的，有带轮式底盘的，有双臂的。直接拼接这些异构动作有两个问题：</p>
+      <ol>
+        <li><strong>格式不兼容</strong>：单臂输出 6 维，双臂输出 28 维，有轮的再多两维……无法 batch 训练。</li>
+        <li><strong>负迁移</strong>：不同机器人的「第 1 维」含义完全不同（一个是关节角，另一个是末端 x 坐标），模型学不到跨机器人的通用知识。</li>
+      </ol>
+      <p>OXE（Open X-Embodiment）的解法是「只保留各机器人共有的特征」——抛弃了很多信息。RDT-1B 的解法是「全部保留，但按物理含义对齐」。</p>
+
+      <h3><span class="num">2</span>128 维向量的结构</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>索引范围</th><th>物理含义</th></tr></thead>
+          <tbody>
+            <tr><td>[0–9]</td><td>右臂关节位置（最多 10 个关节，不足的用左边几位）</td></tr>
+            <tr><td>[10–14]</td><td>右夹爪关节位置</td></tr>
+            <tr><td>[15–24]</td><td>右臂关节速度</td></tr>
+            <tr><td>[25–29]</td><td>右夹爪关节速度</td></tr>
+            <tr><td>[30–32]</td><td>右末端执行器位置（xyz, m）</td></tr>
+            <tr><td>[33–38]</td><td>右末端执行器 6D 姿态（旋转矩阵前两列，避免万向节锁）</td></tr>
+            <tr><td>[39–44]</td><td>右末端速度 + 角速度</td></tr>
+            <tr><td>[45–49]</td><td>保留</td></tr>
+            <tr><td>[50–99]</td><td>左臂（同右臂结构，对称）</td></tr>
+            <tr><td>[100–101]</td><td>底盘线速度（x, y）</td></tr>
+            <tr><td>[102]</td><td>底盘角速度</td></tr>
+            <tr><td>[103–127]</td><td>保留（未来扩展）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>单臂机器人</strong>：其臂映射到「右臂」槽位；6-DoF 臂只用 [0–5]，其余补零。<strong>纯操作机器人</strong>（无底盘）：[100–102] 全零。</p>
+
+      <h3><span class="num">3</span>为什么不做归一化</h3>
+      <p>大多数方法（Chi et al., Ghosh et al.）对动作做 min-max 归一化到 [-1,1] 或标准化到 N(0,1)。RDT-1B 认为这会<strong>破坏物理量的跨机器人共性</strong>：「1 m」在所有机器人里都是 1 m，归一化之后「1 m」的含义变成了「该机器人的最大范围」，不同机器人的同一物理量失去了可比性。因此 RDT 只统一单位（统一到 m, rad, m/s, rad/s），不做值域缩放。</p>
+
+      <h3><span class="num">4</span>对比其他方案</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方案</th><th>策略</th><th>信息损失</th><th>负迁移风险</th></tr></thead>
+          <tbody>
+            <tr><td><strong>RDT 统一动作空间</strong></td><td>按物理含义填入128维向量，其余补零</td><td>无（全部保留）</td><td>低（维度含义一致）</td></tr>
+            <tr><td>OXE / RT-X</td><td>只保留跨机器人共有特征</td><td>高（丢弃独有特征）</td><td>低</td></tr>
+            <tr><td>直接拼接</td><td>各机器人动作直接 concat</td><td>无</td><td>高（维度含义混乱）</td></tr>
+            <tr><td>独立头部</td><td>共享骨干 + 各机器人独立解码头</td><td>无</td><td>低，但无统一迁移</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 双臂操作 ============ -->
+    <section class="card" id="bimanual">
+      <h2>双臂操作 <span class="tag">Bimanual Manipulation</span></h2>
+      <p class="full-name">Bimanual Manipulation · 双手/双臂协作操作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>两条机械臂同时工作的操作任务。比单臂多了一层难度：两臂必须<strong>相互协调</strong>，完成同一任务的方式组合爆炸（多模态），且数据采集成本更高。很多日常任务（折叠衣物、双手搬重物、换手传递）天然需要双臂。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么比单臂难</h3>
+      <ul>
+        <li><strong>动作空间翻倍</strong>：ALOHA 双臂机器人有 14 个关节 + 2 个夹爪；双臂 EEF 控制则是 6+6=12 维。高维动作空间加剧数据稀缺。</li>
+        <li><strong>多模态分布</strong>：完成「把杯子从桌子左边移到右边」可以用「左手抓左移右」也可以「右手直接拿」，还可以「左手递给右手再移」——这三种模式都是合法的。收集演示数据时操作员随机选其中一种，导致数据集中三种模式并存。</li>
+        <li><strong>协调约束</strong>：两臂不能碰撞，某些任务要求精确同步（一只手固定物体，另一只手操作）。</li>
+        <li><strong>数据稀缺</strong>：双臂机器人硬件成本高（ALOHA 约 2 万美元），数据采集需要双人遥操作或特殊接口，数据量远少于单臂。</li>
+      </ul>
+
+      <h3><span class="num">2</span>RDT-1B 的解法</h3>
+      <p>针对多模态：用扩散模型建模完整动作分布（而非均值回归）。针对数据稀缺：在 1M+ 单臂轨迹上预训练，通过统一动作空间提取可迁移的物理先验，再用 6K+ 双臂轨迹微调。</p>
+
+      <h3><span class="num">3</span>典型任务举例（本文实验）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>任务</th><th>双臂特征</th><th>挑战维度</th></tr></thead>
+          <tbody>
+            <tr><td>Wash Cup</td><td>一臂拿杯、一臂开水龙头 → 合作</td><td>未见物体泛化</td></tr>
+            <tr><td>Handover</td><td>右手拿笔 → 中间换手给左手 → 投入盒子</td><td>5-shot 新技能</td></tr>
+            <tr><td>Fold Shorts</td><td>双手同时抓布料两端折叠</td><td>1-shot 新技能</td></tr>
+            <tr><td>Robot Dog</td><td>双手配合（一手固定遥控器，一手推摇杆）</td><td>精细操控</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 跨本体预训练 ============ -->
+    <section class="card" id="cross-embodiment">
+      <h2>跨本体预训练 <span class="tag">Cross-Embodiment</span></h2>
+      <p class="full-name">Cross-Embodiment Pretraining · 跨机器人形态预训练</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在多个不同机器人（不同形态、自由度、动作空间）的数据上<strong>联合预训练</strong>一个大模型，再在目标机器人上微调。核心假设：不同机器人执行的操作任务共享底层物理规律（重力、接触动力学、物体几何），这部分知识可以迁移。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心假设</h3>
+      <p>不同机器人用不同的末端执行器抓同一个瓶子——关节角完全不同，但「末端需要包围物体」「夹紧需要施力」「放置需要接触面」这些物理约束是通用的。大模型在大量数据上见过这些约束的各种体现，从而学到比单机器人训练更强的物理先验。</p>
+
+      <h3><span class="num">2</span>RDT-1B 的实现</h3>
+      <ul>
+        <li>预训练数据 46 个数据集：RT-1（130K）、DROID（76K）、RH20T（110K）、BC-Z、Language Table、ManiSkill 等，总计 1M+ 轨迹，21TB。</li>
+        <li>采样权重：\(w_j \propto \sqrt{N_j}\)（防止大数据集过采样，同时保证小数据集被充分采样）。</li>
+        <li>统一动作空间是跨本体预训练的关键使能技术——没有它，无法把各机器人的动作 batch 在一起训练。</li>
+      </ul>
+
+      <h3><span class="num">3</span>为什么不仅用双臂数据</h3>
+      <p>双臂数据 &lt; 10K 轨迹，完全不够训练 1.2B 参数模型。加入 1M+ 单臂数据后等于扩大了三个数量级——代价是需要解决上述异构性问题。论文消融（Table 2）证实：从头训练（scratch，无预训练）时 Wash Cup 未见物体成功率为 0%，而预训练后达到 50%。</p>
+
+      <div class="callout note">
+        <div class="callout-head">🎯 与 π0.5 的对比</div>
+        <p>π0.5 的「跨本体 co-training」与 RDT 的预训练在思路上相似，但 π0.5 更进一步：把网页图文、口头指令等非机器人数据也纳入训练，且目标是移动操作泛化到新家庭；RDT-1B 的目标是双臂精细操作，以固定双臂机器人为主，没有移动底盘的泛化需求。</p>
+      </div>
+    </section>
+
+    <!-- ============ Action Chunking ============ -->
+    <section class="card" id="action-chunking">
+      <h2>Action Chunking <span class="tag">动作分块</span></h2>
+      <p class="full-name">Action Chunking · 一次预测多步动作序列</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>一次预测未来 \(T_a\) 步（RDT 中 \(T_a = 64\)）的完整动作序列，而非每步只预测一个动作。好处：减少决策次数（降低误差累积），提升时间连贯性；坏处：如果执行时遇到意外需要等 64 步才能重新规划。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要它</h3>
+      <p>策略网络预测的是<strong>当前最优动作</strong>，但它无法准确预知 60 步后的状态。如果每步都调用网络预测，预测误差会沿轨迹累积，最终偏离训练分布，陷入无法恢复的状态（Ross et al., 2011 的 DAgger 问题）。</p>
+      <p>Action Chunking 的思路：<strong>一次性规划未来 64 步</strong>，在规划时考虑到后续动作的时间连贯性——避免第 10 步的动作与第 11 步的动作之间出现突变。执行时按序执行这 64 步，然后重新规划。</p>
+
+      <h3><span class="num">2</span>在 RDT-1B 里的参数</h3>
+      <ul>
+        <li>\(T_a = 64\)：参考 ACT（Zhao et al. 2023）的消融，在性能与计算开销间平衡。</li>
+        <li>与扩散结合：每次推理采样一个 64 维的 action chunk，5 步去噪，6 Hz chunk 频率 = 384 Hz 平均动作频率。</li>
+        <li>历史本体感知 \(z_{i}, i < t\) 被<strong>排除</strong>：防止模型靠历史低维数据走捷径，强迫它从图像特征中学习泛化的决策结构。</li>
+      </ul>
+
+      <h3><span class="num">3</span>与 Receding Horizon Control 的关系</h3>
+      <p>本质上是 Model Predictive Control（MPC）的模仿学习版本：每 \(T_a\) 步重新规划一次，相当于滚动时域控制。区别在于 MPC 用显式动力学模型优化，而 Action Chunking 用神经网络直接预测序列。</p>
+    </section>
+
+    <!-- ============ DPM-Solver++ ============ -->
+    <section class="card" id="dpm-solver">
+      <h2>DPM-Solver++ <span class="tag">采样加速</span></h2>
+      <p class="full-name">Fast Solver for Diffusion Probabilistic Models · 扩散概率模型快速采样器</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>DPM-Solver++（Lu et al., 2022）是一种针对扩散模型 ODE 的高阶数值求解器，能用<strong>5 步</strong>替代 DDPM 的 100 步去噪，精度不显著损失。在 RDT-1B 的 1.2B 模型上，这把推理时间降到了 6 Hz 实时控制可接受的水平。</p>
+      </div>
+
+      <h3><span class="num">1</span>原理直觉</h3>
+      <p>DDPM 的反向过程其实是在求解一个概率流 ODE（随机微分方程去掉噪声项后的确定性版本）：</p>
+      <div class="math-display">
+        \[\frac{dx}{dt} = f(x, t) - \frac{g^2(t)}{2}\nabla_x \log p_t(x)\]
+      </div>
+      <p>标准 DDPM 用一阶欧拉法逐步积分，需要 100–1000 步。DPM-Solver++ 用<strong>解析求解指数积分子</strong> + <strong>高阶 Adams 多步法</strong>预测，大幅减少所需步数。</p>
+
+      <h3><span class="num">2</span>在 RDT-1B 里的效果</h3>
+      <ul>
+        <li>去噪步数：100 → 5（20× 加速）</li>
+        <li>Action chunk 推理频率：6 Hz（每秒 6 个 chunk）</li>
+        <li>平均动作频率：381 Hz（6 Hz × 64 步/chunk）</li>
+        <li>硬件：板载 RTX 4090 24GB，无需服务器</li>
+      </ul>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>Lu et al. 2022 "DPM-Solver++: Fast Solver for Guided Sampling of Diffusion Probabilistic Models"（NeurIPS 2022）</strong>。与 DDIM（另一种加速方法）的区别：DDIM 基于确定性采样，DPM-Solver++ 进一步利用扩散 ODE 的半线性结构，在 10 步以内精度更高。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#diffusion-policy">扩散策略 / DDPM</a></li>
+      <li><a href="#dit">DiT — Diffusion Transformer</a></li>
+      <li><a href="#unified-action-space">统一动作空间</a></li>
+      <li><a href="#bimanual">双臂操作</a></li>
+      <li><a href="#cross-embodiment">跨本体预训练</a></li>
+      <li><a href="#action-chunking">Action Chunking</a></li>
+      <li><a href="#dpm-solver">DPM-Solver++</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · RDT-1B (arXiv:2410.07864) · ICLR 2025 · 配套笔记
+</footer>
+
+</body>
+</html>

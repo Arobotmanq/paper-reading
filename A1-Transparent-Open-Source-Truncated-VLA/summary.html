@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A1 VLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+  .pill.new { background: rgba(234,179,8,0.2); border-color: rgba(234,179,8,0.5); color: #fde68a; font-weight: 700; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+  .badge.valuable { background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #075985; border-color: #0ea5e9; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes  { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no   { background: var(--danger-bg);  color: var(--danger);  border: 1px solid var(--danger); }
+  .os-part { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>SYSU · MBZUAI · Spatialtemporal AI · Vision-Language-Action</span>
+    <h1>A1: Truncated VLA<br>for Efficient Inference</h1>
+    <p class="subtitle">大 VLM 骨干 + 迭代 flow matching 头让 VLA 推理既贵又慢——A1 的答案是<strong>同时截断两个计算瓶颈</strong>：监测中间层 action 一致性提前退出骨干，并在层间传递 warm-start 只做 2 步去噪，把延迟压低 72%，同时全栈开源、透明可复现。</p>
+    <div class="meta-pills">
+      <span class="pill new">🆕 NEW · 2026</span>
+      <span class="pill rel">🎯 项目相关 · Track A 操作 VLA</span>
+      <span class="pill">📅 2026-04-16</span>
+      <span class="pill">🏢 SYSU / MBZUAI / Spatialtemporal AI</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2604.05672">arXiv:2604.05672</a></span>
+      <span class="pill">⭐ <a href="https://github.com/ATeam-Research/A1">ATeam-Research/A1</a></span>
+      <span class="pill">🌐 <a href="http://www.ateam.xin/#/research/A1">Project Page</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">延迟降低</div>
+    <div class="value">72<span class="unit">%</span></div>
+    <div class="desc">FM 推理每 episode 延迟（37.8s→10.5s）</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">骨干算力削减</div>
+    <div class="value">76.6<span class="unit">%</span></div>
+    <div class="desc">VLM 层计算量，成功率仅降 1.7%</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">RoboChallenge</div>
+    <div class="value">29<span class="unit">%</span></div>
+    <div class="desc">开源第一，超 π0(28.3%)、X-VLA(21.3%)</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">开源状态</div>
+    <div class="value" style="font-size:1.2em; margin-top:0.3em;">部分</div>
+    <div class="desc">代码+中间 ckpt 已开，权重/数据待验证</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">VLA 推理慢不是因为模型不好，而是因为<strong>两处计算都在无谓地重复</strong>：VLM 跑满全部 28 层、flow matching 每次从噪声从头去噪 10 步。A1 发现中间层的 action 预测已足够稳定，就<strong>在 action 一致时提前退出骨干，同时把上一层的去噪结果热启动给下一层</strong>——只需 2 步去噪就够——两个瓶颈同时截断，延迟骤降而精度几乎不损，且<strong>全栈开源</strong>让这条路人人可走。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>VLA 部署的核心痛点：<strong>十亿参数骨干 + 10–20 步迭代去噪</strong>让实时控制在消费级硬件上不可行。</li>
+          <li>实验观察：flow matching 轨迹在<strong>不到 3 步内</strong>就锁定正确模式；连续控制步之间 action 变化缓慢；VLM<strong>中间层隐状态已足够</strong>驱动 action 预测。</li>
+          <li>结论：推理中<strong>大量计算是冗余</strong>的——只需在 action 确实改变时才运行更深的层和更多去噪步。</li>
+          <li>两项技术同时截断：①<a href="./notes.html#early-exit" class="note-link">动态 early-exit</a>（action 一致性阈值触发退出骨干）；②<a href="./notes.html#iltfm" class="note-link">Inter-Layer Truncated Flow Matching</a>（层间热启动，δ=2 步去噪）。</li>
+          <li>全栈开源训练管线（代码 + 数据脚本 + 中间 checkpoint + 评估协议），声称"完全透明可复现"，打破闭源惯例。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item">
+            <span class="mi-num">①</span>
+            <span class="mi-body"><strong><a href="./notes.html#truncated-vla" class="note-link">Truncated VLA 架构</a></strong>：基于 Molmo-7B（Qwen2-7B + CLIP）骨干，训练时对每层 i 并行监督 action loss；<a href="./notes.html#action-head" class="note-link">action head</a> 为共享一套参数，支持 <a href="./notes.html#flow-matching" class="note-link">Flow Matching</a>（Qwen3-400M）或 MLP 两种实现。</span>
+          </div>
+          <div class="method-item">
+            <span class="mi-num">②</span>
+            <span class="mi-body"><strong>自适应/高效推理</strong>：Early-exit 用 action chunk 的层间差异量 Δ 与离线标定阈值 η 比较；Inter-Layer Truncated FM 以 δ=2 步去噪 + 层间热启动，将每 episode 推理从 40.9s 压到 10.5s。</span>
+          </div>
+          <div class="method-item">
+            <span class="mi-num">③</span>
+            <span class="mi-body"><strong>全透明开源栈</strong>：训练数据 = 6 个公开机器人数据集（DROID、AgiBot 等）+ 15,951 条自采轨迹；代码在 <code>github.com/ATeam-Research/A1</code>；承诺释出权重、数据处理脚本、评估协议（截至报告时 repo 已有代码和 HuggingFace checkpoint）。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证</div>
+        <p class="validation">计算量削减 76.6% 时成功率仅降 1.7%，且<strong>简单动作（移动）早在第 3–5 层退出，复杂动作（抓取、开灶）深入到第 17–25 层</strong>——这直接验证了"冗余计算"假说。RoboChallenge 上超过全部可比开源系统进一步坐实了开源 VLA 可以有竞争力。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>LIBERO 平均成功率 96.6%（OBJECT 任务 99.8%），与 π0.5(96.9%) 持平。</li>
+            <li>VLABench 平均 53.5%，高于 π0.5(49.5%) +4%。</li>
+            <li>真实机器人 4 平台均值 56.7%，超 π0.5(47.5%) +9.2%、π0(40.8%) +15.9%。</li>
+            <li>RoboChallenge Table30：29.00%（π0=28.33%，X-VLA=21.33%，RDT-1B=15.00%）。</li>
+            <li>推理时延：A1-FM 标准 1.151s/step → 早退(δ=10) 4.443s → 早退+ILTFM(δ=2) 0.728s。</li>
+            <li>LIBERO-Plus 零样本泛化：A1-FM 75.3%，超 OpenVLA-OFT、π0、π0-FAST。</li>
+            <li>c=0.1（最激进）时削减 76.6% 计算，成功率 92.3%（降 1.7% vs. 96.6%）。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（移动/通用操作 VLA）中度命中</strong>：A1 提出的"截断+自适应推理"思路对任何需要低延迟部署 VLA 的操作场景都有直接价值，尤其是 action head + 骨干联合加速的工程路线可借鉴。但 A1 本身<strong>不涉及移动底盘或长程家务</strong>，实验平台以桌面操作（Franka/AgiBot）为主。<strong>Track B（足式算法）不命中</strong>——无 locomotion 相关内容。建议：<strong>读速记层即可；若关注 VLA 推理加速/低延迟部署则值得深读 §3.3</strong>。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 深读层 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：VLA 的 billion 级骨干 + 迭代扩散/flow matching 头使实时控制在商用硬件上成本极高。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · §Abstract</div>
+          <blockquote class="ev-quote">Vision–Language–Action (VLA) models have emerged as a powerful paradigm for open-world robot manipulation, but their practical deployment is often constrained by cost: billion-scale VLM backbones and iterative diffusion/flow-based action heads incur high latency and compute, making real-time control expensive on commodity hardware.</blockquote>
+          <div class="ev-trans">VLA 模型已成为开放世界机器人操作的强大范式，但其实际部署往往受制于成本：十亿参数级 VLM 骨干与迭代扩散/flow-based 动作头带来高延迟和高计算量，使得实时控制在商用硬件上代价高昂。</div>
+          <div class="ev-gloss">两个成本来源：VLM 骨干（跑满全层）与 action head（每次从随机噪声跑 10–20 步去噪）——A1 恰好针对这两处。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 三个经验发现 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心洞见：三个经验观察共同指向"按需计算"原则——flow matching 快速收敛、action 时序冗余、中间层隐状态已足够。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">1. Trajectory convergence: flow-matching trajectories can lock onto the correct mode within fewer than three denoising steps; additional iterations mostly refine precision with diminishing returns. 2. Action redundancy: across consecutive control steps, many actions change smoothly and only require coarse updates. 3. Layer-wise coupling: intermediate VLM hidden states already encode sufficient spatial and visual features to seed the action prediction (e.g., the flow-matching vector field), making full-depth backbone evaluation often unnecessary.</blockquote>
+          <div class="ev-trans">1. 轨迹收敛：flow matching 轨迹在不到 3 步内就能锁定正确模式，额外迭代收益递减。2. 动作冗余：连续控制步之间许多动作平滑变化，只需粗粒度更新。3. 层间耦合：VLM 中间层隐状态已编码足够的空间和视觉特征来启动动作预测，通常不需要跑满整个骨干。</div>
+          <div class="ev-gloss">这三条是 A1 所有技术设计的动机——若任何一条不成立，整个方法的收益就会打折。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 架构：Truncated VLA 设计 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 架构：训练时对每层 i 并行监督 action，推理时用 action 一致性阈值动态决定从哪层退出，骨干和 action head 共享参数（无多个独立策略头）。</div>
+        <figure>
+          <img src="./images/figure_3_training_adaptive_inference.png" alt="Figure 2: A1 训练与自适应推理示意图">
+          <figcaption><strong>Figure 2（p.4）：</strong>左＝训练时每层 i 的共享 action head 并行输出 A(i)，同时对全部层监督 loss；右＝推理时计算 Δ=d(A(i), A(i-1)) 与阈值 η_i 比较，满足一致性则提前退出，无需跑完 28 层。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §3.3</div>
+          <blockquote class="ev-quote">we randomly sample a layer index i ∼U(0, L), where L denotes the total number of layers in the main LLM. For the MLP action head, instead of using the last hidden state to generate actions as in the conventional design, we supervise the loss L(i) on the actions predicted from the hidden state at layer i.</blockquote>
+          <div class="ev-trans">我们随机采样层索引 i ∼U(0, L)，L 为主 LLM 总层数。对于 MLP action head，我们不像传统设计那样用最后一层的隐状态生成动作，而是在第 i 层的隐状态所预测的动作上计算 loss L(i)。</div>
+          <div class="ev-gloss">关键点：这是一个"随机深度"式训练策略，让 action head 在任意中间层都能工作——这是 inference-time 灵活退出的前提。DeeR-VLA 对比：DeeR-VLA 为不同退出层训练独立 action head，A1 用单个共享头。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §3.3.1</div>
+          <blockquote class="ev-quote">Early exit at layer i is triggered by a consistency test against the previous layer's action: ∆i_t = d(A(i)_t, A(i−1)_t) &lt; ηi where d(·,·) is a discrepancy metric and ηi is a layer-specific threshold calibrated offline.</blockquote>
+          <div class="ev-trans">层 i 的提前退出由与上一层 action 的一致性检验触发：当层间动作差异 Δ 小于离线标定的层特定阈值 η_i 时退出。差异度量 d(·,·) 可选余弦相似度、L2 距离或平均绝对偏差。</div>
+          <div class="ev-gloss">阈值 η_i 不是手调的，而是从训练集的层间差异分布的分位数自动设定——这使得"exit budget"可以用参数 c 统一控制。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 Inter-Layer Truncated Flow Matching -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 关键创新：Inter-Layer Truncated Flow Matching——将每层的去噪步数压到 δ=2，并把上一层的去噪结果直接作为下一层的热启动初始条件，彻底消除 action head 的时间瓶颈。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.3.2</div>
+          <blockquote class="ev-quote">To address this issue, we propose Inter-Layer Truncated Flow Matching. We first set the number of denoising steps δ to a small value (e.g., 2). The LLM is executed layer by layer. At each layer i, the FM action head performs δ denoising steps to generate an action chunk A(i)_t, which is then compared with the A(i−1)_t from the previous layer to determine whether to exit early via Eq. (6). The output of the current layer is passed to the next layer as the initial condition for denoising.</blockquote>
+          <div class="ev-trans">为解决这一问题，我们提出层间截断 Flow Matching。首先将去噪步数 δ 设为小值（如 2）。LLM 逐层执行，在每层 i，FM action head 执行 δ 步去噪生成 action chunk A(i)，再与上层 A(i-1) 比较决定是否提前退出。当前层输出作为下一层去噪的初始条件。</div>
+          <div class="ev-gloss">核心等式(10)：A0(i+1) = A1(i)，即上层最终去噪结果直接热启动下层——跨层积累去噪进度，而不是每层从随机噪声重启。这让每 episode 延迟从 27.5s 压到 10.5s。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 开源多平台预训练 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 训练配方：仅用公开机器人数据集 + 15,951 条自采轨迹（无私有大规模语料），两阶段训练（大规模预训+任务微调），避免依赖封闭数据。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">We pretrain A1 using open-source robotic datasets including DROID (15), AgiBot (1), RoboCOIN (39), RoboMind (38), GM-100 (36) and RoboChallenge (43). This practical training setup leverages publicly available data to support broad generalization without relying on proprietary large-scale corpora.</blockquote>
+          <div class="ev-trans">我们使用开源机器人数据集（包括 DROID、AgiBot、RoboCOIN、RoboMind、GM-100 和 RoboChallenge）对 A1 进行预训练。这一实用的训练方案利用公开数据支持广泛泛化，而不依赖私有大规模语料。</div>
+          <div class="ev-gloss">与 π0.5 对比：π0.5 的 ~400h 自采移动操作数据完全未公开；A1 声称全栈公开，但自采的 15,951 条轨迹是否随代码一同发布，截至当前尚待确认（见开源状态卡）。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 RoboChallenge 开源第一 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 主结果：A1 在 RoboChallenge 上以 29.00% 成为<strong>完全透明开源系统中的第一</strong>，同时在真实四平台均值 56.7% 上超过 π0/π0.5。</div>
+        <figure>
+          <img src="./images/figure_4_early_exit_visualization_results.png" alt="Figure 4 + Table 6: 早退可视化与 FM 推理对比">
+          <figcaption><strong>Figure 4 + Table 6（p.9）：</strong>顶部图——LIBERO-Long 一次 episode 中 A1 的实际退出层（绿色数字）：移动帧退出在第 3、5 层，开灶/抓锅等关键帧退出在第 17、25 层。底部 Table 6——引入 ILTFM(δ=2) 后延迟从 27.5s→10.5s，成功率从 95.4%→96.4%（热启动还有正收益）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §5.4</div>
+          <blockquote class="ev-quote">While state-of-the-art VLA systems often rely on closed-source data or proprietary training pipelines, A1 breaks this paradigm: as a completely transparent system with no dependencies on closed-source components, it achieves an average success rate of 29.00%, ranking sixth overall.</blockquote>
+          <div class="ev-trans">当前最先进的 VLA 系统通常依赖闭源数据或专有训练管线，A1 打破了这一范式：作为一个完全透明、不依赖任何闭源组件的系统，它达到了 29.00% 的平均成功率，总排名第六。</div>
+          <div class="ev-gloss">"排名第六"意味着上面还有 DM0(56%)、Spirit-v1.5(47%)、GigaBrain(46%)、π0.5(37%)、wall-oss(37%)——多数仍靠闭源数据或管线。A1 作为唯一标注 §（完全开源）系统排第一（同类）。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 消融：早退阈值 vs. 精度 trade-off -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 消融：计算预算参数 c 提供连续 trade-off；c=1.0 时节省 15.6% 算力且精度不降；c=0.1 时节省 76.6%，成功率 92.3%（仅降 1.7%）。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §5.5.1</div>
+          <blockquote class="ev-quote">When c = 1.0, the A1-MLP model achieves its best performance, with an average success rate of 96.6%, while reducing layer computation by 15.6% compared to full inference. As c decreases to 0.7, 0.4, and 0.1, the computational reduction increases to 39.1%, 58.5%, and 76.6%, respectively, while the success rate drops by only 0.3%, 2.3% and 1.7%.</blockquote>
+          <div class="ev-trans">当 c=1.0 时，A1-MLP 达到最佳性能，平均成功率 96.6%，同时相比完整推理减少 15.6% 的层计算。当 c 降至 0.7、0.4、0.1，计算削减分别增至 39.1%、58.5%、76.6%，成功率仅分别下降 0.3%、2.3% 和 1.7%。</div>
+          <div class="ev-gloss">反直觉：c=1.0（最保守）的多退出训练<strong>比不退出的全层训练还更好</strong>——说明多层监督本身就有正则化效果，而非单纯在节省计算。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态（STEP 0 实时核查） ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（2026-06）</h2>
+      <p class="lead">论文声称"fully open-source and transparent"并承诺释出完整训练栈。以下为截至当前的<strong>实际发布状态</strong>（非仅依赖 PDF）。</p>
+      <dl class="os-grid">
+        <dt>代码</dt>
+        <dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/ATeam-Research/A1">github.com/ATeam-Research/A1</a>（98% Python，含训练/推理/评估脚本；4 commits，39 stars，5 forks）</dd>
+        <dt>权重</dt>
+        <dd><span class="os-tag os-part">部分</span> HuggingFace 上有预训练 checkpoint（含 LIBERO/VLABench/RoboChallenge 微调版），但尚<strong>无正式 Release</strong>，license 未在 README 中明确声明</dd>
+        <dt>训练数据</dt>
+        <dd><span class="os-tag os-part">部分</span> 6 个公开数据集（DROID、AgiBot 等）本身已公开；自采 15,951 条轨迹<strong>未独立发布</strong>，但承诺提供数据处理脚本/清单</dd>
+        <dt>评估协议</dt>
+        <dd><span class="os-tag os-yes">已开源</span> LIBERO、VLABench、RoboChallenge 评估脚本含在 repo 内</dd>
+        <dt>License</dt>
+        <dd><span class="os-tag os-no">待确认</span> README 未明示开源协议（arXiv CC-BY 许可仅涵盖论文文本，不覆盖代码/权重）</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚠️ "Fully transparent"与实际发布状态的差距</div>
+        <p>repo 仅有 <strong>4 commits</strong>，无正式 Release tag，license 未声明——这与论文标题中"Fully Transparent Open-Source"的定位有明显落差。代码和文档覆盖度较好，但<strong>自采 15,951 轨迹数据和 license 声明</strong>是两个尚待补全的关键缺口。建议关注 repo 后续更新。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.3 · §1 Contributions</div>
+        <blockquote class="ev-quote">We commit to releasing the full stack of artifacts for A1 (model weights, training/inference code, data processing scripts/manifests, and evaluation protocols).</blockquote>
+        <div class="ev-trans">我们承诺发布 A1 的完整制品栈（模型权重、训练/推理代码、数据处理脚本/清单，以及评估协议）。</div>
+        <div class="ev-gloss">用了"commit to releasing"（承诺释出）而非"we release"（我们已释出）——部分内容仍为预期而非既成事实，与 π0.5 在 openpi 的正式发布不同。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p><strong>"截断"思路工程落地踏实</strong>：三条经验观察 → 两项联动技术（early-exit + ILTFM），逻辑链清晰，消融表格完整，可控 budget 参数 c 给工程师直接抓手。多平台真机验证（Franka/AgiBot/OpenArm/Dobot-Arm）覆盖度在 VLA 论文中属较好。开源承诺若兑现，社区可直接用来做低延迟 VLA 工程基线。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>"Fully Transparent"存疑</strong>：repo 仅 4 commits、无 license、自采数据未独立发布，与标题落差明显，需跟踪后续更新。② <strong>RoboChallenge 排名语境</strong>：第六不是第一；前五均依赖闭源或未完全公开的系统，"开源第一"成立但绝对成绩（29%）离 DM0(56%) 仍有差距。③ <strong>VLABench 失败分析浅</strong>：自承多数失败因"物体掉落"，但未分析是 action 精度问题还是 policy 层面。④ 骨干选用 Molmo（Qwen2-7B），相较 π0 系列 PaliGemma+flow expert 的选型差异未做充分对比讨论。⑤ 真机每任务仅测 10 次，统计置信度有限。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge valuable">Valuable</span> &nbsp;工程贡献清晰、开源意图值得鼓励，但"Fully Transparent"承诺尚未完全兑现，实验规模中等，离 Breakthrough 还有距离。在 VLA 推理加速这个垂直领域属于高质量工作。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态（实时）</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 · A1 (arXiv:2604.05672) · SYSU/MBZUAI · 2026</footer>
+
+</body>
+</html>

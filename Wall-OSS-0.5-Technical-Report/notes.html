@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wall-OSS-0.5 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  .hero { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%); color: #fff; padding: 4em 1.5em 3.5em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -120px; right: -120px; width: 460px; height: 460px; background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -180px; left: -80px; width: 520px; height: 520px; background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(168, 85, 247, 0.18); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: #a855f7; box-shadow: 0 0 12px #a855f7; }
+  .hero h1 { font-size: 2.6em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.15em; color: #cbd5e1; max-width: 720px; margin: 0 0 1.5em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .back-link a { color: var(--nv-green-dark); font-weight: 600; }
+  .toc .back-link a:hover { border-left-color: var(--nv-green-dark); }
+
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.8em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.3em; display: flex; align-items: center; gap: 0.6em; flex-wrap: wrap; }
+  section.card h2 .tag { font-family: "JetBrains Mono", monospace; background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; padding: 0.15em 0.55em; border-radius: 6px; font-size: 0.55em; font-weight: 600; letter-spacing: 0.03em; }
+  section.card .full-name { color: var(--muted); font-size: 1em; font-weight: 500; margin: 0 0 1.4em; font-style: italic; }
+  section.card h3 { font-size: 1.2em; font-weight: 700; margin: 1.6em 0 0.6em; color: var(--text); display: flex; align-items: center; gap: 0.4em; }
+  section.card h3 .num { background: var(--code-bg); color: var(--accent); font-size: 0.85em; padding: 0.05em 0.55em; border-radius: 6px; font-family: "JetBrains Mono", monospace; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } section.card h2 { font-size: 1.4em; } }
+
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.tldr { background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04)); border-color: var(--accent); }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note { background: var(--gold-bg); border-color: var(--gold); }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th { text-align: left; padding: 0.8em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.7em 1em; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  pre { background: #0f172a; color: #e2e8f0; padding: 1.2em 1.4em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; line-height: 1.55; font-size: 0.88em; box-shadow: var(--shadow-sm); }
+  pre code { background: none; color: inherit; padding: 0; border: 0; font-family: "JetBrains Mono", monospace; }
+  .pre-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: -1px; background: #1e293b; color: #94a3b8; border: 1px solid #1e293b; border-radius: var(--radius) var(--radius) 0 0; padding: 0.5em 1.2em; font-size: 0.78em; font-family: "JetBrains Mono", monospace; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pre-label + pre { border-top-left-radius: 0; border-top-right-radius: 0; margin-top: 0; }
+
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 0.9em 1.4em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>Wall-OSS-0.5 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">你勾选的 4 个核心概念：每个给出原理、在 Wall-OSS 中的用法、与相关方法的对比，以及出处。</p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 Wall-OSS-0.5 综述</a>
+      <span class="pill">📚 当前 4 个概念</span>
+      <span class="pill">🏢 X Square Robot</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ Gradient-Bridged Co-Training ============ -->
+    <section class="card" id="gradient-bridge">
+      <h2>Gradient-Bridged Co-Training <span class="tag">本文核心机制</span></h2>
+      <p class="full-name">梯度桥联合训练 · 离散 CE 当桥、多模态 CE 当锚、flow matching 当部署接口</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>用<strong>离散动作 CE</strong> 当"梯度桥"，把下游动作信号<strong>有力地</strong>传回 VLM 骨干（因为它和 VLM 自回归预训练接口同构）；<strong>多模态 CE</strong> 当"锚"保住接地能力（更新方向与动作优化大致正交）；<strong>flow matching</strong> 只训练推理用的连续动作生成器。三者单阶段端到端联合优化、<strong>不切断梯度</strong>。</p>
+      </div>
+
+      <h3><span class="num">1</span>它要破解的张力</h3>
+      <p>VLA 训练有个固有矛盾：连续 flow matching 是天然的执行接口（直接建模未量化动作），但对 VLM 骨干的更新很弱；离散动作 token 的 next-token CE 原生于 VLM 接口、能强烈塑形骨干，但解码出的离散动作太粗糙、无法精确控制；而冻结/截断梯度（stop-gradient）虽保护 VLM 先验，却阻止精确动作目标去塑形骨干。梯度桥就是化解这一矛盾的配方。</p>
+
+      <h3><span class="num">2</span>三个损失的分工</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>损失</th><th>角色</th><th>对骨干更新的方向 / 份额</th></tr></thead>
+          <tbody>
+            <tr><td><strong>离散动作 CE</strong> (L<sub>act-CE</sub>)</td><td>梯度桥</td><td>主导更新（与 VLM 自回归接口同构 → 强）；方向与 flow <strong>正相关</strong></td></tr>
+            <tr><td><strong>多模态 CE</strong> (L<sub>mm-CE</sub>)</td><td>接地锚</td><td>方向与动作优化<strong>大致正交</strong>，互补而非竞争</td></tr>
+            <tr><td><strong>flow matching</strong> (L<sub>flow</sub>)</td><td>部署接口</td><td>越过早期后仅约 <strong>5%</strong>；但小残差对动作质量仍重要</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>复合目标（论文 Eq.1）：</p>
+      <div class="math-display">\[ \mathcal{L} = \mathcal{L}_{\text{flow}} + \lambda_{\text{act}}\,\mathcal{L}_{\text{act-CE}} + \lambda_{\text{mm}}\,\mathcal{L}_{\text{mm-CE}}, \quad \lambda_{\text{act}}=\lambda_{\text{mm}}=0.01 \]</div>
+      <p>L<sub>flow</sub> 在 <a href="#action-space-supervision">Action-Space Supervision</a> 下比 CE 项小约两个数量级，0.01 把两个 CE 拉到与 flow 可比的尺度；动作:多模态数据按 <strong>9:1</strong> batch 混合。离散 token 来自 <a href="#rvq">Vision-Aligned RVQ tokenizer</a>。</p>
+
+      <h3><span class="num">3</span>与 π₀.₅ 的 stop-gradient 对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>π₀.₅ (stop-gradient / knowledge insulation)</th><th>Wall-OSS (gradient bridge)</th></tr></thead>
+          <tbody>
+            <tr><td>flow→骨干梯度</td><td>切断（隔离表示学习与动作优化）</td><td><strong>保留端到端</strong></td></tr>
+            <tr><td>骨干主要被谁更新</td><td>仅多模态/离散 CE（动作目标无法塑形骨干）</td><td>离散 CE 主导 + flow 5% 残差仍参与</td></tr>
+            <tr><td>消融(from-scratch, 5 任务)</td><td>stop-grad 31.9 / stop-grad+co-train 49.6</td><td><strong>co-train 57.0</strong>（flow-only 36.6）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>删掉三个信号中任意一个，下游真机表现下降 <strong>7.4–25.1pp</strong>——这是"三者缺一不可"的直接证据。</p>
+
+      <div class="callout note">
+        <div class="callout-head">🎯 为什么是"桥"不是"隔离"</div>
+        <p>离散 CE 的梯度方向与 flow 正相关，所以它<strong>替 flow 把骨干往"控制相关特征"方向推</strong>，flow 再在已被塑形好的特征上精修动作。stop-gradient 切断了这条路，骨干学不到控制相关表示，故下游更差。</p>
+      </div>
+    </section>
+
+    <!-- ============ Vision-Aligned RVQ ============ -->
+    <section class="card" id="rvq">
+      <h2>Vision-Aligned RVQ <span class="tag">Action Tokenizer</span></h2>
+      <p class="full-name">Vision-Aligned Residual Vector Quantization · 视觉对齐的残差向量量化动作 tokenizer</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>用<strong>残差向量量化(RVQ)</strong> 把"观察条件化的 delta 动作块"压成多级离散 token；靠三个辅助目标（视觉-动作对齐 / 未来帧预测 / DCT 域重建）让 token <strong>语义化</strong>，取代规则化的 FAST tokenizer。这些离散 token 正是 <a href="#gradient-bridge">梯度桥</a> 喂给 VLM 的信号。</p>
+      </div>
+
+      <h3><span class="num">1</span>RVQ 是什么</h3>
+      <p>普通 VQ（如 VQ-VAE）把一个向量量化到<strong>单个</strong>码本里的最近码字，量化误差大。<strong>残差向量量化</strong>用<strong>多级码本</strong>：第一级量化得到粗近似，把残差送入第二级再量化，逐级逼近——早期码本捕获<strong>粗运动结构</strong>，后期码本做<strong>细残差修正</strong>。</p>
+      <div class="pre-label"><span>RVQ 逐级量化</span><span>示意</span></div>
+<pre><code>z (连续动作潜变量)
+  ├─ q0 = 最近码字(码本0)         # 粗运动
+  ├─ r1 = z - q0 ;  q1 = 最近码字(码本1)   # 残差修正
+  ├─ r2 = r1 - q1; q2 = 最近码字(码本2)
+  └─ ...  → token 序列 [q0, q1, ..., qk]  (Token×N)</code></pre>
+
+      <h3><span class="num">2</span>在 Wall-OSS 里的结构与用法</h3>
+      <p>delta-action 空间的 Encoder–RVQ–Decoder（论文 Figure 3）：</p>
+      <ul>
+        <li><strong>Encoder</strong>：用 temporal cross-attention 压缩"观察条件化的动作块"；Context Encoder（冻结）吃稀疏多视角视频，与 Action Encoder 经<strong>对比学习</strong>对齐。</li>
+        <li><strong>RVQ</strong>：多级码本量化成离散 token。</li>
+        <li><strong>Decoder + Feature Predictor</strong>：重建动作块 + 预测未来观察特征。</li>
+      </ul>
+      <p><strong>三个辅助目标</strong>（超越单纯重建）：① 视觉-动作对齐（把动作潜变量拉向 VLM 视觉特征）② 未来帧预测（编码动作后果）③ DCT 域重建（抑制高频抖动）。结果是一个<strong>可重建、视觉对齐、物理平滑</strong>的离散动作表示。</p>
+
+      <h3><span class="num">3</span>vs FAST tokenizer</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>FAST</th><th>Vision-Aligned RVQ（本文）</th></tr></thead>
+          <tbody>
+            <tr><td>本质</td><td>规则化 DCT 压缩</td><td>学习式 + 视觉对齐</td></tr>
+            <tr><td>目标</td><td>仅低失真重建</td><td>重建 + 视觉对齐 + 未来帧 + 平滑</td></tr>
+            <tr><td>对 VLM</td><td>纯压缩接口</td><td><strong>语义训练接口</strong></td></tr>
+            <tr><td>消融(同 co-train)</td><td>VQA 75.7 · task progress 29.3</td><td><strong>VQA 77.5 (+1.8) · 48.1 (+18.9)</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">🎯 非平凡的发现</div>
+        <p>推理时离散通路被注意力 mask 屏蔽（只走连续 flow 通路），但换成更语义的 RVQ 后<strong>真机 task progress 仍大涨 +18.9pp</strong>——说明训练时更高质量的离散表示，通过 <a href="#gradient-bridge">梯度桥</a> 也提升了连续动作生成的质量。</p>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <p>RVQ / RQ-VAE 源自 <strong>Lee et al. 2022（"Autoregressive Image Generation using Residual Quantization"）</strong>，最早用于图像 tokenization；音频领域的 SoundStream/EnCodec 也用 RVQ。本文把它迁到动作空间并加视觉对齐目标。</p>
+    </section>
+
+    <!-- ============ Action-Space Supervision ============ -->
+    <section class="card" id="action-space-supervision">
+      <h2>Action-Space Supervision <span class="tag">flow matching 损失</span></h2>
+      <p class="full-name">动作空间监督 · 把 flow-matching 损失定义在恢复出的动作上而非速度场</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>标准 flow matching 在<strong>速度场</strong>上算 L2 损失；本文改成在<strong>"恢复出的干净动作"</strong>上算损失，等价于给速度损失加一个 <strong>\((1-\tau)^2\)</strong> 权重——<strong>强调高噪声步</strong>（那里形成动作轨迹的全局形状）。</p>
+      </div>
+
+      <h3><span class="num">1</span>两种损失</h3>
+      <p>线性高斯路径：\(A^{\tau} = \tau A + (1-\tau)\epsilon\)（\(\tau{=}0\) 纯噪声，\(\tau{=}1\) 干净动作）。网络 \(f_\theta\) 输出速度预测。</p>
+      <div class="math-display">\[ \text{标准(速度空间)：} \ \mathbb{E}\big[\|f_\theta(A^\tau,\tau)-(A-\epsilon)\|^2\big] \]</div>
+      <div class="math-display">\[ \text{本文(动作空间)：} \ \hat{A}=A^\tau+(1-\tau)f_\theta(A^\tau,\tau), \quad \mathcal{L}_A=\mathbb{E}\big[\|\hat{A}-A\|^2\big] \]</div>
+      <p>代入展开可证 \(\mathcal{L}_A = \mathbb{E}\big[(1-\tau)^2\|f_\theta(A^\tau,\tau)-(A-\epsilon)\|^2\big]\)，即速度损失的 \((1-\tau)^2\) 加权版。</p>
+
+      <h3><span class="num">2</span>为什么——机器人动作的频谱结构</h3>
+      <p>机器人动作序列<strong>低维且平滑</strong>，任务相关结构主要在<strong>低频轨迹形状</strong>而非高频细节（与自然图像不同——图像高低频都含丰富语义）。因此<strong>高噪声区</strong>（恢复轨迹全局形状处）决定生成质量上限，应重点监督；\((1-\tau)^2\) 权重恰好在 \(\tau\to 0\)（高噪声）时最大。</p>
+
+      <h3><span class="num">3</span>与扩散 x-prediction 的关系</h3>
+      <p>形式上类似扩散模型里的 <strong>x-prediction</strong>（预测干净样本 \(x_0\) 而非噪声/速度），但本文的<strong>动机不同</strong>：不是出于方差/信噪比考量，而是来自<strong>机器人动作的频谱结构</strong>（低频主导）。</p>
+
+      <h3><span class="num">4</span>效果</h3>
+      <p>LIBERO 消融：action-space loss 在 25k step 达 <strong>96.5%</strong> 峰值（超 velocity-space 峰值 6.2%），20k step 即 95.8%，而 velocity 跑完 35k 仍未过 90.3%；且 20k 后稳定在 92.5–96.5%。→ 提升<strong>收敛速度、峰值、训练稳定性</strong>。它也是把 L<sub>flow</sub> 压到比 CE 小两个数量级、从而让 <a href="#gradient-bridge">梯度桥</a> 的 0.01 权重生效的前提。</p>
+    </section>
+
+    <!-- ============ Muon / DMuon ============ -->
+    <section class="card" id="muon">
+      <h2>Muon / DMuon <span class="tag">优化器</span></h2>
+      <p class="full-name">Muon（动量正交化优化器）· DMuon（其分布式实现）</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Muon 对 momentum 矩阵做<strong>正交化（Newton–Schulz 迭代）</strong>，产生<strong>谱归一化</strong>的更新——对梯度幅值不变。这对"VL Expert 与 Action Expert 梯度尺度差异极大"的设定很关键。<strong>DMuon</strong> 是面向混合并行训练的分布式实现，把 Muon 引入的开销从 ~2× 压到 ~0.02×。</p>
+      </div>
+
+      <h3><span class="num">1</span>Muon 原理</h3>
+      <p>对每个 2D 权重矩阵 \(W\)，先算带 momentum 的梯度矩阵 \(M\)，再对 \(M\) 做<strong>正交化</strong>（用 Newton–Schulz 迭代近似 \(M(M^\top M)^{-1/2}\)），得到奇异值≈1 的更新方向。效果：更新<strong>谱归一化、对梯度幅值不变</strong>（梯度放大 10× 也不改变更新方向/步长）。这正是它优于 AdamW 之处——AdamW 的逐元素自适应学习率对不同子模块尺度敏感。</p>
+
+      <h3><span class="num">2</span>在 Wall-OSS 里干什么</h3>
+      <ul>
+        <li><strong>Muon</strong> 管两个 expert 的 2D 参数；<strong>AdamW</strong> 管视觉嵌入和 LM head。</li>
+        <li><strong>为何关键</strong>：Action Expert 与 VL Expert 的梯度尺度差异极大（前者从零学动作生成，后者是预训练 VLM）；Muon 的"幅值不变"让两者能用同一套优化稳定共训。</li>
+      </ul>
+
+      <h3><span class="num">3</span>DMuon — 让它在大规模可用</h3>
+      <p>Muon 的正交化要做矩阵级 Newton–Schulz，朴素实现把 forward+backward 时间拉到 ~2×。DMuon：</p>
+      <ul>
+        <li>用 <strong>Longest-Processing-Time-first</strong> 负载均衡把每个矩阵参数分给唯一 owner rank；</li>
+        <li>在 owner 上做一次矩阵级 Newton–Schulz，再 <strong>reduce-to-owner + 异步 broadcast</strong>（专用 CUDA stream，与下一次 forward 重叠）；</li>
+        <li>owner 本地用对称感知 kernel + 形状自动调优加速。</li>
+      </ul>
+      <p>结果：把额外开销从 ~2× 降到约 <strong>0.02×（约 100× 缩减）</strong>。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>Muon 见 <strong>Liu et al. 2025（"Muon is scalable for LLM training"，arXiv:2502.16982）</strong>；DMuon 是本文在其上做的分布式工程扩展。配合 <a href="#gradient-bridge">梯度桥</a> 的多损失/多专家训练，优化器的尺度不变性尤其有价值。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#gradient-bridge">Gradient-Bridged Co-Training</a></li>
+      <li><a href="#rvq">Vision-Aligned RVQ Tokenizer</a></li>
+      <li><a href="#action-space-supervision">Action-Space Supervision</a></li>
+      <li><a href="#muon">Muon / DMuon</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link"><li><a href="./summary.html">← 返回综述</a></li></ul>
+  </aside>
+</div>
+
+<footer>Reading Notes · Wall-OSS-0.5 Technical Report (X Square Robot) · 配套笔记</footer>
+
+</body>
+</html>

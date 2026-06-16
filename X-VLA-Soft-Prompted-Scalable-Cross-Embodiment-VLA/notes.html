@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-VLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.warn {
+    background: var(--warning-bg);
+    border-color: var(--warning);
+  }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>X-VLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      X-VLA 涉及的关键概念：soft prompt 机制、跨本体训练、flow matching 动作头、VLM backbone、可扩展 VLA 等。每个概念给出定义、本文用法、对比/出处和具象例子。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 X-VLA 综述</a>
+      <span class="pill">📚 当前 5 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2510.10274" style="color: #93c5fd; text-decoration: none;">arXiv:2510.10274</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ Soft Prompt ============ -->
+    <section class="card" id="soft-prompt">
+      <h2>Soft Prompt <span class="tag">Core Innovation</span></h2>
+      <p class="full-name">Soft Prompt / Soft-Prompted Transformer · 软提示 / 软提示 Transformer</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Soft Prompt 是一组随机初始化、端到端学习的<strong>可学习嵌入向量</strong>，每个数据源（embodiment）独享一组，注入 Transformer 编码器的输入端。它让模型从编码早期就感知到"当前是哪个机器人硬件"，而无需修改任何预训练主干权重，也不需要人手工写硬件描述。X-VLA 里所有 embodiment-specific 参数（soft prompt + 输入/输出线性投影库）合计仅占模型总参数的 <strong>0.04%</strong>。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Soft Prompt 源自 NLP 中的 prompt tuning（Lester et al. 2021）。与"hard prompt"（固定文字模板）不同，soft prompt 是：</p>
+      <ul>
+        <li><strong>连续向量</strong>：不是离散 token，是实数空间中的可学习参数 \(p_i \in \mathbb{R}^k\)</li>
+        <li><strong>随机初始化</strong>：不依赖人手工设计，从 \(\mathcal{N}(0, I)\) 初始化，靠端到端训练学出语义</li>
+        <li><strong>与模态无关</strong>：可直接 concat 到任意 Transformer 输入序列的开头/中间</li>
+      </ul>
+      <div class="math-display">
+        \[ p_i \approx \Phi(h_i), \quad \Phi: \mathcal{H} \to \mathbb{R}^k \]
+      </div>
+      <p>其中 \(h_i\) 是第 \(i\) 个数据源的硬件配置（相机、控制频率、机械臂型号等），\(\Phi\) 是隐式学到的从硬件配置到提示空间的映射。</p>
+
+      <h3><span class="num">2</span>在 X-VLA 里干什么</h3>
+      <p>X-VLA 建立了一个 <strong>Soft Prompt Library</strong>：每个数据源（dataset id）对应一组提示向量，推理时按 dataset id 查询。具体位置：</p>
+      <pre><code>输入序列 = [Soft Prompt(p_i)] + [Multi-modal Tokens] + [Control Tokens]
+                ↓
+         N × Standard Self-Attention Transformer Block
+                ↓
+            Action Chunk</code></pre>
+      <p>除了 soft prompt 本身，X-VLA 还配套了 <strong>Input Linear Projection Library</strong>（每个 embodiment 独立映射低维本体/动作 token 到高维特征空间）和 <strong>Output Linear Projection Library</strong>（每个 embodiment 独立映射动作预测输出回低维控制信号）。这三个库合计 <strong>0.04% 参数</strong>，但作用于整个前向传播。</p>
+
+      <h3><span class="num">3</span>与其他异构性处理方案的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方案</th><th>处理位置</th><th>覆盖异构性维度</th><th>缺点</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Domain-specific action head</strong>（π0/GR00T）</td><td>输出端</td><td>仅动作空间</td><td>视觉/语义层面的 embodiment 差异完全未处理</td></tr>
+            <tr><td><strong>HPT-style 投影层</strong></td><td>中间观测处理</td><td>视觉+动作</td><td>破坏预训练 VLM 表征 → 训练不稳定</td></tr>
+            <tr><td><strong>语言提示</strong></td><td>输入端（文字）</td><td>视觉+动作+任务</td><td>需要手工写硬件描述，无法量化扩展到新 embodiment</td></tr>
+            <tr><td><strong>Soft Prompt（本文）</strong></td><td>输入端（向量）</td><td>全维度</td><td>需要新 embodiment 的少量 demo 来训练新 prompt；提示空间维度 k 是超参</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p><strong>Lester et al. 2021 — "The Power of Scale for Parameter-Efficient Prompt Tuning"</strong>（Google Brain）：在 GPT/T5 等大型语言模型上，用少量可学习 token 前缀替代全量 fine-tuning，参数量少 1000× 但性能相当。X-VLA 直接引用此工作，并将其从 NLP 迁移到跨本体机器人学习——用 dataset id 查询对应 prompt 的方式，与多任务 prompt tuning 完全对应。</p>
+      </div>
+
+      <h3><span class="num">5</span>类比 + 具象例子</h3>
+      <p>想象你是一个多语种翻译官，每次接待客人前先戴上不同颜色的"耳机"（soft prompt）——耳机会过滤和放大特定语言的频率，让你的大脑（VLM backbone）无需改造就能切换工作模式。新来一个你没听过的方言？只需用 10 分钟录几句话（少量 demo），新耳机就训好了（两步适配），大脑权重完全不动。</p>
+    </section>
+
+    <!-- ============ Cross-Embodiment ============ -->
+    <section class="card" id="cross-embodiment">
+      <h2>Cross-Embodiment <span class="tag">Core Problem</span></h2>
+      <p class="full-name">Cross-Embodiment Learning / Training · 跨本体学习 / 训练</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>跨本体训练是指用<strong>来自不同机器人硬件平台的数据</strong>联合训练一个通用策略模型。核心挑战是：不同 embodiment 的数据在动作空间、相机配置、控制频率、任务类型上全都不同，简单混训会导致性能下降而非提升。X-VLA 的 soft prompt 机制是目前解决这一问题最简洁的公开方案之一。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要跨本体训练</h3>
+      <p>单个机器人平台的数据量往往不足以训练强大的基础模型。多个机器人数据联合训练可以：</p>
+      <ul>
+        <li>增加数据多样性 → 更好的视觉/语义泛化</li>
+        <li>共享低层操作技能（抓取、放置等）跨 embodiment 迁移</li>
+        <li>减少每个新机器人的数据采集负担（迁移+适配 vs. 从零采集）</li>
+      </ul>
+
+      <h3><span class="num">2</span>具体异构性维度</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>维度</th><th>X-VLA 预训练数据中的实例</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>机械臂类型</td><td>Franka（单臂）· UR5（单臂）· Dual-Franka（双臂）· Agilex（双臂）· AGIBOT</td></tr>
+            <tr><td>控制频率</td><td>15 Hz（Droid）· 30 Hz（AGIBOT/RoboMind）</td></tr>
+            <tr><td>相机配置</td><td>Top View · Left/Right View · Front+Wrist · Head+Wrist</td></tr>
+            <tr><td>动作空间维度</td><td>7-DOF EEF（单臂）· 14-DOF EEF+gripper（双臂）</td></tr>
+            <tr><td>任务分布</td><td>抓取/放置（AGIBOT） · 桌面操作（RoboMind） · 多样场景（Droid）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>X-VLA 中的解决思路</h3>
+      <p>X-VLA 同时用了三层机制：① Soft Prompt（感知 embodiment）② 解耦编码流水线（主视角/辅助视角分开处理）③ 对齐动作表示（统一转换到 EEF absolute pose + Rotate6D）。三层配合，实现"骨架不感知 embodiment，只有提示感知"。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>如同培训一个能适应不同医院系统的护士：医疗知识（骨架）通用，但每家医院的电子病历格式、设备操作界面（embodiment-specific）不同。Soft prompt 相当于给护士配一本该医院专用的"快速手册"（轻量提示），而不是让她重新学医（重新训练骨架）。</p>
+    </section>
+
+    <!-- ============ Scalable VLA ============ -->
+    <section class="card" id="scalable-vla">
+      <h2>Scalable VLA <span class="tag">Architecture</span></h2>
+      <p class="full-name">Scalable Vision-Language-Action Model · 可扩展的视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>X-VLA 的"可扩展性"指：沿<strong>模型规模、数据多样性、数据量</strong>三个轴增长时，预训练验证误差单调下降且无饱和迹象（R²=0.925 强相关于下游成功率）。实现可扩展的关键是把 action decoder 从 DiT（扩散 Transformer）换成标准 self-attention Transformer 编码器栈，避免了 DiT 的 AdaLN 条件导致的训练不稳定。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么 DiT 不够 scalable</h3>
+      <p>早期实验（Table 1）显示：用标准 DiT-base 做 action decoder 时，在异构数据上预训练后适配成功率仅 25%（比无预训练的 39.6% 还低！）。原因是 DiT 的 Adaptive Layer Norm（AdaLN）用时间步 \(t\) 做条件，在跨 embodiment 混训时容易出现特征分布混乱。</p>
+
+      <h3><span class="num">2</span>X-VLA 的架构选择</h3>
+      <p>X-VLA 改用<strong>标准 self-attention Transformer 编码器</strong>做 action denoiser（替代 DiT），让 VLM 的多模态 token 和 noisy action token 一起输入 Transformer，通过标准注意力机制融合。这一改动使 Val Error 从 0.071 降至 0.053（+16.7% 适配成功率，见 Table 1）。</p>
+
+      <h3><span class="num">3</span>三轴 Scaling 行为</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Scaling 轴</th><th>实验范围</th><th>趋势</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>模型规模</td><td>Hidden 256→1024, Layers 4→24</td><td>单调下降，无饱和</td></tr>
+            <tr><td>数据多样性</td><td>1→7 个数据源</td><td>单调下降，无饱和</td></tr>
+            <tr><td>数据量</td><td>20K→290K episodes</td><td>单调下降，无饱和</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>验证误差与下游适配成功率的 Pearson 相关系数 R²=0.925——这意味着可以用廉价的验证误差替代昂贵的真机/仿真评测来做架构搜索。</p>
+
+      <h3><span class="num">4</span>对比 π0/GR00T N1</h3>
+      <p>π0 使用 PaliGemma(2B VLM) + 独立 flow matching action expert（300M），总 3B 参数。X-VLA 使用 Florence-2-Large + 共享 Transformer 编码器，总 0.9B 参数，以更小规模在大多数 benchmark 上超过 π0——说明架构效率更高。GR00T N1(3B) 也在 LIBERO 上被 X-VLA-0.9B 超越（98.1% vs. 93.9%）。</p>
+    </section>
+
+    <!-- ============ Flow Matching Action Head ============ -->
+    <section class="card" id="flow-matching">
+      <h2>Flow Matching <span class="tag">Action Head</span></h2>
+      <p class="full-name">Flow-Matching Policy / Action Head · 流匹配动作头</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Flow matching 是一种生成式建模方法：学习一个速度场（velocity field），将高斯噪声样本沿 ODE 轨迹"流动"到目标动作分布。相比扩散模型（DDPM），使用最优传输（OT）路径的 flow matching 路径更直接、去噪步数更少（通常 10 步），训练目标更简单。X-VLA 用 flow matching 生成 action chunk（未来 4 秒的 30 个锚点动作序列）。</p>
+      </div>
+
+      <h3><span class="num">1</span>数学形式</h3>
+      <p>X-VLA 采用最优传输（OT）路径的 flow matching：</p>
+      <div class="math-display">
+        \[ \mathcal{L}^{FM}_{BC}(\theta) = \mathbb{E}_{t \sim \mathcal{U}(0,1),\, (o, A) \sim \mathcal{D}} \left\| v_\theta(A_t, o, t) - (A - A_0) \right\|^2 \]
+      </div>
+      <p>其中 \(A_t = (1-t)A_0 + tA\)，\(A_0 \sim \mathcal{N}(0, I)\) 是初始噪声，\(A\) 是专家动作 chunk，\(t \in [0,1]\) 是连续时间变量。推理时用 Euler-Maruyama ODE：</p>
+      <div class="math-display">
+        \[ A_{t+\Delta t} = A_t + v_\theta(A_t, o, t) \cdot \Delta t \]
+      </div>
+
+      <h3><span class="num">2</span>在 X-VLA 里的角色</h3>
+      <p>不同于 π0 把 flow matching 放在独立的 action expert（300M 参数，与 VLM 分离），X-VLA 让噪声 action token 和 VLM 多模态 token 一起进入共享 Transformer 编码器：</p>
+      <pre><code>[Soft Prompt] + [Multi-modal Tokens: image + lang + proprio] + [Control Tokens: noisy A_t + flow_t]
+                            ↓ N × Standard Self-Attention Transformer
+                       [Denoised Action Chunk]</code></pre>
+      <p>Flow-time \(t\) 和 noisy action \(A_t\) 被 concat 后通过 Input Linear Projection 映射到高维，与其他 token 一起做 self-attention。输出端通过 Output Linear Projection 映射回低维动作空间。</p>
+
+      <h3><span class="num">3</span>Action Representation</h3>
+      <p>X-VLA 的动作空间统一为 <strong>End-Effector (EEF) pose</strong>：</p>
+      <ul>
+        <li>Cartesian xyz position（3D）</li>
+        <li>Absolute EEF rotation — <strong>Rotate6D</strong>（6D 连续表示，避免 Euler 角的不连续性）</li>
+        <li>Gripper state（二值化，BCE loss）</li>
+      </ul>
+      <p><strong>Intention abstraction（意图抽象）</strong>：预训练时对动作轨迹做时序下采样，生成"未来 4 秒的 30 个锚点"（而非每步的精确动作），让模型学习高层意图而非低频噪声动作。</p>
+
+      <h3><span class="num">4</span>对比 Diffusion Policy</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>DDPM (Diffusion Policy)</th><th>Flow Matching (X-VLA/π0)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>噪声路径</td><td>随机 SDE 路径（弯曲）</td><td>OT 直线路径（更直接）</td></tr>
+            <tr><td>去噪步数</td><td>通常 100 步</td><td>通常 10 步</td></tr>
+            <tr><td>训练目标</td><td>预测噪声 \(\epsilon\)</td><td>预测速度 \(A - A_0\)</td></tr>
+            <tr><td>实时性</td><td>较慢（100 步 ODE）</td><td>更快（10 步即可）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ VLM Backbone ============ -->
+    <section class="card" id="vlm-backbone">
+      <h2>VLM Backbone <span class="tag">Foundation</span></h2>
+      <p class="full-name">Vision-Language Model Backbone · 视觉-语言模型主干</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 模型的"大脑"——预训练在海量图文数据上的视觉-语言编码器，提供开箱即用的场景理解和语言跟随能力。X-VLA 使用 <strong>Florence-2-Large</strong>（Microsoft, 0.77B 参数）作为主视角 + 语言的编码器，冻结 or 以极低学习率微调，以保留预训练表征。</p>
+      </div>
+
+      <h3><span class="num">1</span>Florence-2 简介</h3>
+      <p>Florence-2（Xiao et al. 2024, Microsoft）是一个统一视觉-语言基础模型，训练于大规模图像-文字数据集（FLD-5B，54 亿个标注），支持图像描述、物体检测、分割、OCR 等多种视觉任务。其编码器采用 ViT-Large 视觉backbone + 文字 token，输出多模态嵌入序列。</p>
+
+      <h3><span class="num">2</span>在 X-VLA 中的角色</h3>
+      <p>X-VLA 使用 Florence-2-Large 处理<strong>主视角图像 + 任务语言指令</strong>，输出多模态 token 序列，作为 action denoising Transformer 的条件信息。</p>
+      <p><strong>设计选择：</strong>腕部相机等辅助视角 <em>不经过</em> VLM（避免高频嘈杂图像污染语言推理），而是走 Shared ViT（共享视觉编码器），单独编码后与 VLM 输出 concat 进 Transformer。这一"解耦"设计对比 π0/GR00T 直接把所有视角喂给 VLM 的做法更加精细。</p>
+
+      <h3><span class="num">3</span>为什么不用 Gemma/PaliGemma（π0 的选择）</h3>
+      <p>π0 使用 PaliGemma（SigLIP-400M + Gemma-2B），总 VLM 参数约 2.6B。X-VLA 选用 Florence-2-Large（约 0.77B），在保持强视觉-语言表征的同时大幅缩小模型体积，配合更轻量的动作 Transformer，总参数 0.9B。这是工程效率与性能的权衡选择，实验结果证明在多数 benchmark 上 Florence-2 够用。</p>
+
+      <h3><span class="num">4</span>对比其他 VLA 的 VLM 选择</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>VLA 模型</th><th>VLM Backbone</th><th>总参数</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>π0</td><td>PaliGemma (SigLIP+Gemma-2B)</td><td>3B</td></tr>
+            <tr><td>GR00T N1</td><td>Eagle2 (6.7B VLM)</td><td>10B+</td></tr>
+            <tr><td>OpenVLA</td><td>Llama2-7B + SigLIP</td><td>7B+</td></tr>
+            <tr><td><strong>X-VLA</strong></td><td><strong>Florence-2-Large (~0.77B)</strong></td><td><strong>0.9B</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>X-VLA 是上表中最轻量的，却在 LIBERO / Simpler 上超过所有更大的模型——证明架构设计（soft prompt + 解耦流水线）的重要性超过了 VLM 规模本身。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表 · 5 个</div>
+    <ul>
+      <li><a href="#soft-prompt">Soft Prompt — 核心创新</a></li>
+      <li><a href="#cross-embodiment">Cross-Embodiment — 核心问题</a></li>
+      <li><a href="#scalable-vla">Scalable VLA — 架构</a></li>
+      <li><a href="#flow-matching">Flow Matching — 动作头</a></li>
+      <li><a href="#vlm-backbone">VLM Backbone — 基础模型</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · X-VLA (arXiv:2510.10274) · ICLR 2026 · 配套笔记
+</footer>
+
+</body>
+</html>

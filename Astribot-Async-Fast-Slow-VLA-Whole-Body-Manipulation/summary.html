@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Astribot S1 DuoCore-FS 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Astribot · Fast-Slow VLA · Whole-Body Manipulation</span>
+    <h1>DuoCore-FS:<br>异步快慢 VLA</h1>
+    <p class="subtitle">大 VLM 推理太慢、拖累了整个 VLA 的控制频率——解法不是换更小的模型，而是<strong>彻底解耦</strong>：让慢模型在后台异步思考，让快模型在前台高频行动，靠一个<strong>bridge buffer</strong>交换语义表示，整体以 30 Hz 操控全身 25 个 DoF。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 强命中 · 移动全身操作 VLA · 已深读</span>
+      <span class="pill">📅 2025-12</span>
+      <span class="pill">🏢 Astribot (星尘智能)</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2512.20188">arXiv:2512.20188</a></span>
+      <span class="pill">🤖 Astribot S1 · 25 DoF 全身</span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">全身动作频率</div>
+    <div class="value">30<span class="unit">Hz</span></div>
+    <div class="desc">约为同尺寸同步 VLA 的 3×</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">整体任务成功率</div>
+    <div class="value">90<span class="unit">%</span></div>
+    <div class="desc">in-distribution popcorn scooping</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">VLM 规模</div>
+    <div class="value">3<span class="unit">B</span></div>
+    <div class="desc">PaliGemma-3B slow pathway</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">平台 DoF</div>
+    <div class="value">25</div>
+    <div class="desc">双臂+躯干+头+全向底盘</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法骨架</strong>；效果只作验证。要逐字核对原文再看下面「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">全身操作 VLA 里，<strong>大 VLM 的推理延迟</strong>是瓶颈——现有系统即便号称"快慢双系统"，两路仍同步运行，快路被慢路拖死。DuoCore-FS 的答案是：让慢路（VLM）<strong>真正异步</strong>地在后台刷新一个 bridge buffer，快路随时拉取最新语义表示、<strong>以 30 Hz 独立出动作</strong>，两路<strong>端到端联合训练</strong>，不牺牲语义-控制对齐。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>全身操作（25 DoF，动态视角，长程子任务）比固定臂操作对<strong>控制频率和精度要求更高</strong>，大 VLM 的 3–12 Hz 上限不够用。</li>
+          <li>现有双系统（π0、GR00T N1 等）两路<strong>同步</strong>运行 → 快路上限 = 慢路速度，问题未解。</li>
+          <li>FiS-VLA/OpenHelix 有"异步"但用<strong>固定调度比</strong>，快路仍受慢路日程约束，不是真并行。</li>
+          <li>真正的解法：慢路以 1–3 Hz 异步刷新 bridge buffer（存 text/query/reasoning token），快路以 25–30 Hz 独立消费 buffer——<strong>完全解耦执行频率</strong>。</li>
+          <li>两路<strong>端到端联合训练</strong>（cross-timescale sampling 模拟异步延迟），保留语义-控制对齐，不靠手工模块拼接。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#async-fast-slow" class="note-link">真异步快慢执行</a></strong>：慢路（VLM，1–3 Hz）写 bridge buffer；快路（diffusion policy，25–30 Hz）随时读 buffer 出动作；两路完全并行，快路速度不受慢路制约。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#bridge-buffer" class="note-link">Bridge Buffer + V-L-A 对齐</a></strong>：buffer 存 text embedding + fusion query embedding（由快路 action loss 驱动训练）+ reasoning token；fusion query 跨视觉/语言/本体感知/VLM 内部语义聚合，同时保留原始 instruction embedding 防止语义漂移。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#whole-body-tokenizer" class="note-link">全身动作 tokenizer（RVQ-VAE）</a></strong>：将 25 DoF 分解为 position/rotation/gripper 三路，各自用独立 1D-conv encoder+残差 VQ 离散化，rotation 用 SO(3) 测地距离 loss；相比 FAST tokenizer，token 序列长度缩短 2× 以上，慢路推理频率提升至 3.27 Hz。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在爆米花商业场景全身操作任务上：<strong>DuoCore-FS 以 32.3 Hz 达到 90% 整体成功率</strong>，π0（同步）以 12.5 Hz 达到 85%——频率约 3×，精度持平或略优；OOD 泛化（杯子放边缘）显著优于 π0（50% vs 10%）；语言跟随（双任务区分）显著优于 π0（42.9% vs 14.3%）。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>In-distribution：DuoCore-FS 90%（18/20）vs π0 85%（17/20），@32.3 Hz vs 12.5 Hz。</li>
+            <li>Out-of-distribution：DuoCore-FS 50%（5/10）vs π0 10%（1/10）。</li>
+            <li>Anomalous scenarios（杯子倒/翻/被拿走）：DuoCore-FS 95.8%（23/24）vs π0 91.7%（22/24）。</li>
+            <li>Language following：DuoCore-FS 42.9%（3/7）vs π0 14.3%（1/7）。</li>
+            <li>Action tokenizer 消融：FAST 平均序列 81.12 token（最长 205），RVQ-VAE 固定 36 token；FAST 慢路成功率 0%，RVQ-VAE 83.3%。</li>
+            <li>数据量：1,780 条轨迹（10.22 小时）；训练硬件 24×H100。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性判断</div>
+        <p><strong>Track A（移动全身操作 VLA）直接命中</strong>：这正是在移动双臂全身平台（Astribot S1）上解决 VLA 实时性瓶颈的范式文章，bridge buffer 异步解耦 + 全身 action tokenizer 均可直接借鉴。Track B（足式控制算法）<strong>不直接相关</strong>——本文不涉及 locomotion 底层控制。故按框架<strong>深读</strong>，证据见下。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有 VLA 即便设计了快慢双系统，两路仍同步执行，快路上限受大 VLM 的低推理速度制约，无法满足全身操作的实时性需求。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">Most Vision-Language-Action (VLA) systems integrate a Vision-Language Model (VLM) for semantic reasoning with an action expert generating continuous action signals, yet both typically run at a single unified frequency. As a result, policy performance is constrained by the low inference speed of large VLMs. This mandatory synchronous execution severely limits control stability and real-time performance in whole-body robotic manipulation</blockquote>
+          <div class="ev-trans">大多数 VLA 系统将用于语义推理的 VLM 与生成连续动作信号的动作专家集成在一起，然而两者通常以单一统一频率运行。因此，策略性能受到大型 VLM 低推理速度的制约。这种强制同步执行严重限制了全身机器人操作中的控制稳定性和实时性能。</div>
+          <div class="ev-gloss">全身操作（更多关节、更大运动空间、动态视角）使这个频率瓶颈比固定臂场景更严苛——这是论文选题的出发点。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §2.2 Dual-System VLA Architectures</div>
+          <blockquote class="ev-quote">However, in all these approaches the two subsystems still operate synchronously, requiring the fast system to wait for updates from the slow system. As a result, the overall action-generation frequency is fundamentally constrained by the slow inference speed of the VLM, preventing true fast–slow fully asynchronous execution.</blockquote>
+          <div class="ev-trans">然而，在所有这些方法中，两个子系统仍然同步运行，要求快系统等待慢系统的更新。因此，整体动作生成频率从根本上受到 VLM 低推理速度的制约，无法实现真正的快慢完全异步执行。</div>
+          <div class="ev-gloss">DP-VLA、HiRT、RoboDual、G0-VLA、π0.5 均属于"名义上双系统、实质上同步"的一类。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心设计：DuoCore-FS 通过 bridge buffer 实现慢路（VLM，1–3 Hz）与快路（diffusion policy，25–30 Hz）的完全并行异步——快路速度不再受慢路制约。</div>
+        <figure>
+          <img src="./images/figure_1_architecture_overview.png" alt="Figure 1: DuoCore-FS 快慢异步架构总览">
+          <figcaption><strong>Figure 1（p.3–4）：</strong>下方慢路 VLM 以 1–3 Hz 解析视觉/语言/本体感知，生成 text token、query token、reasoning token 写入 bridge buffer；上方快路以 25–30 Hz 从 buffer 拉取最新语义表示，与当前视觉特征融合后，通过 Transformer-based diffusion policy 生成全身连续动作。左图为数据流，右图为 Astribot S1 机器人实物。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §3.1 Architecture (Bridge Buffer)</div>
+          <blockquote class="ev-quote">the bridge buffer decouples the generation and consumption of representations, allowing the system to operate at different frequencies: the slow system refreshes Bt at a low rate of 1–3 Hz, while the fast system fetch the latest representations at 25–30 Hz to condition whole-body action generation.</blockquote>
+          <div class="ev-trans">bridge buffer 将表示的生成与消费解耦，允许系统以不同频率运行：慢系统以 1–3 Hz 的低速刷新 Bt，而快系统以 25–30 Hz 获取最新表示以条件化全身动作生成。</div>
+          <div class="ev-gloss">这是与 FiS-VLA/OpenHelix（固定调度比、非真并行）的核心差异：快路随时读最新 buffer，不等慢路完成。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">In our design, the slow system and fast system run fully in parallel: the slow module engages in multi-faceted reasoning at a low frequency, e.g., generating discrete action tokens and providing high-level latent representations to guide the fast system, while the fast module translates the latest latent representations from the slow module together with real-time visual observations and proprioceptive states to generate high-frequency continuous actions.</blockquote>
+          <div class="ev-trans">在我们的设计中，慢系统和快系统完全并行运行：慢模块以低频进行多方面推理，例如生成离散动作 token 并提供高层潜在表示来引导快系统，而快模块将来自慢模块的最新潜在表示与实时视觉观测和本体感知状态相结合，生成高频连续动作。</div>
+          <div class="ev-gloss">与 Helix（并行但慢路不生成 action token）相比，DuoCore-FS 的慢路同时输出 reasoning/action token 供 buffer 使用，且端到端联合训练。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> Bridge buffer 的 fusion query 设计：query 参数由快路 action loss 驱动训练，跨 V-L-A 三模态聚合，同时保留原始 instruction embedding 防止语义漂移。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.1 Bridge Buffer</div>
+          <blockquote class="ev-quote">Importantly, the parameters ψ of the fusion queries are trained through the fast system's action-generation objective, enabling them to progressively learn semantic and reasoning features that best support whole-body action generation.</blockquote>
+          <div class="ev-trans">重要的是，fusion query 的参数 ψ 通过快系统的动作生成目标来训练，使其能够逐步学习最能支持全身动作生成的语义和推理特征。</div>
+          <div class="ev-gloss">这是"语义-控制对齐"的关键——query 的优化目标直接是动作质量，而非单纯语义重建，使 buffer 内容对控制真正有用。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.1 Bridge Buffer</div>
+          <blockquote class="ev-quote">By supplying both the original instruction and the semantic representations stored in the buffer, the fast system is able to maintain stable linguistic constraints while avoiding excessive reliance on dynamically extracted reasoning, thereby further improving overall task performance and long-term stability.</blockquote>
+          <div class="ev-trans">通过同时提供原始指令和存储在 buffer 中的语义表示，快系统能够维持稳定的语言约束，同时避免过度依赖动态提取的推理，从而进一步提升整体任务性能和长期稳定性。</div>
+          <div class="ev-gloss">设计细节：instruction embedding（固定）+ fusion query embedding（动态）双路并存——前者防止 query 过度专注于动作模式导致语言跟随能力退化。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 全身动作 tokenizer（RVQ-VAE）：将 25 DoF 动作分解为 position/rotation/gripper 三路，各自 RVQ 离散化，rotation 用 SO(3) 测地距离 loss——相比 FAST，序列长度缩短 2× 以上，且慢路成功率从 0% 升至 83.3%。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5–6 · §3.2 Action Tokenizer</div>
+          <blockquote class="ev-quote">we further build a geometry-aware action tokenizer inspired by the residual VQ-VAE design used in RDT2. At each action step t, the action at ∈ R29 is factorized into three semantically grounded components, at = [apos t , arot t , agrip t ]</blockquote>
+          <div class="ev-trans">我们进一步构建了一个几何感知的动作 tokenizer，灵感来源于 RDT2 中使用的残差 VQ-VAE 设计。在每个动作步骤 t，动作 at ∈ R29 被分解为三个语义上有意义的分量：at = [apos t, arot t, agrip t]。</div>
+          <div class="ev-gloss">R29 = 躯干+左右臂 3×9 维 Cartesian delta pose（position 3D + SO(3) 6D）+ 2 维 gripper 绝对开合宽度；分流设计使每路 RVQ 专注于各自几何结构。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §4.2 Ablation Study of Action Tokenizer</div>
+          <blockquote class="ev-quote">we find that naïvely tokenizing full-body actions with the fast tokenizer causes a combinatorial explosion, producing sequences that can span thousands of action tokens. ... As Table.5 shows, when applying the FAST method [18], the resulting action tokens are on average over 2× longer than those produced by our RVQ-VAE, with the maximum length exceeding exceeds 5×. This substantially constrains inference speed, limiting it to 0.95 Hz. Furthermore, sequential prediction of the left hand, right hand, and torso action tokens induces compounding errors. In deployment, our slow system with FAST[18] frequently generates incorrect tokens, leading to erratic motions and no successful task executions.</blockquote>
+          <div class="ev-trans">我们发现，直接用 fast tokenizer 对全身动作进行 tokenization 会导致组合爆炸，产生可能跨越数千个动作 token 的序列。如表 5 所示，使用 FAST 方法时，生成的动作 token 平均比我们的 RVQ-VAE 长 2× 以上，最大长度超过 5×。这严重限制了推理速度，将其限制在 0.95 Hz。此外，对左手、右手和躯干动作 token 的顺序预测会导致误差累积。在部署中，使用 FAST 的慢系统频繁生成错误 token，导致运动异常且没有成功执行任务。</div>
+          <div class="ev-gloss">这是最有力的设计选择证据：FAST tokenizer 是为固定臂设计的，直接应用于全身操作会爆炸——这也是 RVQ-VAE tokenizer 不是可选优化而是必须的原因。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 跨时间尺度联合训练（cross-timescale co-training）：用随机时间偏移 ∆ 模拟部署时快慢路的真实异步延迟，消除训练-推理不匹配。</div>
+        <figure>
+          <img src="./images/figure_2_cross_timescale_training.png" alt="Figure 2: Cross-timescale co-training 示意">
+          <figcaption><strong>Figure 2（p.7）：</strong>慢路处理时刻 t0 的观测，快路接收随机偏移 t0+∆（∆ ~ U[0, ∆max]）的观测。∆max 由慢路更新周期和慢快频率比共同决定。该策略消除了"训练时同步、推理时异步"的 mismatch。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6–7 · §3.3 Cross-Timescale Co-Training</div>
+          <blockquote class="ev-quote">A key challenge is that the slow system operates at only 1–3 Hz, while the fast controller runs at 25–30 Hz. If both systems were updated using the same observation at each training step, this would lead to a significant train–inference mismatch. To address this issue, we introduce a cross-timescale sampling strategy that explicitly simulates the asynchronous behavior of the deployed system.</blockquote>
+          <div class="ev-trans">一个关键挑战是慢系统仅以 1–3 Hz 运行，而快控制器以 25–30 Hz 运行。如果两个系统在每个训练步骤中都使用相同的观测进行更新，这将导致显著的训练-推理不匹配。为了解决这个问题，我们引入了跨时间尺度采样策略，明确模拟了部署系统的异步行为。</div>
+          <div class="ev-gloss">这是异步训练的关键工程细节：不是简单地让快慢路分别训练，而是在联合训练中显式引入时间延迟分布，使快路学会在"旧的"buffer 语义下仍能正确出动作。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 主结果：DuoCore-FS 以约 32.3 Hz（约为 π0 的 3×）实现 90% 整体成功率，在 OOD 泛化和语言跟随上显著优于 π0。</div>
+        <figure>
+          <img src="./images/figure_3_task_pipeline.png" alt="Figure 3: Popcorn-scooping 任务四阶段">
+          <figcaption><strong>Figure 3（p.8）：</strong>爆米花舀取任务的四个子任务：拿杯子→抓勺子→舀爆米花→放回杯子。全身操作要求协调双臂和躯干旋转，是全身 VLA 的典型评测场景。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §4.2 In-Distribution Results</div>
+          <blockquote class="ev-quote">DuoCore-FS achieves success rates comparable to π0 [6] while running at nearly 3× its inference speed. This demonstrates the effectiveness of our dual system architecture: the slow system's reasoning tokens provide effective guidance to the fast system, boosting success, while asynchronous inference delivers the speedup.</blockquote>
+          <div class="ev-trans">DuoCore-FS 在以接近 π0 推理速度 3× 运行的同时，实现了与 π0 相当的成功率。这证明了我们双系统架构的有效性：慢系统的推理 token 为快系统提供了有效引导，提升了成功率，而异步推理带来了速度提升。</div>
+          <div class="ev-gloss">关键数字：DuoCore-FS 90%（18/20）@32.3 Hz vs π0 85%（17/20）@12.5 Hz；精度持平同时速度提升约 2.6×。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9–10 · §4.2 Out-of-Distribution + Language Following</div>
+          <blockquote class="ev-quote">The full DuoCore-FS system combines the strengths of DuoCore-FS-slow and π0 [6]: it improves generalization while retaining π0-level accuracy on fine-grained tasks.</blockquote>
+          <div class="ev-trans">完整的 DuoCore-FS 系统结合了 DuoCore-FS-slow 和 π0 的优势：在保持 π0 级别精细任务精度的同时提升了泛化能力。</div>
+          <div class="ev-gloss">OOD：DuoCore-FS 50% vs π0 10%；语言跟随：42.9% vs 14.3%——慢路的 autoregressive 推理为 OOD 和语言跟随提供了 π0（纯扩散）所缺乏的显式 token-by-token 推理能力。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 语言跟随改进的根因：慢路的自回归 token 预测训练目标使系统对指令具有更强的显式推理能力，而 π0 的纯扩散路径缺乏这种机制。</div>
+        <figure>
+          <img src="./images/figure_4_language_following_comparison.png" alt="Figure 4: π0 vs DuoCore-FS 语言跟随对比">
+          <figcaption><strong>Figure 4（p.11）：</strong>上行：π0 被指令"关闭饮料柜门"时，仍执行拿杯子（倾向于执行爆米花任务）；下行：DuoCore-FS 正确执行关门动作。这说明慢路的 autoregressive 推理赋予了系统区分相似场景下不同指令的能力。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §4.2 Language Following</div>
+          <blockquote class="ev-quote">DuoCore-FS demonstrates substantially stronger language-following ability than π0 [6], achieving a 42.9% success rate compared to 14.3%. We attribute this improved language-following performance to the slow system's autoregressive training objective, which encourages more consistent token-by-token reasoning over instructions and observations.</blockquote>
+          <div class="ev-trans">DuoCore-FS 展示了比 π0 强得多的语言跟随能力，实现了 42.9% 的成功率，而 π0 为 14.3%。我们将这种改进的语言跟随性能归因于慢系统的自回归训练目标，它鼓励对指令和观测进行更一致的逐 token 推理。</div>
+          <div class="ev-gloss">即慢路的 VLM 自回归训练目标（NLL on text/action token）起到了类似 chain-of-thought 的作用——哪怕推理只有 1–3 Hz，也足以在语义层面区分"关门"和"拿杯子"。注意：成功率仍低（42.9%），主因是数据极度不平衡（关门数据仅占 1%）。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 平台：Astribot S1 是 25 DoF 全身移动双臂操作平台（2×7 DoF 臂 + 4 DoF 躯干 + 2 DoF 头 + 3 DoF 全向底盘），是目前少有的将全身 VLA 落地到商业场景的真实系统。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §4.1 Robotic Platform</div>
+          <blockquote class="ev-quote">Astribot S1 is a mobile dual-arm manipulator featuring two 7-DoF arms with parallel-jaw grippers, a 4-DoF articulated torso, a 2-DoF head, and a 3-DoF omnidirectional mobile base</blockquote>
+          <div class="ev-trans">Astribot S1 是一款移动双臂操作器，配备两个带有平行夹爪的 7 自由度机械臂、一个 4 自由度关节式躯干、一个 2 自由度头部和一个 3 自由度全向移动底盘。</div>
+          <div class="ev-gloss">总计 7+7+4+2+3=23 DoF 加上 2 个夹爪宽度 = 25 DoF 控制空间；商业爆米花摊场景是全身操作 VLA 罕见的真实部署案例，不是实验室场景。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">以下为截至 2026 年 6 月的最新实时核查结果（非仅依据 PDF）。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未公开</span> arXiv 页面及 Astribot 官网均无公开代码链接；GitHub 上 <a href="https://github.com/Astribot-Dev">Astribot-Dev</a> 仅有仿真描述（<code>astribot_simulation</code>/<code>astribot_descriptions</code>/<code>astribot_msgs</code>），无 DuoCore-FS 实现</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未公开</span> 无公开权重或 checkpoint</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> 1,780 条商业场景轨迹未释出</dd>
+        <dt>平台</dt><dd><span class="os-tag os-part">商业提供</span> 论文明确表述：DuoCore-FS 实现（训练/推理/部署）作为 Astribot 平台的一部分提供给商业用户</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚙️ 开源状态说明</div>
+        <p>论文 Abstract 最后一句明确："The implementation of DuoCore-FS, including training, inference, and deployment, is provided to commercial users by Astribot as part of the Astribot robotic platform." 这意味着该系统是商业产品，<strong>不计划开源</strong>。与 π0/openpi 或 GR00T N1 开源路线完全不同。学术借鉴只能依据论文描述复现。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · Abstract</div>
+        <blockquote class="ev-quote">The implementation of DuoCore-FS, including training, inference, and deployment, is provided to commercial users by Astribot as part of the Astribot robotic platform.</blockquote>
+        <div class="ev-trans">DuoCore-FS 的实现，包括训练、推理和部署，作为 Astribot 机器人平台的一部分提供给 Astribot 的商业用户。</div>
+        <div class="ev-gloss">官方 GitHub（Astribot-Dev）只有仿真/描述仓库，无 VLA 代码；这与论文声明一致——商业闭源，可能未来会有部分开放但目前无迹象。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>① <strong>真实商业场景全身操作</strong>落地，不是实验室 tabletop——爆米花商业摊位是极少见的 VLA 真实部署案例。② Bridge buffer 异步解耦机制设计清晰，cross-timescale co-training 是解决训练-推理 mismatch 的实用工程方案，可直接迁移。③ <strong>全身动作 RVQ-VAE tokenizer</strong> 对 FAST 直接应用的失败（0% 成功率）分析深刻，揭示了全身 VLA 与固定臂 VLA 的本质差异。④ 速度约 3× 的提升在不降精度的前提下达成，验证了异步设计的有效性。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>任务场景单一</strong>：只有爆米花舀取和饮料柜关门两个任务，泛化性未充分验证（论文自承需要更多任务评测）。② <strong>完全闭源</strong>：商业产品路线，学术复现只能靠论文描述，与 openpi 生态截然不同，社区杠杆极小。③ <strong>语言跟随成功率仍低</strong>（42.9%），主因是数据不平衡（关门数据仅 1%），未见数据平衡策略。④ 数据量仅 1,780 条轨迹/10 小时，缺少 OXE 或大规模预训练数据支撑，泛化能力存疑。⑤ 未与 Helix/Hume 有数值对比（仅定性对比），难以评估 SOTA 位置。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;桥接 buffer 异步解耦 + 全身 RVQ tokenizer 是对全身 VLA 工程问题的重要贡献，但单任务商业闭源限制了直接学术影响力。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · DuoCore-FS (arXiv:2512.20188) · Astribot Team · 2025-12</footer>
+
+</body>
+</html>

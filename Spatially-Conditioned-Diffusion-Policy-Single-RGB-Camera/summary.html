@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SCDP 综述 · Spatially Conditioned Diffusion Policy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  /* ============================================================
+     语义色锁定（不要加新颜色）：
+       红    = 问题 / 风险 / 未开源
+       琥珀  = 洞察 / 部分开源 / 保留意见
+       靛紫  = 方法 / 结构 / 链接 (--accent)
+       绿    = 结果 / 正向 / 开源 (--success, 全站唯一绿)
+       灰    = 局限 / 次要
+     --brand 仅用于 hero 点缀，每篇可改，默认 = accent。
+     ============================================================ */
+  :root {
+    --brand: #6366f1;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --c-problem: #dc2626; --c-insight: #d97706; --c-method: #6366f1; --c-result: #16a34a; --c-limit: #64748b;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO（轻量：subtitle 一句话 ≤40 字，方法综述下沉到速记层） ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #312e81 100%); color: #fff; padding: 3em 1.5em 3.4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 480px; height: 480px; background: radial-gradient(circle, color-mix(in srgb, var(--brand) 30%, transparent), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(255,255,255,0.08); color: #c7d2fe; border: 1px solid rgba(255,255,255,0.25); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 12px var(--brand); }
+  .hero h1 { font-size: clamp(1.7em, 4vw + 1em, 2.8em); font-weight: 800; line-height: 1.18; margin: 0.5em 0 0.3em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.1em; color: #e2e8f0; max-width: 720px; margin: 0 0 1.3em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.1em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rating { background: rgba(202, 138, 4, 0.22); border-color: rgba(250, 204, 21, 0.5); color: #fde68a; font-weight: 700; }
+  .pill.rating a { color: inherit; }
+
+  /* ---------- KPI（数字卡必须带对照锚 + 链到证据 claim；状态事实用状态卡，不伪装成数字） ---------- */
+  .kpi-strip { max-width: 1020px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { display: block; color: inherit; text-decoration: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  a.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi .status { margin: 0.45em 0; font-size: 0.95em; }
+  .kpi.green .value { color: var(--success); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT（正文列 ≤720px ≈ 42 个中文字行长） ---------- */
+  .layout { max-width: 1020px; margin: 2.6em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: minmax(0, 720px) 230px; gap: 2.5em; justify-content: center; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc ul.toc-claims { margin: 0.3em 0 0.3em 0.5em; padding-left: 0.7em; border-left: 1px dashed var(--border); font-size: 0.9em; }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.8em 2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 0.65em; flex: 0 0 30px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.95em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+  section.card[id], .claim[id] { scroll-margin-top: 1.2em; }
+
+  /* ---------- ① 30 秒分诊条（hero 之下第一卡：痛点/做法/结果/读法） ---------- */
+  .snap { padding: 1.2em 1.6em; }
+  .snap-row { display: flex; gap: 1em; padding: 0.45em 0; border-bottom: 1px dashed var(--border); align-items: baseline; }
+  .snap-row:last-child { border-bottom: 0; }
+  .snap-k { flex: 0 0 3.2em; text-align: center; font-size: 0.78em; font-weight: 700; border-radius: 6px; padding: 0.15em 0; }
+  .snap-k.kp { background: var(--danger-bg); color: var(--c-problem); }
+  .snap-k.km { background: #eef2ff; color: var(--c-method); }
+  .snap-k.kr { background: var(--success-bg); color: var(--c-result); }
+  .snap-k.kh { background: var(--gold-bg); color: var(--gold); }
+  .snap-row > div { color: var(--text-soft); }
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.18em 0.7em; border-radius: 999px; font-weight: 700; font-size: 0.85em; background: var(--gold-bg); color: #92400e; border: 1px solid #f59e0b; }
+
+  /* ---------- ② 速记层（90 秒读完就走的一层） ---------- */
+  .gist-card { border-left: 5px solid var(--accent); }
+  .gist-block { margin: 1.1em 0; }
+  .gb-label { font-size: 0.82em; font-weight: 700; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.12em; font-weight: 600; color: var(--text); background: #eef2ff; border-radius: var(--radius); padding: 0.9em 1.1em; line-height: 1.7; }
+  ol.chain { counter-reset: ch; list-style: none; padding-left: 0; }
+  ol.chain li { counter-increment: ch; position: relative; padding-left: 2.2em; margin: 0.55em 0; }
+  ol.chain li::before { content: counter(ch); position: absolute; left: 0; top: 0.15em; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--code-bg); border: 1px solid var(--border-strong); color: var(--accent-dark); font-size: 0.8em; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pipeline-line { font-size: 0.98em; background: var(--code-bg); border-radius: 8px; padding: 0.6em 1em; color: var(--text); }
+  ul.rel-list { padding-left: 1.2em; }
+  ul.rel-list b { color: var(--text); }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2em 0 1.2em; color: var(--muted); font-size: 0.88em; font-weight: 600; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- ③ 深读层：CLAIM（分型 + 短标题 + 细节收纳 + 折叠证据） ---------- */
+  .claim-group { display: flex; align-items: center; gap: 0.7em; margin: 1.8em 0 0.2em; font-size: 0.8em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .claim-group::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--k, var(--accent)); border-radius: var(--radius); padding: 1.05em 1.3em; margin: 1.1em 0; background: var(--card); }
+  .claim.k-problem { --k: var(--c-problem); } .claim.k-insight { --k: var(--c-insight); }
+  .claim.k-method  { --k: var(--c-method); }  .claim.k-result  { --k: var(--c-result); }
+  .claim.k-limit   { --k: var(--c-limit); }
+  .claim-head { display: flex; align-items: baseline; gap: 0.55em; flex-wrap: wrap; }
+  .claim-head .cn { font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 700; color: var(--k, var(--accent)); }
+  .kicker { font-size: 0.7em; font-weight: 700; padding: 0.1em 0.6em; border-radius: 999px; background: color-mix(in srgb, var(--k, var(--accent)) 12%, #fff); color: var(--k, var(--accent)); flex: 0 0 auto; }
+  .claim-title { font-size: 1.08em; font-weight: 700; color: var(--text); margin: 0; line-height: 1.5; }
+  .claim-body { font-weight: 400; color: var(--text-soft); margin: 0.4em 0 0; line-height: 1.7; }
+  .claim-how { margin-top: 0.5em; font-size: 0.88em; color: var(--muted); padding-left: 0.7em; border-left: 2px solid var(--border); }
+  .claim.key { border-left-color: var(--gold); }
+  .claim.key .cn::after { content: " ★"; color: var(--gold); }
+
+  /* evidence：解读常驻，引文+译文折叠（Ctrl-F 在 Chromium 会自动展开命中的 details；
+     或先点「展开全部证据」再 Ctrl-F） */
+  .evidence { margin-top: 0.75em; }
+  .evidence + .evidence { padding-top: 0.75em; border-top: 1px dashed var(--border); }
+  .ev-gloss { font-size: 0.95em; color: var(--text); background: #fafaf9; border-radius: 6px; padding: 0.35em 0.7em; margin: 0.4em 0; display: flex; gap: 0.6em; }
+  .ev-tag { flex: 0 0 auto; font-size: 0.72em; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 0 0.45em; height: fit-content; margin-top: 0.35em; background: var(--card); }
+  details.ev-fold { margin: 0.45em 0 0; }
+  details.ev-fold > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 0.5em; list-style: none; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.18em 0.7em; }
+  details.ev-fold > summary::-webkit-details-marker { display: none; }
+  details.ev-fold > summary .ev-hint { color: var(--muted); font-weight: 400; }
+  details.ev-fold[open] > summary { margin-bottom: 0.45em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "Source Serif 4", Georgia, "Noto Serif SC", serif; font-style: italic; font-size: 0.97em; line-height: 1.6; color: #1e293b; }
+  .ev-quote::before { content: "“"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "”"; color: var(--muted); font-weight: 700; }
+  .ev-quote mark { background: #fef3c7; color: inherit; font-style: normal; padding: 0 0.1em; border-radius: 3px; }
+  .ev-row { display: flex; gap: 0.6em; margin: 0.4em 0; }
+  .ev-trans { font-size: 0.95em; color: var(--text-soft); }
+  #ev-toggle-all { float: right; font: 600 0.78em "JetBrains Mono", monospace; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.3em 0.8em; cursor: pointer; }
+  #ev-toggle-all:hover { border-color: var(--accent); }
+
+  /* 数字行（≥3 个对比数字禁止写成长句，用 stat-chip 或 mini-table） */
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.45em; margin: 0.55em 0; }
+  .stat { font: 600 0.82em "JetBrains Mono", monospace; padding: 0.18em 0.7em; border-radius: 999px; border: 1px solid var(--border); background: var(--code-bg); color: var(--text-soft); }
+  .stat.win { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+  .stat.dim { opacity: 0.65; }
+
+  /* ---------- 术语：行内兜底释义（概念卡建立前用 .term；建立后升级为 note-link，可双带 data-gloss） ---------- */
+  .term, .note-link { position: relative; cursor: help; }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; cursor: pointer; }
+  .term { border-bottom: 1px dotted var(--muted); }
+  .term[data-gloss]:hover::after, .term[data-gloss]:focus::after,
+  .note-link[data-gloss]:hover::after {
+    content: attr(data-gloss); position: absolute; left: 0; bottom: 1.7em; z-index: 20;
+    width: max-content; max-width: min(46ch, 80vw); background: #0f172a; color: #e2e8f0;
+    font-size: 0.78em; font-weight: 400; font-style: normal; line-height: 1.5;
+    padding: 0.5em 0.8em; border-radius: 8px; box-shadow: var(--shadow-lg);
+  }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.1em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+
+  /* ---------- TABLE（mini 对照表：本文行 tr.winner，末列 📍 页码） ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.1em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: #f8fafc; }
+  th { text-align: left; padding: 0.7em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65em 1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.loc { font-family: "JetBrains Mono", monospace; font-size: 0.82em; color: var(--muted); white-space: nowrap; }
+  tr.winner { background: var(--success-bg); }
+  tr.winner td { font-weight: 700; color: var(--success); }
+  tr.winner td:first-child::before { content: "★ "; }
+
+  /* ---------- FIGURE（必须可点开原图；caption = 内容 + 看点） ---------- */
+  figure { margin: 1.2em 0 0.5em; text-align: center; }
+  figure a { border: none !important; }
+  figure img { max-width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); cursor: zoom-in; }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER / PRINT ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+  @media print {
+    .hero { background: #fff; color: #000; padding: 1em 0; }
+    .hero h1 { background: none; -webkit-text-fill-color: initial; color: #000; }
+    .hero .subtitle, .pill { color: #333; }
+    .kpi-strip { margin-top: 1em; }
+    .toc, #ev-toggle-all { display: none; }
+    section.card { box-shadow: none; }
+    .claim, .evidence, figure { break-inside: avoid; }
+    details.ev-fold { open: true; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>KAIST + Neuromeka · Imitation / Diffusion Policy</span>
+    <h1>Spatially Conditioned Diffusion Policy<br>单 RGB 相机做精密操作</h1>
+    <p class="subtitle">把扩散中间轨迹当视觉注意力锚点，单相机也能做 USB 插入级精密操作。</p>
+    <div class="meta-pills">
+      <span class="pill rating"><a href="#verdict">⚖ Valuable</a></span>
+      <span class="pill">📄 非 VLA · 单任务 diffusion policy（无语言）</span>
+      <span class="pill">📅 2026 · arXiv 预印</span>
+      <span class="pill">🏢 KAIST + Neuromeka</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2606.14535">arXiv:2606.14535</a></span>
+      <span class="pill">⏱ 速记 ~90s · 全文 ~7min</span>
+    </div>
+  </div>
+</header>
+
+<!-- KPI: 数字卡带对照锚并链到证据 claim; 状态事实用状态卡 -->
+<div class="kpi-strip">
+  <a class="kpi green" href="#c4"><div class="label">Meta-World Hard</div><div class="value">82.5<span class="unit">%</span></div><div class="desc">单 RGB · vs DP3 60.3% / DP 16.7% ↗结果4</div></a>
+  <a class="kpi purple" href="#c5"><div class="label">单相机 vs 加腕相机</div><div class="value">82.5<span class="unit">%</span></div><div class="desc">vs DP+腕相机 74.2% / DP3+深度 60.3% ↗结果5</div></a>
+  <a class="kpi blue" href="#c6"><div class="label">真机 USB 完整插入</div><div class="value">30<span class="unit">%</span></div><div class="desc">vs DP/DP3/OTTER/SKIL 全 0% ↗结果6</div></a>
+  <div class="kpi"><div class="label">开源</div><div class="status"><span class="os-tag os-no">未发布</span></div><div class="desc">无代码/权重/项目页（核查 2026-06-16）</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ ① 30 秒分诊条 ============ -->
+    <section class="card snap" id="snap">
+      <div class="snap-row"><span class="snap-k kp">痛点</span><div>主流模仿学习靠"全局+腕部"多相机；只用<strong>一个全局 RGB 相机</strong>时，策略既看不清精细接触细节，也分不清场景里哪块区域跟任务相关。</div></div>
+      <div class="snap-row"><span class="snap-k km">做法</span><div>把扩散去噪过程中的<strong>中间末端轨迹</strong>投影回图像，沿轨迹点采样多尺度特征，当作"该往哪看"的空间注意力锚点喂回去噪网络。</div></div>
+      <div class="snap-row"><span class="snap-k kr">结果</span><div>仿真 Meta-World Hard 82.5%（DP3 60.3% / DP 16.7%）；单相机追平甚至超过"DP+腕相机"(74.2%)；真机 USB 完整插入 30%（其余基线全 0%）。</div></div>
+      <div class="snap-row"><span class="snap-k kh">读法</span><div><span class="badge">Valuable</span> 想给自家 diffusion policy 加空间 grounding → 精读<a href="#c3">方法3</a>轨迹采样机制；只想看路线 → 速记层即止。⚡ 最短精读路径：Fig.2（架构）→ Table 3（相机配置对照）→ Fig.4(a,b)（横长/多尺度消融）。</div></div>
+    </section>
+
+    <!-- ============ ② 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">⚡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲思想、逻辑、方法；效果只作验证。要核对原文再进下面的「深读层」。注意：<strong>这是非 VLA 模型——单任务 imitation/diffusion policy，没有语言指令、没有 VLM</strong>。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">🧭 背景 · 为什么重要（不熟此子方向先读我）</div>
+        <p>视觉模仿学习（<a href="./notes.html#diffusion-policy" class="note-link" data-gloss="Chi 等 2023 RSS 提出：把动作序列建模为条件扩散去噪过程、迭代生成 action chunk；本文搭其上、只替换条件输入">Diffusion Policy</a>、ACT）现在默认配<strong>多相机</strong>：一个全局相机看大局，一个<span class="term" tabindex="0" data-gloss="装在机械臂腕部、随手移动的近距相机，能看清接触点局部细节">腕部相机（wrist camera）</span>贴近接触点看细节。腕相机几乎是标配，因为它直接消除了"哪块区域重要"的视觉歧义。但加腕相机意味着多一路硬件、布线、标定。本文问：能不能<strong>只用一个全局 RGB 相机</strong>就做到 USB 插入这种精密接触任务？难点是单全局视角既要保留精细细节，又要在杂乱场景里自己找到任务相关区域。</p>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">让机器人"看自己要去哪"：扩散去噪每一步都有一条当前预测的<strong>末端轨迹</strong>，把它投影回图像，就得到一串"该盯哪儿"的像素锚点——沿这些锚点采样视觉特征，等于让策略自己生成注意力地图，不需要分割/VLM/点追踪等外部感知模块。轨迹越去噪越准，注意力也跟着越来越聚焦到接触区。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么成立</div>
+        <ol class="chain">
+          <li>关键洞察：<strong>未来末端轨迹投影到图像，天然标出了任务相关区域</strong>——夹爪要去的地方，就是该看的地方。</li>
+          <li>扩散去噪本来就在不断细化动作轨迹估计，把这个"中间产物"当注意力锚点，零额外感知模块、随去噪步演化。</li>
+          <li>用 <a href="./notes.html#multi-scale-fpn" class="note-link" data-gloss="特征金字塔网络：从 CNN 不同深度抽多分辨率特征，低分辨率含语义、高分辨率含细节">FPN</a> 式多尺度特征（ResNet 各 stage）：高分辨率层保细节（对插入对齐关键），低分辨率层保语义上下文。</li>
+          <li>沿轨迹各点、各尺度做双线性插值采样，时间轴平均池化、尺度轴拼接，得到一个紧凑 spatial context 向量，用 <span class="term" tabindex="0" data-gloss="Feature-wise Linear Modulation：用条件向量生成逐通道缩放/偏移来调制网络特征">FiLM</span> 注入去噪 U-Net。</li>
+          <li>验证：单相机就追平"加腕相机"的多相机基线；横长 s 越大、尺度越全，成功率单调上升——证明轨迹锚点+多尺度确实是有效的归纳偏置。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 管线一句话 + 三个设计决策</div>
+        <p class="pipeline-line">单 RGB 图 → ResNet-18 多尺度特征 F1–F5 ‖ 当前状态+中间动作样本 → 重建末端轨迹 → 投影回图像采样点特征 → spatial context 向量（FiLM）→ 条件 U-Net 去噪出 action chunk</p>
+        <ul>
+          <li><b>① 多尺度图像编码器</b>：ResNet-18 五个 stage 各接 3×3 卷积对齐到统一通道 d=64，得到 F1–F5（含粗到细全分辨率）。</li>
+          <li><b>② <a href="./notes.html#spatial-conditioning" class="note-link" data-gloss="本文核心：把扩散去噪的中间末端轨迹投影回图像、沿锚点采样多尺度特征当策略空间条件，让单相机策略自生成注意力地图">空间条件模块</a>（核心创新）</b>：三步——轨迹重建（累加位移 Pᵢ=Pᵢ₋₁+ΔPᵢ）→ <a href="./notes.html#trajectory-projection" class="note-link" data-gloss="空间条件模块前两步：相对位移累加 Pᵢ=Pᵢ₋₁+ΔPᵢ 重建未来 EE 轨迹，再用外参 [R|t] 与内参 K 投影到 2D 像素锚点（需精确手眼标定）">3D→2D 投影（外参 [R|t]、内参 K）</a>→ 沿锚点双线性采样多尺度特征。<strong>每个去噪步都重做一次</strong>，图像编码每次推理只做一次。</li>
+          <li><b>③ 标准 DP 去噪</b>：把固定观测 O 换成随去噪步演化的 spatial context Fᵏ，其余沿用 Diffusion Policy 框架（DDIM 推理）。</li>
+        </ul>
+        <figure>
+          <a href="./images/figure_2_architecture.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_architecture.png" alt="Figure 2: SCDP architecture — multi-scale encoder, spatial conditioning module, action denoising network" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 2 (p.3)：</strong>三大组件——(a) 多尺度图像编码器、(b) 空间条件模块（轨迹重建→投影→点采样）、(c) 动作去噪网络。<strong>看点：</strong>(b) 里"3D→2D 投影 + 沿 EE 参考点采样"这一步是全文创新；注意标"Every Denoising Step"——空间条件随去噪步反复刷新。</figcaption>
+        </figure>
+        <figure>
+          <a href="./images/figure_1_teaser_precision_robustness.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_teaser_precision_robustness.png" alt="Figure 1: teaser — high precision USB insertion, distractor robustness, spatial conditioning concept" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 1 (p.1)：</strong>(a) 高精度 USB 插入、(b) 干扰物下抓杯，(c) 用扩散中间轨迹做轨迹上的空间条件。<strong>看点：</strong>(c) 那条彩色曲线就是"中间末端轨迹"，它落在多尺度特征图上的位置 = 注意力锚点。</figcaption>
+        </figure>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p>核心成立：<strong>单个全局 RGB 相机就能追平甚至超过"全局+腕相机"的多相机配置</strong>，且在最难的接触任务上把差距拉得最大。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>对照（Meta-World Hard 6 任务平均）</th><th class="num">SCDP</th><th class="num">对手</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr class="winner"><td>vs DP3（点云，单相机）</td><td class="num">82.5%</td><td class="num">60.3%</td><td class="loc">p.5 · Tab.1</td></tr>
+              <tr><td>vs DP+腕相机（多相机）</td><td class="num">82.5%</td><td class="num">74.2%</td><td class="loc">p.6 · Tab.3</td></tr>
+              <tr><td>vs OTTER（VLM 注意，最强单视基线）</td><td class="num">82.5%</td><td class="num">47.2%</td><td class="loc">p.5 · Tab.2</td></tr>
+              <tr><td>真机 6 任务平均成功率</td><td class="num">73.8%</td><td class="num">50.3%（DP）</td><td class="loc">p.8 · Tab.4</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🗺 放进你的知识图谱（已读库定位）</div>
+        <ul class="rel-list">
+          <li><b>同一议题（空间表征）</b>：<a href="../SpatialVLA-Spatial-Representations-VLA/summary.html">SpatialVLA</a> 用 Ego3D 位置编码在观测端注入 3D 空间先验；本文也是"给策略空间 grounding"，但走的是<strong>轨迹投影采样</strong>而非位置编码，且无语言、无大规模预训练。</li>
+          <li><b>构建于（扩散动作头）</b>：直接搭在 <a href="../RDT-1B-Diffusion-Foundation-Model-Bimanual-Manipulation/summary.html">RDT-1B</a>、<a href="../pi0-Vision-Language-Action-Flow-Model/summary.html">π0</a> 同根的 Diffusion Policy 框架上——它们用扩散/flow 生成动作；本文创新点不在动作头，而在"<strong>把去噪中间轨迹反过来当视觉条件</strong>"这个反馈回路。</li>
+          <li><b>规模对照</b>：<a href="../Octo-Open-Source-Generalist-Robot-Policy/summary.html">Octo</a>/<a href="../X-VLA-Soft-Prompted-Scalable-Cross-Embodiment-VLA/summary.html">X-VLA</a> 是百万级轨迹预训练的通用策略；本文是 20 演示/单任务的小数据精密操作——两条正交的路线（泛化 vs 精度），不是竞品。</li>
+        </ul>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🎯 与你项目的相关性</div>
+        <p><b>Track A（人形 / 移动操作 VLA）：不命中</b>——无语言、无 VLM、无移动底盘，单臂固定基座单任务。但<strong>"扩散中间轨迹→图像注意力锚点"这个机制可借鉴</strong>：如果你的 VLA 用 diffusion/flow 动作头，理论上可在去噪回路里加一路轨迹投影采样来增强空间 grounding（需相机外参已知）。<b>Track B（足式 locomotion / 控制）：不命中</b>——纯桌面操作，无 locomotion 内容。落地门槛：需精确手眼标定（外参 [R|t]+内参 K），且假设任务相关区域就在末端轨迹附近（工具使用/远端接触会失效，见<a href="#c7">局限7</a>）。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ ③ 深读层：核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据 <button id="ev-toggle-all" type="button">展开全部证据</button></h2>
+      <p class="lead">每条 = 分型论点（常驻）+ 解读（常驻）+ 折叠的逐字原文/译文（📍真实页码，Ctrl-F 锚点）。7 观点 · 8 证据。</p>
+
+      <h3 class="claim-group" id="g-problem">问题与洞察</h3>
+
+      <div class="claim k-problem" id="c1">
+        <div class="claim-head"><span class="cn">1</span><span class="kicker">问题</span><h3 class="claim-title">单全局相机做精密操作的双重难</h3></div>
+        <p class="claim-body">去掉腕部相机、只剩一个全局 RGB 视角时，策略既要捕捉成功所需的精细视觉细节，又要在无结构场景里自己找出任务相关区域——现有方法把观测压成全局 embedding，做不到。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是全文要解的痛点：多相机（尤其腕相机）是当前事实标准，但单相机才更便宜可扩展。对你而言——若想省掉一路腕相机硬件，这就是要跨过的坎。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">manipulation from a single global view remains challenging, as the policy should <mark>capture fine-grained interaction details</mark> and <mark>identify task-relevant regions without local wrist views</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">单全局视角下的操作仍然困难，因为策略既要捕捉精细的交互细节，又要在没有局部腕部视角的情况下识别任务相关区域。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight key" id="c2">
+        <div class="claim-head"><span class="cn">2</span><span class="kicker">洞察</span><h3 class="claim-title">末端轨迹本身就是注意力锚点</h3></div>
+        <p class="claim-body">核心洞察：未来末端执行器轨迹投影到图像上，天然标出了任务相关区域——夹爪要去哪，那里就是该看的地方。于是扩散去噪过程中不断演化的中间轨迹，可直接当作视觉注意力锚点。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是全文最聪明的一招：把"动作"和"该看哪"用同一条轨迹绑定，省掉了分割/VLM/点追踪等会级联误差的外部感知模块。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 Introduction <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Our key insight is that <mark>future end-effector trajectories projected onto the image can provide useful attention anchors</mark> for identifying task-relevant regions. During the diffusion process, SCDP leverages <mark>intermediate action trajectories as evolving estimates</mark> of future motion and extracts point-wise features at those anchors</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">我们的关键洞察是：投影到图像上的未来末端轨迹可以为识别任务相关区域提供有用的注意力锚点。扩散过程中，SCDP 把中间动作轨迹当作未来运动的演化估计，并在这些锚点处提取点特征。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight" id="c2b">
+        <div class="claim-head"><span class="cn">3</span><span class="kicker">洞察</span><h3 class="claim-title">不依赖大模型/外部感知管线</h3></div>
+        <p class="claim-body">SKIL 靠分割掩码、OTTER 靠 VLM 找语言相关区域——都依赖大型预训练模型且多阶段感知管线，早期感知误差会级联到下游。SCDP 用扩散回路内部的中间轨迹当空间查询，无外部感知模块。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是与"任务相关视觉条件"那一派（SKIL/OTTER）的关键分野——后者强在语义、但管线脆且对精细控制次优；SCDP 把"找区域"内化进扩散自身。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §2 Related Work <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">they often rely on <mark>multi-stage perceptual pipelines</mark>, such as language-model prompting, segmentation, or point tracking modules, where <mark>errors from early perception stages can cascade</mark> into downstream policy learning. SCDP instead leverages intermediate action trajectories within the diffusion loop as spatial queries</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">它们常依赖多阶段感知管线（如语言模型 prompting、分割、点追踪模块），早期感知阶段的误差会级联到下游策略学习。SCDP 转而把扩散回路内部的中间动作轨迹用作空间查询。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-method">方法</h3>
+
+      <div class="claim k-method key" id="c3">
+        <div class="claim-head"><span class="cn">4</span><span class="kicker">方法</span><h3 class="claim-title">空间条件模块：重建→投影→采样</h3></div>
+        <p class="claim-body">三步走：从中间动作轨迹累加位移重建未来 EE 点轨迹 → 用相机外参/内参投影到 2D 像素 → 在这些锚点上对多尺度特征做双线性插值采样。每个去噪步都重做一次，使注意力随去噪动态聚焦。</p>
+        <div class="claim-how">实现细节：相对位移参数化 Pᵢ=Pᵢ₋₁+ΔPᵢ；外参 [R|t]∈SE(3)、内参 K 把 3D 点投到像素 (uᵢ,vᵢ)；spatial context F=[f̄₁…f̄₅]∈R⁵ᵈ，沿时间轴平均池化、保留多分辨率拼接。重建横长 s=8、预测横长 h=16。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>"轨迹点在去噪过程中迭代更新"这句是机制核心：注意力不是静态的，而是随动作估计变准而收敛——这是它优于单静态末端点（s=0 仅 75.8%）的原因。落地需要精确手眼标定。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.2 Spatial Conditioning Module <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">While P0 remains constant as determined by the current state, the subsequent trajectory points P1:s are <mark>iteratively updated throughout the denoising process</mark>. This allows the model to <mark>dynamically adjust its spatial attention</mark> to task-relevant regions.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">P0 由当前状态决定保持不变，而后续轨迹点 P1:s 在整个去噪过程中被迭代更新。这让模型能够动态调整其对任务相关区域的空间注意力。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>采样后只沿时间轴池化、保留多尺度拼接——既压缩又不丢分辨率信息。这个 F 向量就是喂回 U-Net 的全部空间证据。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.2 Point-wise Feature Sampling <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">we apply <mark>average pooling only along the temporal axis</mark> while preserving multi-resolution information through <mark>concatenation of the pooled feature vectors</mark>. ... This yields a compact feature representation that preserves multi-scale visual information centered around the attention anchors.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">我们只沿时间轴做平均池化，同时通过拼接池化后的特征向量保留多分辨率信息……得到一个紧凑的特征表示，保留了以注意力锚点为中心的多尺度视觉信息。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method" id="c3b">
+        <div class="claim-head"><span class="cn">5</span><span class="kicker">方法</span><h3 class="claim-title">多尺度编码 + FiLM 注入 DP</h3></div>
+        <p class="claim-body">用 ResNet-18 五个 stage（FPN 式）取粗到细特征保留细节与上下文；用空间 context Fᵏ 替换标准 Diffusion Policy 里的固定观测 O，经 FiLM 调制条件 U-Net，DDIM 推理。</p>
+        <div class="claim-how">ResNet 各 stage 输出 stride 4/4/8/16/32，独立 3×3 卷积对齐到 d 维；推理用 DDIM（仿真 16 步、真机 10 步）；ResNet-18 选作主干（RN-34 更高但为公平对比用 RN-18）。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>多尺度不是锦上添花——消融里它贡献巨大（见结果4里的 +13.9pp）。FiLM 让空间条件以逐通道调制方式进入去噪网络，是标准且轻量的注入方式。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.5 · §3.3 Diffusion Process <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">the denoising network is conditioned on the <mark>spatial context Fk instead of the fixed visual observation O</mark>. ... the spatial context Fk is incorporated via <mark>Feature-wise Linear Modulation (FiLM)</mark>. During inference, we employ the DDIM scheduler</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">去噪网络以空间上下文 Fk 为条件，取代固定视觉观测 O……空间上下文 Fk 通过 Feature-wise Linear Modulation (FiLM) 融入。推理时采用 DDIM 调度器。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-result">结果与边界</h3>
+
+      <div class="claim k-result" id="c4">
+        <div class="claim-head"><span class="cn">6</span><span class="kicker">结果</span><h3 class="claim-title">仿真：难任务上拉开大差距</h3></div>
+        <p class="claim-body">仅 20 演示+单全局相机，SCDP 在 Meta-World 每个难度组都过 80%；越难差距越大——Hard 82.5%（DP3 60.3%、DP 16.7%）。消融显示多尺度（全 F1–F5 vs 仅 F5）带来 +13.9pp。</p>
+        <div class="stat-row">
+          <span class="stat win">Hard SCDP 82.5%</span>
+          <span class="stat">DP3 60.3%</span>
+          <span class="stat dim">DP 16.7%</span>
+          <span class="stat win">Very Hard 89.7%</span>
+          <span class="stat dim">多尺度 +13.9pp</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>"越难差距越大"是好信号——说明增益来自机制（精细+选区）而非简单任务的天花板效应。但 Meta-World 是仿真、脚本演示，迁移真机仍要看 Table 4。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.5–6 · §4.2 Simulation Results <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">SCDP achieves <mark>over 80% success in every Meta-World difficulty group using only 20 demonstrations</mark> and a single global camera. Notably, SCDP outperforms the baselines by <mark>larger margins on the "Hard" and "Very Hard" groups</mark></blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">SCDP 仅用 20 个演示和单个全局相机，就在每个 Meta-World 难度组取得超过 80% 成功率。值得注意的是，SCDP 在"Hard"和"Very Hard"组上以更大幅度超越基线。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>多尺度消融：仅 F5（高层语义）68.6% → 全 F1–F5 82.5%，+13.9pp；而 DP 自己加全尺度也涨——说明多尺度对精密动作生成是普适有用的。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.6 · §4.3 Effects of Multi-Scale Image Encoder <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Peak performance reaches <mark>82.5% when all scales (F1–F5) are utilized, representing a 13.9%p improvement</mark> over the F5-only variant. Notably, even DP benefits substantially from using all feature levels</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">使用全部尺度（F1–F5）时性能峰值达 82.5%，相比仅用 F5 的变体提升 13.9 个百分点。值得注意的是，连 DP 也从使用全部特征层级中显著获益。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-result key" id="c5">
+        <div class="claim-head"><span class="cn">7</span><span class="kicker">结果</span><h3 class="claim-title">单 RGB 追平"加腕相机"多相机</h3></div>
+        <p class="claim-body">最有说服力的对照：SCDP 单 RGB 在 Meta-World Hard 拿 82.5%±11.5，超过 DP+额外腕相机的 74.2%±29.4 和 DP3+深度的 60.3%±38.0，且方差最低（最稳）。</p>
+        <div class="stat-row">
+          <span class="stat win">SCDP 单 RGB 82.5±11.5</span>
+          <span class="stat">DP+腕相机 74.2±29.4</span>
+          <span class="stat dim">DP3+深度 60.3±38.0</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是论文标题主张的核心证据——单相机不仅够用，还更稳（std 仅 11.5 vs 29.4/38.0）。对工程意义：可能省掉一路腕相机硬件+标定，前提是全局相机外参标定精确。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.6 · §4.2 Single RGB View Competitiveness · Tab.3 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">SCDP achieves performance <mark>comparable to DP with an additional wrist-view camera and DP3 with depth observations</mark> on Meta-World "Hard" tasks, while attaining the <mark>highest average success rate and the lowest standard deviation</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">在 Meta-World "Hard" 任务上，SCDP 达到了与"DP+额外腕部视角相机"和"DP3+深度观测"相当的性能，同时取得最高的平均成功率和最低的标准差。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-result" id="c6">
+        <div class="claim-head"><span class="cn">8</span><span class="kicker">结果</span><h3 class="claim-title">真机：精密插入与抗干扰双赢</h3></div>
+        <p class="claim-body">Franka + 单 RealSense 相机上跑 6 个真任务：USB 完整插入(Push) 30%、其余基线全 0%；干扰物下抓杯把手 85%（DP 仅 30%）；Push Cube 在干扰/杂乱场景维持 75%/70%（DP 跌到 50%）。6 任务均值 73.8%（DP 50.3%）。</p>
+        <div class="stat-row">
+          <span class="stat win">真机均值 73.8%</span>
+          <span class="stat">DP 50.3%</span>
+          <span class="stat dim">SKIL 43.2% · DP3 35.3% · OTTER 31.8%</span>
+          <span class="stat win">USB Push 30% vs 全 0%</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>真机数据更有说服力（每任务 20 trials）。但注意 USB 三阶段是 Grasp 85→Insert 40→Push 30 递减，绝对成功率并不高——精密插入仍是难题，只是相对基线（全 0）明显更好。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.8 · §5.2 Distractor Robustness <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">While DP's performance <mark>drops from 90% to 50%</mark> in both Distractor and Cluttered scenes, SCDP maintains relatively <mark>high success rates of 75% and 70%</mark>, respectively.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">在干扰物和杂乱场景中 DP 的性能从 90% 跌到 50%，而 SCDP 分别维持 75% 和 70% 的较高成功率。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-limit" id="c7">
+        <div class="claim-head"><span class="cn">9</span><span class="kicker">局限</span><h3 class="claim-title">假设"任务相关 = 末端附近"</h3></div>
+        <p class="claim-body">方法假设任务相关视觉信息就在末端轨迹附近——对工具使用/间接交互（接触点远离末端）可能失效；重遮挡下从注意力区抽特征也变难。且无语言/无泛化评测，仍是单任务模仿学习。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>作者自陈的边界很诚实。对机器人工程师：用钳子/抹布这类工具任务、或抓取被遮挡物体时，本方法的注意力锚点会指错地方——这是采用前要评估的硬约束。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.8 · §6 Conclusion and Limitations <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">it assumes that <mark>task-relevant visual information lies near the end-effector trajectory</mark>. This assumption may <mark>limit its applicability to tool-use or indirect-interaction tasks</mark>, where task-relevant contacts occur away from the end-effector.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">它假设任务相关视觉信息位于末端执行器轨迹附近。这一假设可能限制其在工具使用或间接交互任务上的适用性——这类任务的相关接触发生在远离末端执行器的位置。</div></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态（必须实时联网核查，标注核查日期） ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06-16）</h2>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未发布</span> 论文与 arXiv 页面均无 code/项目页链接；作者 GitHub（kh11kim）未见本工作仓库</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未发布</span> 无预训练 checkpoint</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未发布</span> 真机数据集（USB 180 / Battery 90 / Long-Horizon 120 / 其余各 50 演示）未公开</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚠ 核查说明</div>
+        <p>2026-06-16 WebSearch / 查阅 arXiv:2606.14535 摘要页 + 作者 GitHub：未发现任何代码、权重、项目主页或数据集发布。这是一篇很新的 arXiv 预印（2026-06-12），尚未同行评审；基准 Meta-World/DexArt 为公开仿真环境，但 SCDP 实现与真机数据集均未开源。后续可能补放，建议复查。</p>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>"用扩散去噪中间轨迹当视觉注意力锚点"是一个干净、自洽、零额外感知模块的好点子，且消融扎实（横长 s=0→12 单调上升、多尺度 +13.9pp、F5 上 SCDP vs DP 40+pp 差距）；单相机追平加腕相机的对照（Tab.3）直接支撑标题主张，方差最低更显稳健；真机 USB/Battery 插入与抗干扰都有验证。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>未开源（代码/权重/数据全无，见<a href="#opensource">开源状态</a>）；非同行评审预印；适用性受"任务相关≈末端附近"假设限制（<a href="#c7">局限9</a>）；真机绝对成功率不高（USB 完整插入仅 30%）；单任务、无语言、无泛化评测——是 diffusion policy 的机制改进，非通用策略。</p></div>
+      <p><strong>评级：</strong><span class="badge">Valuable</span> &nbsp;一个机制清晰、可迁移、消融到位的 single-camera diffusion policy 改进，对"想给扩散动作头加空间 grounding"的工程师有直接借鉴价值；但范围窄（单任务/非 VLA）+ 未开源，限制了即时落地与影响力，未达 Important。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#snap">⏱ 30 秒速读</a></li>
+      <li><a href="#gist">⚡ 速记层</a></li>
+      <li><a href="#core">◆ 核心观点</a>
+        <ul class="toc-claims">
+          <li><a href="#c1">1 问题 · 单相机双重难</a></li>
+          <li><a href="#c2">2 洞察 · 轨迹即锚点 ★</a></li>
+          <li><a href="#c2b">3 洞察 · 不靠外部感知</a></li>
+          <li><a href="#c3">4 方法 · 重建→投影→采样 ★</a></li>
+          <li><a href="#c3b">5 方法 · 多尺度+FiLM</a></li>
+          <li><a href="#c4">6 结果 · 难任务拉差距</a></li>
+          <li><a href="#c5">7 结果 · 单RGB追平腕相机 ★</a></li>
+          <li><a href="#c6">8 结果 · 真机插入抗干扰</a></li>
+          <li><a href="#c7">9 局限 · 末端附近假设</a></li>
+        </ul>
+      </li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 三层阅读架构（30s 分诊 / 90s 速记 / 按需深读）· 阅读笔记</footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('ev-toggle-all');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.dataset.open !== '1';
+      btn.dataset.open = open ? '1' : '0';
+      document.querySelectorAll('details.ev-fold').forEach(function (d) { d.open = open; });
+      btn.textContent = open ? '收起全部证据' : '展开全部证据';
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var links = [].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) {
+            a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id);
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('section.card[id], .claim[id]').forEach(function (t) { spy.observe(t); });
+  }
+})();
+</script>
+
+</body>
+</html>

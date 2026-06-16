@@ -1,0 +1,45 @@
+{
+  "title": "Mobile ALOHA: Learning Bimanual Mobile Manipulation with Low-Cost Whole-Body Teleoperation",
+  "title_cn": "Mobile ALOHA：低成本全身遥操的双臂移动操作学习",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2024",
+  "one_liner": "造一套 $32k 腰带式全身遥操硬件，再用静态双臂数据 co-training 补运动先验，50 次演示可学会电梯/柜子/厨房等复杂全身协调任务。",
+  "framework": "idea-first",
+  "idea": "双臂移动操作的瓶颈不是算法，而是缺低成本全身遥操数据；腰带绑定让人体驱动底盘，配合静态双臂数据 co-training，极低成本打通移动操作数据飞轮。",
+  "logic_chain": [
+    "家务任务需要底盘移动 + 双臂协调同时进行，纯桌面操作不够用",
+    "双臂移动机器人要么太贵（$200k+），要么遥操方案不支持全身同步控制",
+    "腰带物理绑定让操作者用腰驱动底盘，双手控制两条 ALOHA 手臂——零额外设备，全身同步",
+    "移动数据稀少，精细操作仅靠 50 次难收敛；用 825 条静态双臂数据 co-training 补充运动先验",
+    "动作空间简单拼接（14+2=16 维），几乎不需要修改 ACT/Diffusion Policy 实现"
+  ],
+  "method_skeleton": [
+    "腰带式全身遥操硬件：操作者腰部绑定机器人，backdrive 底盘（13N 阻力），双手控制 ALOHA leader arms",
+    "静态 ALOHA 数据 co-training：825 条 OOD 静态演示与 20-50 条移动数据各 50% 混采，底盘动作零填充",
+    "Action Chunking 处理硬件延迟：错位执行 chunk 中手臂/底盘动作，补偿底盘速度控制延迟"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "间接但基础性命中：Mobile ALOHA 是移动操作的数据采集基础设施，π0.5 等 VLA 使用类似平台；co-training 方法论被 π0.5 大幅扩展",
+    "track_B_legged": "不相关——专注轮式底盘移动操作，不涉及步态/locomotion 控制"
+  },
+  "validation": "co-training 平均提升 34%（最高 +90%），多数任务在 50 demos 下达 80%+ 成功率；co-training 优于 pre-training（后者因灾难性遗忘失效）",
+  "core_points": [
+    "腰带物理绑定是全身遥操的最简实现，无需 FPV 或触觉设备，$32k 可实现",
+    "静态双臂数据的精细接触先验对移动操作中精细子任务（按按钮/拧水龙头）有显著正迁移",
+    "Co-training 远优于 Pre-training，依赖于持续混采而非序贯训练",
+    "Action Chunking 同时解决复合误差问题和底盘/手臂控制延迟不对称问题",
+    "开环重放成功率=0，说明所有任务真正需要闭环感知-运动"
+  ],
+  "effects": [
+    "平均绝对提升 34%（co-train vs no co-train）",
+    "Call Elevator 成功率 0%→95%（Press Button: 5%→100%）",
+    "Co-train 35 demos 优于 No co-train 50 demos（+20%，数据效率更高）",
+    "新手用户 5 次练习后可接近专家速度（Wipe Wine 46s→28s）"
+  ],
+  "open_source": "partial",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "硬件+代码+演示数据开源, 无基础策略权重",
+  "open_source_checked": "2026-06-02"
+}

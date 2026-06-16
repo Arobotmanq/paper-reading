@@ -1,0 +1,46 @@
+{
+  "title": "FAST: Efficient Action Tokenization for Vision-Language-Action Models",
+  "title_cn": "FAST：面向 VLA 模型的高效动作 Tokenization",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2025",
+  "one_liner": "用 DCT 变频域 + BPE 去冗余，把高频机器人 action chunk 压缩为少量高信息密度 token，解决自回归 VLA 无法处理高频灵巧任务的根本问题，训练速度提升 5×、性能追平扩散 VLA。",
+  "framework": "idea-first",
+  "idea": "高频 action 的相邻 token 几乎完全相同（边际信息趋零），naive tokenization 是自回归 VLA 失败的根本原因；用 DCT 把时序相关性转化为频域稀疏性、再用 BPE 压缩零值，可在不改模型结构的前提下从根本上解决此问题。",
+  "logic_chain": [
+    "高频 action chunk 中相邻时步动作变化极小，naive binning 产生大量相关 token",
+    "自回归训练信号正比于每 token 的边际信息量，重复 token 使学习信号趋近于零",
+    "这不是数据或模型问题，而是 tokenization 的结构性缺陷（toy 实验控制变量证明）",
+    "DCT 将平滑时序转换为稀疏频域系数（JPEG 压缩同源思路），高频系数量化后为零",
+    "BPE 消除零值并合并常见系数组合，最终约 30 个高信息 token/臂，与频率无关"
+  ],
+  "method_skeleton": [
+    "DCT 压缩（分析方法，无需训练，每 action 维度独立处理，超参 γ=10 全局通用）",
+    "列优先展平（低频优先，使模型先预测整体形状再预测细节）+ BPE 无损压缩（词表大小 1024）",
+    "FAST+ 通用 tokenizer（1M 跨 embodiment 轨迹预训练，HuggingFace AutoProcessor 三行代码调用）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中——FAST 是 π0.5 预训练阶段的 action tokenizer，是 openpi 生态基础设施；训练任何自回归 VLA 推荐直接使用 FAST+",
+    "track_B_legged": "间接相关——FAST+ 离线实验显示对人形机器人 action 有良好压缩率，但本文未做 locomotion/legged 策略训练验证"
+  },
+  "validation": "π0-FAST 在 laundry folding/T-shirt folding 等最难灵巧任务上与 diffusion π0 持平，训练 GPU 时间少 5×；首次在 DROID 数据集上训出可零样本跨环境泛化的策略",
+  "core_points": [
+    "Naive binning tokenization 在高频任务上学习信号边际信息趋零是根本失败原因（toy 实验证明）",
+    "DCT + BPE 四步流程实现高压缩比：50Hz 双臂任务 700 tokens → 53 tokens（13.2×）",
+    "FAST 最终约 30 token/臂，与控制频率无关——反映了机器人动作的本征信息复杂度",
+    "FAST+ 通用 tokenizer 在未见数据集上性能与数据集专属 tokenizer 持平",
+    "π0-FAST 在大规模训练（Table Bussing）上收敛速度 3× 更快，且语言跟随更好",
+    "DROID 数据集首次实现零样本跨环境泛化评估（所有先前工作均无零样本结果）",
+    "当前主要局限：推理延迟 750ms vs 100ms（diffusion π0），动态任务受限"
+  ],
+  "effects": [
+    "训练速度提升 5×（π0-FAST vs diffusion π0 达到相同性能所需 GPU hours）",
+    "Token 压缩 13.2×（T-shirt folding 50Hz，700→53 tokens）",
+    "灵巧操作性能追平 diffusion π0（laundry folding、T-shirt folding 等最难任务）"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "openpi + HF physical-intelligence/fast(FAST+ 通用tokenizer), Apache-2.0",
+  "open_source_checked": "2026-06-02"
+}

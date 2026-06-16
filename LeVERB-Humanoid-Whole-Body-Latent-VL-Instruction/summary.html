@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LeVERB 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>UC Berkeley · Humanoid WBC · Vision-Language-Action</span>
+    <h1>LeVERB: Humanoid<br>Whole-Body Control</h1>
+    <p class="subtitle">想让人形机器人读懂语言和视觉、再用<strong>全身</strong>执行——不是规划一个离散动作词表，而是让 VLA 自己学一个<strong>连续潜在动词空间</strong>作为高低层的接口，低层 RL WBC 策略就解码这个 latent verb 生成动力学级指令。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 双线命中 · Track A VLA + Track B 全身控制/sim-to-real RL · 已深读</span>
+      <span class="pill">📅 2025-06（v3: 2025-09）</span>
+      <span class="pill">🏢 UC Berkeley / CMU / SFU / NTNU</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2506.13751">arXiv:2506.13751</a></span>
+      <span class="pill">🌐 <a href="https://ember-lab-berkeley.github.io/LeVERB-Website/">Project Page</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">整体成功率</div>
+    <div class="value">58.5<span class="unit">%</span></div>
+    <div class="desc">LeVERB-Bench 全任务平均（仿真）</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">导航成功率</div>
+    <div class="value">80<span class="unit">%</span></div>
+    <div class="desc">简单视觉导航任务 zero-shot</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">相比 naive baseline</div>
+    <div class="value">7.8<span class="unit">×</span></div>
+    <div class="desc">优于朴素层级 VLA 实现</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">开源状态</div>
+    <div class="value" style="font-size:1.1em; padding-top:0.4em;">未公开</div>
+    <div class="desc">代码/权重截至 2026-06 均未释出</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层: 思想 · 逻辑 · 方法 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法骨架</strong>；效果只作验证。要核对原文细节请看下方「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">现有 VLA 系统给低层控制器下达<strong>手工设计的显式动作词表</strong>（末端位姿、根节点速度……），这既限制了表达能力，也让 VLA 与动力学级全身控制脱节。LeVERB 的核心想法：<strong>让 VLA 自己从运动数据中学一个连续的 latent action vocabulary</strong>，高层 VLA 输出一个"潜在动词"，低层 RL WBC 策略直接解码这个 latent verb 生成关节指令——<strong>接口从手工词表变成学出来的潜在空间</strong>。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>人形机器人是高维非线性动力学系统，现有 WBC 要求高频（50 Hz+）底层反馈，而 VLA 推理慢且不懂动力学——<strong>两者频率和表示都不匹配</strong>。</li>
+          <li>已有方案用显式接口（速度/末端位姿/全身关键帧）：<strong>表达力有限</strong>，无法覆盖坐下、转身等复杂全身交互。</li>
+          <li>关键洞见：<strong>让 VLA 用 CVAE 从运动轨迹中自监督学一个结构化 latent space</strong>，latent verb 同时携带语义和运动信息。</li>
+          <li>低层 WBC 只需从这个固定 latent space 中采样条件运行，训练时无需渲染——<strong>解耦视觉渲染与动力学训练</strong>，大幅降低计算成本。</li>
+          <li>合成数据（运动捕捉 → 光线追踪渲染 → VLM 自动标注）完全消除了真实机器人数据采集瓶颈，且经域随机化后 zero-shot 迁移到真实 Unitree G1。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#latent-verb" class="note-link">Latent Verb（潜在动词）</a>接口</strong>：LeVERB-VL（System 2）用 <a href="./notes.html#cvae" class="note-link">residual CVAE</a> + SigLiP 视觉/文本编码器，将视觉+语言映射到一个结构化连续 latent space；该 latent z 是高低层的唯一接口，10 Hz 输出。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#wbc-rl" class="note-link">RL whole-body controller</a>（LeVERB-A / System 1）</strong>：先用 PPO 训练多个视觉无关的"跟踪教师"策略，再用 DAgger 蒸馏成以 latent z 为条件的 Transformer 学生策略，50 Hz 输出关节位置指令；域随机化保证 sim-to-real。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#synthetic-data" class="note-link">合成数据流水线</a> + LeVERB-Bench</strong>：将 MoCap 动作重新映射到人形机器人骨骼，在 IsaacSim 光线追踪渲染后程序化随机化场景，VLM 自动生成语言标注；同一套流水线生成 benchmark（154 条视觉语言轨迹 × 100 次随机化 = 17.1h 数据）。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 LeVERB-Bench 仿真闭环评测中整体成功率 <strong>58.5%</strong>，导航任务最高 <strong>80%</strong>，比朴素层级 VLA（NS ablation）高 <strong>7.8 倍</strong>；在真实 Unitree G1 上 zero-shot 部署成功（坐下、起立、视觉导航），完全用合成数据训练。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>LeVERB 整体：58.5%；No Discriminator (ND)：33.0%；No LeVERB-VL (NVL)：25.5%；No Sampling (NS, 朴素 baseline)：7.5%。</li>
+            <li>视觉导航-正前方目标（VNF）Objective 场景：80%；加 Distractor：75%；加 Cluttered：50%。</li>
+            <li>语言-Only 任务（坐下）：LeVERB 100%，朴素 NS 仅 10%。</li>
+            <li>System 2 参数量：102.56M（ViT-Base backbone）；System 1（学生）：2层 Transformer，隐层 128 维。</li>
+            <li>数据：5,996 条轨迹（3,696 视觉语言 + 2,300 语言-only），614 条唯一轨迹。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性判断</div>
+        <p><strong>Track A（人形/移动操作 VLA）直接命中</strong>：这是首个将 VLA 与人形全身控制通过学习的 latent action space 连接的工作，latent verb 接口设计、CVAE 高层策略均可直接借鉴。<strong>Track B（足式/全身控制 sim-to-real RL）同样直接命中</strong>：PPO 跟踪教师 + DAgger 蒸馏学生 + 域随机化的三步 RL 流程是标准 sim-to-real whole-body control 配方，真实 G1 部署验证了其有效性。<strong>本文真正同时覆盖两条线</strong>，建议深读证据层。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有 VLA 系统假设存在一个精确的低层控制器且动作词表手工设计，这把 VLA 困在准静态任务里，无法胜任人形全身控制所需的敏捷复杂动作。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">most existing systems assume an accurate low-level controller with hand-crafted action "vocabulary" such as end-effector pose or root velocity. This assumption confines prior work to quasi-static tasks and precludes the agile, whole-body behaviors required by humanoid whole-body control (WBC) tasks.</blockquote>
+          <div class="ev-trans">大多数现有系统假设存在一个精确的低层控制器以及手工设计的动作"词表"，例如末端执行器位姿或根节点速度。这一假设将先前工作限制在准静态任务中，排除了人形全身控制（WBC）任务所需的敏捷全身行为。</div>
+          <div class="ev-gloss">核心矛盾点：接口是手工的显式词表，表达力上限低——这是全文要解决的"真问题"。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">such interfaces restrict expressiveness and make it difficult to integrate complex whole-body motions and scene interactions. To fully unleash humanoid whole-body capabilities, we need (1) a learned "latent vocabulary" that is expressive enough to both cover whole-body motions and capture semantics encoded in the vision and language inputs</blockquote>
+          <div class="ev-trans">这类接口限制了表达能力，难以整合复杂的全身运动和场景交互。为充分释放人形全身能力，我们需要：(1) 一个学习到的"潜在词表"，它足够表达性，既能覆盖全身运动，又能捕获视觉和语言输入中编码的语义。</div>
+          <div class="ev-gloss">作者把问题清晰地定义成"需要学出来的 latent vocabulary"而不是手工设计——这就是 CVAE latent verb 的动机。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 系统架构 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心架构：<a href="./notes.html#dual-process" class="note-link">双进程（System 1 + System 2）</a>层级策略——高层 LeVERB-VL 以 10 Hz 输出 latent verb，低层 LeVERB-A 以 50 Hz 将其解码为关节位置动作。</div>
+        <figure>
+          <img src="./images/figure_1_training_pipeline.png" alt="Figure 3: LeVERB 数据采集与训练流水线">
+          <figcaption><strong>Figure 3（p.5）：</strong>左：Step 1 合成数据采集（光线追踪渲染 + 语言标注）。中：Step 2 LeVERB-VL 训练，CVAE 编码视觉语言输入到 latent verb z，decoder 重建未来运动学状态。右：Step 3 LeVERB-A 训练，DAgger 将教师跟踪策略蒸馏为以 latent z 为条件的学生 Transformer。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §4.1</div>
+          <blockquote class="ev-quote">LeVERB-VL runs at 10 Hz, while LeVERB-A outputs joint position actions at 50 Hz. This decoupling of vision-language and dynamics-level action information enables separated training of the two systems, avoiding the heavy computations for graphical rendering required in end-to-end approaches.</blockquote>
+          <div class="ev-trans">LeVERB-VL 以 10 Hz 运行，而 LeVERB-A 以 50 Hz 输出关节位置动作。这种视觉语言信息与动力学级动作信息的解耦，使两个系统能够分开训练，避免了端到端方法中需要图形渲染的繁重计算。</div>
+          <div class="ev-gloss">关键工程洞见：不是把视觉渲染和 RL 训练放在一起跑，而是先离线学好 latent space，再冻结它只训低层——计算分离是可行性的关键。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §4.1</div>
+          <blockquote class="ev-quote">A latent vector z serves as a one-way interface from LeVERB-VL to LeVERB-A, and is at the core of LeVERB-VL training. Intuitively, the latent space of z is a descriptive vocabulary that encodes complex whole-body motion objectives, and z is a latent sampled from this vocabulary.</blockquote>
+          <div class="ev-trans">一个 latent 向量 z 作为从 LeVERB-VL 到 LeVERB-A 的单向接口，是 LeVERB-VL 训练的核心。直觉上，z 的 latent space 是一个描述性词表，编码了复杂的全身运动目标，z 是从这个词表中采样的 latent。</div>
+          <div class="ev-gloss">z 的单向性很重要——低层看不到视觉语言，高层看不到动力学；接口设计迫使两个模块各司其职。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 LeVERB-VL: residual CVAE -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> LeVERB-VL 技术核心：<a href="./notes.html#cvae" class="note-link">residual CVAE</a> 将 VLA prior（仅视觉语言）与运动学编码器残差相加构造 latent，再加一个对抗判别器对齐视觉/盲目两类数据的 latent 分布。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §4.2</div>
+          <blockquote class="ev-quote">we use a residual CVAE where the latent of a VLA prior with only vision-language inputs is combined with a privileged trajectory encoder to form a residual latent space. This encourages the VLA to focus on semantic reasoning while offloading motion-specific details to the trajectory encoder.</blockquote>
+          <div class="ev-trans">我们使用一个 residual CVAE，其中只有视觉语言输入的 VLA prior 的 latent 与一个特权轨迹编码器相结合，形成一个 residual latent space。这鼓励 VLA 专注于语义推理，同时将运动相关的细节卸载给轨迹编码器。</div>
+          <div class="ev-gloss">残差设计的妙处：先让 VLA prior 学"能从视觉语言推断的部分"，再让 kinematics encoder 补"视觉语言推断不到的运动细节"——KL loss 强制 encoder 只补差量。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §4.2</div>
+          <blockquote class="ev-quote">we introduce a discriminator inspired by [34], which takes the latent zt as input and predicts whether an actual image was present. We apply a Gradient Reversal Layer (GRL) during training, such that the adversarial learning encourages LeVERB-VL to produce modality-invariant latents, regardless of image availability.</blockquote>
+          <div class="ev-trans">我们引入了一个受 [34] 启发的判别器，它以 latent z_t 为输入，预测是否存在实际图像。我们在训练中应用梯度反转层（GRL），使得对抗学习鼓励 LeVERB-VL 产生与模态无关的 latent，无论图像是否可用。</div>
+          <div class="ev-gloss">这解决了"视觉语言轨迹"和"纯语言盲目轨迹"混训导致的 latent 分布偏移问题——GRL 强制两类数据共享同一 latent 词表。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 LeVERB-A: PPO教师+DAgger蒸馏 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> LeVERB-A 的 sim-to-real RL 流程：先用 PPO 训练多个运动跟踪教师策略（有特权观测），再用 DAgger 蒸馏成以 latent z 为条件的学生 Transformer，全程域随机化保证 zero-shot 迁移。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §4.3</div>
+          <blockquote class="ev-quote">First, we train vision-language-agnostic teacher policies capable of accurately tracking different categories of retargeted kinematics trajectories from LeVERB-Bench. The policy receives privileged proprioceptive observations and reference motions as commands, and outputs expert actions. We train teachers with Proximal Policy Optimization (PPO) and apply domain randomization for zero-shot sim-to-real transfer and early terminations to help training.</blockquote>
+          <div class="ev-trans">首先，我们训练与视觉语言无关的教师策略，能够准确跟踪 LeVERB-Bench 中不同类别的重定向运动学轨迹。策略接收特权本体感受观测和参考运动作为指令，输出专家动作。我们用 PPO 训练教师，并应用域随机化实现 zero-shot sim-to-real 迁移，早期终止辅助训练。</div>
+          <div class="ev-gloss">Track B 核心配方：PPO + 运动跟踪奖励（DeepMimic 风格）+ 域随机化（摩擦、关节扰动、推力干扰）= 可迁移的全身动力学控制基础。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §4.3</div>
+          <blockquote class="ev-quote">Importantly, we sample from the latent distribution rather than using the mean µρ. As LeVERB-VL captures a multimodal mapping between vision-language semantics and motions, using only the mean would impose a unimodal approximation, degrading policy performance.</blockquote>
+          <div class="ev-trans">重要的是，我们从 latent 分布中采样，而不是使用均值 µρ。由于 LeVERB-VL 捕获了视觉语言语义与运动之间的多模态映射，仅使用均值会造成单模态近似，降低策略性能。</div>
+          <div class="ev-gloss">从分布中采样（而非用均值）在训练 LeVERB-A 时至关重要——消融实验（NLS variant）证实：不采样则 latent 分布无法被低层策略完全捕获，性能显著下降。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 合成数据流水线 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 合成数据是可行性基石：MoCap → 重定向 → IsaacSim 光线追踪渲染 → 程序化场景随机化 → VLM 语言标注，完全无需真实机器人采数据，生成 17.1h 视觉语言训练数据。</div>
+        <figure>
+          <img src="./images/figure_2_leverbench_sim.png" alt="Figure 1: LeVERB-Bench 仿真环境示例">
+          <figcaption><strong>Figure 1（p.2）：</strong>LeVERB-Bench 仿真环境——注意光线追踪渲染质量，粉色椅子、多视角相机、语言指令"go sit on gray chair"。这是训练和评测共用的合成环境，每条轨迹随机化 100 次场景变体。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3</div>
+          <blockquote class="ev-quote">With 154 trajectories, each randomized 100 times, We generate 17.1 hours of photorealistic motion rollouts.</blockquote>
+          <div class="ev-trans">通过 154 条轨迹，每条随机化 100 次，我们生成了 17.1 小时的逼真运动 rollout 数据。</div>
+          <div class="ev-gloss">154 条核心轨迹（运动捕捉来源）通过程序化随机化爆炸式扩展为 15,400 条视觉多样的 rollout，是"小数据大覆盖"的关键杠杆。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 消融实验 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 消融验证：判别器（Discriminator）对视觉语言任务最关键，去掉即崩（33%→58.5%）；去掉高层 VLA（NVL）语言-only 任务可以，但视觉任务接近零；朴素无采样基线（NS）几乎在所有任务上失败。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §5.1</div>
+          <blockquote class="ev-quote">the ND variant shows a significant decrease in performance in visual navigation tasks. This is likely due to the separation of the latent vocabulary distribution between the two categories of demos, vision-language ones and language-only ones, as a result of removing the discriminator designed to align data from different sources.</blockquote>
+          <div class="ev-trans">ND 变体在视觉导航任务中表现出显著的性能下降。这可能是由于去掉了用于对齐不同来源数据的判别器后，两类示例（视觉语言类和纯语言类）的 latent 词表分布发生了分离。</div>
+          <div class="ev-gloss">判别器的 GRL 对抗训练不是锦上添花，而是混合视觉/盲目数据策略可行的必要条件——去掉就分布漂移、泛化崩塌。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §5.1</div>
+          <blockquote class="ev-quote">the NVL baseline achieves minimal success rates across all visual-language tasks. This shows that including the VLA planning capacity does help dramatically on visual-language input. In contrast, the performance text-only tasks is much better, even 100% in locomotion.</blockquote>
+          <div class="ev-trans">NVL 基线在所有视觉语言任务中成功率极低。这表明纳入 VLA 规划能力对于视觉语言输入确实有显著帮助。相比之下，纯文本任务的表现要好得多，locomotion 甚至达到 100%。</div>
+          <div class="ev-gloss">视觉任务必须有 VLA 高层推理，纯语言指令（原子命令如"向左转"）低层本身就够——这与 LangWBC 等先前工作结论一致，但本文把边界画得很清楚。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 真实部署 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 真实部署：LeVERB 在 Unitree G1 上 zero-shot 部署成功，System 1 在 CPU 以 ONNX C++ 50 Hz 运行，System 2 在外部 GPU 10 Hz 运行，通过 ROS2 topic 传递 latent verb；演示了词汇泛化（未见动词组合）和空间推理（从视觉判断椅子方向）。</div>
+        <figure>
+          <img src="./images/figure_3_realworld_deployment.png" alt="Figure 1 上部: 零样本真实部署">
+          <figcaption><strong>Figure 1 上部（p.2）：</strong>"take a seat on box"——LeVERB 在真实 Unitree G1 上 zero-shot 执行坐下任务序列，完全在合成数据上训练。</figcaption>
+        </figure>
+        <figure>
+          <img src="./images/figure_4_vocab_generalization.png" alt="Figure 4 上部: 词汇泛化">
+          <figcaption><strong>Figure 4 上部（p.9）：</strong>词汇泛化——"get up"/"stand up from box"（同一意图，不同表达）和 "rest on the box"/"take a seat"/"sit down" 均能正确执行，说明 latent verb space 具备语义泛化能力。</figcaption>
+        </figure>
+        <figure>
+          <img src="./images/figure_5_spatial_reasoning.png" alt="Figure 4 下部: 视觉空间推理">
+          <figcaption><strong>Figure 4 下部（p.9）：</strong>空间推理——同一指令"sit down on blue chair"，椅子在正前方 vs. 侧方时执行不同转向策略，证明 LeVERB-VL 能从视觉输入提取方位信息并传递给低层。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §5.2</div>
+          <blockquote class="ev-quote">LeVERB-A System 1 getting sensor information from the joint encoder, IMU with Unitree SDK, and custom state estimator at 500 Hz; the inference happens in onboard CPU of the robot at 50 Hz with ONNX runtime, all the code is implemented in C++ to fulfill the real-time performance requirements.</blockquote>
+          <div class="ev-trans">LeVERB-A System 1 通过 Unitree SDK 从关节编码器、IMU 获取传感器信息，并以 500 Hz 的自定义状态估计器运行；推理在机器人板载 CPU 上以 50 Hz 的 ONNX runtime 执行，所有代码均以 C++ 实现以满足实时性能要求。</div>
+          <div class="ev-gloss">Track B 工程实践：ONNX + C++ 板载推理、500 Hz 状态估计、50 Hz 控制——这是真实人形机器人全身控制部署的标准架构，有参考价值。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §5.2</div>
+          <blockquote class="ev-quote">We then open-loop replay the latent verbs in real world to LeVERB-A, executing the task successfully. This shows the dynamics-level sim-to-real readiness of LeVERB, enabling future real-world vision-in-the-loop deployment.</blockquote>
+          <div class="ev-trans">然后，我们在真实世界中开环回放 latent verbs 给 LeVERB-A，成功执行了任务。这展示了 LeVERB 的动力学级 sim-to-real 准备就绪性，为未来真实世界视觉闭环部署奠定基础。</div>
+          <div class="ev-gloss">注意"开环回放"——真实部署时 VL 部分在仿真中生成 latent verb 序列，然后在真实机器人上重放。这是一个重要限制：真实世界还没有真正的视觉闭环。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 首创声明 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 首创声明：LeVERB 是首个用层级 latent 架构实现视觉语言驱动全身控制的真实人形机器人工作，同时 LeVERB-Bench 是首个支持光线追踪渲染和物理仿真的视觉语言 WBC benchmark。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §2.2</div>
+          <blockquote class="ev-quote">To our knowledge, no prior work has demonstrated vision-language-driven whole-body control on real humanoid robots using a hierarchical latent architecture—an important gap this work aims to fill.</blockquote>
+          <div class="ev-trans">据我们所知，目前没有任何先前工作展示了使用层级 latent 架构在真实人形机器人上实现视觉语言驱动的全身控制——这是本工作旨在填补的一个重要空白。</div>
+          <div class="ev-gloss">"首个"声明：latent 接口 + 层级架构 + 真实人形 + 视觉语言 + 全身控制，五个条件同时成立——这确实是文献空白，不只是其中一两项的组合。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时检索结果</h2>
+      <p class="lead">STEP 0 实时检查（2026-06-02）：检索 arXiv 页面、项目页面（404），搜索 GitHub。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未公开</span> 截至检索日期，未找到任何 GitHub 仓库或代码链接</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未公开</span> 未发布预训练模型权重</dd>
+        <dt>数据/Benchmark</dt><dd><span class="os-tag os-part">部分</span> LeVERB-Bench 流水线在论文中描述（MoCap 来源 AMASS/LAFAN），但未发布可下载数据集或评测工具包</dd>
+        <dt>项目页面</dt><dd><span class="os-tag os-no">404</span> <code>ember-lab-berkeley.github.io/LeVERB-Website/</code> 返回 404，尚未上线</dd>
+        <dt>论文 CC 协议</dt><dd><span class="os-tag os-part">CC BY-SA 4.0</span> arXiv 页面标注 CC BY-SA 4.0，仅限论文本身</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚠️ 开源预期</div>
+        <p>论文发布于 2025-06（v3: 2025-09），属于较新 preprint，仍在审稿中。项目页面 404 表明尚未正式开源。鉴于第一作者所在 UC Berkeley Ember Lab 有开源传统，后续可能公开代码；建议关注 arXiv 更新和 <code>ember-lab-berkeley.github.io</code>。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · arXiv metadata</div>
+        <blockquote class="ev-quote">arXiv:2506.13751v3  [cs.RO]  25 Sep 2025</blockquote>
+        <div class="ev-trans">论文于 2025 年 9 月 25 日更新至 v3 版本，仍为 preprint 状态。</div>
+        <div class="ev-gloss">v3 更新说明作者仍在维护，但无代码伴随发布。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>① <strong>首个将 VLA 与人形全身控制通过学习的 latent 接口连接</strong>的工作，填补了文献空白，技术路线清晰可复现。② <strong>Track A + Track B 双线</strong>：CVAE latent verb 设计对 VLA 研究有参考价值，PPO教师→DAgger蒸馏的 sim-to-real 流程对全身控制研究有参考价值。③ 合成数据流水线+LeVERB-Bench 对后续工作的生态贡献有价值。④ 真实 Unitree G1 部署（哪怕是开环）是里程碑式的演示。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>真实部署是"开环回放"</strong>：VL 模块在仿真中生成 latent verb 序列，真实机器人开环执行——不是真正的视觉闭环，泛化能力有限。② <strong>任务范围有限</strong>：主要是导航和坐下，尚无复杂操作（搬运、双臂协调）。③ <strong>数据规模小</strong>：154 条唯一轨迹，场景仅 4 种室内环境，泛化边界不清楚。④ <strong>无开源</strong>：代码/权重/benchmark 均未发布，可复现性差。⑤ 基线设置薄弱：主要与自身消融版本比较，缺乏与 NaVILA、Humanoid-VLA、LangWBC 等同期方法的直接对比（作者以"no prior work establishes a fair comparison"为由跳过）。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;首创性和技术贡献明确，但真实部署局限（开环）、基线单薄、无开源使实际影响打折扣——属于"重要探索"而非"可立即落地的突破"。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · LeVERB (arXiv:2506.13751)</footer>
+</body>
+</html>

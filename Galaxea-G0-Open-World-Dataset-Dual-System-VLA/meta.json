@@ -1,0 +1,45 @@
+{
+  "title": "Galaxea Open-World Dataset and G0 Dual-System VLA Model",
+  "title_cn": "Galaxea 开放世界数据集与 G0 双系统 VLA 模型",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2025",
+  "one_liner": "用 500h 真实开放世界单一本体数据驱动双系统 VLA（VLM 慢规划 + VLA 快执行），证明单一本体 Stage-2 预训练比跨本体预训练更关键。",
+  "framework": "idea-first",
+  "idea": "VLA 泛化的真正瓶颈是缺乏真实开放世界的高质量单一本体数据，而非跨本体数据量；G0 三阶段课程（跨本体 VLM 预训练 → 单一本体 VLA 预训练 → 任务微调）配合双系统（G0-VLM 规划 + G0-VLA 执行）实现真实场景部署。",
+  "logic_chain": [
+    "现有大规模数据集主要在受控/实验室场景采集，与真实世界存在严重 domain gap",
+    "跨本体预训练对通用动作（pick-and-place）有益，但当本体差异大时（底盘、躯干控制）有害",
+    "关键缺失是单一本体、真实场景、精细子任务标注数据——Galaxea 开放世界数据集正是填补这一缺口",
+    "三阶段课程学习：Stage-1（跨本体 FAST 自回归）→ Stage-2（单一本体 flow matching）→ Post-train（任务微调）",
+    "G0-VLM 通用模型指令精度仅 16–54%，必须领域适配才能输出 VLA 可执行的原子动作指令"
+  ],
+  "method_skeleton": [
+    "Galaxea 开放世界数据集：500h / 100K 轨迹 / 150 任务 / 50 场景 / 单一 R1 Lite 本体 / 子任务级中英双语标注",
+    "三阶段 G0-VLA 训练：Stage-1 跨本体 FAST 离散 token 自回归预训练（~1700h 多源）→ Stage-2 单一本体 flow matching 预训练（500h Galaxea）→ Post-train 任务微调（≤100 条/任务）",
+    "G0 双系统：G0-VLM（Qwen2.5-VL + DeepSeek-R1 合成数据微调，2 Hz 慢规划）+ G0-VLA（PaLiGemma + Action Transformer flow matching，200 Hz 快执行）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中——移动双臂 VLA 部署、三阶段训练课程、双系统架构设计均可直接参考",
+    "track_B_legged": "不相关——本文不涉及足式 locomotion 或底层控制算法"
+  },
+  "validation": "G0 (Full) 在 4 个基准任务（Table Bussing / Microwave Operation / Bed Making / Blocks Stacking）平均 progress score 最高；G0-VLM 微调后指令精度 74–83% vs Gemini-2.5-pro 16–54%；少样本（20 条）场景下 Stage-2 预训练显著优于其他变体",
+  "core_points": [
+    "真实开放世界数据稀缺是 VLA 泛化的真正瓶颈，现有数据集受控场景不足",
+    "500h Galaxea 开放世界数据集：单一本体 R1 Lite、100K 轨迹、150 任务、50 真实场景、子任务级标注",
+    "Stage-2 单一本体预训练是三阶段课程的核心，Stage-1 跨本体预训练对本体专属动作（底盘/躯干）有害",
+    "G0 双系统：独立 G0-VLM（2 Hz 慢规划）+ G0-VLA（200 Hz 快执行），不共享权重",
+    "G0-VLM 必须经领域适配才能胜任机器人原子动作规划，通用大模型（Gemini-2.5-pro）精度仅 16–54%",
+    "G0-Plus（2026-01）将预训练数据扩展至 2000+ 小时，持续迭代中"
+  ],
+  "effects": [
+    "G0-VLM 指令精度 74–83%（vs Gemini-2.5-pro 16–54%，提升 >50%）",
+    "G0 (Full) 综合 progress score 最高，尤以 Table Bussing / Microwave 等 pick-and-place 任务突出",
+    "少样本（20 条）场景：Stage-2 预训练模型明显优于 Stage-1 / 从头训练",
+    "Bed Making 底盘控制：Stage-1/π0 甚至低于从头训练（embodiment gap 过大）"
+  ],
+  "open_source": "code+weights+dataset(gated)",
+  "open_source_detail": "代码：github.com/OpenGalaxea/GalaxeaVLA（2026-01-04 前 Apache-2.0，之后 G0 PLUS Community License 非商业免费）；权重：HF OpenGalaxea 组织，含 G0_3B_base / G0Plus_3B_base / G0Tiny_250M_base / G0Plus_3B-pick_and_place；数据集：HF OpenGalaxea/Galaxea-Open-World-Dataset，CC BY-NC-SA 4.0 门控访问，2.87 TB LeRobot v2.1 格式",
+  "rating": "Important",
+  "summary": "summary.html"
+}

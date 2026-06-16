@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WholeBodyVLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>OpenDriveLab · Humanoid Loco-Manipulation VLA · ICLR 2026</span>
+    <h1>WholeBodyVLA:<br>统一潜动作的全身控制</h1>
+    <p class="subtitle">人形机器人同时需要精准移动和灵巧操作——但两者的数据都极度稀缺。与其硬采遥操作数据，不如<strong>用人类自拍视频学出统一的潜动作表征</strong>，让同一个 VLA 端到端驱动双臂 + 腿部，真正实现大范围的 loco-manipulation。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 双线命中 · Track A 移动操作 VLA + Track B 足式控制算法 · 已深读</span>
+      <span class="pill">📅 2025-12 / ICLR 2026</span>
+      <span class="pill">🏢 OpenDriveLab / AgiBot</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2512.11047">arXiv:2512.11047</a></span>
+      <span class="pill">🌐 <a href="https://opendrivelab.com/WholeBodyVLA">项目主页</a></span>
+      <span class="pill">⚠️ <a href="https://github.com/OpenDriveLab/WholebodyVLA">GitHub (仅文档)</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">主结果提升</div>
+    <div class="value">+21.3<span class="unit">%</span></div>
+    <div class="desc">vs. 最强 baseline (Modular Design)</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">LAM 预训练增益</div>
+    <div class="value">+38.7<span class="unit">%</span></div>
+    <div class="desc">有 vs. 无 latent pretraining</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">LMO 离散指令增益</div>
+    <div class="value">+24<span class="unit">%</span></div>
+    <div class="desc">vs. 连续速度追踪 RL 控制器</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">开源状态</div>
+    <div class="value" style="font-size:1.2em; padding-top:0.3em;">仅文档</div>
+    <div class="desc">代码/权重/数据均未开源</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">人形机器人 loco-manipulation 的根本瓶颈是<strong>全身联合遥操作数据极度稀缺</strong>——既然稀缺，那就换一个思路：用<strong>人类自拍的 egocentric 视频</strong>作为预训练信号，通过 <a href="./notes.html#lam" class="note-link">Latent Action Model (LAM)</a> 把视频帧间变化压缩为<strong>离散潜动作码字</strong>，让同一个 VLA 在<strong>统一潜动作空间</strong>中同时学习操作与移动——然后 finetune 到机器人时，上身出关节角，下身出离散指令交给 <a href="./notes.html#lmo" class="note-link">LMO RL 控制器</a>执行。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>人形机器人 loco-manipulation 任务需要<strong>大范围移动 + 精准操作</strong>同时协调，模块化方案因为缺少闭环反馈和端到端联合优化会<strong>累积误差</strong>，机器人往往在移动后处于不利的操作构型。</li>
+          <li>端到端方案理论上更优，但<strong>全身遥操作数据成本极高</strong>，MoCap 和 VR+手柄都很贵；而现有 VLA 数据集（如 AgiBot World）只覆盖原地操作，缺乏 locomotion。</li>
+          <li>人类视频中已经隐含了 locomotion 方向、末端轨迹、物体 affordance 等信息——<strong>视频天然是 action-free 的廉价大数据</strong>。</li>
+          <li><a href="./notes.html#lam" class="note-link">LAM（Latent Action Model）</a>把相邻帧差异编码为 VQ-VAE 离散码字，作为<strong>伪动作标签</strong>监督 VLA 预训练——无需真实 action label，视频就能变成有效训练信号。</li>
+          <li>但 locomotion 和 manipulation 的视觉变化模式根本不同（摄像机静止 vs. 运动），<strong>分开训两个 LAM</strong>（manipulation LAM + locomotion LAM）再联合监督，避免混淆。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>双 LAM 统一潜学习</strong>：分别在操作视频（AgiBot World）和人类自拍 egocentric locomotion 视频（约 300h，单人头戴摄像机）上训练两个 VQ-VAE-style LAM；VLA 预训练时<strong>联合预测两类潜动作码字</strong>，强制模型学到 loco-manipulation 交互表征。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>轻量 action decoder + finetune</strong>：LAM 预训练结束后，接一个轻量解码器 f，在少量遥操数据（每任务 50 次）上 finetune（LoRA，Prismatic-7B 骨干），将潜动作解码为上身关节角和离散 locomotion 指令。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><a href="./notes.html#lmo" class="note-link"><strong>LMO RL 离散指令控制器</strong></a>：摒弃连续速度追踪目标，改用离散三值指令 \([s_x, s_y, s_\psi, h^\star] \in \{-1,0,1\}^3 \times \mathbb{R}\)，配合两阶段 curriculum（基础步态 → 精准稳定），专门针对 loco-manipulation 的启停、转向、蹲起优化，在仿真（MuJoCo）中训练后直接 sim2real 部署。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 AgiBot X2 人形机器人（7-DoF 双臂 + 6-DoF 腿 + 1-DoF 腰）上验证三个任务（bag packing / box loading / cart pushing），WholeBodyVLA 平均成功率 <strong>78.0%</strong>，远超最强 baseline Modular Design 的 64.0%、GR00T w/ LMO 的 42.0%。消融证明 unified LAM 预训练和 LMO 控制器均为关键。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>WholeBodyVLA: 78.0% vs. Modular Design: 64.0%（+21.3pp）</li>
+            <li>去掉 LAM 预训练：39.3%（-38.7pp）；仅用 manipulation LAM：63.3%；共享单 LAM：66.0%</li>
+            <li>LMO vs. 速度追踪 RL：78.0% vs. 54.0%（+24pp），91.7% 的差距来自有 locomotion 的第二子任务阶段</li>
+            <li>locomotion 泛化：50%+ 人类视频预训练后，25 条遥操数据即可匹配 &lt;25% 视频预训练时 200 条数据的水平</li>
+            <li>LMO 转向精度（终端偏差）：0.05±0.01 rad 方向误差，远优于速度追踪的 0.26±0.01</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性 · 双线命中</div>
+        <p><strong>Track A（移动操作 VLA）直接命中</strong>：LAM 预训练用廉价视频替代遥操数据的思路，以及 VLA 统一输出上下身控制信号的端到端架构，是移动操作 VLA 的核心范式挑战。这篇是同时覆盖操作和 locomotion 的罕见案例，可直接借鉴统一潜学习框架。</p>
+        <p><strong>Track B（足式算法）直接命中</strong>：LMO RL 控制器是一个非速度追踪的离散指令接口设计，两阶段 curriculum、结构化扰动（replay 真实手臂动作片段）、stand-still 惩罚等技巧直接针对人形机器人 loco-manipulation 稳定性——是足式控制算法中少见的、专为操作场景定制的 RL 控制器设计。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有方法（模块化或端到端）都缺乏「manipulation-aware locomotion」——机器人移动时不考虑后续操作的需求，导致移动结束后处于不利构型，限制了 large-space loco-manipulation。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">Yet existing approaches, modular or end-to-end, are deficient in manipulation-aware locomotion. This confines the robot to a limited workspace, preventing it from performing large-space loco-manipulation.</blockquote>
+          <div class="ev-trans">然而现有方法，无论模块化还是端到端，都缺乏 manipulation-aware locomotion。这将机器人限制在有限工作空间内，阻止其执行大范围的 loco-manipulation。</div>
+          <div class="ev-gloss">问题定义精准：不是「locomotion 不够好」或「manipulation 不够好」，而是两者之间的<strong>协同</strong>缺失——移动要主动为操作创造前提条件（接近、定向、稳定）。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">A naive solution is to serialize locomotion and manipulation with a high-level planner, selecting and switching between them (e.g., navigation vs. grasping). However, the limited closed-loop feedback and lack of end-to-end joint optimization could lead to error accumulation, resulting in robot configurations that are suboptimal for subsequent manipulation tasks.</blockquote>
+          <div class="ev-trans">一种朴素的解法是用高层规划器将 locomotion 和 manipulation 串行化，在两者之间选择和切换（如导航 vs. 抓取）。然而，有限的闭环反馈和缺乏端到端联合优化会导致误差累积，使机器人在后续操作任务中处于次优构型。</div>
+          <div class="ev-gloss">模块化的根本缺陷：locomotion 和 manipulation 之间的「交接」是脆弱边界，机器人在移动结束时往往站位和朝向对后续抓取不友好。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 数据稀缺根因 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 根因诊断：全身 loco-manipulation 数据几乎为零——MoCap 和遥操成本高昂，而现有大规模数据集（AgiBot World 等）把 locomotion 和 manipulation 分开处理，没有结合的。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">However, these resources treat manipulation and navigation as separate tasks. In contrast, datasets that integrate humanoid locomotion with manipulation are almost few. Collecting such trajectories at scale, either via Motion Capture (MoCap) or teleoperation, is prohibitively expensive.</blockquote>
+          <div class="ev-trans">然而，这些资源把 manipulation 和 navigation 作为独立任务处理。相比之下，将人形机器人 locomotion 与 manipulation 整合在一起的数据集几乎没有。通过 MoCap 或遥操大规模采集这类轨迹代价极高。</div>
+          <div class="ev-gloss">这是整篇论文动机的关键事实：不是「没人想做」，而是「数据根本不存在」。论文后续的所有设计都是为了绕开这一根因。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 统一潜学习核心思想 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 核心解法：<a href="./notes.html#lam" class="note-link">统一潜学习（unified latent learning）</a>——用 LAM 把廉价的人类 egocentric 视频压缩为离散潜动作，以此作为 VLA 预训练的伪标签，无需任何 action 标注。</div>
+        <figure>
+          <img src="./images/figure_4_lam_data_collection.png" alt="Figure 4: LAM 数据采集流程与预训练 pipeline">
+          <figcaption><strong>Figure 4（p.14）：</strong>左侧——单人头戴摄像机采集 egocentric locomotion 视频（低成本，只需执行 8 种典型动作朝向潜在操作目标移动）；右侧——LAM 以 VQ-VAE 方式训练，将相邻帧对 (o_t, o_{t+k}) 编码为量化潜动作码字，再解码重建未来帧 o_{t+k}。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">we focus on the pre-training stage of VLA and introduce unified latent learning, which acquires large-scale loco–manipulation priors from human egocentric videos and uses them as latent supervision for the VLA.</blockquote>
+          <div class="ev-trans">我们聚焦于 VLA 的预训练阶段，提出统一潜学习，它从人类 egocentric 视频中获取大规模 loco-manipulation 先验，并将其作为 VLA 的潜在监督信号。</div>
+          <div class="ev-gloss">关键词是「latent supervision」——不是直接用视频做 imitation learning，而是先压缩成潜动作码字，再用码字的预测作为监督信号，从而绕开「视频无 action 标签」这一根本障碍。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.1</div>
+          <blockquote class="ev-quote">we find that directly training a single LAM on the mixed data yields suboptimal performance. We attribute this to the fundamentally different modalities of the two data sources: in manipulation videos the camera pose is almost static, whereas in locomotion videos it changes continuously.</blockquote>
+          <div class="ev-trans">我们发现，在混合数据上直接训练单一 LAM 会产生次优性能。我们将此归因于两类数据源根本不同的模态：在 manipulation 视频中摄像机姿态几乎静止，而在 locomotion 视频中则持续变化。</div>
+          <div class="ev-gloss">这解释了为什么要分两个 LAM 而非一个：摄像机静止时图像变化由手臂运动主导；摄像机运动时图像变化由环境相对运动主导——同一个 LAM 无法同时正确编码这两种模态。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 系统架构 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 系统架构：VLM 主干 + 双 LAM 联合预训练 + 轻量 action decoder finetune，运行时 VLA 以 ~10 Hz 输出上身关节角和离散 locomotion 指令，LMO 以 50 Hz 将指令转为下肢力矩。</div>
+        <figure>
+          <img src="./images/figure_2_pipeline_overview.png" alt="Figure 2: WholeBodyVLA 整体 pipeline">
+          <figcaption><strong>Figure 2（p.5）：</strong>LAM 在视频上预训练产生 latent 监督信号（预训练阶段，图左）；LMO RL 在仿真中独立训练（图中）；运行时，VLM 接收 egocentric 图像和语言指令，经 action decoder 输出 a_upper（双臂关节位置）和离散 locomotion command，后者由 LMO RL Policy 以 50 Hz 转换为 a_lower（下肢力矩），实现全身 loco-manipulation。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.1 / Figure 2 caption</div>
+          <blockquote class="ev-quote">At runtime, egocentric images and language instructions are encoded by the VLM into latent action tokens, which are decoded (∼10 Hz) into (i) dual-arm joint actions and (ii) locomotion commands executed by LMO at 50 Hz, enabling robust whole-body loco–manipulation.</blockquote>
+          <div class="ev-trans">运行时，egocentric 图像和语言指令由 VLM 编码为潜动作 token，以约 10 Hz 的频率解码为 (i) 双臂关节动作和 (ii) 由 LMO 以 50 Hz 执行的 locomotion 指令，从而实现鲁棒的全身 loco-manipulation。</div>
+          <div class="ev-gloss">VLA 10 Hz + RL 50 Hz 的分频架构是关键：高层 VLA 负责语义决策（去哪、抓什么、蹲多低），低层 LMO 负责高频实时平衡。两者通过离散指令接口解耦，互不干扰。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 LMO 离散指令接口 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> <a href="./notes.html#lmo" class="note-link">LMO RL 控制器</a>的核心创新：用<strong>离散三值指令</strong> \([s_x, s_y, s_\psi] \in \{-1,0,1\}^3\) 替代连续速度追踪，明确编码启停语义，专为 loco-manipulation 精准启停和转向优化。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §3.2</div>
+          <blockquote class="ev-quote">We formulate lower-body control as goal-conditioned regulation, where the policy executes discrete high-level commands while maintaining balance. At each time step, the planner generates a command ut = [sx, sy, sψ, h⋆] ∈{−1, 0, 1}3 × R, where sx, sy, sψ denotes discrete indicators for forward, lateral, and turning, and h⋆specifies the stance height. Unlike velocity-based formulations, our interface enforces explicit start–stop semantics and reduces trajectory variance, improving the training process of both RL controller and high-level planner.</blockquote>
+          <div class="ev-trans">我们将下肢控制表述为目标条件调节，策略在保持平衡的同时执行离散高层指令。每个时间步，规划器生成指令 ut = [sx, sy, sψ, h⋆] ∈ {-1,0,1}³ × R，其中 sx, sy, sψ 表示前后、侧向和转向的离散标志，h⋆ 指定站立高度。与速度追踪方案不同，我们的接口强制明确的启停语义，减少轨迹方差，改善 RL 控制器和高层规划器的训练过程。</div>
+          <div class="ev-gloss">离散化的收益是双向的：对 RL 控制器，目标更清晰易优化（只有有限几种状态）；对 VLA，输出空间更简单（预测离散指令比预测连续速度更容易）——这是「接口设计」驱动系统性能提升的典型案例。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §3.2</div>
+          <blockquote class="ev-quote">We adopt a two-stage training scheme that first acquires a minimal locomotion skill and then specializes it for precise and stable loco–manipulation.</blockquote>
+          <div class="ev-trans">我们采用两阶段训练方案，首先获取最基本的 locomotion 技能，然后将其专门化为精准稳定的 loco-manipulation。</div>
+          <div class="ev-gloss">Stage I = 学会不摔倒、响应指令；Stage II = 在真实手臂动作扰动下保持精准轨迹。这种 curriculum 在 loco-manipulation 任务中尤为重要，因为手臂载重会强烈影响腿部稳定性。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 LAM 对泛化的影响 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 量化验证：LAM 预训练将成功率提升 38.7%，且更多的 locomotion 视频预训练可以大幅<strong>减少对遥操数据的依赖</strong>——50%+ 视频预训练后，25 条遥操轨迹即可媲美无预训练时 200 条的效果。</div>
+        <figure>
+          <img src="./images/figure_3_generalization_results.png" alt="Figure 3: 真实世界泛化结果">
+          <figcaption><strong>Figure 3（p.9）：</strong>上排——起始位姿泛化和场景泛化数据量曲线，颜色越深表示 LAM 预训练数据越多，曲线整体越高；下排——在额外 5 个挑战性扩展任务上的结果（长流程 / 地形穿越 / 视觉导航 / 吸尘 / 擦桌），WholeBodyVLA 在所有场景均领先。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §4.3</div>
+          <blockquote class="ev-quote">the full model improves success rate by 38.7%, indicating that unified latent learning extracts useful priors from action-free human videos and enhances downstream policy learning.</blockquote>
+          <div class="ev-trans">完整模型将成功率提高了 38.7%，表明统一潜学习从无 action 的人类视频中提取了有用的先验知识，并增强了下游策略学习。</div>
+          <div class="ev-gloss">38.7pp 的差距（78.0% vs 39.3%）在机器人学习中是非常显著的增益，而且它来自<strong>免费的人类视频</strong>，不是更多的遥操数据——这正是论文方法论的核心价值所在。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §4.3</div>
+          <blockquote class="ev-quote">with more than 50% human video pretraining, the model matches variants using less than 25% human videos even when fine-tuned with only 25 teleoperation trajectories, whereas the latter require 200 trajectories to achieve similar performance.</blockquote>
+          <div class="ev-trans">在超过 50% 人类视频预训练时，即使只用 25 条遥操轨迹微调，模型也能匹配不到 25% 人类视频预训练变体的水平，而后者需要 200 条轨迹才能达到类似性能。</div>
+          <div class="ev-gloss">这是「数据效率」论点的量化依据：更多的廉价视频预训练 = 更少的昂贵遥操数据需求。对实际系统部署极具价值，因为遥操数据采集成本远高于视频采集。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 潜动作的跨域对应 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 潜动作码字在人类视频和机器人视频之间展示出跨域语义对应——同一个 latent action code 在人类和机器人数据中对应相似的运动语义（向前行进、左转、蹲下）。</div>
+        <figure>
+          <img src="./images/figure_5_latent_action_correspondence.png" alt="Figure 5: 人类-机器人潜动作跨域对应">
+          <figcaption><strong>（p.22 Appendix C.2）：</strong>LAM codebook 学到的潜动作在人类 egocentric 视频（左三列）和机器人数据（右三列）之间展现出一致的语义对应：Latent Action 1 = 向前行进、Latent Action 2 = 左转、Latent Action 3 = 蹲下——这正是跨域迁移的直接证明。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.1</div>
+          <blockquote class="ev-quote">This unified prediction compels the model to learn how locomotion and manipulation interact in a single, cohesive action space to support task execution.</blockquote>
+          <div class="ev-trans">这种统一预测迫使模型在单一、内聚的动作空间中学习 locomotion 和 manipulation 如何交互，以支持任务执行。</div>
+          <div class="ev-gloss">「单一内聚动作空间」是整篇论文思想的精髓——不是两套分别的表征，而是强迫 VLA 在同一空间中同时理解「我要往哪走」和「我的手要怎么动」。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 主结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 主结果：WholeBodyVLA 在三个 loco-manipulation 任务上平均 78.0% 成功率，超过最强 baseline（Modular Design 64.0%）约 21.3pp，超过 GR00T N1.5 w/ LMO 约 36pp——代表目前人形机器人 large-space end-to-end loco-manipulation 的 SOTA。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §1 / p.7 · §4.2 / Table 2</div>
+          <blockquote class="ev-quote">Comprehensive experiments on the Agibot X2 show that WholeBodyVLA surpasses prior baselines by 21.3% and 24.0%, while demonstrating strong generalization and broad task coverage.</blockquote>
+          <div class="ev-trans">在 Agibot X2 上的综合实验表明，WholeBodyVLA 超越先前基线 21.3% 和 24.0%，同时展现出强泛化性和广泛任务覆盖。</div>
+          <div class="ev-gloss">两个数字对应两个不同比较对象：21.3% 是相对 Modular Design（最强非端到端方案），24.0% 是相对速度追踪 RL 变体（即 LMO 的贡献）。Table 2 有完整数字。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06）</h2>
+      <p class="lead">已直接检查 <a href="https://github.com/OpenDriveLab/WholebodyVLA">github.com/OpenDriveLab/WholebodyVLA</a>，结论如下：</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未开源</span> 仓库目前仅包含文档、参考资料和社区资源链接，<strong>无可运行代码</strong></dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未开源</span> 无任何模型 checkpoint 或预训练权重发布</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未开源</span> 约 300h egocentric locomotion 视频及遥操数据均未公开；操作数据来源 AgiBot World（部分公开）</dd>
+        <dt>许可证</dt><dd><span class="os-tag os-part">MIT (仓库)</span> 仓库本身 MIT license，但内容几乎只是文档</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚠️ 明确声明无时间表</div>
+        <p>GitHub README 明确写道："<em>We currently have no concrete timeline for open-sourcing the codebase. This repository now serves as a collection of resources and references for the whole-body humanoid VLA research community.</em>"——暂无开源计划，仓库定位是社区资源集合而非可用软件包。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 arXiv:2512.11047 · p.1 · Abstract (项目主页)</div>
+        <blockquote class="ev-quote">See https://opendrivelab.com/WholeBodyVLA.</blockquote>
+        <div class="ev-trans">详见 https://opendrivelab.com/WholeBodyVLA。</div>
+        <div class="ev-gloss">论文中仅给出项目主页链接（视频演示），无代码链接。GitHub 仓库是后续建立的社区资源站，并非代码发布。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 · 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>这是<strong>首个将统一潜学习扩展到 locomotion + manipulation 的端到端 VLA 系统</strong>，在真实人形机器人（AgiBot X2）上完成了此前没有方案能做到的 large-space loco-manipulation（5m+ 行走 + 负重 50kg 推车）。方法论上有两个高价值创新：(1) 双 LAM 分治 + 联合预训练，巧妙绕开 loco-manipulation 数据稀缺；(2) LMO 离散指令 RL 控制器，将「接口设计」提升为系统性能关键因素——这两个思路都有很强的可移植性。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>评测规模偏小</strong>：每个子任务仅 25 次试验，三个任务总计 150 次，且任务场景固定（同一实验室）。② <strong>任务难度有限</strong>：bag packing、box loading、cart pushing 均为预设结构化场景，缺少非结构化环境验证。③ <strong>完全不开源</strong>：无代码、无权重、无数据，无法复现或迁移到其他平台——对社区价值大打折扣。④ <strong>VLM 骨干未说明推理能力</strong>：基于 Prismatic-7B，但 VLM 在 loco-manipulation 中的贡献（语言理解 vs. 视觉感知）未做隔离消融。⑤ <strong>sim2real gap 未充分讨论</strong>：LMO RL 在 MuJoCo 训练后直接部署，Appendix 有失败案例统计但无 sim2real 迁移分析。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;方法论上真正新颖，结果说服力较强，但评测规模和开源状况均有明显不足。作为 loco-manipulation VLA 的「原型系统」有重要参考价值，但还不是 Breakthrough 级别的范式转移。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · WholeBodyVLA (arXiv:2512.11047) · OpenDriveLab · ICLR 2026</footer>
+
+</body>
+</html>

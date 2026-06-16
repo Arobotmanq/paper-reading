@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>π0.5 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "“"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "”"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Physical Intelligence · Vision-Language-Action</span>
+    <h1>π0.5: Open-World<br>Generalization</h1>
+    <p class="subtitle">想让机器人去<strong>没见过的新家</strong>也能干活：与其在目标机器人上死采数据，不如把各种<strong>异构经验</strong>混进一个序列模型联合训练——泛化靠<strong>迁移</strong>，不靠蛮力扩数据。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 项目相关 · Track A 移动操作 VLA · 已深读</span>
+      <span class="pill">📅 2025-04</span>
+      <span class="pill">🏢 Physical Intelligence</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2504.16054">arXiv:2504.16054</a></span>
+      <span class="pill">⭐ <a href="https://github.com/Physical-Intelligence/openpi">openpi</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层: 思想 · 逻辑 · 方法 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">复杂长程任务（扫整个厨房）<strong>没法靠在目标机器人上穷举采数据</strong>来覆盖所有新场景。人是靠<strong>迁移各种经验</strong>应付新情况的——那就把别的机器人、网页图文、人的口头指令等异构数据，<strong>全铸成 token 序列、混进同一个 VLA 联合训练</strong>。泛化的来源是<strong>迁移</strong>，不是蛮力扩数据。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>长程家务任务的场景组合爆炸，<strong>在目标移动机器人上穷举采数据不可行</strong>。</li>
+          <li>但人应付新环境靠的是<strong>迁移</strong>：别处学的技能 + 书本/口头的知识 + 一点当前经验。</li>
+          <li>VLA 的关键能力是把图像/文字/动作<strong>统一成 token 序列</strong> → 模仿学习退化成"下一 token 预测"。</li>
+          <li>既然如此，<strong>任何能写成序列的数据都能拼进同一模型联合训练</strong>（co-training）。</li>
+          <li>再让<strong>同一个模型</strong>先预测"该干哪个子任务"、再据此出动作（类 chain-of-thought 的两级推理），高层借网页/语言知识、低层借别的机器人动作数据。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>异构 co-training</strong>：6 类数据源（移动机器人/固定臂/实验室跨本体/高层子任务/网页/口头指令）混训；直采移动数据只占极小份额。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>同模型两级推理</strong>：先出语义子任务（high-level），再据此出低层动作 chunk（low-level），<a href="./notes.html#hl-ll" class="note-link">共用一套权重</a>，不是两个模型。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>离散训练 + 连续推理</strong>：预训练用 <a href="./notes.html#fast" class="note-link">FAST 离散 token</a>（快、利于 VLM 接口），后训练加 <a href="./notes.html#flow-matching" class="note-link">flow matching action expert</a> 出实时连续动作。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">机器人在<strong>训练集外的真实新家</strong>能端到端扫厨房/收卧室；而<strong>去掉跨本体数据就崩、去掉口头指令就明显变弱</strong>——这些消融<strong>反过来证明了"迁移"这个思想是对的</strong>，也指出哪类数据在负责什么。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>97.6% 训练样本不来自移动操作机器人（直采移动数据仅 ~2.4%，约 400h）。</li>
+            <li>104 个训练场景的模型 ≈ "把测试家纳入训练"的对照上界。</li>
+            <li>完整 π0.5 的高层推理甚至超过人类 oracle；显著优于 π0 / π0-FAST+Flow。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）直接命中</strong>：这正是"用异构数据让移动操作 VLA 泛化到新环境"的范式样本，co-training 配方与两级推理可直接借鉴。Track B（足式控制算法）<strong>不相关</strong>——本文不涉及 locomotion/底层控制。故按框架<strong>深读</strong>，证据细节见下。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：VLA 已能在与训练分布相近的环境里端到端控制，但「在野外能泛化多远」仍是未决问题。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">While vision-language-action (VLA) models have demonstrated impressive results for end-to-end robot control, it remains an open question how far such models can generalize in the wild.</blockquote>
+          <div class="ev-trans">尽管 VLA 模型在端到端机器人控制上已展示出令人印象深刻的结果，但这类模型在真实世界中能泛化到多远，仍是一个未决问题。</div>
+          <div class="ev-gloss">把评测标准从「实验室内同分布」抬高到「完全没见过的真实家庭」——这是全文的衡量尺。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 异构 co-training 配方 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 解法：用<a href="./notes.html#co-training" class="note-link">异构数据 co-training</a>——其它机器人、高层语义预测、口头指令、网络多模态数据混在同一序列建模框架里联合训练。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">We describe π0.5, a new model based on π0 that uses co-training on heterogeneous tasks to enable broad generalization. π0.5 uses data from multiple robots, high-level semantic prediction, web data, and other sources to enable broadly generalizable real-world robotic manipulation.</blockquote>
+          <div class="ev-trans">我们提出 π0.5，一个基于 π0 的新模型，通过在异构任务上 co-training 实现广泛泛化。π0.5 利用来自多种机器人、高层语义预测、网络数据等来源的数据，实现可广泛泛化的真实世界机器人操作。</div>
+          <div class="ev-gloss">核心 thesis：泛化「不只靠规模」，还要靠<strong>不同抽象层次的知识来源</strong>，VLA 把它们都铸进同一序列模型。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §I</div>
+          <blockquote class="ev-quote">The overwhelming majority of training examples provided to π0.5 (97.6% during the first training phase) do not come from mobile manipulators performing household tasks, but from these other sources, such as other robots or data from the web.</blockquote>
+          <div class="ev-trans">提供给 π0.5 的绝大多数训练样本（第一训练阶段中 97.6%）并非来自执行家务的移动操作机器人，而是来自这些其它来源，例如其它机器人或网络数据。</div>
+          <div class="ev-gloss">直采移动操作数据仅约 2.4%——这正是「迁移而非蛮力扩数据」论点的最有力数字。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 分层架构 + 同一模型两级推理 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 架构：<strong>同一个模型</strong>做<a href="./notes.html#hl-ll" class="note-link">两级推理</a>——先预测语义子任务（high-level），再据此预测低层动作 chunk（low-level），类似 chain-of-thought。</div>
+        <figure>
+          <img src="./images/figure_3_model_overview.png" alt="Figure 3: π0.5 两阶段训练与两级推理总览">
+          <figcaption><strong>Figure 3（p.4）：</strong>左＝预训练，所有任务（含动作）都用<a href="./notes.html#fast" class="note-link">FAST</a>离散 token 做下一 token 预测；右＝后训练 + 推理，加入 300M <a href="./notes.html#action-expert" class="note-link">action expert</a> 用 <a href="./notes.html#flow-matching" class="note-link">flow matching</a> 出连续动作。骨干＝SigLIP(400M)+Gemma(2.6B)。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §I</div>
+          <blockquote class="ev-quote">the model first predicts the semantic subtask, inferring the behavior that is appropriate to perform next based on the task structure and the semantics of the scene, and then predicts the low-level robot action chunk based on this subtask.</blockquote>
+          <div class="ev-trans">模型先预测语义子任务，根据任务结构与场景语义推断下一步应执行的行为，然后基于该子任务预测低层机器人动作 chunk。</div>
+          <div class="ev-gloss">与多数「VLM 规划 + 独立低层策略」的两模型方案不同，π0.5 高低两级共享同一权重；高层以较低频率运行。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 混合离散+连续 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 表示技巧：预训练用离散 FAST token（训练快、利于 VLM 接口），推理用 flow matching 连续动作（实时、细粒度）——两者兼得。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §IV-B</div>
+          <blockquote class="ev-quote">Our model is therefore trained to predict actions both through autoregressive sampling of tokens (using the FAST tokenizer) and iterative integration of the flow field, combining the best of both worlds. We use the attention matrix to ensure that the different action representations do not attend to each other.</blockquote>
+          <div class="ev-trans">因此我们的模型被训练为同时通过 token 的自回归采样（用 FAST tokenizer）和对流场的迭代积分来预测动作，兼取两者之长。我们用注意力矩阵保证不同动作表示彼此不相互注意。</div>
+          <div class="ev-gloss">先以 α=0 当纯 VLM 预训练（动作即文本 token），后训练再加 action expert（α=10）——稳定预训练 + 强语言跟随，推理仅需 10 步去噪。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 主结果 首次 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 主结果：据作者所知，这是首个能在<strong>完全没见过的真实家庭</strong>里端到端完成扫厨房/收卧室这类长程灵巧任务的学习型机器人系统。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §I</div>
+          <blockquote class="ev-quote">To our knowledge, our work is the first to demonstrate an end-to-end learning-enabled robotic system that can perform long-horizon and dexterous manipulation skills, such as cleaning a kitchen or bedroom, in entirely new homes.</blockquote>
+          <div class="ev-trans">据我们所知，本工作是首个展示出能在完全新的家庭中执行长程、灵巧操作技能（如打扫厨房或卧室）的端到端学习型机器人系统。</div>
+          <div class="ev-gloss">实测在 3 个训练集外真实家庭 + 多个 mock 房间评测；控制系统极简：50 Hz 直接发目标位姿/底盘速度，PD 跟踪，无轨迹规划无碰撞检测。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 场景数扩展 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 泛化随训练场景数单调增长，且 104 个场景的模型≈「直接在测试家训练」的上界——co-training 几乎补平了泛化鸿沟。</div>
+        <figure>
+          <img src="./images/figure_8_scaling_locations.png" alt="Figure 8: 性能随训练场景数增长">
+          <figcaption><strong>Figure 8（p.9）：</strong>平均任务进度随训练地点数（3→104）上升；绿色虚线/柱＝把测试家纳入训练的对照，最终 104-场景模型与之持平。下方浅黄柱＝无 co-training 预训练，性能崩塌。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §V-B</div>
+          <blockquote class="ev-quote">This control attains similar performance as the final 104-location model, suggesting that our co-training recipe effectively enables broad generalization, reaching similar performance to a model trained on the test environment.</blockquote>
+          <div class="ev-trans">该对照（训练时含测试家数据）达到与最终 104-地点模型相近的性能，表明我们的 co-training 配方有效实现了广泛泛化，达到了与「在测试环境上训练的模型」相当的水平。</div>
+          <div class="ev-gloss">关键反事实：仅用 104 地点移动数据、不做完整 co-training 预训练（浅黄柱）性能远差——证明泛化来自配方而非单纯堆移动数据。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 消融 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 消融：跨本体数据（其它环境 ME + 实验室 CE）对成功率最关键；网络数据（WD）主要提升对未见物体（OOD）的语言跟随。</div>
+        <figure>
+          <img src="./images/figure_10_recipe_ablations.png" alt="Figure 10: 训练配方消融（mock homes）">
+          <figcaption><strong>Figure 10（p.10）：</strong>去掉 CE 或 ME 任一都显著掉点（p&lt;0.001），同时去掉更糟；去 WD 在整体任务上不显著（但见下条对 OOD 的影响）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §V-C</div>
+          <blockquote class="ev-quote">excluding either of the two cross-embodiment data sources (ME and CE) significantly degrades performance, indicating that π0.5 benefits considerably from cross-embodiment transfer, from both other environments (ME) and other tasks (CE).</blockquote>
+          <div class="ev-trans">去掉两个跨本体数据源（ME 与 CE）中的任一个都会显著降低性能，表明 π0.5 大大受益于跨本体迁移——既来自其它环境（ME），也来自其它任务（CE）。</div>
+          <div class="ev-gloss">即「别的机器人采的数据」真的能迁移到目标移动平台；WD 的价值则集中在 OOD 物体的语义理解上。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 高层推理 + 与 π0 比较 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 高层推理很重要：完整 π0.5 甚至<strong>超过人类「oracle」高层策略</strong>；仅占 11% 的口头指令（VI）数据虽小却关键；同时 π0.5 显著优于 π0。</div>
+        <figure>
+          <img src="./images/figure_13_high_level_inference.png" alt="Figure 13: 高层推理评测">
+          <figcaption><strong>Figure 13（p.11）：</strong>full π0.5 最高，甚至高过 human HL；次优是 implicit HL（训练含子任务数据但推理不显式分层）；去 VI / 去 WD / 用 GPT-4 当高层都显著更差。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §V-E</div>
+          <blockquote class="ev-quote">The full π0.5 model performs the best, and outperforms even the human HL “oracle” baseline. Perhaps surprisingly, the second best model is the implicit HL ablation, which does not perform any high-level inference, but includes the full data mixture, i.e. also subtask prediction, in training.</blockquote>
+          <div class="ev-trans">完整 π0.5 模型表现最好，甚至超过人类高层 "oracle" 基线。或许令人意外，次优的是 implicit HL 消融——它不做任何高层推理，但训练中包含完整数据混合（即也含子任务预测）。</div>
+          <div class="ev-gloss">寓意：显式分层有增益，但大部分好处<strong>仅靠「把子任务预测数据放进训练混合」</strong>就已获得——co-training 本身在塑造表征。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §V-E</div>
+          <blockquote class="ev-quote">the relatively small verbal instruction dataset, which only constitutes about 11% of the high-level mobile manipulation examples, is critical to strong performance as the no VI ablation is significantly weaker.</blockquote>
+          <div class="ev-trans">相对小的口头指令数据集——仅占高层移动操作样本的约 11%——对强性能至关重要，因为去 VI 的消融明显更弱。</div>
+          <div class="ev-gloss">VI＝专家用「实时口头遥操作」给已训策略示范好的子任务输出，是一种低成本但高杠杆的新监督模态。π0.5 也显著优于 π0 / π0-FAST+Flow（Figure 12, p.10）。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">⚠️ 论文正文发布时（2025-04）仅有项目博客/视频；但 <strong>2025-09 Physical Intelligence 已在 <code>openpi</code> 正式开源 π0.5 的代码与权重</strong>。下表为<strong>截至当前的最新状态</strong>。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/Physical-Intelligence/openpi">github.com/Physical-Intelligence/openpi</a>（Apache-2.0；训练/微调/推理；JAX，另有 PyTorch 端口）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-yes">已开源</span> <code>pi05_base</code> / <code>pi05_droid</code> / <code>pi05_libero</code> 三个 checkpoint；HuggingFace 端口 <a href="https://huggingface.co/lerobot/pi05_base"><code>lerobot/pi05_base</code></a></dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> ~400h 移动操作及多本体自采数据未释出（仅其中 OXE 子集本就公开）</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚙️ 一个重要实现差异</div>
+        <p>openpi 的开源版<strong>仅支持 flow matching head</strong> 做 π0.5 的训练与推理——即论文里「预训练用 FAST 离散 token」那条<a href="./notes.html#fast" class="note-link">动作通路</a>未包含在开放实现中，复现完整混合配方需自行补齐。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 openpi README · Sept 2025</div>
+        <blockquote class="ev-quote">[Sept 2025] We released pi05, an upgraded version of pi0 with better open-world generalization.</blockquote>
+        <div class="ev-trans">[2025 年 9 月] 我们发布了 pi05——pi0 的升级版，具备更好的开放世界泛化能力。</div>
+        <div class="ev-gloss">共同作者 Chelsea Finn 亦公告「π0.5 weights + fine-tuning code are now open-source」。论文 PDF 本身只指向 <a href="https://pi.website/blog/pi05">pi.website/blog/pi05</a>，开源是后续动作。</div>
+      </div>
+    </section>
+
+    <!-- ============ 简短批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>真·标志性结果：首个端到端在<strong>全新真实家庭</strong>完成 10–15 分钟长程灵巧任务的系统。「异构 co-training＞蛮力扩数据」这一思想用受控消融钉死，且揭示了「子任务预测数据本身即在塑造表征」（implicit HL 次优）的反直觉结论。代码与权重已在 openpi 开源，社区杠杆大。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>① 评测高度自建：rubric 为按步打分的「任务进度」而非二元成功，每任务约 10 trials，绝对成功率与失败模式披露有限。② 主结果靠定性「to our knowledge first」+ mock-home 定量，真实家庭仅 3 个。③ ~400h 自采移动/多本体数据未公开，完整复现仍受限（虽有开源权重可直接用/微调）。④ 自承高层会被分心（反复开关抽屉）、部分可观测与陌生把手仍失败。</p></div>
+      <p><strong>评级：</strong><span class="badge breakthrough">Breakthrough</span> &nbsp;尽管建立在 π0/FAST/flow matching 之上，但「开放世界泛化到全新家庭的长程操作」是该领域一次真正的能力跃迁。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · π0.5 (arXiv:2504.16054)</footer>
+
+</body>
+</html>

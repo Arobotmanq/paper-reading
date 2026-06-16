@@ -1,0 +1,45 @@
+{
+  "title": "LeVERB: Humanoid Whole-Body Control with Latent Vision-Language Instruction",
+  "title_cn": "LeVERB：用潜在视觉语言指令实现人形全身控制",
+  "field": "vla",
+  "venue": "arXiv preprint (under review)",
+  "date": "2025",
+  "one_liner": "首个用学习的 latent verb 接口连接 VLA 与 RL 全身控制器的人形机器人框架，同时覆盖 Track A（VLA）和 Track B（sim-to-real WBC）",
+  "framework": "idea-first",
+  "idea": "与其手工设计高低层接口（速度/末端位姿），不如用 CVAE 从运动数据中自监督学一个 latent action vocabulary，VLA 输出 latent verb，RL whole-body controller 解码执行",
+  "logic_chain": [
+    "现有 VLA 系统手工设计动作词表（速度/末端位姿），表达力有限，无法覆盖复杂全身动作",
+    "用 residual CVAE 从 MoCap 轨迹中学出结构化 latent space，同时对齐视觉语言语义",
+    "冻结 latent space，用 PPO 教师 + DAgger 蒸馏训练以 latent z 为条件的 WBC 学生策略",
+    "合成数据流水线（MoCap→光线追踪渲染→VLM 标注）完全消除真实数据采集瓶颈",
+    "域随机化 + ONNX C++ 部署实现 zero-shot sim-to-real 迁移到 Unitree G1"
+  ],
+  "method_skeleton": [
+    "LeVERB-VL（System 2）：residual CVAE + SigLiP 视觉文本编码器 + 对抗 GRL 判别器，10 Hz 输出 latent verb z",
+    "LeVERB-A（System 1）：PPO 教师策略 + DAgger 蒸馏 Transformer 学生，以 z 为条件，50 Hz 输出关节位置指令",
+    "LeVERB-Bench：合成数据流水线（154 轨迹×100 随机化 = 17.1h），首个光线追踪视觉语言 WBC benchmark"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中——首个将 VLA 与人形全身控制通过学习 latent 接口连接的工作，CVAE 高层策略架构可借鉴",
+    "track_B_legged": "直接命中——PPO 运动跟踪教师 + DAgger 蒸馏 + 域随机化 + ONNX C++ 部署是标准 sim-to-real WBC 配方"
+  },
+  "validation": "LeVERB-Bench 仿真闭环评测：整体 58.5%，导航 80%；比朴素 NS baseline 高 7.8 倍；Unitree G1 zero-shot 真实部署（坐下/起立/导航）",
+  "core_points": [
+    "真问题：手工动作词表（速度/末端位姿）限制了 VLA 与全身控制的整合",
+    "residual CVAE 让 VLA prior 专注语义，kinematics encoder 补运动细节，GRL 判别器对齐视觉/盲目数据的 latent 分布",
+    "System 2（10 Hz VLA）→ latent z → System 1（50 Hz RL WBC）解耦了视觉渲染与动力学训练",
+    "PPO 教师 + DAgger 蒸馏 + 域随机化是 sim-to-real WBC 三步标准配方",
+    "合成数据流水线（MoCap→IsaacSim 光追→VLM 标注）完全无需真实机器人数据，生成 17.1h 视觉语言训练数据",
+    "消融证实：去掉 GRL 判别器整体成功率从 58.5% 降至 33%，去掉高层 VLA 视觉任务接近零",
+    "真实部署是开环回放（VL 在仿真生成 latent 序列，真实机器人回放），尚未实现真正视觉闭环"
+  ],
+  "effects": [
+    "LeVERB-Bench 整体成功率 58.5%（视觉语言任务导航最高 80%）",
+    "比朴素层级 VLA 基线（NS ablation）高 7.8 倍",
+    "Unitree G1 zero-shot 真实部署：坐下、起立、视觉导航（开环 latent 回放）",
+    "System 2 参数量 102.56M（ViT-Base），System 1 学生 Transformer 2层/128维/ONNX CPU 50Hz"
+  ],
+  "open_source": "none",
+  "rating": "Important",
+  "summary": "summary.html"
+}

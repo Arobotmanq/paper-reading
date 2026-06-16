@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>π*₀.₆ 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>π*₀.₆ 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要一定背景知识才好理解的关键概念。每个概念给出定义、原理、在 π*₀.₆ 中的具体用法，以及彼此之间的关系。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 π*₀.₆ 综述</a>
+      <span class="pill">📚 当前 6 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2511.14759" style="color: #93c5fd; text-decoration: none;">arXiv:2511.14759</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ RECAP ============ -->
+    <section class="card" id="recap">
+      <h2>RECAP <span class="tag">RL Framework</span></h2>
+      <p class="full-name">RL with Experience and Corrections via Advantage-conditioned Policies</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>RECAP 是一套让 VLA 通过<strong>自己的部署经验</strong>持续改进的 RL 框架。它把 demonstrations、自主 rollout（成功与失败）、以及人类在线干预统一成 offline RL 的数据流，用 advantage conditioning 把价值函数信号注入 VLA，无需改变模型结构即可实现端到端 RL 训练。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要 RECAP</h3>
+      <p>模仿学习（BC/SFT）的硬上界是示范质量：策略最多学到"平均人类水平"，且会因 distribution shift（累积误差）变得更差。RL 可以突破这个上界——但大型 flow matching VLA 没有可解析的 log-likelihood，PPO/REINFORCE 难以直接应用。RECAP 解决的就是这个矛盾。</p>
+
+      <h3><span class="num">2</span>三步流程</h3>
+      <pre><code>1. 数据收集 (Data Collection)
+   - 用当前策略部署，给每个 episode 打成功/失败标签
+   - 可选：人类专家在自主执行期间进行干预（纠正错误）
+   - 全部数据加入 dataset D_ℓ
+
+2. 价值函数训练 (Value Function Training)
+   - 用 D_ℓ 中所有数据训练多任务 distributional VF
+   - VF 预测"距成功还剩多少步"的分布（B=201 个 bin）
+   - 交叉熵 loss，语言条件化，多任务共享
+
+3. Advantage Conditioned Training
+   - 用 VF 对 D_ℓ 中每条 (o, a) 估算 advantage
+   - 阈值 ε_ℓ（取第 30 百分位值）二值化：A > ε → I=True
+   - 用 I 作为文本 token 前缀，以 SL 目标训练整个 VLA
+
+重复步骤 1-3，K 次迭代</code></pre>
+
+      <h3><span class="num">3</span>预训练 vs. 微调阶段</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>阶段</th><th>数据</th><th>VF 初始化</th><th>π 初始化</th><th>特殊设置</th></tr></thead>
+          <tbody>
+            <tr><td><strong>预训练</strong></td><td>全量多任务多机器人数据</td><td>从头训</td><td>从头训</td><td>步骤 2+3，无在线采数据</td></tr>
+            <tr><td><strong>任务 SFT</strong></td><td>目标任务 demonstrations</td><td>从预训练 VF 微调</td><td>从预训练 π 微调</td><td>固定 I=True（等同 SFT）</td></tr>
+            <tr><td><strong>迭代 RL</strong></td><td>SFT 数据 + 在线 rollouts + interventions</td><td>每次从预训练 VF 微调</td><td>每次从预训练 π 微调</td><td>完整 RECAP 三步</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>关键设计：每次迭代<strong>从预训练 checkpoint 微调</strong>而非接着上次迭代，避免多次更新导致的 drift。</p>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 算法家谱</div>
+        <p>RECAP 的 advantage conditioning 部分源自 <strong>Kumar et al. 2019 "Reward-conditioned policies"</strong>（文中 [48]）和 <strong>Frans et al. 2025 "CFGRL"</strong>（文中 [4]）。价值函数设计参考 <strong>Ghasemipour et al. 2025</strong> 的 time-to-completion value function。DAgger 风格人类干预来自 <strong>Ross et al. 2011</strong>。RECAP 的贡献是把这些组件组合成一套适配大型 flow matching VLA 的完整系统。</p>
+      </div>
+    </section>
+
+    <!-- ============ ADVANTAGE CONDITIONING ============ -->
+    <section class="card" id="advantage-conditioning">
+      <h2>Advantage Conditioning <span class="tag">Policy Extraction</span></h2>
+      <p class="full-name">优势条件化策略提取 · Binarized Advantage Indicator as Text Token</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把"这个动作比平均水平好还是差"这个二元信息，以自然语言 token（"Advantage: positive/negative"）的形式输入给 VLA。模型同时学条件和无条件策略，推理时强制条件为"positive"即得改进策略。无需可计算 log-likelihood，适配 flow matching 模型。</p>
+      </div>
+
+      <h3><span class="num">1</span>理论基础</h3>
+      <p>正则化 RL 的最优解为：</p>
+      <div class="math-display">
+        \[ \hat{\pi}(a|o,\ell) \propto \pi_{\text{ref}}(a|o,\ell) \cdot \left(\frac{\pi_{\text{ref}}(a|I,o,\ell)}{\pi_{\text{ref}}(a|o,\ell)}\right)^\beta \]
+      </div>
+      <p>对 β=1 的特殊情况，<strong>改进策略恰好等于给定 I（improvement indicator）条件下的策略</strong>——只要我们训练模型同时表示条件和无条件策略，就能在推理时直接得到改进策略，无需显式计算 advantage 的期望或梯度。</p>
+
+      <h3><span class="num">2</span>在 π*₀.₆ 中的实现</h3>
+      <pre><code># 训练时：每个 (o_t, a_t) 都计算 advantage 并二值化
+I_t = True  if  A(o_t, a_t, ℓ) > ε_ℓ  else  False
+
+# 文本 prefix 构造：
+prefix = "Advantage: positive"  # I_t = True
+prefix = "Advantage: negative"  # I_t = False
+
+# 训练目标（所有数据都参与）：
+loss = -E[ log π(a_t|o_t,ℓ) + α·log π(a_t|I_t,o_t,ℓ) ]
+
+# 推理时：强制 I = True
+action = π(· | "Advantage: positive", o, ℓ)</code></pre>
+
+      <h3><span class="num">3</span>与 AWR 和 PPO 的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方法</th><th>数据利用率</th><th>适配 flow matching</th><th>off-policy 数据</th><th>实际效果（论文）</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Advantage Conditioning</strong></td><td>全部数据（高/低 advantage 都用）</td><td>原生支持（SL 目标）</td><td>天然支持</td><td>最高吞吐量</td></tr>
+            <tr><td>AWR</td><td>exp-weighted，低优数据权重极小（实质丢弃）</td><td>支持（加权 SL）</td><td>支持</td><td>成功率可，速度慢</td></tr>
+            <tr><td>PPO</td><td>需 on-policy 数据；off-policy 需极小 trust-region</td><td>困难（需 log-likelihood）</td><td>不友好</td><td>需 η=0.01 稳定，效果差</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>类比理解</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 直觉类比</div>
+        <p>想象训练一个学生写代码：AWR 说"只看优秀例子，差例子扔掉"；PPO 说"按当前模型和目标模型的概率比调整"（但 flow matching 没有概率）；<strong>Advantage conditioning 说"把'这段代码写得好/差'直接告诉模型，让它自己学习'好'意味着什么"</strong>——模型用 CFG 风格同时学"一般写法"和"好的写法"，推理时直接要"好的写法"。</p>
+      </div>
+    </section>
+
+    <!-- ============ DISTRIBUTIONAL VALUE FUNCTION ============ -->
+    <section class="card" id="distributional-vf">
+      <h2>Distributional Value Function <span class="tag">Critic</span></h2>
+      <p class="full-name">分布式价值函数 · Time-to-Completion 分布预测</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>不直接回归"期望步数"，而是预测"距离成功还剩 N 步"这个随机变量的<strong>离散概率分布</strong>（201 个 bin）。用与 VLA 相同架构但更小的 VLM（670M）作为 backbone，语言条件化，多任务共享，输出分布比点估计更稳定，且对稀疏奖励友好。</p>
+      </div>
+
+      <h3><span class="num">1</span>奖励定义与价值含义</h3>
+      <div class="math-display">
+        \[ r_t = \begin{cases} 0 & \text{if } t=T \text{ and success} \\ -C_{\text{fail}} & \text{if } t=T \text{ and failure} \\ -1 & \text{otherwise} \end{cases} \]
+      </div>
+      <p>这使得<strong>价值函数 V(o_t) 等于"距成功还剩步数的负值"</strong>（成功轨迹）或大负数（失败轨迹）。实现上归一化到 (-1, 0)，按任务最大长度标准化，使不同长度任务的价值可比。</p>
+
+      <h3><span class="num">2</span>训练方式</h3>
+      <div class="math-display">
+        \[ \min_\phi \mathbb{E}_{\tau \in \mathcal{D}} \left[\sum_{o_t \in \tau} H\left(R^B_t(\tau), p_\phi(V|o_t, \ell)\right)\right] \]
+      </div>
+      <p>用 <strong>Monte Carlo 估计</strong>（而非 Bellman backup）：直接把实际 return 离散化成 201 个 bin，然后最小化交叉熵。这避免了 off-policy Q-learning 的 bootstrapping 误差，虽然 on-policy 估计不如 Q-learning 精确，但实践中非常稳定可靠。</p>
+
+      <h3><span class="num">3</span>架构细节</h3>
+      <ul>
+        <li>Backbone：SigLIP 400M + Gemma 3 <strong>270M</strong>（VLA 用 4B，VF 用 270M 以节省计算）</li>
+        <li>在线推理 VF 成本极小，可在 VLA 训练时 on-the-fly 估算 advantage</li>
+        <li>同时用少量多模态 web 数据 co-train VF，防止过拟合</li>
+        <li>VF 初始化：也来自 Gemma 3 预训练权重</li>
+      </ul>
+
+      <h3><span class="num">4</span>为什么选 distributional 而非点估计</h3>
+      <div class="callout note">
+        <div class="callout-head">📐 设计理由</div>
+        <p>点估计 Q-function（如 DQN、SAC）需要 Bellman backup，在 off-policy / offline 设置下存在外推误差（distributional shift）。Distributional VF + MC 估计：<br>① 无 Bellman backup 误差；② 交叉熵 loss 天然适配 VLM 的 token 预测架构（等价于分类头）；③ 可表示 return 的不确定性，对稀疏奖励/长 horizon 任务更鲁棒。</p>
+      </div>
+    </section>
+
+    <!-- ============ FLOW MATCHING VLA ============ -->
+    <section class="card" id="flow-matching-vla">
+      <h2>Flow Matching VLA <span class="tag">Architecture</span></h2>
+      <p class="full-name">流匹配视觉-语言-动作模型 · 连续动作生成</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Flow matching 是一种生成连续动作分布的方法：从噪声出发，用神经网络学习一个"流场"（向量场），沿着流场积分即可把噪声映射到动作分布。相比扩散（DDPM），flow matching 的轨迹更直（ODE 而非 SDE），采样步数更少（推理更快）。π*₀.₆ 用独立的 860M action expert 做 flow matching，与 VLM backbone 共享注意力但 stop gradient 隔离。</p>
+      </div>
+
+      <h3><span class="num">1</span>与 Diffusion 的关系</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Diffusion (DDPM/DDIM)</th><th>Flow Matching</th></tr></thead>
+          <tbody>
+            <tr><td>过程</td><td>SDE（随机微分方程），噪声路径弯曲</td><td>ODE（常微分方程），路径更直</td></tr>
+            <tr><td>训练目标</td><td>预测噪声 ε 或 x₀</td><td>预测向量场 v(x,t) = x₁ - x₀</td></tr>
+            <tr><td>采样步数</td><td>通常 20-50 步（DDIM 可少）</td><td>通常 10 步以内</td></tr>
+            <tr><td>Log-likelihood</td><td>下界（ELBO）</td><td>无解析 log-likelihood，类似 ELBO</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>在 π*₀.₆ 中，flow matching loss 作为<strong>连续 log-likelihood 的下界</strong>来近似，使 advantage conditioning 的 SL 目标可以同时优化离散 token（cross-entropy）和连续动作（flow matching loss）。</p>
+
+      <h3><span class="num">2</span>为什么 flow matching 对 RL 困难</h3>
+      <p>PPO/REINFORCE 需要 <strong>ratio π_θ(a|o) / π_ref(a|o)</strong>——这要求可以精确计算当前策略和参考策略在动作 a 上的概率密度。Flow matching 模型没有解析 likelihood，只能通过 ELBO 近似，且近似误差在策略更新中会累积放大。RECAP 通过 advantage conditioning（SL 目标）完全规避了这一问题。</p>
+
+      <h3><span class="num">3</span>π*₀.₆ 的 Knowledge Insulation (KI) 训练</h3>
+      <p>VLA 同时预测三类输出：语言子任务 ℓ̂（next token prediction）、离散动作 a^ℓ（FAST tokenizer 离散化，cross-entropy）、连续动作 a（flow matching）。Stop gradient 隔离 action expert 与 VLM backbone，防止流场损失反向影响 VLM 的语言知识。这使预训练在语言/视觉数据上保持稳定。</p>
+    </section>
+
+    <!-- ============ π0 LINEAGE ============ -->
+    <section class="card" id="pi0-lineage">
+      <h2>π₀ 家族 <span class="tag">Model Family</span></h2>
+      <p class="full-name">Physical Intelligence π₀ / π₀-FAST / π₀.₅ / π₀.₆ / π*₀.₆ 发展脉络</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>π₀ 家族是 Physical Intelligence 开发的 flow matching VLA 系列。从初代的单任务 flow matching，到 π₀.₅ 的异构数据 co-training 泛化，再到 π*₀.₆ 用 RL 从部署经验中持续改进——每一代解决一个核心问题。</p>
+      </div>
+
+      <h3><span class="num">1</span>发展时间线</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>模型</th><th>时间</th><th>核心创新</th><th>关键组件</th><th>开源</th></tr></thead>
+          <tbody>
+            <tr><td><strong>π₀</strong></td><td>2024-10</td><td>Flow matching + VLM 的 VLA 范式</td><td>SigLIP + PaliGemma + 300M action expert</td><td>是（openpi）</td></tr>
+            <tr><td><strong>π₀-FAST</strong></td><td>2024-10</td><td>FAST 离散化 token 的动作表示</td><td>FAST tokenizer 预训练</td><td>是（openpi）</td></tr>
+            <tr><td><strong>π₀.₅</strong></td><td>2025-04</td><td>异构 co-training → 开放世界泛化</td><td>同模型两级推理；97.6% 非移动机器人数据</td><td>是（openpi）</td></tr>
+            <tr><td><strong>π₀.₆</strong></td><td>2025-11</td><td>更大 backbone + 更多数据（工程迭代）</td><td>Gemma 3 4B + 860M action expert</td><td>否</td></tr>
+            <tr><td><strong>π*₀.₆</strong></td><td>2025-11</td><td>RL from experience via RECAP</td><td>Advantage conditioning + distributional VF</td><td>否</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>关键设计演进</h3>
+      <ul>
+        <li><strong>π₀ → π₀.₅</strong>：从单纯 flow matching VLA → 异构数据 co-training + 两级推理。核心问题：如何泛化到新环境（数据迁移而非数据扩增）。</li>
+        <li><strong>π₀.₅ → π₀.₆</strong>：工程迭代。更大 VLM（Gemma 2B → Gemma 3 4B），更大 action expert（300M → 860M），更多预训练数据。</li>
+        <li><strong>π₀.₆ → π*₀.₆</strong>：范式迁移。从"用更好的数据训更好的 BC 策略"到"让策略在部署中通过 RL 不断超越 BC 上界"。核心问题：如何在实际部署中自主提升。</li>
+      </ul>
+
+      <div class="callout success">
+        <div class="callout-head">📌 对 Track A 的含义</div>
+        <p>π₀.₅ 已证明了异构数据迁移的可行性（co-training 使移动操作泛化到新家庭）。π*₀.₆ 进一步证明了 RL 改进的可行性（advantage conditioning 使 flow matching VLA 可 RL 训练）。两篇合起来构成了"怎么让 VLA 既能泛化又能持续改进"的完整路径——对人形操作 VLA 的研究具有直接参考价值。</p>
+      </div>
+    </section>
+
+    <!-- ============ ON-ROBOT RL ============ -->
+    <section class="card" id="on-robot-rl">
+      <h2>On-Robot RL <span class="tag">Real-World RL</span></h2>
+      <p class="full-name">在机器人上做强化学习 · 从真实部署中学习</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在真实机器人上运行 RL 面临独特挑战：奖励稀疏且需人工标注、数据采集慢（无法并行仿真）、episode reset 需人工、探索容易损坏设备。π*₀.₆ 通过 offline RL（而非 online RL）、稀疏二元奖励、DAgger 式人类干预来适配这些约束。</p>
+      </div>
+
+      <h3><span class="num">1</span>π*₀.₆ 的 on-robot RL 配置</h3>
+      <ul>
+        <li><strong>数据规模</strong>：T-shirt 洗衣任务，每轮 300 轨迹 × 4 台机器人，共 2 轮；Box assembly，每轮 600 autonomous + 360 intervention 轨迹，共 2 轮。</li>
+        <li><strong>奖励定义</strong>：episode-level 成功/失败（人工判断），episode 结束后标注，无 step-level 奖励信号。</li>
+        <li><strong>干预策略</strong>：人类专家监控自主 rollout，出错时接管（teleoperate 纠正），然后继续让机器人自主执行。</li>
+        <li><strong>迭代次数</strong>：实践中 1-2 次迭代已有显著效果；K=1 足以在洗衣任务上把成功率提升到 90%+。</li>
+      </ul>
+
+      <h3><span class="num">2</span>与仿真 RL 的关键区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>仿真 RL（e.g. sim2real）</th><th>On-Robot RL（RECAP）</th></tr></thead>
+          <tbody>
+            <tr><td>数据速度</td><td>可并行 × 1000 环境</td><td>物理时间限制，慢</td></tr>
+            <tr><td>奖励</td><td>自动计算，稠密或稀疏皆可</td><td>人工标注，必须稀疏</td></tr>
+            <tr><td>探索</td><td>随机探索代价低（重置自动）</td><td>需谨慎（设备安全），RECAP 用策略随机性 + 人类干预</td></tr>
+            <tr><td>Reset</td><td>自动 reset</td><td>人工 reset（π*₀.₆ 的主要人力成本之一）</td></tr>
+            <tr><td>分布 shift</td><td>迁移到真实环境有 gap</td><td>直接在真实分布上训练</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>具象例子：洗衣任务的 RECAP 循环</h3>
+      <pre><code>轮次 0（预训练 + SFT）：
+  - 用 π0.5 数据预训练 π*₀.₆（offline RL，全数据集）
+  - 用洗衣 demonstrations SFT（I=True）→ π⁰_ℓ
+
+轮次 1（第一次 on-robot 迭代）：
+  - 4 台机器人各自运行 π⁰_ℓ，收集 300 episodes
+  - 人类标注每集成功/失败
+  - 用所有数据更新 VF → 更新 π → π¹_ℓ
+  - 结果：成功率从 ~60% → ~90%（T-shirt 任务）
+
+轮次 2（第二次 on-robot 迭代）：
+  - 用 π¹_ℓ 再收集 300 episodes
+  - 重复更新 VF 和 π → π²_ℓ
+  - 结果：吞吐量继续提升 ~50%，但成功率已接近上限</code></pre>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#recap">RECAP — RL 框架</a></li>
+      <li><a href="#advantage-conditioning">Advantage Conditioning</a></li>
+      <li><a href="#distributional-vf">Distributional Value Function</a></li>
+      <li><a href="#flow-matching-vla">Flow Matching VLA</a></li>
+      <li><a href="#pi0-lineage">π₀ 家族谱系</a></li>
+      <li><a href="#on-robot-rl">On-Robot RL</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · π*₀.₆ (arXiv:2511.14759) · 配套笔记
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpatialVLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Shanghai AI Lab · Vision-Language-Action</span>
+    <h1>SpatialVLA:<br>空间表示赋能 VLA</h1>
+    <p class="subtitle">现有 VLA 只"看"2D 图像，缺乏对3D物理世界的真实感知——SpatialVLA 的核心思想是：<strong>把 3D 空间信息同时注入观测端（Ego3D Position Encoding）和动作端（Adaptive Action Grids）</strong>，让机器人策略在预训练时就学会跨本体的空间行动知识，使迁移和泛化变得又快又好。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 直接命中 · 移动操作 VLA · 空间感知</span>
+      <span class="pill">📅 2025-01 (RSS 2025)</span>
+      <span class="pill">🏢 Shanghai AI Lab / SJTU / Fudan / ZJU</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2501.15830">arXiv:2501.15830</a></span>
+      <span class="pill">⭐ <a href="https://github.com/SpatialVLA/SpatialVLA">GitHub (MIT, 689★)</a></span>
+      <span class="pill">🤗 <a href="https://huggingface.co/IPEC-COMMUNITY/spatialvla-4b-224-pt">IPEC-COMMUNITY/spatialvla-4b-224-pt</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">预训练规模</div>
+    <div class="value">1.1<span class="unit">M episodes</span></div>
+    <div class="desc">OXE + RH20T, 28 datasets</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">骨干模型</div>
+    <div class="value">3.5<span class="unit">B params</span></div>
+    <div class="desc">PaliGemma 2 (SigLIP + Gemma)</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">推理速度</div>
+    <div class="value">20<span class="unit">Hz</span></div>
+    <div class="desc">RTX 4090, 3 tokens/action</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">SimplerEnv SOTA</div>
+    <div class="value">71.9<span class="unit">%</span></div>
+    <div class="desc">zero-shot Visual Matching</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">现有 VLA 把机器人操控当做"看2D图、输数字"的问题，但人操纵物体靠的是对<strong>3D空间的直觉感知</strong>。SpatialVLA 的答案是：<strong>在观测侧用 Ego3D Position Encoding 把深度点云融入视觉 token，在动作侧用 Adaptive Action Grids 把连续运动离散成贴合真实动作分布的空间格子</strong>——两端同时"注入3D"，让 VLA 骨干在 1.1M episodes 预训练中就学会空间感知的机器人通用策略。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>现有 VLA 模型<strong>仅接受 2D 观测输入</strong>，缺乏对 3D 物理世界的精确感知——而人操控物体天然依赖 3D 空间心理模型。</li>
+          <li>跨本体的难点有两个：观测端各机器人相机位姿不统一（无法3D对齐），动作端各机器人运动范围差异巨大（无法统一离散化）。</li>
+          <li>Ego3D Position Encoding 用<strong>自我中心相机坐标系</strong>估计深度并反投影，规避外参标定——对任意 embodiment 普适。</li>
+          <li>Adaptive Action Grids 对整个预训练数据拟合 Gaussian 分布，按等概率原则切分格子——让高频动作区域有更细粒度的离散格子，3 个 token 替代 7 个 token，推理快 4×。</li>
+          <li>预训练完成后，格子可以用新数据的 Gaussian 重新离散化（re-discretization），并用三线性插值初始化新 token embedding——快速迁移到新机器人，无需从头微调。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#ego3d" class="note-link">Ego3D Position Encoding</a></strong>：用 ZoeDepth 估深度 → 反投影得到自我中心3D坐标 P → 正弦编码 γ(P) → MLP → 加到 SigLIP 的 2D patch token 上，得到 O3d = X + MLP(γ(P))。无需外参标定，跨本体通用。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#action-grids" class="note-link">Adaptive Action Grids</a></strong>：7D 动作 → 分为 ΔT(极坐标 ϕ,θ,r) + ΔR(roll,pitch,yaw) + grip → 各维度拟合 Gaussian 分布 → 等概率切分 M 份 → 学习可训练 spatial token embedding，共 V=8194 个 token，每步只预测 3 个。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#spatial-adaption" class="note-link">Spatial Embedding Adaption</a></strong>（post-training）：对新机器人数据重拟 Gaussian → 生成新格子 Gnew → 三线性插值从预训练 token 初始化新 token → LoRA 微调。LIBERO 上比 LoRA-only 提升 +4.6~5.4%。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 SimplerEnv 上零样本达 71.9% Visual Matching，超过 RT-2-X（60.7%）且参数量少 15×（3.5B vs 55B）；LIBERO 微调平均 78.1%，第一。空间理解专项任务（高度变化、空间指令）全面碾压无深度信息的竞争者。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>SimplerEnv Google Robot 零样本 Visual Matching：<strong>71.9%</strong>，比第二名 RoboVLM 高 +15.6%。</li>
+            <li>SimplerEnv Variant Aggregation 零样本：<strong>68.8%</strong>，超过 RT-2-X 64.3%（3.5B vs 55B 参数）。</li>
+            <li>LIBERO-Spatial 微调：<strong>88.2%</strong>；全套 LIBERO 平均 78.1%，第一。</li>
+            <li>消融：去掉 Ego3D Encoding 后 variant aggregation 从 81.6% 跌到 68.9%（-12.7%）。</li>
+            <li>消融：Adaptive Action Grids vs 线性 256-bin → Google Robot variant aggregation +36.5%。</li>
+            <li>推理速度：20Hz，比 OpenVLA（5Hz）快 4×，比 RT-2-X（3.2Hz）快 6×。</li>
+            <li>预训练：64×A100 GPU，10 天，batch size 2048。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（人形/移动操作 VLA）高度直接相关</strong>：Ego3D PE 的「无需外参标定、任意 embodiment 通用」设计思路，完全可以应用到移动操作机器人的多摄像头场景；Adaptive Action Grids 的"跨本体统一动作空间 + re-discretization 快速迁移"机制是当前少数同时解决观测和动作异构性的工作。<strong>Track B（足式先进算法）不直接相关</strong>——本文专注上肢/末端执行器的操控动作，不涉及步态或全身控制，但3D空间感知的思路对 perception module 有参考价值。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：VLA 模型局限于 2D 观测输入，缺乏对 3D 物理世界精确感知和理解的能力，而这正是操控任务的关键。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §I Introduction</div>
+          <blockquote class="ev-quote">existing VLA models are primarily confined to 2D observation inputs and lack precise perception and comprehension of the 3D physical world — where humans instinctively construct rich, structured mental representations of space, effortlessly aligning objects within a canonical, intuitive, and even personally tailored workspace for manipulation</blockquote>
+          <div class="ev-trans">现有 VLA 模型主要局限于 2D 观测输入，缺乏对 3D 物理世界的精确感知与理解——而人类本能地在大脑中构建丰富、结构化的空间心理表示，毫不费力地在规范化、直觉性甚至个性化的工作空间中对齐物体进行操控。</div>
+          <div class="ev-gloss">这是全文的核心动机：把问题从"2D 感知 → 动作预测"升维为"3D 空间感知 → 空间动作预测"。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_2_capabilities_overview.png" alt="SpatialVLA 四大能力概览">
+          <figcaption><strong>Fig. 1 (p.1, 局部)：</strong>SpatialVLA 的四大能力柱——大规模跨本体数据集、3D场景空间理解、零样本泛化、高效迁移后训练。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点2 两大挑战 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 两大挑战：跨本体 VLA 实现3D空间智能面临观测端（相机不对齐）和动作端（动作空间异质）两个根本困难。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §I Introduction</div>
+          <blockquote class="ev-quote">the observations from different robot embodiments are not 3D-aligned, because the camera sensors of different robots are various and mounted at different places (e.g. wrist and/or third-person), resulting in non-calibrated 3D observation spaces. Secondly, different robots have different action movement characteristics to accomplish diverse tasks, due to different degrees of freedom, motion controllers, workspace configurations, and task complexity, leading to significant difficulty in learning generalizable spatial actions.</blockquote>
+          <div class="ev-trans">来自不同机器人本体的观测在3D上是未对齐的，因为不同机器人的相机传感器各异且安装位置不同（如腕部和/或第三人称视角），导致3D观测空间未经标定。其次，不同机器人由于自由度、运动控制器、工作空间配置和任务复杂性不同，具有不同的动作运动特性，导致学习可泛化空间动作面临重大困难。</div>
+          <div class="ev-gloss">论文将问题切分为"观测端3D对齐"和"动作端3D统一"两个子问题，对应 Ego3D PE 和 Adaptive Action Grids 两个核心创新。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 Ego3D Position Encoding -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> Ego3D Position Encoding：在自我中心相机坐标系中估深度并反投影，无需外参标定，把3D点云融入 SigLIP 的 2D 视觉 token，跨本体通用。</div>
+
+        <figure>
+          <img src="./images/figure_1_system_overview.png" alt="SpatialVLA 系统架构图">
+          <figcaption><strong>Fig. 2 (p.3)：</strong>SpatialVLA 架构全景：左侧 Ego3D PE 将深度信息与 SigLIP 特征融合（O3d = X + MLP(γ(P))）；中间 Adaptive Action Grids 将连续动作编码为3个 spatial token；右侧后训练的 Gaussian re-discretization。</figcaption>
+        </figure>
+
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3–4 · §III-A The SpatialVLA Model Architecture</div>
+          <blockquote class="ev-quote">The proposed Ego3D position encoding integrates depth information from the camera frame and image pixels to construct an egocentric 3D coordinate system, which eliminates the need for robot-camera extrinsic calibration and is agnostic to specific robot setups. Specifically, we use ZoeDepth to estimate depth map D and obtain pixel's 3D position p = {x, y, z} in the egocentric 3D coordinate system via back-projection π−1 with camera intrinsic parameters.</blockquote>
+          <div class="ev-trans">所提出的 Ego3D 位置编码将相机帧的深度信息与图像像素相结合，构建自我中心3D坐标系，从而无需机器人-相机外参标定，且与特定机器人设置无关。具体地，我们使用 ZoeDepth 估计深度图 D，并通过相机内参利用反投影 π⁻¹ 获得像素在自我中心3D坐标系中的3D位置 p = {x, y, z}。</div>
+          <div class="ev-gloss">关键设计选择：用单目深度估计（ZoeDepth）而非 RGB-D 相机，保留了与现有机器人硬件的兼容性；"自我中心"坐标系规避了依赖机器人底座的外参标定问题。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §III-A (Equation 2)</div>
+          <blockquote class="ev-quote">The egocentric 3D spatial representations O3d ∈Rd×h×w are obtained by adding 3D position embedding P′ and 2D path visual tokens X, depicted as follows, O3d = X + P′ = X + MLP(γ(P)).</blockquote>
+          <div class="ev-trans">自我中心3D空间表示 O3d 通过将3D位置嵌入 P′ 与2D图块视觉 token X 相加得到：O3d = X + P′ = X + MLP(γ(P))。</div>
+          <div class="ev-gloss">加法融合（而非拼接或交叉注意力）保持了与 PaliGemma 2 预训练格式的兼容——这是工程上的重要考量：改动尽量小，复用 VLM 的预训练知识。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 Adaptive Action Grids -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> Adaptive Action Grids：对整个预训练数据拟合 Gaussian 分布，按等概率原则切分动作格子，让高频动作区域自动获得更细粒度——3 个 token 代替 7 个 token，速度快 4×，精度更高。</div>
+
+        <figure>
+          <img src="./images/figure_3_adaptive_action_grids.png" alt="Adaptive Action Grids 可视化">
+          <figcaption><strong>Fig. 3 (p.4)：</strong>左图是 ΔR/ΔT 的动作分布热力图（Gaussian 拟合）；右图是按等概率切分后的行动格子——在动作密集区域格子更细，稀疏区域格子更粗，体现自适应性。</figcaption>
+        </figure>
+
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §III-A Adaptive Action Grids</div>
+          <blockquote class="ev-quote">for tokenizing continuous translation and rotation movements, we first normalize each action variable into [−1, 1] for each robot environment and statistic the translation and rotation movements ∆R = {roll, pitch, yaw}, ∆T = {ϕ, θ, r} on the whole dataset mixture, following with a parameterized Gaussian distribution fitting N(µa, Σa). Then, the continuous actions are split into M intervals Gi=1,..,M = {[a1 = −1, a2), ..., [aM-1, aM = 1]} with equal probability 1/M on each normalized action variable</blockquote>
+          <div class="ev-trans">为了对连续的平移和旋转运动进行 tokenize，我们首先将每个机器人环境中的每个动作变量归一化到 [−1,1]，并统计整个数据集混合上的平移和旋转运动（ΔR、ΔT），然后拟合参数化 Gaussian 分布 N(μₐ, Σₐ)。接着，将连续动作按每个归一化动作变量的等概率 1/M 切分为 M 个区间 Gᵢ₌₁,..,M。</div>
+          <div class="ev-gloss">"等概率"而非"等间距"是核心：这使高频的小幅动作区域格子更密（精度高），低频的大幅动作区域格子更稀——自适应地将离散化预算分配给信息量最大的区域。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §III-A (after Eq.5)</div>
+          <blockquote class="ev-quote">it is worth noting that the model only needs to generate 3 tokens for one-step robot actions rather than 7 tokens as in RT-1, RT-2 and OpenVLA, achieving in fast model inference speed.</blockquote>
+          <div class="ev-trans">值得注意的是，该模型对一步机器人动作只需生成 3 个 token，而不是像 RT-1、RT-2 和 OpenVLA 那样需要 7 个 token，从而实现了更快的模型推理速度。</div>
+          <div class="ev-gloss">把 7 维动作 → 3 个 spatial token（ΔT 1个 + ΔR 1个 + grip 1个）是本文效率优势的直接来源：词表虽大（8194），但每步只查询 3 次，推理速度 20Hz vs OpenVLA 的 5Hz。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 后训练迁移机制 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> Spatial Embedding Adaption（后训练）：对新机器人数据重拟 Gaussian 生成新格子，用三线性插值从预训练 token 初始化新 token，加速收敛并提升小数据微调性能。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §III-B Post-training Designs</div>
+          <blockquote class="ev-quote">we fit a new Gaussian distribution N(µnew, Σnew) for each action variable on post-training datasets and create discrete spatial action grids Gnew in translation and rotation movement to construct action grids Gnew and tokens anew, where the embeddings of new spatial action tokens Eanew are initialized by trilinear interpolation with pre-trained action tokens Ea.</blockquote>
+          <div class="ev-trans">我们对后训练数据集中每个动作变量拟合新的 Gaussian 分布 N(μnew, Σnew)，在平移和旋转运动中创建离散空间动作格子 Gnew 以构建动作格子和 token anew，其中新空间动作 token 的嵌入 Eanew 通过与预训练动作 token Ea 的三线性插值初始化。</div>
+          <div class="ev-gloss">三线性插值意味着：新机器人的动作格子中心点在预训练的3D动作空间里找 K 个最近邻格子，加权平均其 embedding 作为初始值——这保留了预训练中学到的"3D动作语义"，让新 token 从"有意义的起点"开始优化，而非随机初始化。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 大规模预训练数据 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 预训练数据：1.1M episodes 来自 OXE 和 RH20T 的 28 个数据集，覆盖多种机器人本体、场景和任务，训练 10 天（64× A100）。</div>
+
+        <figure>
+          <img src="./images/figure_4_dataset_mixture.png" alt="SpatialVLA 训练数据集混合比例">
+          <figcaption><strong>Fig. 9 (Appendix p.14)：</strong>28 个数据集的比例饼图——Bridge 15.34%、Fractal 14.71%、Droid 11.66% 等，Others 31.76%。数据混合权重根据各数据集在真实环境测试性能调整（来自 OpenVLA 的设计，本文改进权重）。</figcaption>
+        </figure>
+
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §III-B Pre-training Procedure</div>
+          <blockquote class="ev-quote">We train SpatialVLA from Paligemma2 backbone on a cross-robot dataset mixture with 1.1 Million real robot demonstrations {ζ1, ..., ζn}, covering a diverse range of robot embodiments, scenes, and tasks. This pre-training dataset mixture consists of a subset of OXE and the RH20T dataset and we modify the mixture weights from OpenVLA according to the real-word testing performance of individual dataset</blockquote>
+          <div class="ev-trans">我们以 PaliGemma2 骨干为基础，在包含 110 万条真实机器人示范的跨机器人数据集混合上训练 SpatialVLA，覆盖多种机器人本体、场景和任务。该预训练数据集混合由 OXE 的子集和 RH20T 数据集组成，我们根据各数据集在真实环境测试性能修改了来自 OpenVLA 的混合权重。</div>
+          <div class="ev-gloss">关键细节：文本 token embedding 在预训练中冻结（保留 VLM 的语言理解）；只有 Ego3D PE 的 MLP 参数和 spatial action token embedding 是随机初始化并优化的——这减少了训练不稳定性。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 零样本性能 SOTA -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 主结果：SpatialVLA 在 SimplerEnv 零样本评测超越 RT-2-X（55B → 3.5B，参数量少15倍），并在 WidowX 真实机器人上展现最高平均成功率，证明 3D 空间表示对泛化的决定性作用。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §IV-A SimplerEnv Evaluation</div>
+          <blockquote class="ev-quote">Our SpatialVLA model yields 71.9% and 75.1% Visual Matching scores in zero-shot and fine-tuning settings, surpassing the second-best policy, RoboVLM, by +15.6% and +11.7% margins. Notably, our model trained from scratch on OXE mixture with RH20T surpasses the state-of-the-art closed-source model RT-2-X, achieving superior performance in Visual Matching (71.9% vs 60.7%) and Variant Aggregation (68.8% vs 64.3%), while using significantly fewer model parameters (3.5B vs 55B).</blockquote>
+          <div class="ev-trans">我们的 SpatialVLA 模型在零样本和微调设置下分别获得 71.9% 和 75.1% 的 Visual Matching 分数，比第二名 RoboVLM 分别高出 +15.6% 和 +11.7%。值得注意的是，我们从头在 OXE 混合数据集加 RH20T 上训练的模型超越了最先进的闭源模型 RT-2-X，在 Visual Matching（71.9% vs 60.7%）和 Variant Aggregation（68.8% vs 64.3%）上都取得更优性能，同时使用的模型参数量大幅减少（3.5B vs 55B）。</div>
+          <div class="ev-gloss">55B 的 RT-2-X 是闭源的谷歌模型，3.5B 的 SpatialVLA 超越它是量级差异上的强有力论据，表明空间表示设计的价值远超单纯的参数规模扩展。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 消融验证 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 消融证明：去掉 Ego3D Encoding 导致 variant aggregation 下降 12.7%；Adaptive Action Grids 比线性 256-bin 高 36.5%——两个创新各自独立贡献显著。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §IV-D Ablations on Design Decisions</div>
+          <blockquote class="ev-quote">In contrast to the conventional linear 256-bin action space discretization (#1v.s.#2), the proposed adaptive spatial action grids exhibits significant advantages, particularly in the Google Robot task, with the promotion of +36.5% and +42.1% in variant aggregation and visual matching success rates, respectively.</blockquote>
+          <div class="ev-trans">与传统的线性 256-bin 动作空间离散化（#1 vs #2）相比，所提出的自适应空间动作格子展现出显著优势，特别是在 Google Robot 任务上，variant aggregation 和 visual matching 成功率分别提升了 +36.5% 和 +42.1%。</div>
+          <div class="ev-gloss">这是论文最关键的消融实验：原有 VLA（OpenVLA 等）用线性 256-bin 离散化，SpatialVLA 的自适应 Gaussian 格子超出幅度之大（+36.5%），表明"如何把连续动作离散化"本身是一个被严重低估的设计变量。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §IV-D (Table IV, row #8)</div>
+          <blockquote class="ev-quote">the proposed egocentric 3D position encoding (ego3d), incorporating 3D point cloud features, helps the model overcome varied lighting, color, textures, and camera poses, yielding stronger generalizability in diverse manipulation scenarios. Models w/o ego3d suffer a significant performance drop in variant aggregation, from 81.6% and 79.2% to 68.9% and 66.7%, due to their inability to adapt to scene changes.</blockquote>
+          <div class="ev-trans">所提出的自我中心3D位置编码（ego3d）融合了3D点云特征，帮助模型克服不同的光照、颜色、纹理和相机位姿变化，在多样化操控场景中具有更强的泛化能力。没有 ego3d 的模型在 variant aggregation 上出现显著性能下降，从 81.6% 和 79.2% 降至 68.9% 和 66.7%，原因是无法适应场景变化。</div>
+          <div class="ev-gloss">"variant aggregation" 任务专门测试模型对光照/颜色/纹理变化的鲁棒性——正是 Ego3D PE 能提供与外观无关的3D几何信息的场景，故消融差距最大在这里出现，印证了设计动机。</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查</h2>
+      <p class="lead">以下为 <strong>2026-06 实时查询</strong> GitHub <a href="https://github.com/SpatialVLA/SpatialVLA">SpatialVLA/SpatialVLA</a> 和 Hugging Face IPEC-COMMUNITY 的结果。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/SpatialVLA/SpatialVLA">github.com/SpatialVLA/SpatialVLA</a>（MIT License；Python 96.5%，Shell 3.5%；689★，51 forks）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://huggingface.co/IPEC-COMMUNITY/spatialvla-4b-224-pt">IPEC-COMMUNITY/spatialvla-4b-224-pt</a>（预训练）· <a href="https://huggingface.co/IPEC-COMMUNITY/spatialvla-4b-mix-224-pt">spatialvla-4b-mix-224-pt</a>（混合微调）· <code>spatialvla-4b-224-sft-bridge</code> · <code>spatialvla-4b-224-sft-fractal</code></dd>
+        <dt>数据</dt><dd><span class="os-tag os-part">部分开源</span> OXE 和 RH20T 本身已公开；数据混合权重配方在论文 Appendix A 中披露，但需自行下载和处理</dd>
+        <dt>依赖</dt><dd><span class="os-tag os-yes">简洁</span> 纯 HuggingFace Transformers（≥ 4.47.0）推理，8.5GB GPU，Python 3.10+；<code>AutoModel</code> + <code>AutoProcessor</code> 即可加载</dd>
+      </dl>
+      <div class="callout success">
+        <div class="callout-head">✅ 部署友好</div>
+        <p>论文 Abstract 明确声明 "All the details and codes are open-sourced"，代码库仅依赖标准 HuggingFace 接口，复现门槛极低。与 π0（JAX + 私有硬件）相比，SpatialVLA 的开源程度和易用性明显更高。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · Abstract</div>
+        <blockquote class="ev-quote">All the details and codes are open-sourced.</blockquote>
+        <div class="ev-trans">所有细节和代码均已开源。</div>
+        <div class="ev-gloss">GitHub 实时验证：MIT License，689 stars（截至2026-06查询）；HuggingFace 上有4个官方 checkpoint 变体。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>SpatialVLA 是迄今少数同时解决 VLA 的"观测端3D对齐"和"动作端3D统一"两个跨本体核心难题的工作，且都以极简的方式实现（加法 PE、Gaussian 格子离散化），无需额外的 RGB-D 硬件或相机标定。3 tokens/step 的推理设计使其在 20Hz 运行（实用性强）；代码权重全开源（MIT）；消融实验充分，Adaptive Action Grids vs 线性256-bin 的 +36.5% 差距是关键说服力数据。RSS 2025 接收，是当前 VLA 社区的重要参考基线。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留与局限</div>
+        <p>① <strong>单目深度估计的误差</strong>：ZoeDepth 的深度估计在弱纹理/反光物体上误差较大，论文未分析 Ego3D PE 对深度估计精度的敏感性。② <strong>Gaussian 假设的局限</strong>（作者自承）：单轴运动场景下 Gaussian 拟合会导致格子在某轴聚集，丧失其它轴的细粒度。③ <strong>长时序任务困难</strong>（作者自承）：LIBERO-Long 成功率 55.5%，明显低于其它子任务，因为模型仅依赖当前帧和历史 token，无显式长程规划机制。④ <strong>评测场景局限</strong>：评测全为桌面单臂操控，无移动底盘、双臂或腿足场景，泛化到移动操作 VLA 需验证。⑤ <strong>无与 diffusion-based VLA 的直接对比</strong>：π0 的流匹配动作 head 在精细操控上通常更优，但论文仅部分对比 π0（且 π0 无开源权重对齐比较）。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;方法创新扎实、开源完整、消融充分，但非颠覆性范式突破——是 VLA 空间表示方向的优质参考论文，尤其对 Track A 移动操作 VLA 有直接工程参考价值。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · SpatialVLA (arXiv:2501.15830) · RSS 2025</footer>
+
+</body>
+</html>

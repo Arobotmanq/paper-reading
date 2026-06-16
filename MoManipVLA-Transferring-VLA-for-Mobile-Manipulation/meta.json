@@ -1,0 +1,47 @@
+{
+  "title": "MoManipVLA: Transferring Vision-language-action Models for General Mobile Manipulation",
+  "title_cn": "MoManipVLA：将 VLA 模型迁移至通用移动操作",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2025",
+  "one_liner": "把固定基座 VLA 当路径点生成器，通过物理可行性约束下的双层轨迹优化（上层优化底盘、下层优化臂轨迹），以极低训练成本将其迁移到移动操作平台。",
+  "framework": "idea-first",
+  "idea": "固定基座 VLA 的末端器路径点具有跨本体的语义泛化价值；通过双层整体运动规划（reachability+smoothness+collision）使路径点在移动平台上物理可行，从而无需大规模移动操作数据即可迁移 VLA 策略。",
+  "logic_chain": [
+    "现有 VLA 模型泛化能力强但只针对固定基座，无法生成底盘动作",
+    "移动操作数据采集成本高，从头训练泛化能力有限",
+    "VLA 预测的末端器路径点保留语义泛化价值，可作为路径点 oracle",
+    "10-DoF 联合搜索非凸且空间大，双层分解（3-DoF 底盘 + 7-DoF 臂）贪心求解可行",
+    "物理可行性三目标（可达性/平滑性/碰撞）+ Dual Annealing 生成可执行整体轨迹"
+  ],
+  "method_skeleton": [
+    "复用 OpenVLA-7B（LoRA 微调 200 条示范）作为末端器路径点生成器",
+    "三项物理可行性目标函数：Reachability（IK 迭代次数代理）+ Smoothness（关节角差分）+ Collision（nvblox ESDF 查询点距离），加权组合 O=λ1Fr+λ2Fs+λ3Fc",
+    "双层轨迹优化：上层 Dual Annealing 搜索底盘位姿（最大化臂搜索空间质量），下层在确定底盘后选最优臂轨迹；Pinocchio IK 求关节角"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中——提供完整的固定基座 VLA → 移动操作迁移范式，公式可复用，OVMM 基线可对比",
+    "track_B_legged": "不相关——不涉及足式控制或 locomotion"
+  },
+  "validation": "OVMM: Overall SR +4.2%（49.4% vs KUZHUM 38.2%），Pick SR +12.4%（53.1% vs 35.2%）；真实世界 50 条示范微调，Put in Bowl 40%、Stack Block 30%、Open Drawer 10%（各测 10 次）",
+  "core_points": [
+    "现有 VLA 模型针对固定基座，无法产生底盘与机械臂的协同动作",
+    "VLA 末端器路径点具有语义泛化价值，可作为移动操作的路径点 oracle",
+    "三项物理可行性目标（可达性/平滑性/碰撞）量化轨迹质量",
+    "双层轨迹优化（上层底盘 + 下层臂）分解 10-DoF 搜索，比直接联合搜索更快且成功率更高",
+    "消融：去掉 VLA 路径点（w/o GT）成功率从 49.4% 暴跌至 11.3%——路径点是核心",
+    "真实世界仅需 50 条示范微调即可部署，验证低成本迁移可行性",
+    "局限：性能受 VLA 上限约束；无任务规划模块，不支持长程任务"
+  ],
+  "effects": [
+    "OVMM Overall SR 49.4%，超 SOTA KUZHUM 4.2 pp（+11.2 pp Partial SR）",
+    "Pick 成功率 53.1%，超所有基线 12.4%",
+    "双层 vs 直接搜索：成功率 +0.9%，延迟 -7%（693ms vs 743ms）",
+    "真实部署仅需 50 条示范，Put in Bowl 成功率 40%"
+  ],
+  "open_source": "none",
+  "rating": "Valuable",
+  "summary": "summary.html",
+  "open_source_detail": "截至2026-06未见代码/权重(CVPR2025, 仅项目页)",
+  "open_source_checked": "2026-06-02"
+}

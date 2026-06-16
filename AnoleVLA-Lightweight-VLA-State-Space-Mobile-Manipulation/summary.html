@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AnoleVLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+  .pill.new { background: rgba(249,115,22,0.22); border-color: rgba(249,115,22,0.5); color: #fed7aa; font-weight: 700; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+  .badge.valuable { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #5b21b6; border-color: #7c3aed; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Keio University · Lightweight VLA · Mobile Manipulation</span>
+    <h1>AnoleVLA:<br>SSM 驱动的轻量 VLA</h1>
+    <p class="subtitle">Transformer 的二次方注意力让大 VLA 在资源受限机器人上跑不起来——<strong>用 Mamba (deep SSM) 替换 Transformer backbone</strong>，配合速度-加速度两阶段训练，在移动操作机器人上实现比 π0.5 <strong>成功率高 21 分、推理快 3 倍</strong>的轻量部署。</p>
+    <div class="meta-pills">
+      <span class="pill new">🆕 NEW · 2026</span>
+      <span class="pill rel">🎯 Track A 移动操作 VLA · 直接命中 · 效率角度</span>
+      <span class="pill">📅 2026-03</span>
+      <span class="pill">🏢 Keio University</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2603.15046">arXiv:2603.15046</a></span>
+      <span class="pill">🌐 <a href="https://anolevla-8z7l8.kinsta.page/">Project Page</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">vs π0.5 成功率提升</div>
+    <div class="value">+21<span class="unit">pts</span></div>
+    <div class="desc">真实机器人实验平均成功率</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">推理速度加速</div>
+    <div class="value">3×<span class="unit">faster</span></div>
+    <div class="desc">216 ms/chunk vs π0.5 的 578 ms</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">模型大小</div>
+    <div class="value">0.47<span class="unit">B</span></div>
+    <div class="desc">仅约 π0.5 (3.0B) 的 1/6</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">开源状态</div>
+    <div class="value" style="font-size:1.2em">待发布</div>
+    <div class="desc">代码承诺于论文发表后开放</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">VLA 的大 Transformer backbone 让真实机器人部署成为"奢侈"——<strong>用 <a href="./notes.html#mamba" class="note-link">Mamba (deep SSM)</a> 把序列复杂度从 O(L²) 降到 O(L)</strong>，再加一个「先学速度再学加速度」的两阶段训练，让 0.47B 参数的轻量 VLA 在<strong>移动操作</strong>任务上同时赢得成功率和推理速度。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>VLA 把视觉/语言/状态 token 拼成长序列；<strong>Transformer 自注意力 O(L²) 在长序列下成为关键瓶颈</strong>，制约实时部署。</li>
+          <li><a href="./notes.html#ssm" class="note-link">Deep SSM (Mamba)</a> 用<strong>递归隐状态</strong>以 O(L) 处理序列，天然适合增量式实时感知融合。</li>
+          <li>Mamba 与 Transformer 共享 token 空间 → 可<strong>即插即用替换 backbone</strong>，保留上游多模态 tokenization 和下游 action decoding 管线不变。</li>
+          <li>机器人轨迹的「速度」和「加速度」都要约束才能平滑 → <strong>两阶段训练</strong>：先拟合速度（位移 delta），再加速度 loss（速度 delta）精细化时序一致性。</li>
+          <li>在 50 episode 的小数据集上，<strong>大模型 π0.5 (3B) 过拟合 + 领域迁移失败</strong>；轻量 Mamba 模型样本效率更高，反而超越。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#mamba" class="note-link">Mamba-370M backbone</a></strong>：替换 Transformer，O(L) 序列复杂度；本体感知 token 排在序列最前，确保 Mamba 递归时先以机器人状态为条件再整合视觉和语言。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#action-head" class="note-link">线性 Action Head</a></strong>：直接从 backbone 末尾 token 的隐状态线性投影出 H 步连续动作 chunk（无 action 离散化，无 diffusion 迭代），单次前向即出轨迹。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#two-stage" class="note-link">两阶段训练</a></strong>：第一阶段只用速度 loss（L1 on δpose）；第二阶段加入<strong>加速度 loss</strong>（L1 on δ²pose），确保轨迹时序平滑，避免真实机器人上的抖动失效。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 Meta-World 仿真 + Toyota HSR 真实机器人物理实验两套评测中，AnoleVLA 均超越所有同量级基线（SmolVLA、TinyVLA、VLA-Adapter）以及大 10 倍的 π0.5；同时推理速度是 π0.5 的 3 倍。消融证明加速度 loss 带来 +4.73 pts。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>Meta-World 平均成功率：AnoleVLA 67.85% vs SmolVLA 57.33% vs π0.5 43.80%</li>
+            <li>Real-world 平均成功率：AnoleVLA 63% vs SmolVLA 52% vs π0.5 42%</li>
+            <li>推理速度：AnoleVLA 216 ms/chunk vs SmolVLA 309 ms vs π0.5 578 ms</li>
+            <li>Open drawer（接触密集）：AnoleVLA 75% vs SmolVLA 55%（平滑轨迹的核心优势场景）</li>
+            <li>加速度 loss 消融：无加速度 loss 63.12% → 有 67.85%（+4.73 pts）</li>
+            <li>失败分析（20例）：位置识别错误 10例 / 抓取点预测错误 6例 / 动作不完整 4例</li>
+          </ul>
+        </details>
+      </div>
+
+      <figure>
+        <img src="./images/figure_1_overview_performance.png" alt="AnoleVLA 总览与真实机器人成功率对比">
+        <figcaption><strong>Figure 1（p.1）：</strong>左侧为 AnoleVLA 系统架构概览——Deep SSM backbone 处理多模态输入，两阶段训练策略（速度 loss + 加速度 loss）。右侧为真实机器人实验成功率 vs 推理速度散点图，AnoleVLA (0.47B) 在两个维度上同时领先 π0.5 (3.0B)，推理速度快约 3 倍。</figcaption>
+      </figure>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）直接命中</strong>：这正是轻量化 VLA 在真实移动操作机器人（Toyota HSR）上部署的样本。Mamba backbone 替换思路、两阶段平滑训练、以及「为什么大 VLA 在小数据集上会输给轻量模型」的分析都值得借鉴。Track B（足式先进算法）<strong>不相关</strong>——本文不涉及 locomotion 或步态控制。本文 <strong>NEW（2026-03）</strong> 且来自学术组，是同类轻量 VLA 中较新的一篇，代表<strong>效率优先</strong>路线。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 核心问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：VLA 在受限资源环境下的部署依然困难，因为标准 Transformer backbone 的推理成本与 VRAM 需求太高。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · §I Introduction</div>
+          <blockquote class="ev-quote">deploying them on physical robots remains challenging because their backbones require substantial memory and compute at inference time.</blockquote>
+          <div class="ev-trans">将它们部署到实体机器人上仍然充满挑战，因为其 backbone 在推理时需要大量内存和算力。</div>
+          <div class="ev-gloss">OpenVLA 基于 Llama-2 7B，π0.5 用 3B 参数 LM——两者都不是嵌入式平台的朋友。这是全文出发点。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · §I Introduction</div>
+          <blockquote class="ev-quote">Transformer self-attention scales quadratically with sequence length, which becomes problematic because VLAs typically concatenate vision, language, and robot-state tokens into a single sequence.</blockquote>
+          <div class="ev-trans">Transformer 自注意力随序列长度呈二次方增长，这对 VLA 来说尤为棘手，因为 VLA 通常将视觉、语言和机器人状态 token 拼接为单一序列。</div>
+          <div class="ev-gloss">精确定位了 bottleneck：不是模型参数数量本身，而是注意力的 O(L²) 复杂度——序列越长越痛。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 Mamba backbone -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 解法核心：用 <a href="./notes.html#mamba" class="note-link">Mamba (deep SSM)</a> 替换 Transformer backbone，实现 O(L) 线性复杂度的多模态序列建模，同时保留原有 tokenization 和 action decoding 管线不变。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · §I Introduction</div>
+          <blockquote class="ev-quote">we propose AnoleVLA, a lightweight VLA that leverages a deep state space model (deep SSM) for efficient multimodal sequence modeling. By leveraging the linear computational complexity of deep SSMs, this model addresses the inference bottlenecks.</blockquote>
+          <div class="ev-trans">我们提出 AnoleVLA，一个利用 deep state space model (deep SSM) 进行高效多模态序列建模的轻量 VLA。通过利用 deep SSM 的线性计算复杂度，该模型解决了推理瓶颈。</div>
+          <div class="ev-gloss">核心思想：Mamba 的 O(L) 复杂度把 VLA 长序列的推理成本从「随上下文爆炸」变为「线性可控」。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §IV Introduction (Architecture)</div>
+          <blockquote class="ev-quote">Because both Mamba and transformers operate as causal sequence models over a shared token space, Mamba can seamlessly replace the transformer backbone while preserving the upstream multimodal tokenization and downstream action decoding pipelines.</blockquote>
+          <div class="ev-trans">由于 Mamba 和 Transformer 都在共享的 token 空间上作为因果序列模型运行，Mamba 可以无缝替换 Transformer backbone，同时保留上游多模态 tokenization 和下游 action decoding 管线。</div>
+          <div class="ev-gloss">即插即用的关键依据：同一 token 接口，只换骨干——这是工程上的优雅之处，也是实际可行性的基础。</div>
+        </div>
+        <figure>
+          <img src="./images/figure_3_architecture_mamba.png" alt="Figure 3: AnoleVLA 模型架构">
+          <figcaption><strong>Figure 3（p.3）：</strong>完整架构图。左侧：多模态 token（本体感知 s、状态差分 Δs、视觉 x_v、语言 x_l）拼接后送入 Mamba-370M backbone；每个 Mamba block 做选择性 SSM 更新 z_{n,i} = A z_{n,i-1} + B h_{n,i-1}。右侧：两阶段训练的速度 loss 和加速度 loss 对应 H 步动作 chunk 的监督信号。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点3 架构细节：token 排序与 action head -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 架构细节：本体感知 token 排在序列最前，利用 Mamba 因果递归确保隐状态先以机器人状态为条件；action head 为单层线性投影——Mamba 递归聚合已足够表达。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §IV-B Architecture</div>
+          <blockquote class="ev-quote">We place proprioceptive tokens at the beginning of the sequence so that, under Mamba's causal recurrence, the hidden state is first conditioned on the agent's state before the integration of visual and linguistic information.</blockquote>
+          <div class="ev-trans">我们将本体感知 token 放置在序列的开头，以便在 Mamba 的因果递归下，隐状态首先以智能体状态为条件，然后再整合视觉和语言信息。</div>
+          <div class="ev-gloss">这是 Mamba 与 Transformer 的关键设计差异之一：Transformer 可全局注意力，Mamba 的因果性意味着 token 顺序决定信息流。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §IV-B Architecture (Action head)</div>
+          <blockquote class="ev-quote">We adopt a linear projection as the action head because the Mamba backbone already extracts a sufficiently expressive representation at the final token position through its recurrent aggregation of the full input sequence.</blockquote>
+          <div class="ev-trans">我们采用线性投影作为 action head，因为 Mamba backbone 已经通过对完整输入序列的递归聚合，在最后的 token 位置提取了足够具有表达力的表征。</div>
+          <div class="ev-gloss">不需要 diffusion head 也不需要 action tokenizer——Mamba 递归隐状态本身已经是「全序列摘要」，直接线性投影出 50步 action chunk。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 两阶段训练 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 两阶段训练：先用速度 loss（L1 on end-effector delta）学基本轨迹；再加入<a href="./notes.html#two-stage" class="note-link">加速度 loss</a>（L1 on 速度差分）精化时序平滑性——消融证明此阶段带来 +4.73 pts。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §IV-C Loss Function</div>
+          <blockquote class="ev-quote">In trajectory generation, consistency in both velocity and acceleration is important for smooth execution on real hardware. Motivated by this observation, we design a two-stage loss that supervises both quantities.</blockquote>
+          <div class="ev-trans">在轨迹生成中，速度和加速度的一致性对于在真实硬件上平滑执行都很重要。基于此观察，我们设计了一个两阶段 loss，对两个量都进行监督。</div>
+          <div class="ev-gloss">直觉：「速度连续」保证路径合理，「加速度连续」保证不抖动——真实机器人关节的冲击 (jerk) 是操作失败的常见原因。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §V-D Ablation Studies</div>
+          <blockquote class="ev-quote">Table III shows that model (i) achieves a success rate 4.73 points lower than model (ii). This result suggests that the introduction of the acceleration loss alongside the velocity loss enabled the generation of smoother and more stable trajectories, which effectively improved overall performance.</blockquote>
+          <div class="ev-trans">表 III 显示，模型 (i) 的成功率比模型 (ii) 低 4.73 分。这一结果表明，在速度 loss 的基础上引入加速度 loss，能够生成更平滑、更稳定的轨迹，从而有效提升了整体性能。</div>
+          <div class="ev-gloss">受控消融：唯一变量是第二阶段是否加入加速度 loss，+4.73 pts 的差距说明平滑约束并非可有可无的锦上添花。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 主结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 主结果：AnoleVLA 在仿真 (Meta-World) 和真实物理实验中均超越所有基线，包括比它大 6 倍的 π0.5，同时推理速度快约 3 倍。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4–5 · §V-B Quantitative Results</div>
+          <blockquote class="ev-quote">AnoleVLA outperformed SmolVLA, the strongest baseline, by 10.52 points, and surpassed π0.5 by 24.05 points. These results demonstrate that AnoleVLA outperformed the baseline approaches while maintaining a competitive or smaller model size.</blockquote>
+          <div class="ev-trans">AnoleVLA 超越了最强基线 SmolVLA 10.52 分，并超越 π0.5 24.05 分。这些结果证明，AnoleVLA 在保持有竞争力或更小模型规模的同时，超越了所有基线方法。</div>
+          <div class="ev-gloss">Meta-World 上 24 pts 的优势相当惊人——但仿真 benchmark 本身是 50 tasks × 2500 episodes，有一定规模支撑。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6–7 · §VI-B Physical Quantitative Results</div>
+          <blockquote class="ev-quote">AnoleVLA achieved an average success rate of 63%, whereas the values of VLA-Adapter, TinyVLA, and SmolVLA were 40%, 29%, and 52%, respectively. Consequently, AnoleVLA outperformed SmolVLA, the strongest among the small-scale VLAs, by 11 points for the average success rate.</blockquote>
+          <div class="ev-trans">AnoleVLA 实现了 63% 的平均成功率，而 VLA-Adapter、TinyVLA 和 SmolVLA 分别为 40%、29% 和 52%。因此，AnoleVLA 在平均成功率上超越了小规模 VLA 中最强的 SmolVLA 11 分。</div>
+          <div class="ev-gloss">真实机器人上的差距更能说明问题。特别是 Open drawer 任务（75% vs 55%）直接体现了平滑轨迹的价值——接触密集任务对抖动尤为敏感。</div>
+        </div>
+        <figure>
+          <img src="./images/figure_6_physical_experiments.png" alt="Figure 6: 物理实验成功执行示例">
+          <figcaption><strong>Figure 6（p.7）：</strong>AnoleVLA 在真实 Toyota HSR 机器人上的成功执行：(a) Open the drawer — 抓住把手并完全拉出；(b) Put the lemon into the cup — 抓起柠檬放入目标容器；(c) Remove the apple from the tray — 抓苹果并移出托盘。三类任务覆盖抽屉开关、拾放、容器操作。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点6 大模型失败的原因 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 反直觉：π0.5 (3B) 在物理实验中只得 42%，输给 0.47B 的 AnoleVLA——原因是小数据集下大模型样本效率低，且预训练数据与本实验的多视角移动操作领域存在巨大 domain gap。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §VI-B Physical Quantitative Results</div>
+          <blockquote class="ev-quote">There are two main reasons for this significant performance gap. First, the small training dataset of only 50 episodes per task made it difficult to fine-tune π0.5. Although π0.5 is heavily pre-trained, massive architectures with 3B parameters generally suffer from low sample efficiency with such limited data, making effective adaptation challenging without overfitting. Second, a substantial domain gap exists regarding visual observations. The pretraining data for π0.5 mainly contains table-top manipulation from fixed viewpoints; however our tasks require whole-body manipulation with continuously changing viewpoints.</blockquote>
+          <div class="ev-trans">造成这一显著性能差距的主要有两个原因。第一，每项任务仅有 50 个训练 episode 的小数据集，使得 π0.5 的微调变得困难。尽管 π0.5 经过大量预训练，但 3B 参数的大型架构在如此有限的数据下通常样本效率低，在不过拟合的情况下难以有效适应。第二，视觉观测存在实质性的领域差距。π0.5 的预训练数据主要包含固定视角下的桌面操作；然而我们的任务需要具有不断变化视角的全身操作。</div>
+          <div class="ev-gloss">两条独立原因相互叠加：① 数据量太少大模型无法充分微调；② 移动机器人的持续变视角与 π0.5 的固定视角预训练数据不匹配。轻量模型反而「船小好调头」。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 失败分析 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 失败模式分析：50% 的失败来自目标物体位置识别错误（空间定位弱），其次是抓取点预测错误 (30%) 和动作执行不完整 (20%)——指向未来改进方向。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §V-E Error Analysis</div>
+          <blockquote class="ev-quote">Position recognition error was the most frequent failure mode. Manual inspection of the failed episodes suggests that the model often generated grasping motions toward incorrect regions or empty space, which indicates inappropriate localization of the target object from visual observations.</blockquote>
+          <div class="ev-trans">位置识别错误是最常见的失败模式。对失败 episode 的人工检查表明，模型经常生成朝向错误区域或空旷空间的抓取动作，这表明从视觉观测中对目标物体的定位不当。</div>
+          <div class="ev-gloss">空间定位弱是 Mamba 因果序列模型的潜在弱点——缺乏 Transformer 全局注意力的「任意两点关联」能力。作者计划引入显式空间推理模块或位置专用 loss 来解决。</div>
+        </div>
+        <figure>
+          <img src="./images/figure_4_qualitative_simulation.png" alt="Figure 4: Meta-World 定性结果对比">
+          <figcaption><strong>Figure 4（p.5–6）：</strong>Meta-World 仿真定性结果。(a) Pick and place a puck onto a shelf——AnoleVLA 成功抓取并放置，SmolVLA 未能抓起。(b) Hammer a screw on the wall——AnoleVLA 正确挥动工具完成击打，SmolVLA 轨迹偏斜错过。(c) Push the puck to a goal——两者均失败，AnoleVLA 越过了目标 puck（位置识别错误的典型案例）。</figcaption>
+        </figure>
+      </div>
+
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">论文正文（2026-03，arXiv:2603.15046v1）明确承诺代码与视频，但截至当前项目页处于「审稿中」状态，链接尚未激活。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-part">待发布</span> 项目页 <a href="https://anolevla-8z7l8.kinsta.page/">anolevla-8z7l8.kinsta.page</a> 说明「We will set the links as soon as the paper is published.」——承诺发表后开放，当前不可用</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未公开</span> 无已发布的 checkpoint</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> 250 episode 物理实验数据 + Meta-World splits 均未释出（Meta-World 本身公开，但自采物理数据未发布）</dd>
+        <dt>视频</dt><dd><span class="os-tag os-part">承诺</span> 项目页预留了视频位，内容待发表后上线</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · Abstract (footnote 1)</div>
+        <blockquote class="ev-quote">Our code and videos are available at this URL</blockquote>
+        <div class="ev-trans">我们的代码和视频可在此 URL 获取。</div>
+        <div class="ev-gloss">论文内脚注指向 https://anolevla-8z7l8.kinsta.page/，当前页面显示「under review」，链接为占位符，实际代码尚未开放。</div>
+      </div>
+      <div class="callout warn">
+        <div class="callout-head">⚙️ 当前可用性</div>
+        <p>论文 arXiv 版本可直接获取（2026-03-16）。代码一旦发布可关注项目页更新。本文作者来自庆应义塾大学，与 Physical Intelligence / NVIDIA 无从属关系，代码规模预期较小、偏研究原型。</p>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>① <strong>效率路线的清晰 case study</strong>：Mamba 替换 VLA Transformer backbone 的思路简洁，O(L²)→O(L) 的理论动机与工程实现都交代清楚。② <strong>真实机器人验证</strong>：Toyota HSR 上的物理实验覆盖 5 类任务 × 20 trials，不仅仿真。③ <strong>两阶段平滑训练</strong>是独立贡献，对任何需要「轨迹平滑」的操作策略均有参考价值。④ 定量揭示了「大 VLA + 小数据 + domain gap = 失败」的规律——对如何选型有指导意义。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>物理实验规模小</strong>：每任务仅 50 episode 训练 + 20 trials 测试，5 个任务场景，泛化结论有限。② <strong>无 OOD 评测</strong>：物理实验固定在 WRS2020 标准环境中，未测未见新场景/新物体的泛化能力。③ <strong>Mamba 因果性的代价</strong>：位置识别错误（50% 失败来源）可能与 Mamba 缺乏全局注意力直接相关，但论文未对比在同场景 Transformer 模型的相同指标。④ 代码当前未公开，结果无法复现。⑤ 未与 SmolVLA、TinyVLA 用完全相同训练设置（部分结果引自原文，不是本文自训）。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge valuable">Valuable</span> &nbsp;针对「轻量 VLA 在资源受限移动操作机器人上的部署」提出了完整且实验扎实（有物理机器人）的解决方案，Mamba+两阶段训练的组合有新意，但泛化范围和数据规模仍属小型研究原型。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · AnoleVLA (arXiv:2603.15046)</footer>
+
+</body>
+</html>

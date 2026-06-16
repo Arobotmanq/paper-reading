@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Octo 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.compare {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.compare .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>Octo 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      Octo 论文里反复出现、需要背景知识才能理解的 8 个关键概念。每个概念给出定义、原理、在 Octo 中的具体用法、与相关概念的对比，以及类比和具象例子。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 Octo 综述</a>
+      <span class="pill">📚 当前 8 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2405.12213" style="color: #93c5fd; text-decoration: none;">arXiv:2405.12213</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. Generalist Robot Policy ============ -->
+    <section class="card" id="grp">
+      <h2>Generalist Robot Policy <span class="tag">GRP</span></h2>
+      <p class="full-name">通用机器人策略 · 跨本体/跨任务的统一控制模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>GRP 是一个<strong>单模型控制多种机器人完成多种任务</strong>的策略，相对于"一个任务 = 一个模型"的传统方式。Octo 是迄今第一个既能做 GRP 又完全开源的操作策略。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>传统机器人学习方法：针对每个机器人、每个任务单独采集数据、从头训练。GRP 的目标是打破这个"任务 → 数据 → 训练"的闭环，训练一个<strong>可以零样本或少样本迁移到新机器人和新任务</strong>的策略模型。</p>
+      <p>论文将 GRP 定义为：<em>"能跨任务、环境和机器人系统执行低层视觉运动控制的模型"</em>，强调低层控制（直接输出关节/末端执行器动作）而非高层规划。</p>
+
+      <h3><span class="num">2</span>在 Octo 里干什么</h3>
+      <p>Octo 是 GRP 的一个具体实现，其"通用性"体现在三个层面：</p>
+      <ul>
+        <li><strong>跨任务</strong>：语言或目标图像指令，同一模型处理 pick、place、wipe、open drawer 等不同任务。</li>
+        <li><strong>跨观测</strong>：第三视角相机、手腕相机、力矩传感器——任意组合，缺失的全零 mask。</li>
+        <li><strong>跨动作空间</strong>：端点位置控制、关节位置控制、双臂 14DoF——微调时只换 action head，骨干保留。</li>
+      </ul>
+
+      <h3><span class="num">3</span>与同时代工作的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>模型</th><th>参数量</th><th>灵活微调</th><th>开源</th><th>预训练数据</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Octo</strong></td><td>27M/93M</td><td>是（新观测/动作空间）</td><td>全开源</td><td>OXE 800k</td></tr>
+            <tr><td>RT-1-X</td><td>35M</td><td>否</td><td>权重公开</td><td>OXE 350k</td></tr>
+            <tr><td>RT-2-X</td><td>55B</td><td>否</td><td>不公开</td><td>OXE 350k + 网络</td></tr>
+            <tr><td>RoboCat</td><td>未公开</td><td>部分</td><td>不公开</td><td>自采多本体</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>把 GRP 比作 NLP 领域的"预训练语言模型"：就像 BERT/GPT 在大量文本上预训练，再在具体下游任务上微调；GRP 在大量机器人轨迹上预训练，再微调到具体机器人/任务——<strong>把"零样本/少样本迁移"的思路从语言/视觉移植到机器人控制</strong>。</p>
+    </section>
+
+    <!-- ============ 2. Readout Token ============ -->
+    <section class="card" id="readout-token">
+      <h2>Readout Token <span class="tag">Architecture</span></h2>
+      <p class="full-name">读出 Token · 被动汇聚嵌入的模块化输出接口</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Readout token 是插入 transformer 序列中的特殊 token：它<strong>只读不写</strong>——关注前面所有 observation/task token 但不被任何人关注，从而把序列信息压缩成紧凑向量，再送入轻量 action head。新增/移除观测模态时骨干权重完全不受影响。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念</h3>
+      <p>标准 transformer 中每个 token 既读（attention 到别人）也写（被别人 attention）。Readout token 打破了这个对称：</p>
+      <ul>
+        <li>TR,t <strong>可以 attend</strong> 其之前的所有 observation token 和 task token。</li>
+        <li>所有 observation/task token <strong>不能 attend</strong> TR,t。</li>
+      </ul>
+      <p>效果：readout token 汇聚了全局信息，但不会"污染"其他 token 的计算——就像一个只读的全局汇总节点。</p>
+
+      <h3><span class="num">2</span>在 Octo 里干什么</h3>
+      <p>Octo 在每个时间步插入一个 readout token TR,t。Transformer 处理完序列后，TR,t 的输出嵌入 eR,t 被送入 diffusion action head，预测从时间 t 开始的 action chunk。</p>
+      <p><strong>关键好处：</strong>微调时添加新观测类型（例如力矩传感器）→ 只需为这个新观测加一个新 tokenizer 和 position embedding；旧的 readout token 和 action head 不需要修改。这是"无痛插拔"的机制基础。</p>
+
+      <h3><span class="num">3</span>出处与对比</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>设计灵感来自 BERT 的 <strong>[CLS] token</strong>：[CLS] 也是序列开头的特殊 token，用于捕获全局语义信息。Readout token 是这个思想在<strong>时序机器人控制场景</strong>里的推广——每个时间步一个，因果地汇聚历史信息。</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>BERT [CLS]</th><th>Octo Readout Token</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>位置</td><td>序列开头，一个</td><td>每个时间步一个</td></tr>
+            <tr><td>用途</td><td>分类/句子嵌入</td><td>action head 的输入</td></tr>
+            <tr><td>因果性</td><td>双向 attention</td><td>单向（只看过去）</td></tr>
+            <tr><td>是否被关注</td><td>被其他 token 关注</td><td>不被任何 token 关注</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>具象例子</h3>
+      <p>类比"会议记录员"：readout token 是一个只记录不发言的秘书——听完所有人（observation token / task token）的发言后，把内容浓缩成一份摘要（嵌入向量），交给决策者（action head）。加入新的发言人（新模态）不影响秘书的角色或旧决策流程。</p>
+    </section>
+
+    <!-- ============ 3. Diffusion Action Head ============ -->
+    <section class="card" id="diffusion-head">
+      <h2>Diffusion Action Head <span class="tag">Policy Objective</span></h2>
+      <p class="full-name">扩散动作头 · 用去噪扩散过程预测连续多模态动作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把 diffusion model 的去噪过程用于动作预测：从 Gaussian 噪声出发，20 步迭代去噪生成 action chunk。既能拟合多峰动作分布（不像 MSE 会均值化），又保留连续动作的精度（不像离散分类）。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念</h3>
+      <p>扩散模型（Diffusion Model）的核心思想：训练一个去噪网络 \(\epsilon_\theta\)，学习从噪声逐步还原数据。用于动作预测时：</p>
+      <div class="math-display">
+        \[ x_{k-1} = \alpha\bigl(x_k - \gamma\,\epsilon_\theta(x_k, e, k)\bigr) + \mathcal{N}(0, \sigma^2 I) \]
+      </div>
+      <p>其中 \(x_K \sim \mathcal{N}(0, I)\) 是初始噪声，\(e\) 是 readout token 的嵌入，\(k\) 是去噪步骤索引，\(\alpha, \gamma, \sigma\) 是 cosine noise schedule 的超参数。经过 \(K=20\) 步后得到动作 \(x_0\)。</p>
+
+      <h3><span class="num">2</span>在 Octo 里干什么</h3>
+      <p>Octo 的 diffusion head 是一个<strong>3 层 MLP</strong>（hidden dim=256，含残差连接和 layer norm），接受 readout token 嵌入 \(e\) 作为条件，预测 action chunk（多步连续动作序列）。</p>
+      <p><strong>设计要点：</strong></p>
+      <ul>
+        <li>每次动作预测只需 transformer 骨干做<strong>一次前向传播</strong>，20 步去噪完全在小的 diffusion head 内完成——计算高效。</li>
+        <li>训练用标准 DDPM 目标：对真实动作加噪声，训练去噪网络重建原始动作。</li>
+        <li>推理时从 Gaussian 噪声开始，20 步 DDPM 采样（可用 DDIM 加速）。</li>
+      </ul>
+
+      <h3><span class="num">3</span>为什么比 MSE 和离散更好</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方法</th><th>问题</th><th>Diffusion 如何解决</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>MSE loss</td><td>多峰分布 → 平均化 → "对冲"行为，动作迟缓</td><td>能建模任意多峰分布，采样出确定的一个峰</td></tr>
+            <tr><td>离散分类（256 bins/dim）</td><td>精度受限（每个 bin 宽度固定），精细操作失败</td><td>连续动作空间，精度不受限</td></tr>
+            <tr><td><strong>Diffusion</strong></td><td>推理需多次前向（慢）</td><td>头很小，骨干只跑一次；可用 DDIM 减少步数</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>具象例子</h3>
+      <p>机器人抓一个物体：可能的合理抓取姿势有多个（从左边抓、从上方抓、从右边抓）——MSE 会给出"三个方向的平均"（从中间抓，往往失败）；离散分类精度不够（位置差 1mm 就失败的精密插孔任务无法胜任）；diffusion 采样出其中一个合理姿势，精确执行。</p>
+
+      <h3><span class="num">5</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>直接来自 <strong>Chi et al., "Diffusion Policy" (RSS 2023)</strong>。Octo 是第一个在跨本体预训练 GRP 中应用 diffusion action head 的工作，证明其在大规模多样化数据上依然有效。</p>
+      </div>
+    </section>
+
+    <!-- ============ 4. Block-wise Attention ============ -->
+    <section class="card" id="block-attention">
+      <h2>Block-wise Causal Attention <span class="tag">Architecture</span></h2>
+      <p class="full-name">分块因果注意力 · 支持模态插拔的注意力掩码设计</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Octo 的 transformer 不用标准因果 mask，而是把 token 分成"task block"和"observation block"两类，规定：observation token 只能关注<strong>相同或更早时间步的观测</strong>以及<strong>任意任务 token</strong>；不存在的观测 block 被全零 mask 掉而非删除。这让新增/移除模态时 transformer 结构不变。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念</h3>
+      <p>标准 decoder-only transformer 的因果 mask：token i 只能看 token 0 到 i。Octo 把这个规则按"模态 block"扩展：</p>
+      <ul>
+        <li>任务 token（语言/目标图像）：所有时间步的 observation token 都可以 attend 它们。</li>
+        <li>时间步 t 的 observation token：只能 attend 时间步 ≤ t 的观测 token + 所有任务 token。</li>
+        <li>缺失的模态（无语言标注的数据集 / 无手腕相机）：该 block 的 token 全零 mask，贡献为 0，但模型结构不变。</li>
+      </ul>
+
+      <h3><span class="num">2</span>在 Octo 里干什么</h3>
+      <p>这个 mask 设计解决了一个核心工程问题：OXE 的 25 个数据集并不是每个都有语言标注（只有 56% 有），也不是每个都有手腕相机（只有 27% 有）。如果用标准方式处理，就需要为每种观测组合训练不同的模型。</p>
+      <p>Block-wise mask 的解法：<strong>永远保留全部 token 位置，只是把缺失的全零掉</strong>。这样同一个模型权重可以处理任意模态组合。</p>
+      <p>微调时添加新模态（例如力矩传感器）：加一个新 observation block，只需学新 tokenizer 的权重和这个 block 的 position embedding；骨干 transformer 权重完全不变。</p>
+
+      <h3><span class="num">3</span>与标准方案的对比</h3>
+      <div class="callout compare">
+        <div class="callout-head">对比：标准多模态融合方案</div>
+        <p>RT-1 等早期工作：把所有模态先 concat/fuse 成固定维度特征，再送入 transformer。优点：简单；缺点：<strong>改变输入类型需要重新初始化 fusion 层</strong>，大量预训练知识丢失。Octo 的 block-wise mask 避免了这个问题。</p>
+      </div>
+
+      <h3><span class="num">4</span>具象例子</h3>
+      <p>类比"会议室"：任务 token 是黑板上的任务说明（所有人都能看，不随时间变化）；每个时间步的 observation token 是那一刻拍的快照（只能参考过去的快照）；readout token 是秘书（只读）。缺少某种相机 = 那个座位空着（贡献为零），但会议室结构不变，其他人正常开会。</p>
+    </section>
+
+    <!-- ============ 5. Open X-Embodiment (OXE) ============ -->
+    <section class="card" id="oxe">
+      <h2>Open X-Embodiment <span class="tag">Dataset</span></h2>
+      <p class="full-name">OXE · 跨本体机器人学习数据集联合体</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>OXE 是由 30+ 机构联合发布的机器人操作数据集集合，约 1.5M 轨迹，覆盖多种机器人本体、传感器配置和任务类型。Octo 从中精选 25 个数据集共 800k 轨迹进行预训练——是截至发表时最大的公开机器人操作预训练数据集。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念</h3>
+      <p>OXE（Open X-Embodiment）是 2023 年由 Google DeepMind 牵头、30+ 机构参与的数据集整合项目。目标是把分散在各研究组的机器人数据集统一格式、开放共享，类比 ImageNet 对计算机视觉的作用。</p>
+      <p>数据集包含：单臂/双臂机械臂、移动操作、导航等；动作空间有末端执行器控制、关节控制等；传感器有 RGB 相机、手腕相机、力矩传感器等。</p>
+
+      <h3><span class="num">2</span>Octo 如何使用 OXE</h3>
+      <p>Octo 的数据筛选标准：</p>
+      <ul>
+        <li>移除没有图像流的数据集。</li>
+        <li>移除不使用 delta 末端执行器控制的数据集（统一动作空间）。</li>
+        <li>移除过于重复、图像分辨率低、或任务过于小众的数据集。</li>
+      </ul>
+      <p>剩余 25 个数据集，约 800k 轨迹。采样权重根据数据集大小确定，<strong>多样性高的数据集权重翻倍</strong>（避免被 Fractal、Kuka 等大数据集主导）。</p>
+      <p>对比：RT-1-X 使用 OXE 的 350k 子集；Octo 使用 800k——更多、更多样。</p>
+
+      <h3><span class="num">3</span>数据处理技巧</h3>
+      <ul>
+        <li><strong>Hindsight goal relabeling</strong>：对没有语言标注的轨迹，从该轨迹的未来帧中随机选一帧作为目标图像。让模型从自监督视觉观测中学习控制，减少对语言标注的依赖。</li>
+        <li><strong>Gripper 动作统一</strong>：+1 = 开，0 = 关。各数据集的不同 gripper 约定全对齐。</li>
+        <li><strong>大 shuffle buffer</strong>：500k 帧的 shuffle buffer，并在解码图像前先混洗帧——确保训练 batch 的多样性（小 buffer 严重影响零样本性能）。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>Open X-Embodiment Collaboration et al., "Open X-Embodiment: Robotic Learning Datasets and RT-X Models" (arXiv:2310.08864, 2023)。Octo 团队是该协作的主要贡献者之一。</p>
+      </div>
+    </section>
+
+    <!-- ============ 6. Action Chunking ============ -->
+    <section class="card" id="action-chunking">
+      <h2>Action Chunking <span class="tag">Policy Design</span></h2>
+      <p class="full-name">动作分块 · 预测多步连续动作序列而非单步动作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Action chunking = 策略每次预测未来 H 步的动作序列（而非单步动作），执行时采用 receding horizon control（滚动执行前几步，然后重新规划）。好处：动作更连贯，减少"对齐误差累积"；在 Octo 中与 diffusion head 组合，进一步提升动作连贯性。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念</h3>
+      <p>单步动作预测的问题：每步独立推断，前后动作缺乏一致性，在需要连贯运动（如把盖子套上笔）的任务上容易"抖"。</p>
+      <p>Action chunking 的解法：<strong>一次预测接下来 H 步的动作</strong>，把它们视为一个整体来优化。实际执行时：</p>
+      <ul>
+        <li>执行前 \(k\) 步（\(k &lt; H\)），然后重新观察/推断（receding horizon control）。</li>
+        <li>或执行全部 H 步后再重新推断（适合延迟不敏感场景）。</li>
+      </ul>
+
+      <h3><span class="num">2</span>在 Octo 里干什么</h3>
+      <p>Octo 预测一个 action chunk，diffusion head 的输出维度是 \(H \times d_{action}\)（H 步 × 每步动作维度）。默认用 receding horizon control 而非 temporal ensembling（实验发现 temporal ensembling 无额外增益）。</p>
+      <p>特别场景：Berkeley Bimanual（ALOHA 双臂）用 chunk size=64，执行 12 步后重规划——长 chunk 有助于双臂协调。</p>
+
+      <h3><span class="num">3</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>Action chunking 在 <strong>Zhao et al., "ACT: Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware" (2023)</strong> 中被推广用于双臂操作，随后被 Diffusion Policy、Octo 等广泛采用。Octo 论文验证了其在跨本体大规模预训练场景中依然有效。</p>
+      </div>
+
+      <h3><span class="num">4</span>具象例子</h3>
+      <p>音乐家演奏 vs 打字：打字是单步动作（一次想一个字母），音乐家是 action chunking（脑子里已经规划好接下来几个小节的手指动作序列，执行时更流畅）。机器人用 action chunking 类似于"把接下来 5 步的动作计划好再开始动"。</p>
+    </section>
+
+    <!-- ============ 7. Modular Tokenizer ============ -->
+    <section class="card" id="modular-tokenizer">
+      <h2>Modular Tokenizer <span class="tag">Architecture</span></h2>
+      <p class="full-name">模块化 Tokenizer · 将不同模态编码为统一 token 序列的轻量编码器</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Octo 为每种输入模态设计独立的轻量 tokenizer，将它们编码为统一格式的 token 序列后再拼接。图像走浅层 CNN（patch 化），语言走冻结 T5-base（16 token），缺失模态全零掩码。这让 transformer 骨干无需改变就能处理任意模态组合。</p>
+      </div>
+
+      <h3><span class="num">1</span>语言 Tokenizer</h3>
+      <p>使用冻结的 <strong>T5-base（111M 参数）</strong> 文本编码器，将语言指令编码为 16 个语言嵌入 token。</p>
+      <p>实验发现：冻结 T5-base 比微调更好，比更大的 T5-large 也更好。原因可能是机器人数据集中语言标注质量参差不齐，微调 T5 反而引入噪声。</p>
+
+      <h3><span class="num">2</span>图像 Tokenizer</h3>
+      <p>使用<strong>浅层 CNN patch encoder</strong>（非预训练大型 ResNet）：</p>
+      <ul>
+        <li>第三视角相机（256×256）→ 256 个 16×16 patch token。</li>
+        <li>手腕相机（128×128）→ 64 个 16×16 patch token。</li>
+      </ul>
+      <p>这与 ViT 的"transformer-first"哲学一致：把大部分计算预算放在 transformer 骨干，而非视觉编码器。</p>
+
+      <h3><span class="num">3</span>为什么不用预训练大型视觉编码器（如 CLIP、VC-1）</h3>
+      <p>实验发现：ImageNet 预训练 ResNet 在零样本评测上无额外增益（可能与 ResNet 架构本身在大数据下表现差有关）。此外，冻结大型视觉编码器会限制模型适应机器人视角图像的能力。Octo 选择<strong>训练轻量 patch encoder</strong>，让视觉表征从机器人数据中学习，而不是从 ImageNet/网络图像迁移。</p>
+
+      <h3><span class="num">4</span>微调时的扩展方式</h3>
+      <p>添加新观测（如力矩传感器）：</p>
+      <ul>
+        <li>为力矩数据写一个新的轻量 tokenizer（例如 MLP）。</li>
+        <li>为该模态分配新的 position embedding。</li>
+        <li>骨干 transformer 权重<strong>完全不变</strong>，只训练新加的 tokenizer 参数。</li>
+      </ul>
+    </section>
+
+    <!-- ============ 8. Hindsight Goal Relabeling ============ -->
+    <section class="card" id="hindsight-relabeling">
+      <h2>Hindsight Goal Relabeling <span class="tag">Data Augmentation</span></h2>
+      <p class="full-name">事后目标重标注 · 将无语言标注的轨迹转化为目标图像条件数据</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>对于没有语言指令标注的轨迹，从该轨迹<strong>未来的某一帧随机选一帧</strong>作为"目标图像"——因为轨迹最终到达了那个状态，所以事后来看"到达那个图像的状态"就是那段轨迹的目标。这让 56% 没有语言标注的 OXE 数据也能参与训练，而不需要人工补标注。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念</h3>
+      <p>传统条件模仿学习：策略需要任务条件（语言指令或目标图像）才能知道"想干什么"。问题是许多机器人数据集没有语言标注（采集时没有设计语言 annotation pipeline）。</p>
+      <p>Hindsight relabeling 的解法：轨迹的结果帧就是目标。对轨迹中的每个时间步 t，从 [t+1, T] 中均匀采样一帧作为目标图像。这样即使没有人类语言标注，模型也能学到"观察到 goal image → 执行能到达那个状态的动作"。</p>
+
+      <h3><span class="num">2</span>在 Octo 里干什么</h3>
+      <p>Octo 同时支持语言条件和目标图像条件，两者在训练时随机 mask（各有一定概率被 zero-out），让模型学会处理任一条件。对无语言数据集，始终使用目标图像条件（hindsight relabeling 自动生成目标）。</p>
+      <p>有趣发现：目标图像条件在 WidowX 评测上比语言条件高 25%——目标图像提供了更精确的任务信息。</p>
+
+      <h3><span class="num">3</span>出处与局限</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>思想来自强化学习中的 <strong>Hindsight Experience Replay (HER)</strong>（Andrychowicz et al., NeurIPS 2017）。在模仿学习中的应用由 <strong>Lynch & Sermanet "Language Conditioned Imitation Learning over Unstructured Data" (RSS 2021)</strong> 等工作推广。</p>
+      </div>
+      <p><strong>局限：</strong>Hindsight goal image 不能解释"为什么是这条路径"——如果轨迹是绕远路到达目标，模型会学到"绕远路也是 OK 的"。此外，目标图像只有视觉信息，缺乏语义（不知道"把红杯子放到桌上"而只知道"最终状态长什么样"）。这是为什么语言标注仍然有价值的原因。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表（8 个）</div>
+    <ul>
+      <li><a href="#grp">Generalist Robot Policy</a></li>
+      <li><a href="#readout-token">Readout Token</a></li>
+      <li><a href="#diffusion-head">Diffusion Action Head</a></li>
+      <li><a href="#block-attention">Block-wise Causal Attention</a></li>
+      <li><a href="#oxe">Open X-Embodiment (OXE)</a></li>
+      <li><a href="#action-chunking">Action Chunking</a></li>
+      <li><a href="#modular-tokenizer">Modular Tokenizer</a></li>
+      <li><a href="#hindsight-relabeling">Hindsight Goal Relabeling</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · Octo (arXiv:2405.12213) · 配套笔记 · 8 个概念
+</footer>
+
+</body>
+</html>

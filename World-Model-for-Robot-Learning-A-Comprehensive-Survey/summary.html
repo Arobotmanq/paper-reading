@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Model for Robot Learning · 综述</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 800px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.5em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "“"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "”"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.95em; }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th { text-align: left; padding: 0.85em 1.1em; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.75em 1.1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.winner { background: linear-gradient(90deg, rgba(118, 185, 0, 0.1), rgba(118, 185, 0, 0.04)); }
+  tr.winner td { font-weight: 700; color: var(--nv-green-dark); }
+  tr.winner td:first-child::before { content: "★ "; color: var(--nv-green); }
+
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  mjx-container { font-size: 1.02em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>NTU MARS · Survey · World Model × Robot Learning</span>
+    <h1>World Model for Robot Learning<br>一份 policy-centric 的世界模型综述</h1>
+    <p class="subtitle">把"碎片化"的机器人世界模型文献，按 <b>架构（World Model for Policy）/ 应用（World Model as Simulator）/ 能力（Robotic Video World Model）</b> 三条主线重新组织；用一个统一的预测-控制联合分布，把 policy、passive/controllable world model、IDM 解释为同一分布的不同 marginal。覆盖到 2026.3、含大量工业界模型。</p>
+    <div class="meta-pills">
+      <span class="pill">📄 Survey</span>
+      <span class="pill">📅 2026.04（arXiv:2605.00080v1）</span>
+      <span class="pill">🏢 NTU · UC Berkeley · Stanford · Oxford · ETH …</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2605.00080">arXiv</a></span>
+      <span class="pill">⭐ <a href="https://github.com/NTUMARS/Awesome-World-Model-for-Robotics-Policy">Awesome-List</a></span>
+      <span class="pill">🌐 <a href="https://ntumars.github.io/wm-robot-survey/">Project</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi purple"><div class="label">Policy 架构范式</div><div class="value">5<span class="unit">类</span></div><div class="desc">IDM / 单骨干 / MoE-MoT / 统一VLA / latent</div></div>
+  <div class="kpi green"><div class="label">三大主线</div><div class="value">3<span class="unit">视角</span></div><div class="desc">为策略 · 当模拟器 · 视频世界模型</div></div>
+  <div class="kpi blue"><div class="label">LIBERO 最佳</div><div class="value">98.5<span class="unit">% avg</span></div><div class="desc">Cosmos Policy / LingBot-VA</div></div>
+  <div class="kpi gold"><div class="label">开源（综述本体）</div><div class="value">✓<span class="unit">Awesome-List</div><div class="desc">581★ 持续维护，无模型权重</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。这是综述，"观点"= 它对全领域的判断与组织框架，而非单一方法。</p>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：纯反应式 VLA 缺乏"显式预测结构"，长程推理 / 误差累积下脆弱；世界模型是从"语义意图"通往"物理可实现行为"的预测桥。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · §1 Introduction</div>
+          <blockquote class="ev-quote">purely reactive VLA policies remain limited in complex physical environments, where they often struggle with long-horizon reasoning, temporal credit assignment, and robustness under compounding errors.</blockquote>
+          <div class="ev-trans">纯反应式 VLA 策略在复杂物理环境中仍受限：长程推理、时间信用分配、以及误差累积下的鲁棒性都常出问题。</div>
+          <div class="ev-gloss">这是引入世界模型的动机；问题不止"动作预测能力不足"，更是缺"对世界如何演化的预测结构"。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §1</div>
+          <blockquote class="ev-quote">world models are not merely a generative enhancement, but a predictive
+bridge from semantic intent to physically realizable behavior.</blockquote>
+          <div class="ev-trans">世界模型不只是一种生成式增强，而是从语义意图通向物理可实现行为的"预测桥"。</div>
+          <div class="ev-gloss">全文的口号式立场：predictive bridge。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 它给出 robotics-centered 的"世界模型"定义：只有 <b>action-conditioned</b>、能服务下游决策的预测才算；"生成看起来合理的未来视频"不算。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §2.1.1</div>
+          <blockquote class="ev-quote">a model does not qualify as a world model in our sense
+simply because it generates plausible future images or videos. Rather, it must capture environment evolution
+in a form relevant to robot interaction and useful for downstream policy-related computation.</blockquote>
+          <div class="ev-trans">一个模型并不会仅因为能生成"看起来合理"的未来图像/视频就算作（本综述意义上的）世界模型；它必须以与机器人交互相关、且对下游策略计算有用的形式捕捉环境演化。</div>
+          <div class="ev-gloss">把 <a href="./notes.html#joint-dist" class="note-link">action-conditioned world model</a> 立为最重要子类——视觉合理但"对动作不一致"的未来对闭环没价值。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1</div>
+          <blockquote class="ev-quote">an
+actionable world model should provide three core capabilities: foresight ... imagination-driven planning ... and
+data amplification</blockquote>
+          <div class="ev-trans">一个"可行动"的世界模型应提供三种核心能力：foresight（预判后果）、imagination-driven planning（用想象 rollout 比较候选行为）、data amplification（合成额外演示/轨迹）。</div>
+          <div class="ev-gloss">这三条能力贯穿全篇，对应后面的"为策略 / 当模拟器 / 生成数据"三类用途。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 统一视角（本综述最有价值的"思想"）：policy、passive world model、controllable world model、IDM 只是同一个"<a href="./notes.html#joint-dist" class="note-link">预测-控制联合分布</a>"的不同 marginal/conditional。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §3.1</div>
+          <blockquote class="ev-quote">policy model, passive world model (video generation model), controllable world model and
+inverse dynamics model are not entirely separate abstractions; rather, they correspond to different ways of
+querying or factorizing the same idealized joint distribution.</blockquote>
+          <div class="ev-trans">策略模型、被动世界模型（视频生成模型）、可控世界模型与逆动力学模型并非完全独立的抽象；它们对应于"查询/分解同一个理想化联合分布"的不同方式。</div>
+          <div class="ev-gloss">由联合分布 $p(o_{t+1:t+k}, a_{t+1:t+k}\mid o_t, l)$ 对 $a$ 积分得 passive WM、对 $o$ 积分得 policy……这解释了"为何世界模型与策略能天然耦合"。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 「World Model 作策略」按架构演进分 5 类：从解耦的 <a href="./notes.html#policy-arch" class="note-link">IDM-style</a> predict-then-act，逐步走向单骨干、MoE/MoT、统一 VLA、latent-space，耦合越来越紧。</div>
+        <figure>
+          <img src="./images/figure_3.png" alt="Figure 3: IDM / Single-backbone / MoT architectures">
+          <figcaption><strong>Figure 3：</strong>三种代表性架构。(a) IDM-style：视频生成模型先预测未来观测，IDM 再从中反推动作（解耦）。(b) 单骨干：observation/action token 共享一个 backbone，联合建模。(c) MoT-style：视频专家与动作专家各自保留，通过 joint attention 深度耦合。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §3.2</div>
+          <blockquote class="ev-quote">A defining feature of this family is its architectural decoupling: the predictive model is typically pretrained
+first and then frozen, lightly adapted, or connected to a separate policy head, rather than optimized jointly
+with action generation.</blockquote>
+          <div class="ev-trans">这一族（IDM-style）的定义性特征是架构解耦：预测模型通常先预训练再冻结/轻量适配/接一个独立策略头，而不与动作生成联合优化。</div>
+          <div class="ev-gloss">解耦带来模块化与可复用视频先验，但性能受"生成未来的保真度/可控性"上限制约，且会在"视觉合理但动作不一致"时累积误差——正是后续更紧耦合的动机。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §3.3</div>
+          <blockquote class="ev-quote">whether video-pretrained backbones are
+consistently superior to matched-scale VLM backbones for robotic control remains an open empirical question</blockquote>
+          <div class="ev-trans">视频预训练 backbone 是否在机器人控制上一致优于同规模 VLM backbone，仍是一个开放的经验问题。</div>
+          <div class="ev-gloss">难得的克制：综述反复强调"视频/VLM/latent/symbolic 谁更好"未定论，只做组织而不下结论。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 「World Model 作模拟器」两类用途：当 RL 的 <a href="./notes.html#wm-rl" class="note-link">learned simulator</a>、当决策期 evaluator；且第二层认识到——模拟器本身不可靠，必须与策略 co-evolution。</div>
+        <figure>
+          <img src="./images/figure_5.png" alt="Figure 5: World model for RL vs for validation">
+          <figcaption><strong>Figure 5：</strong>(a) RL 设定：世界模型当 learned simulator，产生想象 transition 供策略改进。(b) 验证设定：世界模型为候选动作的想象后果打分，支持决策期选择（Score=0.6/0.8/0.3）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.15 · §4</div>
+          <blockquote class="ev-quote">conventional reinforcement learning on physical robots is often slow, expensive, difficult to reset, and potentially unsafe, while pure imitation learning
+remains limited by demonstration quality and cannot easily learn from failures.</blockquote>
+          <div class="ev-trans">物理机器人上的常规 RL 往往慢、贵、难复位、且潜在不安全；而纯模仿学习受演示质量所限、难以从失败中学习。</div>
+          <div class="ev-gloss">这是"用学到的模拟器替代真机交互"的根本动机。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.17 · §4.1</div>
+          <blockquote class="ev-quote">the focus moves beyond reinforcement learning in a world
+model toward reinforcement learning with a world model whose fidelity, action-following precision, and rollout
+reliability must themselves be continuously improved.</blockquote>
+          <div class="ev-trans">关注点从"在世界模型里做 RL"转向"与世界模型一起做 RL"——后者的保真度、动作跟随精度、rollout 可靠性本身必须被持续改进。</div>
+          <div class="ev-gloss">WoVR/VLAW/World-VLA-Loop 这类"世界模型–策略 co-evolution"是 2026 的新主线。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 机器人视频世界模型的中心瓶颈，已不是"生成得真不真"，而是"是否与动作因果对齐、长程物理自洽、可执行"。</div>
+        <figure>
+          <img src="./images/figure_6.png" alt="Figure 6: Unified view of robotic video world models">
+          <figcaption><strong>Figure 6：</strong>视频世界模型的四阶段演进：§5.2 想象引擎（监督）→ §5.3 动作可控（因果对齐）→ §5.4 结构感知（物理一致）→ §5.5 从视频骨干到 foundation 世界模型。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.23 · §5.6</div>
+          <blockquote class="ev-quote">The key challenge is no longer simply to
+generate realistic futures. It is to generate futures that remain causally aligned with robot actions, physically
+and kinematically self-consistent over long horizons, coherent across views and embodiments, stable under
+interaction, and executable enough to support real policy improvement.</blockquote>
+          <div class="ev-trans">关键挑战不再是生成真实的未来，而是生成"与机器人动作因果对齐、长程上物理与运动学自洽、跨视角/跨本体一致、交互下稳定、且足够可执行以支撑真实策略改进"的未来。</div>
+          <div class="ev-gloss">"realism → actionability"的范式转移，是第 5 章的主旋律。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 评估观：在具身场景里，视觉真实度"既非必要也非充分"；需要 open-loop / closed-loop / diagnostic 三层 function-aware 评估。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.24 · §7.1</div>
+          <blockquote class="ev-quote">From this policy-
+centric perspective, visual realism alone is neither necessary nor sufficient</blockquote>
+          <div class="ev-trans">从这种策略中心的视角看，仅凭视觉真实度既不充分也不必要。</div>
+          <div class="ev-gloss">benchmark 因此分三层：动作条件开环预测质量 / 闭环任务效用与策略评估 / 物理一致性·可控性·可执行性诊断。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.29 · §7.3</div>
+          <blockquote class="ev-quote">high performance can emerge from multiple
+design paradigms, indicating that photorealistic video generation is not necessary for effective embodied
+control.</blockquote>
+          <div class="ev-trans">高性能可以来自多种设计范式，表明"照片级真实视频生成"对有效的具身控制并非必要。</div>
+          <div class="ev-gloss">由 LIBERO/RoboTwin 结果实证支撑（见下"效果"）——没有单一架构通吃。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 核心开放挑战："弱动作条件"导致因果错配——很多世界模型主要由历史观测/任务意图驱动，预测合理却未必因果地系于"将要执行的那个动作"。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.30 · §8.1</div>
+          <blockquote class="ev-quote">The technical bottleneck is weak action conditioning: many predictive world-model objectives are trained
+mainly from observation history and task intent, so their futures can be plausible without being causally
+tied to the robot action to be executed.</blockquote>
+          <div class="ev-trans">技术瓶颈是"弱动作条件"：许多预测式世界模型目标主要从观测历史与任务意图训练，因而其未来可以"看似合理"却未真正因果地系于"将要执行的机器人动作"。</div>
+          <div class="ev-gloss">配套挑战还有：效率（扩散迭代去噪的高延迟）、多模态触觉/力反馈缺失、与经典控制(MPC/Lyapunov)的融合、符号结构抽象、评估指标缺标准。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 关键效果 / 数字 ============ -->
+    <section class="card" id="results">
+      <h2><span class="icon">📊</span>关键效果 · 数字</h2>
+      <p class="lead">综述自身不产新数字，而是汇总各方法在公共基准上的代表性结果，用以支撑"没有单一架构通吃 + 长程是分水岭"的判断。</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>范式</th><th>方法</th><th class="num">Spatial</th><th class="num">Object</th><th class="num">Goal</th><th class="num">Long</th><th class="num">Avg</th></tr></thead>
+          <tbody>
+            <tr><td>Decoupled</td><td>Say-Dream-ACT</td><td class="num">99.4</td><td class="num">99.2</td><td class="num">98.6</td><td class="num">95.4</td><td class="num">98.1</td></tr>
+            <tr class="winner"><td>Single-backbone</td><td>Cosmos Policy</td><td class="num">98.1</td><td class="num">100.0</td><td class="num">98.2</td><td class="num">97.6</td><td class="num">98.5</td></tr>
+            <tr class="winner"><td>MoE/MoT</td><td>LingBot-VA</td><td class="num">98.5</td><td class="num">99.6</td><td class="num">97.2</td><td class="num">98.5</td><td class="num">98.5</td></tr>
+            <tr><td>Unified VLA</td><td>RynnVLA-002</td><td class="num">99.0</td><td class="num">99.8</td><td class="num">96.4</td><td class="num">94.4</td><td class="num">97.4</td></tr>
+            <tr><td>Latent-space</td><td><a href="./notes.html#jepa" class="note-link">VLA-JEPA</a></td><td class="num">96.2</td><td class="num">99.6</td><td class="num">97.2</td><td class="num">95.8</td><td class="num">97.2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.85em;color:var(--muted)">LIBERO 标准 4-suite（Table 5 节选）。竞争力分布在所有范式上，但 Goal / 尤其 Long 套件掉点更明显——长程一致性才是真区分度。</p>
+
+      <div class="evidence">
+        <div class="ev-loc">📍 p.29 · §7.3</div>
+        <blockquote class="ev-quote">larger drops are
+more common on Goal and especially Long suites, where success depends more on sustained, action-grounded
+consistency over extended trajectories.</blockquote>
+        <div class="ev-trans">更大的掉点更常出现在 Goal、尤其是 Long 套件——这里的成功更依赖"在长轨迹上持续、动作接地的一致性"。</div>
+        <div class="ev-gloss">RoboTwin/CALVIN/SIMPLER 上还显示更强的"基准依赖性"：一个基准强不必然迁移到另一个。</div>
+      </div>
+    </section>
+
+    <!-- ============ 全景图 ============ -->
+    <section class="card" id="map">
+      <h2><span class="icon">🗺</span>领域全景（两张总图）</h2>
+      <figure>
+        <img src="./images/figure_1.png" alt="Figure 1: organization overview">
+        <figcaption><strong>Figure 1：</strong>综述组织。§3 从架构看世界模型如何与策略耦合；§4 从应用看世界模型当模拟器；§5 按"世界建模能力"组织机器人视频世界模型。</figcaption>
+      </figure>
+      <figure>
+        <img src="./images/figure_2.png" alt="Figure 2: temporal evolution">
+        <figcaption><strong>Figure 2：</strong>代表性工作的时间演化。上支（World Model for Policy）：从早期解耦的"视频生成+IDM"流水线 → 单骨干 / MoE-MoT / 统一 VLA / latent。下支（World Model as Simulator）：从 rollout 验证/候选评估 → learned simulator 做 RL、post-training、co-evolution。趋势是主导方向而非严格替代。</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">这是综述，不发布模型/权重；"开源"= 配套的 awesome-list 仓库 + 项目页，持续维护、收录各方法的论文/代码/权重链接。</p>
+      <dl class="os-grid">
+        <dt>论文清单</dt><dd><span class="os-tag os-yes">开放</span> <a href="https://github.com/NTUMARS/Awesome-World-Model-for-Robotics-Policy">NTUMARS/Awesome-World-Model-for-Robotics-Policy</a>（在线，约 581★，持续更新）</dd>
+        <dt>项目页</dt><dd><span class="os-tag os-yes">开放</span> <a href="https://ntumars.github.io/wm-robot-survey/">ntumars.github.io/wm-robot-survey</a></dd>
+        <dt>模型 / 权重</dt><dd><span class="os-tag os-no">无</span> 综述本体不含可训练产物</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · Abstract footer</div>
+        <blockquote class="ev-quote">https://github.com/NTUMARS/Awesome-World-Model-for-Robotics-Policy</blockquote>
+        <div class="ev-trans">配套 GitHub 仓库地址（随综述持续维护更新）。</div>
+        <div class="ev-gloss">开源状态核实日期：2026-06-09（WebFetch 确认仓库 live、约 581★）。</div>
+      </div>
+    </section>
+
+    <!-- ============ 简短批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div>
+        <p>① 时效性极强（覆盖到 2026.3，含 Cosmos、GigaWorld、Genie Envisioner、Unitree UnifoLM、智元/Galaxea 相关数据集等工业/最新工作）。② 真正的"思想增量"是那套<b>预测-控制联合分布</b>统一视角，把 policy/IDM/passive·controllable WM 收编为同一分布的不同查询——对你理解 VLA × 世界模型的耦合非常顺手。③ 5 类 policy 架构 + 模拟器两用途 + 视频 WM 四阶段，taxonomy 清晰、配 Table 1/2 与基准汇总，可直接当"领域地图 + 选型参考"。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div>
+        <p>① 典型综述局限：广而不深，多数方法只给一两句定位，机制细节需回溯原文。② 汇总的基准数字来自各原论文、协议口径不一（作者已诚实标注"less suitable for strict ranking"），横向对比仅供参考、不可当排行榜。③ 引文里大量 2026 的 arXiv 预印本尚未同行评审，结论稳定性待时间检验。④ 非端到端方法/底层 locomotion 不在范围内（与你的 Track B 几乎无交集）。</p></div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;作为"VLA × 世界模型"方向的<b>领域地图 + 统一概念框架</b>，对 Track A 价值高；非方法突破，定位是参考综述。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#core">◆ 核心观点 · 证据</a></li>
+      <li><a href="#results">📊 关键效果 · 数字</a></li>
+      <li><a href="#map">🗺 领域全景</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 证据优先版式 · World Model for Robot Learning: A Comprehensive Survey (arXiv:2605.00080v1)</footer>
+
+</body>
+</html>

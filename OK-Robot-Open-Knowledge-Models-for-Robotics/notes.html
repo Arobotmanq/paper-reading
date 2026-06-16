@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OK-Robot 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .back-link a { color: var(--nv-green-dark); font-weight: 600; }
+  .toc .back-link a:hover { border-left-color: var(--nv-green-dark); }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code { background: none; color: inherit; padding: 0; border: 0; font-family: "JetBrains Mono", monospace; }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>OK-Robot 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文涉及的关键技术概念：从开放知识框架到每个具体模块的定义、原理与在本系统中的用法。共 <strong>7 个概念</strong>。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 OK-Robot 综述</a>
+      <span class="pill">📚 7 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2401.12202" style="color: #93c5fd; text-decoration: none;">arXiv:2401.12202</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 开放词表移动操作 ============ -->
+    <section class="card" id="ovmm">
+      <h2>OVMM <span class="tag">Open-Vocab Mobile Manip</span></h2>
+      <p class="full-name">Open-Vocabulary Mobile Manipulation · 开放词表移动操作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>OVMM 是要求机器人在任意未见环境中，用<strong>自然语言指令</strong>找到并操作<strong>任意未见物体</strong>的任务设定。"开放词表"意味着物体集合不固定，机器人不能靠记住固定类别来工作。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义与背景</h3>
+      <p>传统移动操作任务通常在固定的物体集合和固定环境中评测。OVMM 将这两个维度都"开放"：</p>
+      <ul>
+        <li><strong>开放物体</strong>：机器人接收自然语言查询（"把 Takis 零食袋移到床头柜"），目标物体是任意的，不在预定义列表里。</li>
+        <li><strong>开放环境</strong>：部署在训练时从未见过的真实家庭，布局、物品摆放、光照条件均未知。</li>
+        <li><strong>零样本</strong>：不能对新环境收集任何数据后再运行，必须只依赖一次快速扫描（OK-Robot 中为 iPhone 扫描）。</li>
+      </ul>
+
+      <h3><span class="num">2</span>为什么难</h3>
+      <p>OVMM 难在各子任务误差的<strong>乘积效应</strong>：假设导航成功率 90%、抓取成功率 85%、放置成功率 97%，串联成功率仅 74%——而真实系统中还有语义查询失败、硬件故障等额外损耗。NeurIPS 2023 OVMM 竞赛冠军仅达 33%。</p>
+
+      <h3><span class="num">3</span>在 OK-Robot 里</h3>
+      <p>OK-Robot 是针对 OVMM 任务的一套<strong>无训练系统集成方案</strong>，通过精心的模块化设计将竞赛冠军的 33% 提升至 58.5%（自然环境）/82.4%（整洁环境）。论文的核心贡献就是把 OVMM 的"工程难"问题系统化地拆解出来。</p>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 来源</div>
+        <p>OVMM 作为正式评测 benchmark 由 Yenamandra et al. 2023 (<strong>HomeRobot</strong>) 提出并在 NeurIPS 2023 竞赛中使用。OK-Robot 在此基础上做了更多真实家庭实验，并分析了比竞赛更细粒度的失败模式。</p>
+      </div>
+    </section>
+
+    <!-- ============ 开放知识 ============ -->
+    <section class="card" id="open-knowledge">
+      <h2>Open Knowledge <span class="tag">无需重训</span></h2>
+      <p class="full-name">Open Knowledge Models · 开放知识模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Open Knowledge 特指<strong>在大规模公开数据上预训练、可以无需任何微调直接迁移到新场景的模型</strong>。OK-Robot 的核心主张是：目前这类模型已足够强，缺的是<strong>正确的系统集成方式</strong>。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>论文对 "Open Knowledge" 的定义：<em>"learned models trained on large, publicly available datasets"</em>（在大规模公开数据集上训练的学习模型）。强调两点：①公开数据——社区可重现；②大规模训练——具备足够的泛化能力。</p>
+
+      <h3><span class="num">2</span>与"预训练模型/基础模型"的区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>概念</th><th>侧重</th><th>是否必须公开</th></tr></thead>
+          <tbody>
+            <tr><td>Foundation Model</td><td>大规模、多任务能力</td><td>不必</td></tr>
+            <tr><td>Pre-trained Model</td><td>可微调</td><td>不必</td></tr>
+            <tr><td><strong>Open Knowledge Model</strong></td><td><strong>无需重训即可直接用于机器人</strong></td><td>是（公开数据+权重）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>在 OK-Robot 里</h3>
+      <p>OK-Robot 使用了 4 个核心 Open Knowledge 模型：<strong>CLIP</strong>（视觉-语言对齐）、<strong>OWL-ViT</strong>（开放词表检测）、<strong>AnyGrasp</strong>（6-DoF 抓取生成）、<strong>Lang-SAM</strong>（语言引导分割）——全部直接调用，无任何针对家庭场景的微调。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>类比乐高积木：每块积木已经设计好了（预训练模型），工程问题是<strong>如何把它们拼在一起</strong>。OK-Robot 的贡献是设计出那个"拼法"，而不是重新制造积木。</p>
+    </section>
+
+    <!-- ============ VoxelMap ============ -->
+    <section class="card" id="voxelmap">
+      <h2>VoxelMap <span class="tag">Semantic Memory</span></h2>
+      <p class="full-name">VoxelMap · 体素语义记忆地图</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VoxelMap 是一个把 CLIP 语义向量存入 3D 体素网格的<strong>静态语义地图</strong>。机器人扫描一次家庭后，就能用自然语言查询任意物体的 3D 位置——无需再运行检测模型。</p>
+      </div>
+
+      <h3><span class="num">1</span>构建流程</h3>
+      <pre><code>iPhone 扫描（Record3D） → RGB-D 帧序列 + 位姿
+        ↓
+对每帧运行 OWL-ViT（开放词表检测）+ SAM（分割）
+        ↓
+提取每个物体的 CLIP 嵌入向量
+        ↓
+用深度图 + 位姿反投影到 3D 世界坐标（点云）
+        ↓
+体素化至 5cm 分辨率
+对每个体素：计算检测置信度加权平均的 CLIP 嵌入
+        ↓
+VoxelMap 完成——每个非空体素 = 一个 CLIP 向量 + 3D 坐标</code></pre>
+
+      <h3><span class="num">2</span>查询方式</h3>
+      <p>给定自然语言查询（如 "orange soda can"）：</p>
+      <ol>
+        <li>用 CLIP 语言编码器将查询转为向量 \(\mathbf{q}\)。</li>
+        <li>遍历所有体素，找到 \(\mathbf{q} \cdot \mathbf{v}_i\) 最大的体素 \(i\)。</li>
+        <li>该体素的 3D 坐标就是导航目标。</li>
+      </ol>
+      <p>对 "A on B" 查询的特殊处理：找 top-10 A 点和 top-50 B 点，选 L2 距离最近的 A-B 对中的 A 点——这个细节使 OK-Robot 能处理 "桌上的零食袋" 这类相对位置查询。</p>
+
+      <h3><span class="num">3</span>与同类方案的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方案</th><th>表示</th><th>优势</th><th>劣势</th></tr></thead>
+          <tbody>
+            <tr><td><strong>VoxelMap</strong></td><td>体素 + CLIP 均值</td><td>低方差、快速、支持导航</td><td>静态地图，物体移动后失效</td></tr>
+            <tr><td>CLIP-Fields</td><td>隐式神经场（NeRF 风格）</td><td>连续表示</td><td>构建慢，方差大</td></tr>
+            <tr><td>USA-Net</td><td>语义 + Affordance 图</td><td>支持可行性推理</td><td>方差更大</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>消融实验结果：VoxelMap 在平均性能上略优于竞争对手，但更重要的是<strong>方差最小</strong>——跨家庭部署时更稳定。</p>
+
+      <h3><span class="num">4</span>局限</h3>
+      <p>VoxelMap 是<strong>静态</strong>的：扫描后不更新。物体被移动后，地图里的位置就错了。这是论文第 V 节明确列出的已知局限之一，称为"Live semantic memory"的开放问题。</p>
+    </section>
+
+    <!-- ============ OWL-ViT / CLIP ============ -->
+    <section class="card" id="owlvit-clip">
+      <h2>OWL-ViT / CLIP <span class="tag">Open-Vocab Detection</span></h2>
+      <p class="full-name">OWL-ViT · Simple Open-Vocabulary Object Detection with Vision Transformers; CLIP · Contrastive Language-Image Pre-training</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>CLIP 是将图像和文字对齐到同一向量空间的预训练模型；OWL-ViT 在 CLIP 基础上加入了检测头，可以用自然语言查询定位图像中任意物体的边界框——两者都是 OK-Robot 开放词表能力的基础。</p>
+      </div>
+
+      <h3><span class="num">1</span>CLIP 是什么</h3>
+      <p>CLIP（OpenAI, 2021）用<strong>对比学习</strong>在 4 亿图文对上训练：使匹配的图像-文本对嵌入向量相近，不匹配对嵌入向量相远。结果：图像编码器和文本编码器共享一个语义空间——"一只橙色猫"的文本向量和橙色猫图片的视觉向量会很近。</p>
+
+      <h3><span class="num">2</span>OWL-ViT 是什么</h3>
+      <p>OWL-ViT（Minderer et al., ECCV 2022）在 CLIP 骨干上加了轻量的检测头：输入图像 + 文本查询列表，输出每个查询对应的边界框和置信度分数。<strong>不需要固定类别列表</strong>，可以检测任意文本描述的物体。</p>
+      <p>OK-Robot 中对每一帧扫描图像运行 OWL-ViT，供应一个来自 ScanNet200 的大型物体标签集（见论文 Appendix B），使地图尽可能捕捉到家庭中的常见物体。</p>
+
+      <h3><span class="num">3</span>为什么选 OWL-ViT 而非 Detic</h3>
+      <p>论文明确说明：<em>"We chose OWL-ViT [8] over Detic [7] as the object detector since we found OWL-ViT to perform better in preliminary queries."</em> — 这是个实验性选择，不是理论必然。对于其他场景，Detic 或 Grounding DINO 可能更优。</p>
+
+      <h3><span class="num">4</span>在 VoxelMap 中的角色</h3>
+      <p>每个扫描帧 → OWL-ViT 检测出边界框 → SAM 精化为掩码 → CLIP 图像编码器提取掩码区域的语义嵌入 → 存入对应体素。OWL-ViT 负责"找到什么"，CLIP 负责"存成什么向量"，SAM 负责"精确定位像素"。</p>
+
+      <h3><span class="num">5</span>类比</h3>
+      <p>CLIP 像一本"图文双语词典"——图像和文字都被翻译成同一种"意义语言"。OWL-ViT 在此基础上加了一个"指针"，能在图像里标记出"这里就是那个意思对应的东西"。</p>
+    </section>
+
+    <!-- ============ AnyGrasp ============ -->
+    <section class="card" id="anygrasp">
+      <h2>AnyGrasp <span class="tag">6-DoF Grasp</span></h2>
+      <p class="full-name">AnyGrasp · Robust and Efficient Grasp Perception in Spatial and Temporal Domains</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>AnyGrasp 是一个给定单帧 RGB-D 图像，能为场景中<strong>任意物体</strong>生成<strong>所有无碰撞的 6-DoF 平行夹抓取候选</strong>的预训练模型——无需物体 CAD 模型或预先知道物体类别。</p>
+      </div>
+
+      <h3><span class="num">1</span>输入 / 输出</h3>
+      <ul>
+        <li><strong>输入</strong>：一张 RGB 图像 + 对应的点云（由深度图反投影得到）。</li>
+        <li><strong>输出</strong>：数百个抓取候选，每个包含：抓取点（3D）、夹爪宽度、高度、深度方向、"graspness score"（未标定的模型置信度）。</li>
+      </ul>
+
+      <h3><span class="num">2</span>技术原理概要</h3>
+      <p>AnyGrasp（Fang et al., IEEE Transactions on Robotics, 2023）在 GraspNet-1Billion 这个超大规模抓取数据集上训练，学习了物体表面几何形状与良好抓取姿态之间的映射关系。它用点云特征直接回归每个候选点处的抓取参数，速度快且场景级别处理（不是逐物体）。</p>
+
+      <h3><span class="num">3</span>在 OK-Robot 里的用法</h3>
+      <p>流程：导航到目标物体附近 → 机器人头部相机对准目标 3D 位置 → 拍 RGB-D 图 → AnyGrasp 生成<strong>全场景</strong>所有候选 → Lang-SAM 提供目标物体掩码 → 只保留落在掩码内的候选 → 水平抓取启发式选最优一个 → 执行。</p>
+
+      <h3><span class="num">4</span>商业版 vs. 开源版</h3>
+      <div class="callout note">
+        <div class="callout-head">⚠️ 重要区别</div>
+        <p>论文中使用的是 AnyGrasp <strong>完整商业版</strong>。论文同时评测了其开源基线（Open Graspness），发现<strong>一个简单的 top-down 启发式</strong>甚至能击败开源版 AnyGrasp。这意味着完整复现 OK-Robot 结果需要访问商业版 API。</p>
+      </div>
+
+      <h3><span class="num">5</span>局限（论文分析）</h3>
+      <p>AnyGrasp 的主要失败模式（来自 Figure 4 和 Figure 8）：</p>
+      <ul>
+        <li>透明物体（点云不完整）</li>
+        <li>平板物体（书、巧克力）——双指夹爪无法从表面夹取</li>
+        <li>生成的抓取超出机器人关节限位</li>
+        <li>单帧 RGB-D 视野有限，遮挡情况下失败</li>
+      </ul>
+
+      <h3><span class="num">6</span>类比</h3>
+      <p>AnyGrasp 像一个"机器人版的手眼协调大脑"——给它看一眼东西，它就能告诉你 200 种拿法，你再从中选最合适的那个。</p>
+    </section>
+
+    <!-- ============ Lang-SAM ============ -->
+    <section class="card" id="langsam">
+      <h2>Lang-SAM <span class="tag">Language-Guided Segm</span></h2>
+      <p class="full-name">Lang-SAM · Language-Guided Segment Anything</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Lang-SAM 把 SAM（Segment Anything Model）和开放词表检测器结合，给定一张图像和一段自然语言描述，输出<strong>对应物体的像素级分割掩码</strong>。在 OK-Robot 里充当"抓取过滤器"的眼睛。</p>
+      </div>
+
+      <h3><span class="num">1</span>SAM 简介</h3>
+      <p>SAM（Kirillov et al., Meta AI Research, ICCV 2023）是一个"分割万物"的基础模型：给定点/框提示，能精确分割图像中任意物体的像素掩码。但 SAM 本身不理解语言——它需要外部告诉它"在哪里"提示。</p>
+
+      <h3><span class="num">2</span>Lang-SAM 的组合</h3>
+      <p>Lang-SAM（Medeiros, 2023）= Grounding DINO（语言引导检测，给出边界框）+ SAM（精确分割，给出掩码）。流程：</p>
+      <pre><code>输入: 图像 + 语言查询 ("Takis bag")
+Grounding DINO → 边界框
+SAM(图像, 边界框提示) → 像素掩码
+输出: 目标物体的精确掩码</code></pre>
+
+      <h3><span class="num">3</span>在 OK-Robot 里的两个用途</h3>
+      <ul>
+        <li><strong>抓取过滤</strong>：AnyGrasp 对整个场景生成候选，Lang-SAM 告知"目标物体在哪些像素"，只保留候选抓取点投影到掩码内的抓取。</li>
+        <li><strong>放置位置估计</strong>：用放置目标的语言查询（如 "nightstand"）运行 Lang-SAM，得到目标表面点云，再用点云高度估计放置点。</li>
+      </ul>
+
+      <h3><span class="num">4</span>失败模式</h3>
+      <p>Lang-SAM 的主要失败：识别到错误的目标物体（图 4 中 17 次 "LangSAM detected wrong object"）。常发生于有多个外观相似物体的场景——这与 VoxelMap 的语言查询敏感性问题类似，本质是 VLM 的"incantation 效应"。</p>
+
+      <h3><span class="num">5</span>类比</h3>
+      <p>如果 AnyGrasp 是"给出 200 种拿法"，Lang-SAM 就是"用一张红色贴纸标记目标物体"——只有贴着红色贴纸的地方的拿法才被接受。</p>
+    </section>
+
+    <!-- ============ Zero-shot / Training-free ============ -->
+    <section class="card" id="zero-shot">
+      <h2>Zero-shot <span class="tag">Training-Free</span></h2>
+      <p class="full-name">Zero-shot Deployment · 零样本部署 / 无训练迁移</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Zero-shot 指模型在<strong>没有见过目标任务/环境的任何训练样本</strong>的情况下直接运行。OK-Robot 的 zero-shot 是指无需为新家庭收集任何标注数据，只用一次 iPhone 扫描即可部署——不同于 few-shot（看几个例子）或 fine-tuning（用少量样本调参数）。</p>
+      </div>
+
+      <h3><span class="num">1</span>Zero-shot 的三种层级</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>层级</th><th>含义</th><th>OK-Robot 的做法</th></tr></thead>
+          <tbody>
+            <tr><td>Zero-shot object</td><td>目标物体训练时没见过</td><td>是——CLIP/OWL-ViT 支持开放词表</td></tr>
+            <tr><td>Zero-shot environment</td><td>部署环境训练时没见过</td><td>是——10 个真实家庭全是未见场景</td></tr>
+            <tr><td>Zero-shot embodiment</td><td>机器人平台没训练过</td><td>否——AnyGrasp 虽然未为 Stretch 微调，但有水平抓取启发式适配</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>为什么 zero-shot 难</h3>
+      <p>零样本方案无法通过在目标场景微调来修正偏差——必须第一次就对。这放大了每个模块的系统误差，这也是为什么 OK-Robot 花大力气设计启发式规则（抓取角度惩罚、导航评分函数、放置高度估计）来减少对模型输出的依赖。</p>
+
+      <h3><span class="num">3</span>OK-Robot 中的 zero-shot 边界</h3>
+      <p>值得注意：OK-Robot 虽然对新家庭是 zero-shot，但其所有组件模型（AnyGrasp、CLIP 等）都是在大量数据上预训练的。<strong>"zero-shot 部署"不等于"完全无监督"</strong>——预训练中积累的知识才使 zero-shot 泛化成为可能。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>类比一个没去过某城市的外语流利的人：他没"训练"过这个城市（zero-shot environment），但他能用语言能力（预训练）来阅读路牌和问路。OK-Robot 的预训练模型就是那个"语言能力"。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#ovmm">OVMM — 开放词表移动操作</a></li>
+      <li><a href="#open-knowledge">Open Knowledge — 开放知识</a></li>
+      <li><a href="#voxelmap">VoxelMap — 体素语义记忆</a></li>
+      <li><a href="#owlvit-clip">OWL-ViT / CLIP — 开放检测</a></li>
+      <li><a href="#anygrasp">AnyGrasp — 6-DoF 抓取</a></li>
+      <li><a href="#langsam">Lang-SAM — 语言分割</a></li>
+      <li><a href="#zero-shot">Zero-shot — 零样本部署</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · OK-Robot (arXiv:2401.12202) · NYU + AI at Meta · 配套笔记
+</footer>
+
+</body>
+</html>

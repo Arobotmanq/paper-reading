@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>策展版论文推荐 · Paper Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --accent:#6366f1; --accent-dark:#4f46e5; --bg:#fafafa; --card:#fff; --border:#e5e7eb; --text:#0f172a; --text-soft:#334155; --muted:#64748b; --code-bg:#f1f5f9; --shadow-sm:0 1px 2px rgba(15,23,42,.04); --shadow:0 4px 16px rgba(15,23,42,.06); --radius:12px; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:"Inter","Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; font-size:16px; line-height:1.7; }
+  .hero { background:linear-gradient(135deg,#1e1b4b 0%,#312e81 60%,#4338ca 100%); color:#fff; padding:3em 1.5em 2.6em; position:relative; overflow:hidden; }
+  .hero::before { content:""; position:absolute; top:-100px; right:-90px; width:380px; height:380px; background:radial-gradient(circle,rgba(129,140,248,.45),transparent 70%); }
+  .hero-inner { max-width:920px; margin:0 auto; position:relative; z-index:1; }
+  .eyebrow { display:inline-flex; align-items:center; gap:.5em; background:rgba(129,140,248,.18); color:#c7d2fe; border:1px solid rgba(129,140,248,.4); padding:.35em .9em; border-radius:999px; font-size:.82em; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+  .eyebrow .dot { width:8px; height:8px; border-radius:50%; background:#818cf8; box-shadow:0 0 12px #818cf8; }
+  .hero h1 { font-size:2.2em; font-weight:800; margin:.4em 0 .2em; }
+  .hero .sub { color:#c7d2fe; max-width:680px; margin:0; }
+  .hero .pills { margin-top:1em; display:flex; gap:.5em; flex-wrap:wrap; }
+  .hero .pill, .pill { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); color:#e2e8f0; padding:.35em .85em; border-radius:8px; font-size:.83em; text-decoration:none; }
+  .wrap { max-width:920px; margin:2.2em auto 5em; padding:0 1.5em; }
+  .group { margin-bottom:2.4em; }
+  .group h2 { font-size:1.25em; font-weight:700; display:flex; align-items:center; gap:.5em; margin:0 0 .3em; padding-bottom:.4em; border-bottom:2px solid var(--border); }
+  .group h2 .dot { width:10px; height:10px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#a855f7); flex:0 0 auto; }
+  .group h2 .cnt { font-family:"JetBrains Mono",monospace; font-size:.6em; font-weight:700; color:var(--muted); background:var(--code-bg); border:1px solid var(--border); border-radius:999px; padding:.1em .6em; }
+  .gdesc { font-size:.88em; color:var(--muted); margin:.3em 0 .8em; }
+  .rec { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:1em 1.2em; margin:.7em 0; box-shadow:var(--shadow-sm); transition:box-shadow .2s; }
+  .rec:hover { box-shadow:var(--shadow); }
+  .rec-top { display:flex; align-items:baseline; gap:.55em; flex-wrap:wrap; }
+  .rec-title { font-weight:700; color:var(--text); text-decoration:none; font-size:1.02em; }
+  .rec-title:hover { color:var(--accent-dark); }
+  .prio { font-size:.72em; font-weight:700; border-radius:999px; padding:.12em .6em; flex:0 0 auto; }
+  .p1 { background:#fef2f2; color:#dc2626; border:1px solid #dc2626; }
+  .p2 { background:#eef2ff; color:#4f46e5; border:1px solid #818cf8; }
+  .p3 { background:var(--code-bg); color:var(--muted); border:1px solid var(--border); }
+  .ktag { font-size:.72em; font-weight:700; border-radius:999px; padding:.12em .6em; flex:0 0 auto; }
+  .k-new { background:#f0fdf4; color:#16a34a; border:1px solid #16a34a; }
+  .k-cls { background:#fffbeb; color:#d97706; border:1px solid #d97706; }
+  .rec-meta { color:var(--muted); font-size:.83em; margin:.25em 0; }
+  .rec-abs { font-size:.92em; color:var(--text-soft); margin:.4em 0; }
+  .rec-why { font-size:.88em; color:var(--text); background:#fafaf9; border-left:3px solid var(--accent); border-radius:0 6px 6px 0; padding:.4em .8em; margin:.45em 0; }
+  .rec-os { font-size:.8em; color:var(--muted); font-family:"JetBrains Mono",monospace; }
+  footer { text-align:center; color:var(--muted); font-size:.85em; padding:1em; }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Paper Reading · 策展版推荐</span>
+    <h1>策展版论文推荐</h1>
+    <p class="sub">全网扫描（arXiv + 顶会获奖 + 工业技报）→ 与已读 34 篇去重 → 逐篇核实存在性/链接/开源状态 → 按你的两条主线分组排序。想深读哪篇，跟我说篇名即可。</p>
+    <div class="pills">
+      <span class="pill">📄 48 篇已核实</span>
+      <span class="pill">🕒 2026-06-11 20:09</span>
+      <a class="pill" href="#g-trackB">🦿 Track B</a> <a class="pill" href="#g-trackA">🤖 Track A</a> <a class="pill" href="#g-found">🧱 奠基补课</a> <a class="pill" href="#g-wm">🌍 World Model / 视频预训练（综述之后的一手切入）</a> <a class="pill" href="#g-est">📐 状态估计 / 底层与工具（补全 CoCo-InEKF 的上下游）</a>
+      <a class="pill" href="./recommendations.html">📰 每日 feed</a>
+      <a class="pill" href="./index.html">📚 阅读索引</a>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+<section class="group" id="g-trackB"><h2><span class="dot"></span>🦿 Track B · 人形控制 / sim2real（你的主线空白区，按补课顺序排列） <span class="cnt">17</span></h2><p class="gdesc">已读库 34 篇里 Track B 几乎空白。这一组按『必读 → 推荐 → 了解』排好了补课顺序：先 ASAP/HOVER 建立 sim2real 残差补偿与统一 WBC 接口的框架，再沿 tracking（BeyondMimic/SONIC）、力控（FALCON/UniFP）、视觉 sim2real（VIRAL）展开。</p>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2502.01143" target="_blank">ASAP: Aligning Simulation and Real-World Physics for Learning Agile Humanoid Whole-Body Skills</a>
+      </div>
+      <div class="rec-meta">2025-02 · RSS 2025 · arXiv:2502.01143</div>
+      <p class="rec-abs">两阶段框架：先在仿真预训练动作跟踪策略，再用真机数据学 delta action 残差模型补偿动力学失配，在 Unitree G1 上实现侧踢、跳跃等高动态全身技能。</p>
+      <div class="rec-why"><b>为何该读：</b>你做人形 sim2real 分析（对比 sim 与真机 obs/action diff），ASAP 正是把这个 gap 显式建模为可学习的残差动作并回灌仿真微调的代表作，与 SysID/域随机化做了系统对比；是你这条主线最贴近日常工作的必读。</div>
+      <div class="rec-os">开源：code: https://github.com/LeCAR-Lab/ASAP (project page: https://agile.human2humanoid.com/)</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2410.21229" target="_blank">HOVER: Versatile Neural Whole-Body Controller for Humanoid Robots</a>
+      </div>
+      <div class="rec-meta">2024-10 · ICRA 2025 · arXiv:2410.21229</div>
+      <p class="rec-abs">以全身运动模仿为统一抽象，把 15+ 种控制模式（根速度跟踪、关节角跟踪、关键点跟踪等）蒸馏进单一策略，模式间无缝切换，Unitree H1 实机验证。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 LeVERB 和 WholeBodyVLA，这类&#x27;上层 VLA + 下层 WBC 接口&#x27;的设计源头就是 HOVER 的 masked 多模式统一控制器思想；理解它才能看懂当前人形公司低层控制接口的设计取舍。NVlabs 开源（IsaacLab 扩展）。</div>
+      <div class="rec-os">开源：code: https://github.com/NVlabs/HOVER (linked from project page https://hover-versatile-humanoid.github.io/)</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2508.08241" target="_blank">BeyondMimic: From Motion Tracking to Versatile Humanoid Control via Guided Diffusion</a>
+      </div>
+      <div class="rec-meta">2025-08 · arXiv preprint · arXiv:2508.08241</div>
+      <p class="rec-abs">开源 motion tracking 流水线做到空翻、侧空翻、冲刺级别的实机动作质量，再用 guided diffusion 在测试时仅靠 cost function 实现零样本导航/避障/遥操作。</p>
+      <div class="rec-why"><b>为何该读：</b>当前社区事实上的 sim2real 动作跟踪标准流水线之一——LAFAN1 数据集任意动作不调参即可训出可上实机的策略，多家机器人公司（含高擎等）已直接移植；你们做实机跟踪验证可以直接以它为 baseline。</div>
+      <div class="rec-os">开源：code: https://github.com/HybridRobotics/whole_body_tracking (open-source motion tracking pipeline, linked from https://b</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2511.07820" target="_blank">SONIC: Supersizing Motion Tracking for Natural Humanoid Whole-Body Control</a>
+      </div>
+      <div class="rec-meta">2025-11 · arXiv preprint (NVIDIA, latest revision 2026-0 · arXiv:2511.07820</div>
+      <p class="rec-abs">把 motion tracking 当作可 scaling 的任务：42M 参数、700 小时/1 亿帧动捕、9k GPU 小时训出通用全身控制基础模型，G1 实机 50 条高动态轨迹 100% 成功，免 retargeting 跨具身跟踪。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 GR00T N1，SONIC 就是 NVIDIA GR00T 系 VLA 下面的 WBC 底座（GR00T-WholeBodyControl 统一平台），展示了&#x27;下层控制也能走 scaling law&#x27;的最新证据；权重已开源，可直接在 G1 上复现。</div>
+      <div class="rec-os">开源：unknown — project page https://nvlabs.github.io/SONIC/ exists but is JS-rendered and returned no content; no code/weight</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2509.26633" target="_blank">OmniRetarget: Interaction-Preserving Data Generation for Humanoid Whole-Body Loco-Manipulation and Scene Interaction</a>
+      </div>
+      <div class="rec-meta">2025-09 · arXiv (Amazon FAR 等) · arXiv:2509.26633</div>
+      <p class="rec-abs">基于 interaction mesh 保留人-物-地形接触关系的全身动作重定向与数据生成引擎，RL 策略在 G1 上完成长程跑酷与搬运。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 GRAIL（生成式造数据），OmniRetarget 是『重定向式造数据』的对照路线，数据已开源，是 BeyondMimic/SONIC 一系 tracking 工作的上游。</div>
+      <div class="rec-os">开源：数据集开源 (HF: omniretarget)，项目页宣布开源重定向代码</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2505.03729" target="_blank">Visual Imitation Enables Contextual Humanoid Control</a>
+      </div>
+      <div class="rec-meta">2025-05 · CoRL 2025 (Best Student Paper Award) · arXiv:2505.03729</div>
+      <p class="rec-abs">VideoMimic：real-to-sim-to-real 流水线，从单目日常视频联合重建人和环境，训出一个能上下楼梯、坐立的情境感知人形全身策略（Berkeley，G1 真机）。</p>
+      <div class="rec-why"><b>为何该读：</b>CoRL 2025 Best Student Paper；与你读过的 GRAIL（从 3D 资产和视频先验生成 loco-manipulation）是同一思路的更完整闭环，且全栈开源，是&#x27;从人类视频到人形技能&#x27;路线的代表作。</div>
+      <div class="rec-os">开源：verified: code https://github.com/hongsukchoi/VideoMimic ; project page https://www.videomimic.net/</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2406.08858" target="_blank">OmniH2O: Universal and Dexterous Human-to-Humanoid Whole-Body Teleoperation and Learning</a>
+      </div>
+      <div class="rec-meta">2024-06 · CoRL 2024 · arXiv:2406.08858</div>
+      <p class="rec-abs">学习型全尺寸人形全身遥操作+自主系统：支持 VR/RGB/语言多种接口控制带灵巧手的 H1，并可从遥操作示教学到自主策略。</p>
+      <div class="rec-why"><b>为何该读：</b>HOVER 与 ASAP 的同门前身（LeCAR Lab H2O 系列），奠定了&#x27;sim 训练 RL 跟踪策略 + 真机人体动作驱动&#x27;的范式；你读 Track A 的遥操作采数据流程（Mobile ALOHA 等），这是人形全身版的源头工作，且完全开源。</div>
+      <div class="rec-os">开源：verified: code https://github.com/LeCAR-Lab/human2humanoid; OmniH2O-6 dataset released (CMU Box link on project page htt</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2412.13196" target="_blank">ExBody2: Advanced Expressive Humanoid Whole-Body Control</a>
+      </div>
+      <div class="rec-meta">2024-12 · arXiv preprint (cs.RO); project-page BibTeX li · arXiv:2412.13196</div>
+      <p class="rec-abs">解耦全身速度跟踪与关键点跟踪，并用 privileged teacher 自动过滤不可行动作再蒸馏 student，在两个人形平台实机实现行走/下蹲/舞蹈级表达性全身控制。</p>
+      <div class="rec-why"><b>为何该读：</b>motion tracking 路线绕不开的 ExBody 系列代表作：teacher-student 蒸馏 + 动作可行性过滤这两个工程技巧在后续几乎所有 tracking 工作（含 BeyondMimic、SONIC）中被沿用，适合作为入门精读。</div>
+      <div class="rec-os">开源：unknown: no code link on project page https://exbody2.github.io/ or arXiv abstract</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2505.03738" target="_blank">AMO: Adaptive Motion Optimization for Hyper-Dexterous Humanoid Whole-Body Control</a>
+      </div>
+      <div class="rec-meta">2025-05 · RSS 2025 · arXiv:2505.03738</div>
+      <p class="rec-abs">sim2real RL 与轨迹优化混合：用混合 AMO 数据集训练可对分布外指令鲁棒自适应的全身控制网络，29-DoF Unitree G1 上大幅扩展可达工作空间（深蹲取物、大幅度躯干扭转）。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过的 WholeBodyVLA、LeVERB、Psi0 这类 loco-manipulation 上层都需要这种&#x27;听 root/躯干/末端指令&#x27;的下层 WBC，AMO 是被广泛对比和复用的经典下层；RL+TO 混合的思路对工程落地很有参考价值。</div>
+      <div class="rec-os">开源：verified: code/models https://github.com/OpenTeleVision/AMO; project page https://amo-humanoid.github.io/</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2505.06776" target="_blank">FALCON: Learning Force-Adaptive Humanoid Loco-Manipulation</a>
+      </div>
+      <div class="rec-meta">2025-05 · L4DC 2026 · arXiv:2505.06776</div>
+      <p class="rec-abs">上下身双智能体 RL + 力矩限幅感知的 3D 力课程，让人形在末端受 0-100N 外力下稳走并精确跟踪，实机完成拉车、开门、负重搬运，跨多款人形部署。</p>
+      <div class="rec-why"><b>为何该读：</b>力控这一格的最佳人形新作：你读过的 VLA（π0.5、GR00T 等）默认末端无力交互，FALCON 补上『有力任务』的底层能力，LeCAR Lab 全开源，与你公司做 loco-manipulation 底层控制器的需求高度匹配。</div>
+      <div class="rec-os">开源：verified: code https://github.com/LeCAR-Lab/FALCON ; project page https://lecar-lab.github.io/falcon-humanoid/</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2505.20829" target="_blank">Learning a Unified Policy for Position and Force Control in Legged Loco-Manipulation</a>
+      </div>
+      <div class="rec-meta">2025-05 · CoRL 2025 (PMLR v305) · arXiv:2505.20829</div>
+      <p class="rec-abs">首个不依赖力传感器、用 RL 从历史状态估计外力的腿式机器人统一位置/力/阻抗控制策略（UniFP，北邮+BIGAI）。</p>
+      <div class="rec-why"><b>为何该读：</b>CoRL 2025 双 Best Paper 之一，评委明确表彰其&#x27;用学习解决基础控制问题&#x27;——这正是你 Track B 想补的内容；交互力控也是你读过的 GRAIL、WholeBodyVLA 这类 loco-manipulation 工作普遍回避的短板。</div>
+      <div class="rec-os">开源：unknown (project page https://unified-force.github.io/ exists; no code repo directly verified)</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2511.15200" target="_blank">VIRAL: Visual Sim-to-Real at Scale for Humanoid Loco-Manipulation</a>
+      </div>
+      <div class="rec-meta">2025-11 · arXiv preprint (cs.RO) · arXiv:2511.15200</div>
+      <p class="rec-abs">纯仿真训练、零样本上真机的视觉 loco-manipulation：privileged RL teacher + tiled rendering 大规模蒸馏 RGB student（最多 64 GPU），G1 上连续 54 个循环搬运，逼近专家遥操作水平。</p>
+      <div class="rec-why"><b>为何该读：</b>把你的两条主线接起来的最新工作：证明视觉端到端策略也能靠大规模视觉域随机化 + real2sim 对齐做 sim2real（而非只靠真机数据），与你读的 GR00T N1/GRAIL 形成对照；作者与 HOVER/ASAP 同系（Tairan He 等）。</div>
+      <div class="rec-os">开源：code: https://github.com/NVlabs/GR00T-VisualSim2Real (no model weights found); project page: https://viral-humanoid.gith</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2512.01996" target="_blank">Learning Sim-to-Real Humanoid Locomotion in 15 Minutes</a>
+      </div>
+      <div class="rec-meta">2025-12 · arXiv preprint (cs.RO) · arXiv:2512.01996</div>
+      <p class="rec-abs">FastSAC/FastTD3 off-policy RL + 数千并行环境 + 极简奖励，单张 RTX 4090 上 15 分钟训出强域随机化下可上 Unitree G1 / Booster T1 实机的步态与全身跟踪策略。</p>
+      <div class="rec-why"><b>为何该读：</b>对做 sim2real 的工程师价值直接：把&#x27;改奖励→重训→上实机&#x27;的迭代周期从天级压到分钟级，意味着可以用真机反馈快速闭环调参；配方简单、开源，可直接套到自家机器人上验证。</div>
+      <div class="rec-os">开源：code: https://github.com/amazon-far/holosoma (open-source implementation of the recipe); project page: https://younggyo.</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2502.10363" target="_blank">BeamDojo: Learning Agile Humanoid Locomotion on Sparse Footholds</a>
+      </div>
+      <div class="rec-meta">2025-02 · RSS 2025 (Robotics: Science and Systems) · arXiv:2502.10363</div>
+      <p class="rec-abs">针对人形多边形脚掌设计采样式落脚点奖励 + 双 critic + 两阶段课程，配机载 LiDAR 高程图，让 Unitree G1 实机走梅花桩/平衡木等稀疏落脚点地形。</p>
+      <div class="rec-why"><b>为何该读：</b>地形感知 locomotion 在人形上的代表作：你读过的 DTC 类工作解决的『稀疏落脚点』难题，这篇用纯 RL + 感知在人形实机上做成了，且高程图、双 critic 等工程细节对你做 sim2real 部署直接可用。</div>
+      <div class="rec-os">开源：no code repo found; project page only: https://why618188.github.io/beamdojo/</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2406.10454" target="_blank">HumanPlus: Humanoid Shadowing and Imitation from Humans</a>
+      </div>
+      <div class="rec-meta">2024-06 · CoRL 2024 · arXiv:2406.10454</div>
+      <p class="rec-abs">斯坦福全栈系统：RL 影随策略 RGB 实时跟随人体动作 → 影随遥操作采数据 → 行为克隆自主完成穿鞋走路等任务。</p>
+      <div class="rec-why"><b>为何该读：</b>人形『影随遥操作采数据』范式的源头之一，与 OmniH2O 对照读；全栈开源。</div>
+      <div class="rec-os">开源：代码开源: github.com/MarkFzp/humanplus</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2309.15462" target="_blank">DTC: Deep Tracking Control</a>
+      </div>
+      <div class="rec-meta">2023-09 · Science Robotics (Vol. 9, Issue 86, 2024) · arXiv:2309.15462</div>
+      <p class="rec-abs">训练时用模型式轨迹优化器在线生成参考落脚点、RL 策略学习跟踪，兼得 TO 的精确落脚与 RL 的鲁棒性，ANYmal 实机过缝隙/梅花桩并抗打滑。</p>
+      <div class="rec-why"><b>为何该读：</b>MPC/TO+RL 混合控制的标杆论文（ETH RSL，Science Robotics）：在『纯 RL 踩不准、纯模型不鲁棒』之间给出了最干净的混合架构。你要补 MPC+RL 这条线，这篇是首选范本，BeamDojo 等人形工作都在回应它提出的问题。</div>
+      <div class="rec-os">开源：unknown (no official code release found; ETH RSL paper)</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2201.08117" target="_blank">Learning robust perceptive locomotion for quadrupedal robots in the wild</a>
+      </div>
+      <div class="rec-meta">2022-01 · Science Robotics (Vol. 7, Issue 62, 2022) · arXiv:2201.08117</div>
+      <p class="rec-abs">注意力循环编码器融合本体+外感知、teacher-student 蒸馏 sim2real，ANYmal 在野外按人类徒步配速走完阿尔卑斯山小时级路线，是感知 locomotion 的里程碑。</p>
+      <div class="rec-why"><b>为何该读：</b>地形感知 locomotion 和 teacher-student sim2real 范式的『圣经』：今天几乎所有人形感知行走（包括 BeamDojo）的训练范式都源于此。你做 sim2real，这篇定义的 privileged learning + 噪声课程是必备基础。</div>
+      <div class="rec-os">开源：none (project page only: https://leggedrobotics.github.io/rl-perceptiveloco/ ; only third-party partial reimplementation</div>
+    </article></section>
+<section class="group" id="g-trackA"><h2><span class="dot"></span>🤖 Track A · 最新 VLA / 工业技术报告（2025H2–2026H1 别漏） <span class="cnt">11</span></h2><p class="gdesc">按与你已读系列的承接关系排序：π0.7 接 π*0.6、Gemini 1.5 接初代报告、Helix 02 补 Figure 缺位、GO-2 接 GO-1。</p>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://www.pi.website/blog/pi07" target="_blank">π0.7: a Steerable Model with Emergent Capabilities</a>
+      </div>
+      <div class="rec-meta">2026-04 · Physical Intelligence blog / tech report (not </div>
+      <p class="rec-abs">PI 的新一代可引导（steerable）基础模型：通过语言指导、元数据和轻量世界模型生成的视觉子目标做多模态提示，展现组合泛化——零数据条件下在 UR5e 双臂上折衣服，单模型追平 RL 微调的 π*0.6 专家模型（2026-04-16）。</p>
+      <div class="rec-why"><b>为何该读：</b>你已系统读完 π0/π0.5/π*0.6，π0.7 是这条主线的最新一环：从&#x27;靠 RL 经验学习&#x27;转向&#x27;靠提示可引导 + 涌现泛化&#x27;，与 π*0.6 形成直接方法论对照，属于必读的系列收官。</div>
+      <div class="rec-os">开源：none — blog page links only a paper PDF (/download/pi07.pdf); no GitHub/HuggingFace links found</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2510.03342" target="_blank">Gemini Robotics 1.5: Pushing the Frontier of Generalist Robots with Advanced Embodied Reasoning, Thinking, and Motion Transfer</a>
+      </div>
+      <div class="rec-meta">2025-10 · arXiv preprint (Google DeepMind tech report) · arXiv:2510.03342</div>
+      <p class="rec-abs">Gemini Robotics 的正式续作：VLA + ER（具身推理）双模型体系，引入 Motion Transfer 机制跨本体迁移动作数据，并让模型在行动前用自然语言&#x27;先想后做&#x27;（2025-10，2026-04 又迭代出 ER 1.6 并接入 Boston Dynamics Atlas）。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过初代 Gemini Robotics 报告，这篇是其最重要的版本升级，被你 2025 下半年漏掉了；Motion Transfer 跨本体迁移与 thinking-before-acting 是当前 generalist policy 的两个关键思想，与你读过的 π0.5、GR00T N1 形成三家对照。</div>
+      <div class="rec-os">开源：none — no code/weights links on arXiv page; closed model from Google DeepMind</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://www.figure.ai/news/helix-02" target="_blank">Introducing Helix 02: Full-Body Autonomy</a>
+      </div>
+      <div class="rec-meta">2026-01 · Figure AI blog (company announcement, not a pe</div>
+      <p class="rec-abs">Figure 把 Helix 从上半身扩展到全身：单一视觉运动网络从所有传感器直连所有执行器，底层 System 0 是用 1000+ 小时人类动作数据加 sim-to-real RL 训练的学习型全身控制器，实现洗碗机装卸等长程任务（2026-01-27 发布）。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 GR00T N1、Gemini Robotics、WholeBodyVLA 和 LeVERB，但 Figure 的 Helix 系列一直缺位；Helix 02 是目前工业界最接近&#x27;VLA + 全身控制 + sim2real RL&#x27;三者统一的公开报告，正好打在你 sim2real/控制工作与 Track A 的交叉点上，System 0 的训练范式对你日常工作直接有参考价值。</div>
+      <div class="rec-os">开源：none</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://www.agibot.com/article/231/detail/56.html" target="_blank">AGIBOT Genie Operator-2 (GO-2)：推理与行动的统一</a>
+      </div>
+      <div class="rec-meta">2026-04 · 智元官方技报（核心技术称中 CVPR/ACL 2026）</div>
+      <p class="rec-abs">智元下一代具身基座：异步双系统（低频语义规划 System 2 + 高频动作跟随 System 1）打通推理到执行。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 GO-1（ViLLA），GO-2 是其直接后继；按你的约定『漏掉重要中国厂商模型不可接受』。</div>
+      <div class="rec-os">开源：未开源</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://huggingface.co/blog/nvidia/gr00t-n1-7" target="_blank">NVIDIA Isaac GR00T N1.7: Open Reasoning VLA Model for Humanoid Robots</a>
+      </div>
+      <div class="rec-meta">2026-04 · HuggingFace blog (NVIDIA release, not a peer-r</div>
+      <p class="rec-abs">GR00T N1 的最新迭代：Cosmos-Reason2-2B 推理骨干 + 32 层 DiT 的 Action Cascade 双系统，预训练加入 2 万小时 EgoScale 人类第一视角视频，用统一的相对 EEF 动作空间把人类操作先验直接迁移到机器人（2026-04-17，Apache 2.0）。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 GR00T N1，这条线在 2025-12 的 N1.6（state-relative 动作、DAgger+RTC，见 research.nvidia.com/labs/gear/gr00t-n1_6）和 N1.7 上演进很快；&#x27;人类视频数据 1k→20k 小时带来可预测的能力提升&#x27;这一 scaling 结论对你判断数据路线很有价值，且全开源可直接上 Unitree G1 复现。</div>
+      <div class="rec-os">开源：verified: model weights https://huggingface.co/nvidia/GR00T-N1.7, code https://github.com/NVIDIA/Isaac-GR00T (open, comm</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2602.03310" target="_blank">RDT2: Exploring the Scaling Limit of UMI Data Towards Zero-Shot Cross-Embodiment Generalization</a>
+      </div>
+      <div class="rec-meta">2026-02 · arXiv preprint (no venue listed) · arXiv:2602.03310</div>
+      <p class="rec-abs">RDT-1B 续作：用增强版 UMI 采集 1 万+ 小时无机器人演示数据，7B VLM 经 RVQ 离散对齐 + flow matching + 蒸馏三阶段训练，首次实现未见本体、场景、物体、指令&#x27;4U&#x27;条件下的零样本部署（2026-02-03）。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 RDT-1B 和 FAST，RDT2 是国内开源 VLA 的代表性升级：它回答的核心问题——&#x27;不靠真机数据、纯 UMI 数据能否 scale 出跨本体零样本&#x27;——与 π0.7、GR00T N1.7 的人类视频路线互为印证；代码、权重全开源，可复现性强。</div>
+      <div class="rec-os">开源：verified: code https://github.com/thu-ml/RDT2; weights https://huggingface.co/collections/robotics-diffusion-transformer</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2605.02881" target="_blank">MolmoAct2: Action Reasoning Models for Real-world Deployment</a>
+      </div>
+      <div class="rec-meta">2026-05 · arXiv preprint (cs.RO) · arXiv:2605.02881</div>
+      <p class="rec-abs">AI2 全开放的动作推理模型二代：MolmoER 空间推理骨干 + OpenFAST 开源动作分词器 + 流匹配动作专家经逐层 KV-cache 接到离散 token VLM，7 个基准上超过 π0.5。</p>
+      <div class="rec-why"><b>为何该读：</b>2026 年开源 VLA 阵营的代表作：你读过 FAST，OpenFAST 是其开放数据复刻；你读过 π0.5，这是公开声称在真实部署评测中胜过它且权重/代码/数据全开放的模型，&#x27;离散推理+连续动作专家&#x27;的嫁接方式与你读的 dual-system 工作（G0、GR00T N1）正好互补。</div>
+      <div class="rec-os">开源：code: https://github.com/allenai/molmoact2; models: https://huggingface.co/collections/allenai/molmoact2-models; dataset</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2507.15493" target="_blank">GR-3 Technical Report</a>
+      </div>
+      <div class="rec-meta">2025-07 · arXiv tech report (ByteDance Seed) · arXiv:2507.15493</div>
+      <p class="rec-abs">字节跳动 Seed 的大型 VLA：网络级图文数据共训 + VR 人类轨迹高效微调 + 真机模仿学习三合一配方，配套 ByteMini 双臂移动机器人，长程灵巧任务上超过 π0。</p>
+      <div class="rec-why"><b>为何该读：</b>你系统读过 π0/π0.5/GO-1/Galaxea G0/Wall-OSS 等中外厂商报告，GR-3 是这一梯队中你缺失的字节跳动方案；其 VR 人类数据少样本适配与双臂移动整机（ByteMini）设计对你做人形移动操作直接可对照。</div>
+      <div class="rec-os">开源：none (project page only: https://seed.bytedance.com/GR3/; no code or weights released)</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2502.19645" target="_blank">Fine-Tuning Vision-Language-Action Models: Optimizing Speed and Success</a>
+      </div>
+      <div class="rec-meta">2025-02 · RSS 2025 (accepted, per arXiv comments) · arXiv:2502.19645</div>
+      <p class="rec-abs">系统拆解 VLA 微调设计空间，提出 OFT 配方（并行解码+动作分块+连续动作+L1 回归），把 OpenVLA 在 LIBERO 提到 97.1%、吞吐提速 26 倍。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 OpenVLA 本体，这是其官方后续与最重要的&#x27;微调方法论&#x27;论文：在双臂 ALOHA 高频任务上击败 π0 和 RDT-1B 的默认微调配方，对你在公司里实际微调部署 VLA 是最具工程价值的一篇。</div>
+      <div class="rec-os">开源：code: https://github.com/moojink/openvla-oft; weights: https://huggingface.co/moojink (OFT checkpoints); project page: h</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2604.07993" target="_blank">HEX: Humanoid-Aligned Experts for Cross-Embodiment Whole-Body Manipulation</a>
+      </div>
+      <div class="rec-meta">2026-04 · arXiv preprint (cs.RO) · arXiv:2604.07993</div>
+      <p class="rec-abs">面向全尺寸双足人形的全身 VLA 框架：提出 humanoid-aligned 统一状态表征 + MoE 本体感知预测器建模全身协调，残差门控融合视觉语言与本体动力学，用 flow matching 出动作，在快反应和长程任务上超过强基线（2026-04-09）。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 WholeBodyVLA 和 Asynchronous Fast-Slow VLA，HEX 是同一问题（高自由度人形全身协调控制为什么不能各部位独立建模）的最新学术答案，state-centric 的思路与你做控制/状态估计的背景高度契合，且代码开源。</div>
+      <div class="rec-os">开源：verified: code https://github.com/Open-X-Humanoid/HEX; project page https://hex-humanoid.github.io/ (weights availabilit</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2506.01844" target="_blank">SmolVLA: A Vision-Language-Action Model for Affordable and Efficient Robotics</a>
+      </div>
+      <div class="rec-meta">2025-06 · arXiv (HF LeRobot) · arXiv:2506.01844</div>
+      <p class="rec-abs">0.45B 小型 VLA，单卡可训、消费级硬件可部署，约 1/10 规模达到 π0 级性能（LIBERO 87.3%）。</p>
+      <div class="rec-why"><b>为何该读：</b>想低成本动手做 VLA 微调/部署实验，这是生态最完善的起点（LeRobot 全家桶）。</div>
+      <div class="rec-os">开源：完全开源：lerobot 代码 + 权重 + 数据</div>
+    </article></section>
+<section class="group" id="g-found"><h2><span class="dot"></span>🧱 奠基补课 · VLA 知识体系的根基缺口 <span class="cnt">5</span></h2><p class="gdesc">你读了大量 VLA 新作，但这几篇被它们引用最多的根基还没读：ACT 的 action chunking 与 Diffusion Policy 的扩散动作头是几乎所有你读过模型的动作专家源头。</p>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2304.13705" target="_blank">Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware</a>
+      </div>
+      <div class="rec-meta">2023-04 · RSS 2023 · arXiv:2304.13705</div>
+      <p class="rec-abs">提出 ALOHA 低成本双臂遥操作平台与 ACT（Action Chunking with Transformers），用 CVAE+动作分块以 50 条演示学会精细双臂操作。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 Mobile ALOHA 却没读其直接前身：Mobile ALOHA 的整套策略学习就是 ACT，&#x27;action chunking&#x27; 这一概念也由本文提出，并被 π0、RDT-1B、OpenVLA-OFT 等你读过的几乎所有 VLA 沿用——这是你 VLA 知识体系中最明显的根基缺口。</div>
+      <div class="rec-os">开源：code/hardware: https://github.com/tonyzhaozh/aloha and https://github.com/tonyzhaozh/act (project page: https://tonyzhao</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2303.04137" target="_blank">Diffusion Policy: Visuomotor Policy Learning via Action Diffusion</a>
+      </div>
+      <div class="rec-meta">2023-03 · RSS 2023 (arXiv hosts the extended IJRR journa · arXiv:2303.04137</div>
+      <p class="rec-abs">把视觉运动策略建模为条件去噪扩散过程，优雅处理多模态动作分布，12 个任务平均提升 46.9%。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过的 RDT-1B（扩散）和 π0（flow matching 是其连续化变体）的动作头范式都源自本文；理解 receding-horizon 扩散动作生成是看懂这一整族 VLA 动作专家设计的前提，属于必须补的奠基论文。</div>
+      <div class="rec-os">开源：code: https://github.com/real-stanford/diffusion_policy (project page: https://diffusion-policy.cs.columbia.edu)</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2212.06817" target="_blank">RT-1: Robotics Transformer for Real-World Control at Scale</a>
+      </div>
+      <div class="rec-meta">2022-12 · RSS 2023 (arXiv page itself lists no venue; RS · arXiv:2212.06817</div>
+      <p class="rec-abs">13 台机器人 17 个月收集 13 万 episode、700+ 任务，训练 35M 参数 Transformer 实现 3Hz 实时多任务控制，确立&#x27;大数据+Transformer 机器人策略&#x27;范式。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 RT-2 但没读其前身：RT-2 的动作 token 化、评测协议和数据底座都直接继承 RT-1；它也是 OXE/RT-X 的基础模型之一，补上它你的 Google 机器人路线（RT-1→RT-2→Gemini Robotics）才完整。</div>
+      <div class="rec-os">开源：code + trained checkpoints: https://github.com/google-research/robotics_transformer (Apache 2.0; repo archived/read-only</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2310.08864" target="_blank">Open X-Embodiment: Robotic Learning Datasets and RT-X Models</a>
+      </div>
+      <div class="rec-meta">2023-10 · ICRA 2024 · arXiv:2310.08864</div>
+      <p class="rec-abs">21 家机构汇集 22 种机器人、100 万+ 真机轨迹的最大开源跨本体数据集，并训出 RT-1-X/RT-2-X 验证正迁移。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过的 Octo、OpenVLA、SpatialVLA 全部在 OXE 上预训练，AgiBot World 也是对标它而建；不读 OXE 就不清楚这些模型的数据底座与跨本体正迁移证据从何而来。</div>
+      <div class="rec-os">开源：Datasets and models released: project site https://robotics-transformer-x.github.io (code at github.com/google-deepmind/</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2403.12945" target="_blank">DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset</a>
+      </div>
+      <div class="rec-meta">2024-03 · RSS 2024 · arXiv:2403.12945</div>
+      <p class="rec-abs">50 名采集者、3 大洲 564 场景、7.6 万条（350h）真实操作演示数据集。</p>
+      <div class="rec-why"><b>为何该读：</b>OXE 之外最重要的真机数据底座：你候选里的 π0.5-DROID、Ctrl-World 都在其上工作；全开源。</div>
+      <div class="rec-os">开源：完全开源（数据+代码+硬件指南）</div>
+    </article></section>
+<section class="group" id="g-wm"><h2><span class="dot"></span>🌍 World Model / 视频预训练（综述之后的一手切入） <span class="cnt">11</span></h2><p class="gdesc">你读过《World Model for Robot Learning》综述，这组是按路线分流的一手工作：数据引擎（DreamGen/GigaBrain）、神经仿真评估（Ctrl-World/1X/Genie Envisioner）、latent 流派对照（V-JEPA 2）、基础设施（Cosmos）。</p>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2505.12705" target="_blank">DreamGen: Unlocking Generalization in Robot Learning through Video World Models</a>
+      </div>
+      <div class="rec-meta">2025-05 · arXiv preprint (no venue listed) · arXiv:2505.12705</div>
+      <p class="rec-abs">用微调后的视频世界模型（Cosmos-Predict2）生成『神经轨迹』合成数据，再用 IDM/latent action 提取伪动作训练策略，让人形机器人只靠 1 个遥操任务的数据学会 22 个新行为。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 GR00T N1，这是同一 NVIDIA GEAR 团队的直接后续（用于训练 GR00T N1.5），是『世界模型当 VLA 数据引擎』这条线最具代表性、且在 GR-1 人形上落地验证的一手工作；读完综述后从这篇切入最顺。</div>
+      <div class="rec-os">开源：code: https://github.com/NVIDIA/GR00T-Dreams (project page: https://research.nvidia.com/labs/gear/dreamgen)</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2510.10125" target="_blank">Ctrl-World: A Controllable Generative World Model for Robot Manipulation</a>
+      </div>
+      <div class="rec-meta">2025-10 · ICLR 2026 · arXiv:2510.10125</div>
+      <p class="rec-abs">可控多视角（含腕部相机）、帧级动作条件、姿态记忆检索的世界模型，让通才策略完全在『想象』中做闭环评估与改进，新指令成功率从 38.7% 提到 83.4%。</p>
+      <div class="rec-why"><b>为何该读：</b>你精读过 π0/π0.5/π*0.6：这篇直接拿 π0.5（DROID 版）做 policy-in-the-loop 实验，想象中评估的排名与真机一致，再用想象中的成功轨迹做 SFT 改进策略——与 π*0.6 的 RECAP『从经验学习』形成无需真机的对照路线，是世界模型服务 VLA 迭代的最干净示范。</div>
+      <div class="rec-os">开源：Code: https://github.com/Robert-gyj/Ctrl-World; weights: https://huggingface.co/yjguo/Ctrl-World</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2508.05635" target="_blank">Genie Envisioner: A Unified World Foundation Platform for Robotic Manipulation</a>
+      </div>
+      <div class="rec-meta">2025-08 · arXiv preprint (has OpenReview submission) · arXiv:2508.05635</div>
+      <p class="rec-abs">把策略学习（GE-Act 流匹配动作头）、神经仿真（GE-Sim 动作条件视频生成）与评测（EWMBench）统一到一个指令条件视频扩散世界模型（GE-Base）平台里。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 AgiBot World Colosseo（GO-1）：GE-Base 正是在 AgiBot-World-Beta 的 100 万+ 真机操作 episode 上训练的，是智元在世界模型方向的旗舰工作；对你关心的『生成式仿真替代真机评估/训练』给出完整工程方案，且符合你对中国厂商+开源的偏好。</div>
+      <div class="rec-os">开源：Code released: https://github.com/AgibotTech/Genie-Envisioner; project page https://genie-envisioner.github.io/</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://www.1x.tech/discover/redwood-ai-world-model" target="_blank">1X World Model: Evaluating Bits, not Atoms</a>
+      </div>
+      <div class="rec-meta">2025-06 · 1X Technologies tech report (blog + PDF, not o</div>
+      <p class="rec-abs">首个全身人形机器人的生成式视频世界模型：从 EVE/NEO 数千小时真机视频+动作数据直接学出『神经仿真器』，用于在虚拟中批量评估全身操作策略（动作可控、能预测接触），评估结果与真机高度相关。</p>
+      <div class="rec-why"><b>为何该读：</b>你在人形公司做 sim2real/控制，真机评估瓶颈你最有体感：1X 给出了『学一个仿真器来评估策略』的完整工业实践（checkpoint 选择、架构对比、长尾数据策管），是与你日常工作最贴近的非 arXiv 工业报告，也呼应 Ctrl-World 的评估思路。</div>
+      <div class="rec-os">开源：none found; paper PDF at https://www.1x.tech/1x-world-model.pdf, no code/weights links on page</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2506.09985" target="_blank">V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning</a>
+      </div>
+      <div class="rec-meta">2025-06 · arXiv preprint (Meta AI) · arXiv:2506.09985</div>
+      <p class="rec-abs">100 万小时互联网视频自监督预训练的 latent 预测式（非生成式）世界模型；V-JEPA 2-AC 仅用 62 小时无标注机器人视频后训练，即可零样本在新实验室的 Franka 上做规划式抓放。</p>
+      <div class="rec-why"><b>为何该读：</b>你看的其他世界模型几乎都是像素级生成式路线，V-JEPA 2 代表 LeCun 一派的 latent 预测路线——不生成像素、在表征空间做 MPC 规划，是理解『生成 vs 潜空间』两大流派之争的必读对照；其『海量人类视频+极少机器人数据』的配方对 VLA 预训练也有直接启发。</div>
+      <div class="rec-os">开源：code: https://github.com/facebookresearch/vjepa2; weights on HuggingFace (facebook/vjepa2-*) and dl.fbaipublicfiles.com</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2501.03575" target="_blank">Cosmos World Foundation Model Platform for Physical AI</a>
+      </div>
+      <div class="rec-meta">2025-01 · arXiv tech report (NVIDIA) · arXiv:2501.03575</div>
+      <p class="rec-abs">NVIDIA 的世界基础模型平台：视频数据策管管线 + 视频 tokenizer + 扩散/自回归两类预训练 WFM + 面向机器人/自动驾驶的后训练范例，定位『先预训练通用世界模型，再后训练成专用世界模型』。</p>
+      <div class="rec-why"><b>为何该读：</b>这是当前机器人世界模型生态的基础设施：你读的 GR00T N1 和上面的 DreamGen 都构建在 Cosmos（Predict/Transfer/Reason 系列持续更新）之上；做 sim2real 的人尤其值得看它对 tokenizer、数据管线和后训练的工程化拆解。</div>
+      <div class="rec-os">开源：Open-source code and open weights: https://github.com/nvidia-cosmos/cosmos-predict1 (permissive licenses, weights on Hug</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://unigen-x.github.io/unifolm-world-model-action.github.io/" target="_blank">UnifoLM-WMA-0: A World-Model-Action (WMA) Framework under UnifoLM Family</a>
+      </div>
+      <div class="rec-meta">2025-09 · Unitree Robotics project page / tech report (n</div>
+      <p class="rec-abs">宇树首个开源的跨本体『世界模型-动作』架构：世界模型一身两用——既作交互式仿真引擎生成可动作控制的 rollout，又作决策增强预测未来交互来优化动作头，已在真机部署验证。</p>
+      <div class="rec-why"><b>为何该读：</b>你偏好中国厂商技术报告+开源可复现，且做人形：这是 Unitree（你大概率直接接触其硬件生态）官方的世界模型路线表态，基于 Open-X 与五个 Unitree 开源数据集微调视频生成底座，代码权重全放出，上手成本低，适合作为可复现的第一个 WMA 实验。</div>
+      <div class="rec-os">开源：code: https://github.com/unitreerobotics/unifolm-world-model-action; datasets on https://huggingface.co/unitreerobotics</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2510.19430" target="_blank">GigaBrain-0: A World Model-Powered Vision-Language-Action Model</a>
+      </div>
+      <div class="rec-meta">2025-10 · arXiv preprint (GigaBrain Team) · arXiv:2510.19430</div>
+      <p class="rec-abs">用世界模型（GigaWorld-0）批量生成 real2real/视角迁移/人类视频迁移/sim2real 等多种合成数据来训练 VLA，配 RGBD 输入与具身 CoT，大幅降低对真机数据的依赖。</p>
+      <div class="rec-why"><b>为何该读：</b>这是把『世界模型当数据引擎』推到 VLA 预训练全流程的中国团队代表作，与 DreamGen 互为印证；尤其注意其 2026 年 2 月后续 GigaBrain-0.5M*（arXiv 2602.12099）——标题直接对标你读过的 π*0.6，用基于世界模型的 RL 让 VLA 从『想象经验』中学习，是 2026 年该方向最新进展。</div>
+      <div class="rec-os">开源：code + weights: https://github.com/open-gigaai/giga-brain-0 (released 2025-11-27); project page https://gigabrain0.githu</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://www.prnewswire.com/news-releases/x-square-robot-open-sources-wall-wm-shifting-robot-world-modeling-from-chunks-to-events-302785692.html" target="_blank">WALL-WM: Shifting Robot World Modeling from Chunks to Events</a>
+      </div>
+      <div class="rec-meta">2026-05 · X Square 官方发布</div>
+      <p class="rec-abs">把世界建模的学习单元从固定时长动作 chunk 换成有语义边界的行为事件（event），事件对齐的视频-动作去噪做 VLA 预训练。</p>
+      <div class="rec-why"><b>为何该读：</b>你读过 Wall-OSS-0.5，这是 X Square 的世界模型后继，且官方宣布开源。</div>
+      <div class="rec-os">开源：官方宣布开源（github.com/X-Square-Robot）</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2410.06158" target="_blank">GR-2: A Generative Video-Language-Action Model with Web-Scale Knowledge for Robot Manipulation</a>
+      </div>
+      <div class="rec-meta">2024-10 · ByteDance 技报 · arXiv:2410.06158</div>
+      <p class="rec-abs">3800 万网络视频预训练学世界动态，再机器人轨迹微调做视频生成+动作预测，100+ 任务平均 97.7%。</p>
+      <div class="rec-why"><b>为何该读：</b>GR-3 的前身：『视频生成预训练 → 动作』路线的代表，读 GR-3 前可快速过一遍。</div>
+      <div class="rec-os">开源：未开源（仅项目页）</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p3">了解</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2402.15391" target="_blank">Genie: Generative Interactive Environments</a>
+      </div>
+      <div class="rec-meta">2024-02 · ICML 2024 (Best Paper) · arXiv:2402.15391</div>
+      <p class="rec-abs">11B 基础世界模型：从无标注游戏视频无监督学出潜动作空间，生成可逐帧交互的虚拟环境。</p>
+      <div class="rec-why"><b>为何该读：</b>latent action（LAM）思想的源头——你读过的 WholeBodyVLA、GO-1 的潜动作都可溯源到此。</div>
+      <div class="rec-os">开源：未开源（有第三方 JAX 复现 jafar）</div>
+    </article></section>
+<section class="group" id="g-est"><h2><span class="dot"></span>📐 状态估计 / 底层与工具（补全 CoCo-InEKF 的上下游） <span class="cnt">4</span></h2><p class="gdesc">Contact-Aided InEKF 是 CoCo-InEKF 的滤波骨架，CoRL21 学习接触是其直接前身；AutoOdom 代表端到端学习里程计的最新方向。</p>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p1">必读</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/1904.09251" target="_blank">Contact-Aided Invariant Extended Kalman Filtering for Robot State Estimation</a>
+      </div>
+      <div class="rec-meta">2019-04 · International Journal of Robotics Research (IJ · arXiv:1904.09251</div>
+      <p class="rec-abs">用李群不变观测器理论构造接触辅助 InEKF，融合 IMU+接触+正运动学在 Cassie 双足上实现收敛性有保证的位姿/速度估计，是腿式机器人状态估计的奠基之作。</p>
+      <div class="rec-why"><b>为何该读：</b>你读的 CoCo-InEKF 整个滤波骨架就是这篇的 InEKF——理解它的对数线性误差动力学和接触量测模型，才能真正看懂 CoCo-InEKF 改的是什么、为什么学协方差有效。腿式状态估计这条线必须从这篇读起。</div>
+      <div class="rec-os">开源：verified: https://github.com/RossHartley/invariant-ekf (C++ library), https://github.com/RossHartley/invariant-ekf-ros (</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-cls">经典</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2106.15713" target="_blank">Legged Robot State Estimation using Invariant Kalman Filtering and Learned Contact Events</a>
+      </div>
+      <div class="rec-meta">2021-06 · CoRL 2021 (Conference on Robot Learning) · arXiv:2106.15713</div>
+      <p class="rec-abs">用多模态本体感知（关节编码器+IMU+运动学）训练深度接触事件分类器替代物理接触传感器，喂给接触辅助 InEKF，在真实四足上做出媲美视觉 SLAM 的纯本体里程计。</p>
+      <div class="rec-why"><b>为何该读：</b>这是『学习+InEKF』路线的开山之作，也是 CoCo-InEKF 最直接的前身/对照：它学接触的二值事件，CoCo-InEKF 学接触协方差。两篇对照读能看清这条线的演化逻辑，且代码开源可直接复现。</div>
+      <div class="rec-os">开源：verified: https://github.com/UMich-CURLY/deep-contact-estimator</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2511.18857" target="_blank">AutoOdom: Learning Auto-regressive Proprioceptive Odometry for Legged Locomotion</a>
+      </div>
+      <div class="rec-meta">2025-11 · arXiv preprint (no venue listed) · arXiv:2511.18857</div>
+      <p class="rec-abs">两阶段训练（大规模仿真预训练 + 少量真机数据自回归增强）的纯本体感知学习型里程计，在 Booster T1 人形实机上比 Legolas 基线 ATE 降 57%。</p>
+      <div class="rec-why"><b>为何该读：</b>与你的工作几乎完全对口：人形实机 + sim2real 两阶段范式 + 纯本体里程计，作者是清华赵明国组/Booster。代表了从 CoCo-InEKF 这类『滤波+学习组件』走向『端到端学习里程计』的最新方向，值得作为状态估计线的 2025 新作精读。</div>
+      <div class="rec-os">开源：unknown (no code repository found on arXiv page or via search)</div>
+    </article>
+    <article class="rec">
+      <div class="rec-top">
+        <span class="prio p2">推荐</span><span class="ktag k-new">最新</span>
+        <a class="rec-title" href="https://arxiv.org/abs/2502.08844" target="_blank">MuJoCo Playground</a>
+      </div>
+      <div class="rec-meta">2025-02 · RSS 2025 (Outstanding Demo Paper Award) · arXiv:2502.08844</div>
+      <p class="rec-abs">DeepMind/Berkeley 的全开源 GPU 加速机器人学习框架（MJX+批量渲染+训练环境），pip install 后单卡几分钟训出可零样本上真机的四足/人形/灵巧手策略。</p>
+      <div class="rec-why"><b>为何该读：</b>拿了 RSS 2025 Outstanding Demo Paper Award；对你这种做 sim2real 落地的工程师是直接可用的生产力工具，也是 IsaacGym/IsaacLab 之外必须了解的对照技术栈，开源可复现程度在同类中最高。</div>
+      <div class="rec-os">开源：verified: https://github.com/google-deepmind/mujoco_playground (project site: https://playground.mujoco.org)</div>
+    </article></section>
+  <p style="color:var(--muted);font-size:.82em;margin-top:2em;">优先级口径：<b>必读</b>=直接支撑你的研究主线或被你已读论文大量引用；<b>推荐</b>=填补明确缺口；<b>了解</b>=知道存在、按需取用。每篇的链接与开源状态核实于 2026-06-11。</p>
+</div>
+<footer>Paper Reading · 策展版推荐 · 多智能体全网扫描生成</footer>
+</body>
+</html>

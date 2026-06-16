@@ -1,0 +1,47 @@
+{
+  "title": "AnoleVLA: Lightweight Vision-Language-Action Model with Deep State Space Models for Mobile Manipulation",
+  "title_cn": "AnoleVLA：基于深度状态空间模型的轻量视觉-语言-动作模型用于移动操作",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2026",
+  "one_liner": "用 Mamba (deep SSM) 替换 Transformer backbone，O(L²)→O(L) 复杂度，在真实移动操作机器人上比 π0.5 成功率高 21 分、推理快 3 倍",
+  "framework": "idea-first",
+  "idea": "Transformer 自注意力的 O(L²) 复杂度是 VLA 实时部署的瓶颈——用 Mamba (deep SSM) 以 O(L) 线性复杂度替换 backbone，配合速度+加速度两阶段训练约束轨迹平滑性，使 0.47B 轻量 VLA 在资源受限移动操作机器人上同时赢得成功率和推理速度。",
+  "logic_chain": [
+    "VLA 将视觉/语言/状态 token 拼成长序列，Transformer O(L²) 自注意力在长序列下成为推理瓶颈",
+    "Mamba (deep SSM) 用递归隐状态以 O(L) 处理序列，与 Transformer 共享 token 空间可即插即用替换",
+    "本体感知 token 排在序列最前，利用 Mamba 因果性确保隐状态先以机器人状态为条件",
+    "速度 loss 学轨迹形状，加速度 loss 约束时序平滑性，两阶段训练避免真实机器人抖动失效",
+    "小数据集下大 VLA (π0.5 3B) 样本效率低且存在 domain gap，轻量 Mamba 模型反而胜出"
+  ],
+  "method_skeleton": [
+    "Mamba-370M backbone：替换 Transformer，O(L) 序列复杂度；SigLIP 2 视觉编码 + 线性 tokenization",
+    "线性 Action Head：从末尾 token 隐状态单次前向投影出 H=50 步连续动作 chunk，无离散化无迭代去噪",
+    "两阶段训练：第一阶段速度 loss (L1 on δpose)，第二阶段加入加速度 loss (L1 on δ²pose)"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中——轻量 VLA 在真实移动操作机器人 (Toyota HSR) 上的完整实验，Mamba backbone + 两阶段训练均可借鉴",
+    "track_B_legged": "不相关——不涉及 locomotion 或步态控制"
+  },
+  "validation": "Meta-World 仿真 67.85%（vs SmolVLA 57.33%，vs π0.5 43.80%）；真实物理实验 63%（vs SmolVLA 52%，vs π0.5 42%）；推理 216 ms/chunk vs π0.5 578 ms（≈3× faster）；加速度 loss 消融 +4.73 pts",
+  "core_points": [
+    "Transformer O(L²) 自注意力是 VLA 长序列推理的关键瓶颈，Mamba O(L) 是直接解法",
+    "Mamba 与 Transformer 共享 token 空间，可无缝替换 backbone 保留上下游管线",
+    "本体感知 token 排在序列最前是针对 Mamba 因果性的必要设计",
+    "速度+加速度两阶段训练带来平滑轨迹，对接触密集任务（开抽屉 75% vs 55%）效果显著",
+    "大 VLA (π0.5 3B) + 小数据 (50 episodes) + 移动操作 domain gap = 失败；轻量模型样本效率优势明显",
+    "最大失败来源（50%）是位置识别错误，可能与 Mamba 缺乏全局注意力有关"
+  ],
+  "effects": [
+    "真实机器人平均成功率 63%，vs π0.5 42%（+21 pts）",
+    "推理速度 216 ms/chunk，vs π0.5 578 ms（约 3× faster）",
+    "Meta-World 平均成功率 67.85%，超越同量级 SmolVLA (57.33%) +10.52 pts",
+    "加速度 loss 消融：无 → 63.12%，有 → 67.85%（+4.73 pts）"
+  ],
+  "open_source": "partial",
+  "open_source_note": "代码和视频承诺于论文发表后开放（项目页 https://anolevla-8z7l8.kinsta.page/），当前处于 under review 状态，链接未激活",
+  "rating": "Valuable",
+  "summary": "summary.html",
+  "open_source_detail": "项目页有代码/视频, license 未明",
+  "open_source_checked": "2026-06-02"
+}

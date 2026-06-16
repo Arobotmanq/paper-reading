@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RT-2 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Google DeepMind · Vision-Language-Action</span>
+    <h1>RT-2: Vision-Language-<br>Action Models</h1>
+    <p class="subtitle">把动作当成文本 token，让 VLM 在网页知识与机器人数据上 <strong>co-fine-tune</strong>——网页语义直接迁移到控制，无需为机器人设计新参数。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 项目强相关 · Track A 移动操作 VLA · 已深读</span>
+      <span class="pill">📅 2023-07</span>
+      <span class="pill">🏢 Google DeepMind</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2307.15818">arXiv:2307.15818</a></span>
+      <span class="pill">🌐 <a href="https://robotics-transformer2.github.io">项目主页</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">最大模型</div>
+    <div class="value">55<span class="unit">B</span></div>
+    <div class="desc">RT-2-PaLI-X，史上最大闭环控制模型</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">评测轨迹数</div>
+    <div class="value">6<span class="unit">k</span></div>
+    <div class="desc">真实机器人，6000 次评测</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">涌现能力提升</div>
+    <div class="value">3<span class="unit">×</span></div>
+    <div class="desc">vs RT-1 的符号理解/推理均值</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">泛化提升</div>
+    <div class="value">2<span class="unit">×</span></div>
+    <div class="desc">未见物体/场景平均成功率 vs RT-1</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">机器人缺少的不是更多机器人数据——而是<strong>语义理解与常识推理</strong>。VLM 在网页上已经学到了这一切；只要把机器人<strong>动作表示为文本 token</strong>，就可以用<strong>co-fine-tune</strong>把 VLM 变成能直接出低层控制动作的 VLA，网页知识<strong>零成本迁移</strong>到控制。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>VLM 在网页数据（文本+图像）上学到了丰富的<strong>语义/推理/常识</strong>，但输出的是语言 token，不是机器人动作。</li>
+          <li>机器人动作（6-DoF 末端执行器位移 + 抓手）可以被均匀离散成整数 bin，并用与语言完全相同的 token 表示——<a href="./notes.html#action-tokenization" class="note-link">action-as-text-tokens</a>。</li>
+          <li>统一 token 格式后，机器人轨迹和网页 VQA 数据可以混在同一训练集里，进行<a href="./notes.html#co-fine-tuning" class="note-link">co-fine-tuning</a>——不引入任何新参数。</li>
+          <li>co-fine-tuning 同时保留 VLM 的语义知识（不遗忘）并学习机器人动作，而纯 fine-tuning 会遗忘。</li>
+          <li>结果：VLA 模型自动获得 VLM 的<a href="./notes.html#emergent-capabilities" class="note-link">涌现能力</a>——符号理解、多语言、数学推理、人物识别——这些能力<strong>完全未出现在机器人训练数据中</strong>。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>action-as-text-tokens</strong>：8 维动作（6 DoF 位移 + 抓手 + 终止）均匀离散为 256 bins，用整数 token 表示，拼成字符串如 <code>"1 128 91 241 5 101 127"</code>，与语言完全同质化。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>co-fine-tuning</strong>（而非 fine-tuning）：机器人数据与原始 VLM 网页数据<strong>同时</strong>在训练 batch 中混合，按采样权重平衡。纯 fine-tuning 遗忘 VLM 知识、泛化崩塌；co-fine-tuning 两者兼得。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>两大 VLM backbone</strong>：<a href="./notes.html#palix" class="note-link">PaLI-X</a>（5B/55B，ViT-22B + encoder-decoder）和 <a href="./notes.html#palme" class="note-link">PaLM-E</a>（12B，decoder-only）——证明方法对 backbone 无关，通用性强。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 6000 次真实机器人评测中：泛化到未见物体/场景 <strong>约 2×</strong>（vs RT-1/MOO）；涌现能力（符号/推理/人物识别）<strong>约 3×</strong>（vs RT-1）；co-fine-tuning 显著优于 fine-tuning，55B 优于 5B——三条消融均指向同一结论：<strong>迁移的是知识，不是数据量</strong>。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>RT-2-PaLI-X-55B 未见物体平均成功率 62%，RT-1 仅 32%（Table 4）。</li>
+            <li>涌现能力平均：RT-2-PaLI-X-55B 60%，RT-1 仅 17%（Table 5）。</li>
+            <li>co-fine-tuning 5B 均值 42% vs fine-tuning 5B 均值 42%（相近）vs from scratch 9%（崩塌）——主要差距体现在泛化类别上（Table 6）。</li>
+            <li>55B 均值 62% vs 5B 均值 46%（co-fine-tuning）——模型规模单调有效。</li>
+            <li>Language-Table 仿真：RT-2-PaLI-3B 90±10 vs RT-1 74±13（Table 1）。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）强命中</strong>：RT-2 正是 VLA 范式的奠基性工作，action-as-text-tokens + co-fine-tuning 是后续所有 VLA（OpenVLA、π0、RT-X…）的共同起点。理解 RT-2 是读懂整个 VLA 脉络的必经之路。Track B（足式先进算法）<strong>不直接相关</strong>——本文不涉及 locomotion 底层控制。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 核心问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 核心问题：VLM 学到了强大的语义推理能力，但直接应用于机器人很难——VLM 输出语言 token，机器人需要接地的低层控制动作。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">directly applying such models to robotic tasks is also difficult: such models reason about semantics, labels, and textual prompts, whereas robots require grounded low-level actions, such as Cartesian end-effector commands.</blockquote>
+          <div class="ev-trans">直接将这些模型应用于机器人任务也很困难：这类模型对语义、标签和文本提示进行推理，而机器人需要的是接地的低层动作，例如笛卡尔末端执行器命令。</div>
+          <div class="ev-gloss">这正是 RT-2 要解决的核心矛盾：语言 token 空间与控制动作空间之间的鸿沟。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 核心方法：action-as-text-tokens -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心方法：将机器人动作离散化为整数 bin，用现有 VLM 的 token 表示——<a href="./notes.html#action-tokenization" class="note-link">action-as-text-tokens</a>——不引入任何新参数，直接用语言训练范式训机器人控制。</div>
+        <figure>
+          <img src="./images/figure_1_rt2_overview_cofinetuning.png" alt="Figure 1: RT-2 overview — co-fine-tuning with action-as-text-tokens">
+          <figcaption><strong>Figure 1（p.2）：</strong>左侧网页 VQA 数据与右侧机器人轨迹数据均以相同格式（text tokens）混合训练；推理时 text tokens 被 de-tokenize 为真实机器人动作，实现闭环控制。这就是 action-as-text-tokens 思路的完整流程。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">we propose to co-fine-tune state-of-the-art vision-language models on both robotic trajectory data and Internet-scale vision-language tasks, such as visual question answering. In contrast to other approaches, we propose a simple, general recipe to achieve this goal: in order to fit both natural language responses and robotic actions into the same format, we express the actions as text tokens and incorporate them directly into the training set of the model in the same way as natural language tokens.</blockquote>
+          <div class="ev-trans">我们提议对最先进的 VLM 在机器人轨迹数据和互联网规模的视觉-语言任务（如视觉问答）上进行 co-fine-tune。与其他方法相比，我们提出一个简单、通用的方案：为了将自然语言响应和机器人动作纳入相同格式，我们将动作表示为文本 token，并以与自然语言 token 完全相同的方式直接纳入模型的训练集。</div>
+          <div class="ev-gloss">方案极其简洁：不新增参数，不新建模块，只是重新定义"token 的含义"——动作既是文本。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.2 Robot-Action Fine-tuning</div>
+          <blockquote class="ev-quote">The continuous dimensions (all dimensions except for the discrete termination command) are discretized into 256 bins uniformly. Thus, the robot action can be represented using ordinals of the discrete bins as 8 integer numbers.</blockquote>
+          <div class="ev-trans">连续维度（除离散终止命令以外的所有维度）均匀地离散化为 256 个 bin。因此，机器人动作可以用离散 bin 的序数表示为 8 个整数。</div>
+          <div class="ev-gloss">8 个数字字符串（如 "1 128 91 241 5 101 127"）就是完整的机器人动作——与 VQA 答案格式毫无区别。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 co-fine-tuning vs fine-tuning -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> co-fine-tuning 是关键：同时保留网页数据与机器人数据的 fine-tuning——单纯 fine-tuning 遗忘 VLM 概念、泛化崩塌；co-fine-tuning 两者兼得。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §3.2 Co-Fine-Tuning</div>
+          <blockquote class="ev-quote">we notice that co-fine-tuning leads to more generalizable policies since the policies are exposed to both abstract visual concepts from web scale data and low level robot actions during fine-tuning, instead of just robot actions.</blockquote>
+          <div class="ev-trans">我们注意到 co-fine-tuning 产生了更可泛化的策略，因为策略在 fine-tuning 期间同时接触了来自网页规模数据的抽象视觉概念和低层机器人动作，而不只是机器人动作。</div>
+          <div class="ev-gloss">co-fine-tuning 的本质是防止"灾难性遗忘"——机器人数据太少，一旦单独 fine-tuning 就把 VLM 知识覆盖掉。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §4.3 Size and Training Ablations</div>
+          <blockquote class="ev-quote">we notice that co-fine-tuning a model (regardless of its size) results in a better generalization performance than simply fine-tuning it with robotic data. We attribute this to the fact that keeping the original data around the fine-tuning part of training, allows the model to not forget its previous concepts learned during the VLM training.</blockquote>
+          <div class="ev-trans">我们注意到，co-fine-tuning 一个模型（无论其大小）比仅用机器人数据 fine-tuning 产生更好的泛化性能。我们将此归因于：在 fine-tuning 阶段保留原始数据，使模型不会遗忘其在 VLM 训练中学到的先前概念。</div>
+          <div class="ev-gloss">消融明确指出：from scratch 崩塌，fine-tuning 次优，co-fine-tuning 最优——是方法选择，不是偶然结果。</div>
+        </div>
+        <figure>
+          <img src="./images/figure_6_emergent_ablations_page10.png" alt="Figure 6: 涌现能力与消融对比">
+          <figcaption><strong>Figure 6（p.10）：</strong>左图：RT-2 在三类涌现能力（符号理解/推理/人物识别）上均显著超越 RT-1/VC-1；右图：co-fine-tuned（橙）> fine-tuned（蓝）> from scratch（红），尤其在泛化场景下差距明显。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点4 整体泛化结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 整体泛化性能：在 seen tasks 上与 RT-1 持平，但在未见物体/场景/环境上全面领先——约 2× 于 RT-1 和 MOO，约 6× 于 R3M/VC-1。</div>
+        <figure>
+          <img src="./images/figure_4_overall_performance_page8.png" alt="Figure 4: Overall performance bar chart">
+          <figcaption><strong>Figure 4（p.8）：</strong>条形图对比 RT-2-PaLI-X-55B / RT-2-PaLM-E-12B / RT-1 / MOO / VC-1 / R3M 在 Seen Tasks、Unseen Objects、Unseen Backgrounds、Unseen Environments 及 Unseen Average 上的成功率。RT-2 在所有泛化类别上大幅领先。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §4.1</div>
+          <blockquote class="ev-quote">The difference between the RT-2 models and the baseline is most pronounced in the various generalization experiments, suggesting that the strength of vision-language-action models lies in transferring more generalizable visual and semantic concepts from their Internet-scale pretraining data. Here, on average, both instantiations of RT-2 perform similarly, resulting in ∼2x improvement over the next two baselines, RT-1 and MOO, and ∼6x better than the other baselines.</blockquote>
+          <div class="ev-trans">RT-2 模型与基线之间的差距在各种泛化实验中最为突出，表明视觉-语言-动作模型的优势在于从互联网规模的预训练数据中迁移了更可泛化的视觉和语义概念。平均而言，RT-2 的两种实例表现相近，比下两个最强基线（RT-1 和 MOO）提升约 2×，比其他基线好约 6×。</div>
+          <div class="ev-gloss">seen tasks 上持平说明 VLM 没有牺牲基础能力；泛化上的巨大领先才是 VLA 的核心价值主张。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 涌现能力 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 涌现能力（Emergent Capabilities）：RT-2 能执行<strong>机器人训练数据中从未出现过</strong>的任务，如将物体移到特定数字/图标旁、多语言指令、识别人物——这些能力纯粹从网页 VLM 预训练迁移而来。</div>
+        <figure>
+          <img src="./images/figure_2_emergent_capabilities.png" alt="Figure 2: Emergent capability examples">
+          <figcaption><strong>Figure 2（p.5）：</strong>展示 RT-2 的涌现能力示例——"put strawberry into the correct bowl"（语义推理）、"pick the bag about to fall"（物理理解）、"pick object different from others"（分类推理）等，均为机器人数据中未见的语义能力。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §1 Introduction</div>
+          <blockquote class="ev-quote">we observe a number of emergent capabilities. While the model's physical skills are still limited to the distribution of skills seen in the robot data, the model acquires the ability to deploy those skills in new ways by interpreting images and language commands using knowledge gleaned from the web.</blockquote>
+          <div class="ev-trans">我们观察到一系列涌现能力。尽管模型的物理技能仍限于机器人数据中见过的技能分布，但模型获得了利用从网络获取的知识，通过解释图像和语言命令以新方式部署这些技能的能力。</div>
+          <div class="ev-gloss">关键区分：新动作技能仍受限于机器人数据；涌现的是"在哪里用、对什么用"的语义理解——这正是 web knowledge 的贡献。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §4.2</div>
+          <blockquote class="ev-quote">We observe that our VLA models significantly outperform the baselines across all categories, with our best RT-2-PaLI-X model achieving more than 3x average success rate over the next best baseline (RT-1).</blockquote>
+          <div class="ev-trans">我们观察到，我们的 VLA 模型在所有类别上都显著优于基线，我们最好的 RT-2-PaLI-X 模型在涌现能力上达到比下一最强基线（RT-1）高 3× 以上的平均成功率。</div>
+          <div class="ev-gloss">涌现能力 3× 提升是核心数字——RT-1 使用完全相同的机器人数据却几乎做不到这些任务，差距全来自 VLM 预训练。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 chain-of-thought 推理 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> chain-of-thought 推理：通过少量数据增强，让 RT-2 先输出自然语言"Plan"再输出动作 token，实现更复杂的多步语义推理——同一个 VLA 模型既是规划器又是执行器。</div>
+        <figure>
+          <img src="./images/figure_7_chain_of_thought_rollouts.png" alt="Figure 7: Chain-of-thought rollouts">
+          <figcaption><strong>Figure 7（p.10）：</strong>RT-2 with chain-of-thought 示例——"I'm hungry → Plan: pick rxbar chocolate → Action: …"；"I need to hammer a nail → Rocks → Action: …"。模型先用自然语言推理出意图，再输出动作。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §4.4</div>
+          <blockquote class="ev-quote">Inspired by the chain-of-thought prompting method in LLMs (Wei et al., 2022), we fine-tune a variant of RT-2 with PaLM-E for just a few hundred gradient steps to increase its capability of utilizing language and actions jointly with the hope that it will elicit a more sophisticated reasoning behavior.</blockquote>
+          <div class="ev-trans">受 LLM 中 chain-of-thought 提示方法的启发，我们对 RT-2 的 PaLM-E 变体仅用数百个梯度步进行微调，以增强其联合利用语言和动作的能力，期望它能产生更复杂的推理行为。</div>
+          <div class="ev-gloss">仅需数百步 fine-tune 即可激活 chain-of-thought——这说明 VLM 的推理能力早已内化，RT-2 只是"打开了通道"。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §4.4</div>
+          <blockquote class="ev-quote">This data augmentation scheme acts as a bridge between VQA datasets (visual reasoning) and manipulation datasets (generating actions).</blockquote>
+          <div class="ev-trans">这种数据增强方案充当了 VQA 数据集（视觉推理）和操作数据集（生成动作）之间的桥梁。</div>
+          <div class="ev-gloss">"Plan: …" 文本正是连接 VQA 与控制的语义桥梁——也是后续 chain-of-thought VLA 工作的范式雏形。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 模型规模 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 模型规模持续有效：55B 显著优于 5B，且 RT-2 是当时史上最大的闭环机器人控制模型（比前人大逾一个数量级），需要 TPU 云服务运行。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §3.3 Real-Time Inference</div>
+          <blockquote class="ev-quote">To the best of our knowledge, our model is the largest ever, by over an order of magnitude, used for direct closed-loop robotic control, and therefore requires a new set of solutions to enable efficient real-time inference.</blockquote>
+          <div class="ev-trans">据我们所知，我们的模型是有史以来用于直接闭环机器人控制的最大模型，比之前大逾一个数量级，因此需要一套新解决方案来实现高效的实时推理。</div>
+          <div class="ev-gloss">55B 参数在 multi-TPU 云服务上运行，1-3 Hz；5B 版本约 5 Hz——这是当时将 web-scale 模型拉进机器人闭环控制的工程壮举。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 局限 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 主要局限：RT-2 只能迁移语义/视觉知识，<strong>不能从网页数据中学到新运动技能</strong>——物理技能仍受限于机器人训练数据的分布。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §5 Limitations</div>
+          <blockquote class="ev-quote">although we show that including web-scale pretraining via VLMs boosts generalization over semantic and visual concepts, the robot does not acquire any ability to perform new motions by virtue of including this additional experience. The model's physical skills are still limited to the distribution of skills seen in the robot data (see Appendix G), but it learns to deploy those skills in new ways.</blockquote>
+          <div class="ev-trans">尽管我们展示了通过 VLM 加入网页规模预训练能提升语义和视觉概念的泛化，但机器人并不因为这些额外经验就获得执行新运动的能力。模型的物理技能仍然受限于机器人数据中见到的技能分布，但它学会了以新方式部署这些技能。</div>
+          <div class="ev-gloss">这条局限非常重要：RT-2 不能「看视频学会新动作」——运动泛化与语义泛化仍是两个不同的问题。</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未开源</span> Google DeepMind 内部 TPU 基础设施，无公开代码</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未开源</span> PaLI-X / PaLM-E 权重均未公开</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未开源</span> RT-1 机器人数据集（部分已发布于 Open X-Embodiment）</dd>
+        <dt>项目页</dt><dd><span class="os-tag os-part">仅演示</span> <a href="https://robotics-transformer2.github.io">robotics-transformer2.github.io</a> 提供视频演示和论文</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚠️ 完全闭源</div>
+        <p>RT-2 由 Google DeepMind 开发，代码、权重、私有机器人数据均未公开。但其思想（action-as-text-tokens + co-fine-tuning）已被社区广泛复现，代表性开源工作包括 <strong>OpenVLA</strong>（UC Berkeley，基于 Prismatic VLM + Open X-Embodiment 数据）和后续的 <strong>π0</strong>（Physical Intelligence，已开源 openpi）。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · Header</div>
+        <blockquote class="ev-quote">https://robotics-transformer2.github.io</blockquote>
+        <div class="ev-trans">项目主页（仅展示视频，无代码或权重下载）。</div>
+        <div class="ev-gloss">Google DeepMind 一贯不开源核心机器人模型；RT-2 的贡献主要在于思想验证，开源实现需依赖社区跟进。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>RT-2 是<strong>VLA 范式的奠基论文</strong>：action-as-text-tokens + co-fine-tuning 这个极简方案解决了"VLM 如何变成机器人控制器"的关键问题，且以 6000 次真实评测证明了涌现能力（3×）和泛化（2×）的实质性提升。消融设计清晰，逻辑链完整。后续所有 VLA 工作（OpenVLA、RT-X、π0、OpenPI）都建立在这套范式上——<strong>理解 RT-2 是读懂 VLA 领域的前提</strong>。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>完全闭源</strong>：代码/权重/私有数据均未公开，社区无法直接复现或在其上构建。② <strong>运动泛化局限</strong>：RT-2 不能从网页数据学到新运动技能，只能语义泛化——复杂灵巧操作仍需大量机器人数据。③ <strong>推理速度</strong>：55B 模型需 multi-TPU 云服务，1-3 Hz，不适合高频控制场景。④ <strong>评测范围有限</strong>：主要在 office kitchen 单一场景，固定臂 7-DoF 操作——移动操作/人形机器人上的泛化未验证。⑤ chain-of-thought 部分仅有定性演示，无定量评测。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge breakthrough">Breakthrough</span> &nbsp;VLA 概念的首次大规模实验验证，奠定了整个方向的基础范式，影响力极高。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · RT-2 (arXiv:2307.15818) · Google DeepMind 2023</footer>
+
+</body>
+</html>

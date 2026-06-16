@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UniVLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>CASIA · BAAI · THU · HKISI · Vision-Language-Action</span>
+    <h1>UniVLA: Unified<br>Vision-Language-Action</h1>
+    <p class="subtitle">想让同一个大模型同时看懂视频、回答问题、输出机器人动作：与其给 VLM 外挂一个视觉编码器再接动作头，不如把<strong>视觉、语言、动作全变成离散 token</strong>，在同一个自回归 Transformer 里联合建模——再插一个<strong>世界模型后训练</strong>阶段，用海量无动作标注的机器人视频学时序因果动态，然后再微调出策略。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 项目相关 · Track A 移动操作 VLA · 跨本体泛化</span>
+      <span class="pill">📅 2025-06-24（arXiv）· ICLR 2026</span>
+      <span class="pill">🏢 CASIA + BAAI + THU + HKISI</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2506.19850">arXiv:2506.19850</a></span>
+      <span class="pill">⭐ <a href="https://github.com/baaivision/UniVLA">github.com/baaivision/UniVLA</a></span>
+      <span class="pill">🤗 <a href="https://huggingface.co/Yuqi1997/UniVLA">HF: Yuqi1997/UniVLA</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">LIBERO 平均成功率</div>
+    <div class="value">95.5<span class="unit">%</span></div>
+    <div class="desc">超 π0-FAST 的 85.5%</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">LIBERO-Long 长程任务</div>
+    <div class="value">94.0<span class="unit">%</span></div>
+    <div class="desc">前 SOTA CoT-VLA 仅 69.0%</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">CALVIN ABCD→D</div>
+    <div class="value">4.63<span class="unit">avg</span></div>
+    <div class="desc">前 SOTA RoboVLMs 4.49</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">SimplerEnv-Bridge</div>
+    <div class="value">69.8<span class="unit">%</span></div>
+    <div class="desc">前 SOTA SpatialVLA 42.7%</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层: 思想 · 逻辑 · 方法 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">现有 VLA 给 VLM 外挂视觉编码器再接动作输出，是个<strong>晚期融合的语言中心范式</strong>，天然丢失视频里的时序因果结构。UniVLA 的答案：把<strong>视觉图像、自然语言、机器人动作全部 tokenize 成同一份词表里的离散 token</strong>，让同一个 8.5B 自回归 Transformer 用"下一 token 预测"统一学习——再插一个<strong>世界模型后训练阶段</strong>，用大规模无动作标注机器人视频学因果动态，最后微调即可高效学出策略。泛化靠<strong>时序理解的预训练迁移</strong>，不靠蛮力堆动作数据。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>主流 VLA（RT-2、OpenVLA、π0）让 ViT 编码图像再接语言模型——这种<strong>晚期融合</strong>限制了跨模态深度耦合，且无法利用视频里的<strong>时序与因果依赖</strong>。</li>
+          <li>真正的统一：把图像用 VQ tokenizer 离散化，把动作用 FAST（DCT）离散化，与语言共享词表 → <strong>一切都是 token，next-token prediction 统一一切</strong>。</li>
+          <li>但光有架构还不够：动作数据稀缺，视频数据海量。中间插一个<strong>世界模型后训练</strong>——只用视频（无需动作标注）、以视觉 token 为监督，学环境动态 <code>P(s_{t+1}|s_t, instruction)</code>。</li>
+          <li>世界模型学到的<strong>时序因果表征</strong>可大幅迁移到下游策略微调：用 10% 数据即可超过全数据 GR-1；2k 步收敛即超过 8k 步无后训练基线。</li>
+          <li>同一框架自然支持多模态输出——spatial grounding（文本）、video prediction（视觉）、action（动作）都是 next-token prediction 的不同 loss mask。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#unified-ar" class="note-link">统一自回归建模</a></strong>：图像用 VQ tokenizer（8× 空间压缩），动作用 <a href="./notes.html#fast" class="note-link">FAST（DCT 离散化）</a>，加 boi/eoi/boa/eoa 特殊分隔符，与语言 token 拼成同一序列——同一个 8.5B Transformer（基于 Emu3）做 next-token 预测。无独立 ViT encoder。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#world-model" class="note-link">世界模型后训练</a></strong>：用 622K 机器人视频（RT-1、BridgeV2、DROID、CALVIN 等）在 instruction + video 序列上训练，<strong>只对视觉 token 计算 loss</strong>，不需要动作标注。对比消融：纯动作预测后训练会负迁移（-0.94 CALVIN avg）；世界模型后训练提升最大（+3.15）。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>两帧交错策略微调</strong>：以 <code>{lang, obs_t, action_t, obs_{t+1}, action_{t+1}, ...}</code> 交错序列微调，action chunk 大小 10（CALVIN/LIBERO）/ 5（SimplerEnv）；引入 1 帧历史观测窗口效果最优（CALVIN 4.26→4.61）；<a href="./notes.html#visual-loss" class="note-link">同时保留视觉预测 loss</a>（权重 0.5）可再涨约 0.2 avg。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">三项仿真基准全部刷新 SOTA；世界模型消融证明<strong>时序因果理解是性能跃升的核心</strong>——这反过来支持"统一 token 序列 + 世界模型预训练"的思想。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>LIBERO 平均：95.5%（π0-FAST 85.5%，CoT-VLA 81.1%）。</li>
+            <li>LIBERO-Long 长程任务：94.0%（前 SOTA CoT-VLA 69.0%，+25pp）。</li>
+            <li>CALVIN ABCD→D avg len：4.63（前 SOTA RoboVLMs 4.49）；ABC→D：4.41。</li>
+            <li>SimplerEnv-Bridge 总成功率：69.8%（前 SOTA SpatialVLA 42.7%，+27pp）。</li>
+            <li>世界模型后训练 vs. 无后训练 LIBERO-Long：89.2% vs. 17.4%（+71.8pp）。</li>
+            <li>数据效率：10% CALVIN 数据达 3.19 avg，超全数据 GR-1（2.00）和 RoboVLMs（2.52）。</li>
+            <li>训练效率：后训练版 2k 步 = 4.21 avg，超无后训练 8k 步（1.46）。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（移动操作 / 人形 VLA）中度命中</strong>：UniVLA 给出了一条"不依赖独立视觉编码器、以统一 token 序列 + 世界模型预训练实现高效跨本体泛化"的路线。其在 LIBERO-Long 和 CALVIN 长程任务上的显著领先，直接支持世界模型后训练对长程推理的价值。论文还展示了 ALOHA 双臂真机实验和 NAVSIM 自动驾驶迁移，说明框架跨域适应性。</p>
+        <p><strong>Track B（足式控制）不相关</strong>——本文不涉及 locomotion、底盘控制或足式机器人。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有 VLA 的视觉-语言-动作是"晚期融合"范式，丢失了视频里的时序与因果结构，也无法利用大规模无动作视频数据。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">most existing VLA approaches follow a language-centric paradigm: visual observations are first projected into a semantic space, and action policies are subsequently derived based on these representations. This late-fusion strategy, while beneficial for semantic understanding and generalization, limits the formation of deeply coupled cross-modal representations and impedes the learning of temporal and causal dependencies across the perception-action loop.</blockquote>
+          <div class="ev-trans">现有 VLA 方法大多遵循以语言为中心的范式：视觉观测首先被投影到语义空间，然后据此推导动作策略。这种晚期融合策略虽有利于语义理解和泛化，却限制了跨模态深度耦合表征的形成，并阻碍了感知-动作循环中时序和因果依赖关系的学习。</div>
+          <div class="ev-gloss">这是 UniVLA 的立论基础：既有 VLM+ViT+动作头的架构不是"真统一"，是拼凑。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 统一 token 建模 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心方案：把视觉、语言、动作全部离散化成同一词表内的 token，用单一自回归 Transformer 做 next-token prediction——这是真正的"统一"建模。</div>
+        <figure>
+          <img src="./images/figure_1_teaser_overview.png" alt="Figure 1: UniVLA 统一建模框架总览">
+          <figcaption><strong>Figure 1（p.1）：</strong>左：传统 VLA = ViT 编码器 + LM + 动作输出（异构组件）。右：UniVLA = 视觉/语言/动作全部变成离散 token，统一序列建模，支持 text grounding（文本输出）、world modeling（视觉输出）、policy learning（动作输出）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">we present UniVLA, a unified and native multimodal VLA model that autoregressively models vision, language, and action signals as discrete token sequences. This formulation enables flexible multimodal tasks learning, particularly from large-scale video data.</blockquote>
+          <div class="ev-trans">我们提出 UniVLA，一个统一的原生多模态 VLA 模型，将视觉、语言和动作信号自回归地建模为离散 token 序列。这一表述支持灵活的多模态任务学习，尤其擅长从大规模视频数据中学习。</div>
+          <div class="ev-gloss">关键词：native multimodal（原生，不是拼接）、discrete token sequences（统一词表）、autoregressively（同一个 next-token 目标）。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §3.1 Unified Multimodal Model</div>
+          <blockquote class="ev-quote">our method unifies language, vision, and action modalities by converting each into discrete tokens and concatenating them into a single multimodal sequence L. Specifically, Lt, Lv, and La denote the discrete token sequences for language, vision, and action, respectively, all drawn from a shared vocabulary.</blockquote>
+          <div class="ev-trans">我们的方法通过将语言、视觉和动作模态各自转换为离散 token 并拼接为单一多模态序列 L，从而统一建模。Lt、Lv、La 分别表示语言、视觉和动作的离散 token 序列，均来自共享词表。</div>
+          <div class="ev-gloss">共享词表是关键：所有 token 的 loss 函数都是 cross-entropy，不同 token 类型靠 loss mask 区分。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 世界模型后训练 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 世界模型后训练是关键"催化剂"：用 instruction + video 序列（无需动作标注）预测未来视觉 token，让模型学到时序因果动态——这一步的增益远超其他后训练策略。</div>
+        <figure>
+          <img src="./images/figure_2_framework_overview.png" alt="Figure 2: UniVLA 训练框架与三阶段">
+          <figcaption><strong>Figure 2（p.4）：</strong>训练三阶段：① VL-Align 预训练（初始化自 Emu3），② 世界模型后训练（622K 机器人视频，无动作监督），③ 策略微调（动作监督）。图中 Text/Vision/Action tokens 交错序列即为统一建模的核心数据格式。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.2 World Model (Post-train)</div>
+          <blockquote class="ev-quote">we use the loss computed solely from the vision tokens as the supervisory signal, enabling the model to generate visual predictions conditioned on the given instruction and observed state.</blockquote>
+          <div class="ev-trans">我们仅以视觉 token 上的 loss 作为监督信号，使模型能够在给定指令和观测状态下生成视觉预测。</div>
+          <div class="ev-gloss">无动作标注 = 622K 视频全可用；监督目标是"预测下一帧"，强迫模型理解"做了这个指令，世界会怎么变"。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7-8 · §4.4 Table 4</div>
+          <blockquote class="ev-quote">the world model post-training approach yields the most substantial gains, enhancing both generalization and long-horizon planning capabilities. A comparison with text-to-image (T2I) training emphasizes the importance of modeling temporal dynamics in video data, while contrasting with video-only training highlights the essential role of textual guidance in state transitions.</blockquote>
+          <div class="ev-trans">世界模型后训练方法带来最大增益，同时提升泛化和长程规划能力。与 T2I 训练的对比强调了在视频数据中建模时序动态的重要性；与纯视频训练的对比则凸显了文字指导在状态转移中的关键作用。</div>
+          <div class="ev-gloss">必须同时有 text（任务指令）和 video（时序观测），两者缺一都不行——这正是"世界模型"而非"视频生成"的本质。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 数据和训练效率 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 世界模型后训练带来显著的数据效率和训练效率提升：10% 数据即超过以往全数据方法；2k 步已超无后训练 8k 步——迁移是真实且大幅的。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §4.4 Data and Training Efficiency</div>
+          <blockquote class="ev-quote">on the CALVIN benchmark (Table 5a), our method achieves higher success rates using only 10% of the fine-tuning data, outperforming prior approaches such as GR-1 and RoboVLMs.</blockquote>
+          <div class="ev-trans">在 CALVIN 基准（表 5a）中，我们的方法仅用 10% 的微调数据就取得了更高的成功率，超越了 GR-1 和 RoboVLMs 等先前方法。</div>
+          <div class="ev-gloss">10% 数据下 UniVLA = 3.19 avg，GR-1 全数据 = 2.00；世界模型后训练实质上给策略微调提供了"免费的"时序理解基础。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 SoTA 结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 在 LIBERO、CALVIN、SimplerEnv 三项仿真基准上全面刷新 SOTA，尤其长程任务（LIBERO-Long）大幅领先——证明统一 token 框架 + 世界模型后训练在长程推理上的优越性。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §4.3 Main Results (LIBERO)</div>
+          <blockquote class="ev-quote">UniVLA achieves the best overall performance across all LIBERO benchmark suites, with particularly significant gains on long-horizon tasks—improving the previous state of the art from 69.0% to 94.0%.</blockquote>
+          <div class="ev-trans">UniVLA 在所有 LIBERO 基准套件上均取得最佳整体表现，在长程任务上尤为显著——将前 SOTA 从 69.0% 提升至 94.0%。</div>
+          <div class="ev-gloss">LIBERO-Long 的 +25pp 是该论文最醒目的单项数字；长程任务需要跨时间步的规划，恰好是世界模型后训练增益最大的地方。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §4.3 Main Results (SimplerEnv)</div>
+          <blockquote class="ev-quote">Our approach demonstrates a significant improvement over prior methods, raising the average success rate from 42.7% to 69.8%.</blockquote>
+          <div class="ev-trans">我们的方法相比先前方法展示了显著提升，将平均成功率从 42.7% 提升至 69.8%。</div>
+          <div class="ev-gloss">SimplerEnv 用真实机器人数据的仿真评测，代表 sim2real 泛化能力，+27pp 说明统一 token 学到了可迁移的视觉-动作对应。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 多模态输出能力 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 同一模型天然支持多模态输出——spatial grounding（输出 bounding box）、future frame prediction（输出视觉 token）、action prediction（输出动作 token）——靠不同的 loss mask 切换，不需要多个专用模型。</div>
+        <figure>
+          <img src="./images/figure_3_multimodal_capabilities.png" alt="Figure 3: UniVLA 多模态能力展示">
+          <figcaption><strong>Figure 3（p.9）：</strong>上：LIBERO 长程任务的动作输出序列（pick → place 等步骤）。下左：视觉预测——给定当前帧和指令，预测操作后的下一帧（红框=当前，绿框=预测检测结果）。下右：spatial grounding——输出目标物体的 bounding box 坐标。同一模型，不同输出模态。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §4.5 Multimodal Capability</div>
+          <blockquote class="ev-quote">This design enables policy learning for embodied control, spatial reasoning through language output, and future state prediction via visual output, highlighting the model's capacity for generalizable multimodal understanding.</blockquote>
+          <div class="ev-trans">这种设计使得模型能够用于具身控制的策略学习、通过语言输出进行空间推理，以及通过视觉输出进行未来状态预测，彰显了模型可泛化的多模态理解能力。</div>
+          <div class="ev-gloss">这不只是"附赠功能"——grounding 和 visual prediction 能力正是世界模型后训练的副产品，也解释了为何后训练能迁移到策略微调。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 真机与驾驶扩展 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 框架跨域适应性强：真机 ALOHA 双臂实验（AgileX Cobot Magic V2.0，8 类任务）和 NAVSIM 自动驾驶基准均证明，同一框架无需大改即可迁移到新平台，且世界模型后训练在真机端同样有效。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.17 · Appendix B Real-Robot Experiments</div>
+          <blockquote class="ev-quote">Interestingly, this post-training provides substantial benefits even when transferring to real-robot execution.</blockquote>
+          <div class="ev-trans">有趣的是，即使在迁移到真实机器人执行时，该后训练依然带来了显著收益。</div>
+          <div class="ev-gloss">真机验证了世界模型后训练不只是仿真技巧——它学到的时序因果知识在真实物理环境中也有用。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06-02）</h2>
+      <p class="lead">以下信息来自 GitHub repo（baaivision/UniVLA）和 HuggingFace 页面的实时 WebFetch，<strong>非 PDF 内容</strong>。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/baaivision/UniVLA">github.com/baaivision/UniVLA</a>（ICLR 2026 接收；训练/评测脚本；CALVIN / LIBERO / SimplerEnv 支持；自动驾驶扩展 DriveVLA-W0）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://huggingface.co/Yuqi1997/UniVLA">HuggingFace: Yuqi1997/UniVLA</a>（世界模型预训练 checkpoint + 各基准微调权重）</dd>
+        <dt>数据</dt><dd><span class="os-tag os-part">部分公开</span> 后训练用 622K 视频均来自已公开数据集（RT-1、BridgeV2、DROID、CALVIN、LIBERO 等），无私有数据</dd>
+        <dt>许可</dt><dd><span class="os-tag os-part">待确认</span> 仓库未在 README 明确列出 LICENSE 文件；基于 Emu3（BAAI 开源），建议使用前确认许可条款</dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚙️ 实现细节</div>
+        <p>仓库代码基于 <strong>Emu3 (BAAI)</strong>、<strong>RoboVLMs</strong> 和 <strong>OpenVLA</strong> 构建。后训练用 32 × A100 (40GB) 约 4-5 天；策略微调各基准 8k-20k 步。<code>conda create -n emu_vla python=3.10 &amp;&amp; pip install -r requirements.txt</code> 即可配置环境。代码发布于 2025-06-27（论文 arXiv 发布后 3 天）。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 GitHub README · baaivision/UniVLA（实时核查）</div>
+        <blockquote class="ev-quote">[ICLR 2026] Unified Vision-Language-Action Model</blockquote>
+        <div class="ev-trans">【ICLR 2026】统一视觉-语言-动作模型</div>
+        <div class="ev-gloss">已被 ICLR 2026 接收（非 arXiv preprint），代码在论文提交后 3 天即开放。</div>
+      </div>
+    </section>
+
+    <!-- ============ 简短批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>架构思路干净：真正的"统一 token"而非拼凑；世界模型后训练这个"中间阶段"的设计既有理论支撑（MDP 世界模型），又有详细的消融验证（Table 4 各策略对比）。LIBERO-Long +25pp 和 SimplerEnv +27pp 是量级上的领先，不是刷榜小数点。代码权重已开源、数据集全公开，可复现性强。ICLR 2026 接收背书质量。对 Track A 研究者：「无动作标注视频 → 世界模型 → 高效策略迁移」这条路线是直接可借鉴的训练配方。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>仅仿真评测为主</strong>：三项 SOTA 结果均来自仿真基准；真机实验（ALOHA）仅定性展示，未提供标准化成功率对比。② <strong>模型体量大</strong>：8.5B 参数，后训练需要 32 × A100 × 4-5 天，实际部署门槛高。③ <strong>无独立 ViT encoder</strong> 是把双刃剑：统一 token 丢失了空间精细结构（VQ tokenizer 8× 压缩），高精度操作（微米级放置）可能受限。④ 论文自承后训练规模化研究尚处早期，与 RL 范式的结合留作未来工作。⑤ 基于 Emu3 的 VQ vision tokenizer 在运动模糊/快速动作场景下的重建质量未有讨论。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;在 VLA 统一建模路线上，UniVLA 是目前最系统的实现之一，尤其"世界模型后训练"对数据效率的大幅提升是重要发现，但仍以仿真为主，真机大规模验证有待跟进。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · UniVLA (arXiv:2506.19850) · ICLR 2026</footer>
+</body>
+</html>

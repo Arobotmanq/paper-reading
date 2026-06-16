@@ -1,0 +1,48 @@
+{
+  "title": "A1: A Fully Transparent Open-Source, Adaptive and Efficient Truncated Vision-Language-Action Model",
+  "title_cn": "A1：全透明开源、自适应高效的截断视觉-语言-动作模型",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2026",
+  "one_liner": "同时截断 VLM 骨干（action 一致性早退出）与 flow matching 头（层间热启动 δ=2 步去噪），以 76.6% 骨干算力削减 + 72% 延迟降低实现高效 VLA 推理，并全栈开源。",
+  "framework": "idea-first",
+  "idea": "VLA 推理的两大计算瓶颈（VLM 全层推理 + FM 多步去噪）均是冗余的：中间层 action 已足够稳定，可提前退出；且层间 action 变化缓慢，可热启动接力去噪。A1 联合消除两者，同时宣称全栈开源。",
+  "logic_chain": [
+    "VLA 的 billion 级骨干 + 10-20 步 FM 去噪让实时控制在商用硬件上成本极高",
+    "实验观察：FM 轨迹 3 步内收敛、action 时序冗余、中间层隐状态已足够——均指向大量冗余计算",
+    "训练时对每层 i 并行监督 action loss（multi-exit training），使共享 action head 在任意中间层均可工作",
+    "推理时按层计算 action，差异小于阈值 η_i 则 Early Exit（省骨干算力）",
+    "同时 Inter-Layer Truncated FM 把去噪步数压到 δ=2，并将上层结果热启动给下层（省 FM 算力）",
+    "全栈开源（代码+checkpoint+评估协议），打破闭源惯例，RoboChallenge 开源系统第一"
+  ],
+  "method_skeleton": [
+    "Truncated VLA 架构：Molmo-7B 骨干，训练时随机采样层 i 并监督共享 action head（FM 或 MLP）",
+    "自适应早退出推理：层间 action 差异 Δ 与离线标定阈值 η_i 比较，budget 参数 c 统一控制激进度",
+    "Inter-Layer Truncated Flow Matching：δ=2 步去噪 + 层间热启动传递 A0(i+1)=A1(i)，彻底消除 FM 头延迟"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "中度命中：VLA 推理加速思路对任何低延迟操作部署有直接价值；但 A1 本身以桌面操作（Franka/AgiBot）为主，不含移动底盘或长程家务，范式借鉴意义大于直接复用",
+    "track_B_legged": "不命中：无 locomotion 或足式控制相关内容"
+  },
+  "validation": "LIBERO 96.6%、VLABench 53.5%（超 π0.5 +4%）、真实 4 平台均值 56.7%（超 π0.5 +9.2%）、RoboChallenge 29.00%（开源第一）；早退 c=0.1 省 76.6% 算力仅降 1.7% 精度",
+  "core_points": [
+    "真问题：VLM 全层+FM 多步去噪双重计算瓶颈让 VLA 实时控制成本极高",
+    "三条经验发现指向冗余：FM 快速收敛(<3步)、action 时序冗余、中间层隐状态已足够",
+    "训练：对每层并行监督共享 action head（multi-exit training），为动态退出奠基",
+    "推理1 - Early Exit：层间 action 差异 Δ<η_i 触发提前退出，骨干算力最高省 76.6%",
+    "推理2 - ILTFM：δ=2 步去噪+热启动 A0(i+1)=A1(i)，episode 延迟从 40.9s→10.5s",
+    "开源承诺：代码+checkpoint+评估已上 GitHub/HuggingFace，license 和自采数据待补",
+    "RoboChallenge 29.00%：完全透明开源系统第一，说明开源也能有竞争力"
+  ],
+  "effects": [
+    "骨干算力削减 76.6%（c=0.1），成功率仅降 1.7%（LIBERO 96.6%→92.3%）",
+    "episode 推理延迟 37.8s→10.5s（LIBERO，FM head，72% 降低）",
+    "真实 4 平台均值 56.7%，超 π0.5(47.5%) +9.2%、π0(40.8%) +15.9%",
+    "RoboChallenge 29.00%，完全开源系统第一（π0=28.33%，X-VLA=21.33%，RDT-1B=15.00%）",
+    "LIBERO-Plus 零样本泛化 75.3%，超 OpenVLA-OFT、π0、π0-FAST"
+  ],
+  "open_source": "partial",
+  "rating": "Valuable",
+  "summary": "summary.html",
+  "open_source_detail": "{\"status\": \"partial\", \"code\": \"yes — github.com/ATeam-Research/A1 (98% Python, 4 commits, 39 stars)\", \"weights\": \"partial — HuggingFace checkpoints available, no formal Release tag\", \"data\": \"partial — 6 public datasets used; self-collected 15,951 trajectories not independently released; data processing scripts promised\", \"license\": \"NOT DECLARED — no license in README; arXiv CC-BY covers paper only\", \"gap_note\": \"Paper title says 'Fully Transparent Open-Source' but key gaps: no license, no self-collected data release, only 4 commits. Track post-publication updates.\"}"
+}

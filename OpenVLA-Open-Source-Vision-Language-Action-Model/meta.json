@@ -1,0 +1,46 @@
+{
+  "title": "OpenVLA: An Open-Source Vision-Language-Action Model",
+  "title_cn": "OpenVLA：开源视觉-语言-动作模型",
+  "field": "vla",
+  "venue": "arXiv (cs.RO)",
+  "date": "2024",
+  "one_liner": "把 Prismatic-7B VLM 直接在 970k OXE 机器人示范上 fine-tune，配合 LoRA 和 int4 量化，建立首个真正开源可消费级 GPU 部署的通用 VLA 基准",
+  "framework": "idea-first",
+  "idea": "现有 VLA 全部闭源且无高效微调方案——把动作当 token、VLM 当骨干、next-token prediction 当目标，用开源基础设施从头到尾打通 VLA 训练与高效部署",
+  "logic_chain": [
+    "现有学习型策略泛化差，VLM 互联网先验可弥补这一不足",
+    "RT-2 验证了 VLM fine-tune → VLA 可行，但 55B 闭源不可复现",
+    "开源 VLM（Prismatic-7B）+ 动作 token 化 = 标准 next-token prediction，可复用 LLM 基础设施",
+    "LoRA + int4 量化是打通'可在消费级 GPU 微调部署'的关键缺失环节",
+    "7B 模型以 1/7 参数超越 55B RT-2-X，证明配方有效"
+  ],
+  "method_skeleton": [
+    "Prismatic-7B VLM 骨干（SigLIP+DINOv2 双编码器 + Llama 2 7B），视觉编码器必须解冻",
+    "动作离散化为 256 bin token（分位数档宽），覆写 Llama 末尾 256 低频 token，next-token prediction 训练",
+    "LoRA rank=32 参数高效微调（仅 1.4% 参数，单卡 A100 10-15h）+ int4 量化无损推理（7.0 GB 显存）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "高度相关——OpenVLA 是现阶段开源 VLA 的基准线，骨干选择/动作 token 化/LoRA 最佳实践是后续工作（OpenVLA-OFT 等）的直接起点，建议深读",
+    "track_B_legged": "不相关——本文不涉及 locomotion 或足式控制"
+  },
+  "validation": "29 任务多机器人评测：比 RT-2-X (55B) 高 16.5%，参数量仅 1/7；Franka 微调比 Diffusion Policy 高 20.4%（多指令任务）；LoRA rank=32 匹配全参数微调；int4 量化无损（71.9% ≈ 71.3%，显存 7.0 GB）",
+  "core_points": [
+    "现有 VLA 全部闭源且无高效微调方案，是广泛采用的核心障碍",
+    "Prismatic-7B（SigLIP+DINOv2+Llama 2）骨干提供空间+语义双重特征，视觉编码器必须在 VLA 训练中解冻",
+    "动作离散化用分位数档宽（1%-99%分位数）规避异常值，保留正常动作的分辨率",
+    "LoRA rank=32 是 VLA 微调最优平衡点：1.4%参数、单卡 A100、媲美全参数",
+    "int4 量化无损（7.0 GB），int8 反掉速（量化操作开销大于内存节省，导致频率崩溃）",
+    "OpenVLA 是首个训练数据+权重+代码三位一体全开放的通用 VLA"
+  ],
+  "effects": [
+    "vs RT-2-X (55B)：+16.5% 绝对成功率（29 任务，WidowX+Google Robot），参数量 1/7",
+    "vs Diffusion Policy：+20.4% 成功率（多指令多物体 Franka 任务）",
+    "LoRA rank=32：68.2% ≈ 全参数 69.7%，训练参数 97.6M vs 7,188M，VRAM 60 GB vs 163 GB",
+    "int4 量化：71.9%（无损），VRAM 7.0 GB vs 16.8 GB（bfloat16）"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "代码+权重开源, MIT(openvla-7b + OFT变体)",
+  "open_source_checked": "2026-06-02"
+}

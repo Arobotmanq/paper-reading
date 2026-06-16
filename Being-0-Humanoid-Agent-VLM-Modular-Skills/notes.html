@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Being-0 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>Being-0 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要一定背景知识才好理解的核心概念——从 embodied agent 的整体架构，到 Foundation Model、Connector、modular skills、VLA、locomotion policy 等关键模块，每个概念给出定义、在 Being-0 中的用法、对比/出处和具象例子。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 Being-0 综述</a>
+      <span class="pill">📚 当前 9 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.12533" style="color: #93c5fd; text-decoration: none;">arXiv:2503.12533</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. EMBODIED AGENT ============ -->
+    <section class="card" id="embodied-agent">
+      <h2>Embodied Agent <span class="tag">具身智能体</span></h2>
+      <p class="full-name">Embodied Robotic Agent · 具身机器人智能体</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Embodied Agent 是一个在物理世界中「感知→推理→行动」闭环运作的 AI 系统。与纯软件 AI agent 不同，它必须与真实环境交互，因此受物理限制（重力、惯性、传感器噪声）约束。Being-0 是一个部署在全身人形机器人上的 embodied agent。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Embodied Agent 具备三要素：</p>
+      <ul>
+        <li><strong>感知（Perception）</strong>：通过传感器（相机、IMU、触觉）观测环境。</li>
+        <li><strong>推理（Reasoning）</strong>：根据感知结果和任务指令决策下一步行动。</li>
+        <li><strong>行动（Action）</strong>：通过物理执行器（电机、关节）改变环境状态。</li>
+      </ul>
+      <p>「Embodied」的核心含义是：智能体的认知和行为不可分割地与其身体和环境耦合——相机位置、关节状态、重力都影响决策。</p>
+
+      <h3><span class="num">2</span>本文用法</h3>
+      <p>Being-0 是一个部署在 Unitree H1-2 人形机器人上的 embodied agent，执行「make coffee」「deliver basket」等真实世界长程任务。它通过双目相机和 IMU 感知，用 FM + Connector 推理，通过 41 DoF 关节动作与环境交互。</p>
+
+      <h3><span class="num">3</span>对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>感知</th><th>行动</th><th>典型例子</th></tr></thead>
+          <tbody>
+            <tr><td>软件 AI Agent</td><td>文本/图像（数字）</td><td>调用 API、生成文本</td><td>ChatGPT plugins、AutoGPT</td></tr>
+            <tr><td><strong>Embodied Agent</strong></td><td>相机/IMU/触觉（物理）</td><td>控制电机关节（物理）</td><td>Being-0、RT-2、SayCan</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 背景</div>
+        <p>「Embodied AI」这一概念源于认知科学的 embodied cognition 理论（Lakoff & Johnson 1999），主张认知不可脱离身体和环境而独立存在。在机器人领域，Firoozi et al. 2023 的综述《Foundation Models in Robotics》对 embodied agent 的现状和挑战有全面梳理，Being-0 的 §6 Related Work 直接引用了它。</p>
+      </div>
+    </section>
+
+    <!-- ============ 2. FOUNDATION MODEL ============ -->
+    <section class="card" id="foundation-model">
+      <h2>Foundation Model <span class="tag">基础模型</span></h2>
+      <p class="full-name">Foundation Model (FM) · 大规模预训练基础模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Foundation Model 是在海量互联网数据上预训练的大型多模态模型（通常为 VLM/LLM），具有通用的视觉-语言推理能力。Being-0 用 GPT-4o 作为高层规划者，负责理解指令、判断进度、选择下一个技能——但它不直接控制机器人关节。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Foundation Model（Bommasani et al. 2021 首提此术语）特指：</p>
+      <ul>
+        <li>在<strong>极大规模数据</strong>上预训练（图文/代码/视频等）；</li>
+        <li>具备<strong>广泛的任务泛化能力</strong>，无需针对每任务重新训练；</li>
+        <li>通过<strong>提示（prompting）</strong>或微调适配下游任务。</li>
+      </ul>
+      <p>在机器人语境下，FM 通常指能做视觉理解 + 语言推理的大型 VLM，如 GPT-4V/4o、Gemini、Claude。</p>
+
+      <h3><span class="num">2</span>本文用法</h3>
+      <p>Being-0 用 GPT-4o 作为 FM，部署在<strong>云端</strong>，执行三项功能（§3.2）：</p>
+      <ul>
+        <li><strong>Reasoning</strong>：描述当前图像，理解任务进度和当前阶段。</li>
+        <li><strong>Detection</strong>：判断最近执行技能是否成功，识别异常。</li>
+        <li><strong>Planning</strong>：基于推理和检测结果，从技能库中选择下一个技能。</li>
+      </ul>
+      <p>FM 只在<strong>关键决策点</strong>触发（如技能完成后、任务阶段切换时），不参与每步控制——这是系统效率的关键。</p>
+
+      <h3><span class="num">3</span>对比：FM vs Connector VLM</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Foundation Model (GPT-4o)</th><th>Connector VLM (VideoLLaMA2)</th></tr></thead>
+          <tbody>
+            <tr><td>规模</td><td>极大（未知，估计千亿参数）</td><td>轻量（数十亿参数）</td></tr>
+            <tr><td>部署位置</td><td>云端 API</td><td>板载 Jetson AGX</td></tr>
+            <tr><td>训练数据</td><td>互联网通用数据</td><td>室内导航第一人称图像（领域专用）</td></tr>
+            <tr><td>推理延迟</td><td>数秒~十秒</td><td>约 1 秒</td></tr>
+            <tr><td>职责</td><td>高层规划/推理/判断</td><td>低层执行/导航/位姿调整</td></tr>
+            <tr><td>调用频率</td><td>低（仅关键决策点）</td><td>高（每步闭环）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>「Foundation Model」术语由 Stanford HAI 的 Bommasani et al. 2021 在《On the Opportunities and Risks of Foundation Models》中系统提出。在机器人 agent 中使用 FM 的代表性工作包括 SayCan（Ahn et al. 2022，Google）和 Cradle（Tan et al. 2024）——Being-0 明确基于 Cradle 框架改造而来。</p>
+      </div>
+    </section>
+
+    <!-- ============ 3. CONNECTOR ============ -->
+    <section class="card" id="connector">
+      <h2>Connector <span class="tag">连接器模块</span></h2>
+      <p class="full-name">Embodied Connector · 具身连接器 (VLM-based 中间层)</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Connector 是 Being-0 最核心的创新——一个用室内导航数据微调的轻量 VLM（VideoLLaMA2），专门负责把 FM 的语言计划实时翻译为可执行技能命令，并通过 Grounded Skill Planning + Visual Navigation + Pose Adjustment 三项功能弥合 FM 与低层技能之间的「感知-执行鸿沟」。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要 Connector</h3>
+      <p>直接把 FM（GPT-4o）连接到技能库时，三个问题导致系统失效：</p>
+      <ul>
+        <li><strong>FM 推理太慢</strong>：GPT-4o 延迟数秒，无法以所需频率（约 1 Hz）闭环控制双足机器人；</li>
+        <li><strong>FM 3D 空间理解差</strong>：GPT-4o 无法准确估计目标物体的方向和深度，导致 locomotion 方向规划频繁出错；</li>
+        <li><strong>导航终止位姿不对</strong>：即使导航到达目标附近，停止位姿可能不适合后续抓取（物体在抓取手背后、距离太远等）。</li>
+      </ul>
+
+      <h3><span class="num">2</span>三项核心功能</h3>
+      <ul>
+        <li><strong>Grounded Skill Planning</strong>：把 FM 的语言计划（如「抓杯子」）映射到当前可执行技能（如「向桌子移动」），并在 FM 计划与当前状态不匹配时自动纠正/细化。</li>
+        <li><strong>Visual Navigation</strong>：用目标物体的检测边界框 + 双目合成深度估计相对位置，实时选择 joystick locomotion 技能（直走/转向等）闭环导航，遇到目标不可见时触发探索程序（转头+移动搜索）。</li>
+        <li><strong>Pose Adjustment</strong>：在即将到达目标时，预测最优对齐方向，触发「弧形接近」复合技能，使机器人以适合操作的位姿终止导航——这是 Grasp-coffee 成功率从 1/5 提升到 4/5 的关键。</li>
+      </ul>
+
+      <h3><span class="num">3</span>训练方式</h3>
+      <p>以 VideoLLaMA2 为 backbone，在<strong>室内导航第一人称图像数据集</strong>上做多任务微调（Multi-task Learning），三个训练目标并行：</p>
+      <ul>
+        <li>图像描述（image description）；</li>
+        <li>技能预测（skill prediction）；</li>
+        <li>目标检测（object detection，输出边界框）。</li>
+      </ul>
+      <p>训练后部署在板载 Jetson AGX 上，推理延迟约 1 秒，显著低于 GPT-4o 的云端延迟。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 类比</div>
+        <p>可以把 Connector 类比为「<strong>公司里层经理</strong>」：FM（高管）下达战略指令（「搞定这个项目」），Connector（中层经理）把指令分解成当前可执行的具体工作任务，并实时监控进度、动态调整——不是每件小事都上报高管，而是在权限范围内自主处理。只有阶段性节点才需要 FM 介入判断。</p>
+      </div>
+    </section>
+
+    <!-- ============ 4. MODULAR SKILLS ============ -->
+    <section class="card" id="modular-skills">
+      <h2>Modular Skills <span class="tag">模块化技能库</span></h2>
+      <p class="full-name">Modular Skill Library · 模块化技能库</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Modular Skill Library 是一组独立、可复用的低层控制策略，每个技能对应一个具体动作（「直走」「抓杯子」「按按钮」），通过语言描述接口被 Connector 和 FM 调用。上下体技能完全解耦——下体 locomotion 用 RL 训，上体 manipulation 用遥操+行为克隆训。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>模块化技能库是一组<strong>预训练的、功能单一的策略集合</strong>，每个技能：</p>
+      <ul>
+        <li>有明确的<strong>语言描述</strong>（如 <code>grasp_cup</code>、<code>go_straight</code>）；</li>
+        <li>有固定的<strong>输入/输出接口</strong>（观测 → 关节目标位置）；</li>
+        <li>可被上层系统通过名称<strong>独立调用</strong>，无需了解内部实现。</li>
+      </ul>
+
+      <h3><span class="num">2</span>本文的两类技能</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>技能类型</th><th>控制部位</th><th>训练方法</th><th>控制频率</th><th>接口</th></tr></thead>
+          <tbody>
+            <tr><td><a href="#locomotion-skill">Locomotion Skills</a></td><td>下体（13 DoF 腿+躯干）</td><td>RL + sim-to-real</td><td>50 Hz</td><td>joystick velocity command</td></tr>
+            <tr><td><a href="#manipulation-skill">Manipulation Skills</a></td><td>上体（7×2 DoF 手臂 + 6×2 DoF 手）</td><td>遥操数据 + ACT 行为克隆</td><td>10 Hz</td><td>语言描述（如 "grasp bottle"）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>可扩展性</h3>
+      <p>模块化设计的核心优势：</p>
+      <ul>
+        <li>新操作技能只需 50–150 条遥操轨迹，&lt;1 小时采集；</li>
+        <li>locomotion 技能更换不影响 manipulation 策略，反之亦然；</li>
+        <li>已扩展到触觉传感器增强的灵巧手（Play-chess 任务）。</li>
+      </ul>
+
+      <h3><span class="num">4</span>与 Whole-body Control 的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Modular Skills（Being-0）</th><th>Whole-body Control（如 HumanPlus）</th></tr></thead>
+          <tbody>
+            <tr><td>上下体关系</td><td>完全解耦，独立策略</td><td>单一策略同时控制上下体</td></tr>
+            <tr><td>技能多样性</td><td>易扩展（独立训练每个技能）</td><td>难（需要重新训练整体策略）</td></tr>
+            <tr><td>运动+操作同时</td><td>仅支持静止时操作</td><td>支持行走同时操作</td></tr>
+            <tr><td>sim-to-real 难度</td><td>分开训练，相对容易</td><td>全身联合，挑战更大</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 5. VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">视觉-语言-动作模型</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 是一类直接把视觉观测 + 语言指令端到端映射到机器人动作的模型（图像 + 文字 → 关节目标位置/速度）。在 Being-0 中，VLA 的概念对应底层的 manipulation skill（用 ACT 行为克隆实现）——<strong>注意：高层的 FM 和 Connector 是 VLM，不是 VLA</strong>，它们不直接输出机器人动作。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>VLA = Vision-Language-Action Model，核心特征：</p>
+      <ul>
+        <li><strong>输入</strong>：视觉观测（图像/视频）+ 自然语言指令；</li>
+        <li><strong>输出</strong>：机器人动作（关节角度/速度/末端轨迹等）；</li>
+        <li><strong>端到端</strong>：感知和控制在同一个神经网络内完成，不需要手工设计的中间表示。</li>
+      </ul>
+      <p>代表性工作：RT-2（Brohan et al. 2023, Google DeepMind）、π0（Black et al. 2024, Physical Intelligence）、GR-2、OpenVLA 等。</p>
+
+      <h3><span class="num">2</span>本文中「VLA」的准确含义</h3>
+      <p>Being-0 的架构中，<strong>术语使用需要仔细辨别</strong>：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>组件</th><th>实际技术</th><th>是否是 VLA？</th><th>输出</th></tr></thead>
+          <tbody>
+            <tr><td>Foundation Model (GPT-4o)</td><td>Large VLM</td><td>不是 VLA</td><td>语言文字（技能名）</td></tr>
+            <tr><td>Connector (VideoLLaMA2)</td><td>Fine-tuned VLM</td><td>不是 VLA</td><td>技能命令/边界框</td></tr>
+            <tr><td><strong>Manipulation Skill (ACT)</strong></td><td>行为克隆 Transformer</td><td><strong>近似 VLA</strong>（图像+语言→动作）</td><td>关节目标位置（上体）</td></tr>
+            <tr><td>Locomotion Skill (RL policy)</td><td>RL 策略</td><td>不是 VLA（输入仅 proprioception）</td><td>关节目标位置（下体）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>论文 Related Work §6 明确将 VLA 作为独立方向提及（RT-1/RT-2/π0 等），但 Being-0 选择不走「端到端 VLA」路线，而是用「FM + Connector + 模块化 skills」的分层架构——核心原因是缺乏人形机器人灵巧手的大规模数据集。</p>
+
+      <h3><span class="num">3</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 对比与类比</div>
+        <p>VLA 相当于「一个端到端训练的全能运动员」，而 Being-0 的做法是「教练（FM）+ 助理教练（Connector）+ 专项运动员（各 skill）」的分工体系。前者目标更优雅，但需要大量覆盖全分布的示范数据；后者牺牲一些全局最优性，换来可扩展性和当前数据条件下的实用性。</p>
+      </div>
+    </section>
+
+    <!-- ============ 6. HUMANOID LOCOMOTION POLICY ============ -->
+    <section class="card" id="locomotion-skill">
+      <h2>Humanoid Locomotion Policy <span class="tag">人形运动策略</span></h2>
+      <p class="full-name">Humanoid Locomotion Policy · 人形机器人运动控制策略</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Humanoid Locomotion Policy 是控制双足机器人稳定行走的神经网络策略，通常用强化学习在仿真中训练，再做 sim-to-real 迁移到真机。在 Being-0 中它是技能库中的一个组件，通过 joystick velocity command 接口被 Connector 调用。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Locomotion Policy 是一个映射 \(\pi_L(a_l \mid q_l, q_u, \dot{q}, \omega; v_g)\) 的神经网络策略：</p>
+      <ul>
+        <li><strong>输入</strong>：下体/上体关节位置 \(q_l, q_u\)、关节速度 \(\dot{q}\)、IMU 角速度 \(\omega\)、目标 joystick 速度 \(v_g\)；</li>
+        <li><strong>输出</strong>：下体关节目标位置 \(a_l\)（PD 控制器跟踪）；</li>
+        <li><strong>控制频率</strong>：50 Hz。</li>
+      </ul>
+
+      <h3><span class="num">2</span>本文训练方式</h3>
+      <p>Being-0 采用<strong>RL + sim-to-real</strong>：</p>
+      <ul>
+        <li>在 Isaac Gym 等物理仿真器中用强化学习训练 goal-conditioned 策略；</li>
+        <li>加入 domain randomization（地面摩擦、机器人质量分布等随机化）和外力干扰，增强鲁棒性；</li>
+        <li>直接迁移到真机（zero-shot sim-to-real）。</li>
+      </ul>
+      <p>技能库中定义了 9 种 locomotion skill：<code>no action</code>、<code>go straight</code>、<code>walk backwards</code>、<code>turn left</code>、<code>turn right</code>、<code>sidestep left</code>、<code>sidestep right</code>，以及头部控制的 <code>tilt head</code>、<code>turn head</code>。</p>
+
+      <h3><span class="num">3</span>与 Track B 的关系</h3>
+      <p>Being-0 的 locomotion skill 是<strong>功能型组件</strong>，不是 locomotion 算法的研究贡献。论文引用 Ha et al. 2024《Learning-based Legged Locomotion: State of the Art and Future Perspectives》作为方法来源，并承认当前仅支持平地行走，不支持复杂地形、蹲坐跳等——Track B 关注的高级 locomotion 算法（如 parkour、楼梯、多地形）均不在本文讨论范围内。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 类比</div>
+        <p>Locomotion Policy 相当于「会走路的本能反射」——人类走路时不需要有意识地计算每步如何迈脚，大脑只需发出「向左走」的高层指令。Being-0 的 locomotion skill 正是这样：Connector 发出「turn_left」命令，策略自动处理所有低层关节协调，保持平衡。</p>
+      </div>
+    </section>
+
+    <!-- ============ 7. RL LOCOMOTION ============ -->
+    <section class="card" id="rl-locomotion">
+      <h2>RL Locomotion <span class="tag">强化学习运动控制</span></h2>
+      <p class="full-name">Reinforcement Learning for Locomotion · 基于强化学习的运动控制</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>RL Locomotion 用强化学习让机器人在仿真中通过「试错」学会行走，再部署到真机。相比传统最优控制（MPC/LQR），RL 方法能自动学到对不规则地形、外力干扰的鲁棒策略，无需手工设计状态机或步态参数。Being-0 的 locomotion skill 正是 RL + sim-to-real 路线的产物。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>强化学习运动控制的基本范式：</p>
+      <ul>
+        <li><strong>奖励函数</strong>：定义好的行走目标（跟踪速度指令 + 保持直立 + 能量效率 - 跌倒惩罚）；</li>
+        <li><strong>仿真环境</strong>：Isaac Gym（NVIDIA）、MuJoCo 等，支持并行化大批量训练；</li>
+        <li><strong>策略网络</strong>：通常是 MLP 或小型 Transformer，接受 proprioception 输出关节目标；</li>
+        <li><strong>sim-to-real 迁移</strong>：通过 domain randomization 缩小仿真与真实的物理差异。</li>
+      </ul>
+
+      <h3><span class="num">2</span>本文中的具体做法</h3>
+      <p>Being-0 采用 Ha et al. 2024 的 RL locomotion 框架，训练一个以 joystick 速度命令 \(v_g\) 为条件的策略，支持多方向行走同时保持平衡。仿真中加入了 domain randomization 和 external forces，提升真机部署的鲁棒性（§3.1）。</p>
+
+      <h3><span class="num">3</span>与传统方法的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方法</th><th>核心思路</th><th>优点</th><th>缺点</th></tr></thead>
+          <tbody>
+            <tr><td>最优控制（MPC/LQR）</td><td>数学建模 + 在线求解优化</td><td>理论保证、可解释</td><td>需精确模型、计算量大</td></tr>
+            <tr><td><strong>RL + sim-to-real</strong></td><td>仿真中试错学习，迁移真机</td><td>无需精确模型、鲁棒性强</td><td>奖励设计难、sim2real gap</td></tr>
+            <tr><td>模仿学习</td><td>学习运动捕捉数据</td><td>动作自然</td><td>需要 mocap 数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 代表性工作</div>
+        <p>RL Locomotion 在人形机器人上的代表性进展：Xie et al. 2020（平地行走）、Radosavovic et al. 2024（复杂地形，用 transformer policy）、Zhuang et al. 2024（parkour）。Being-0 直接引用 Ha et al. 2024 作为其 locomotion 组件的基础，而不是从头开发 locomotion 算法。</p>
+      </div>
+    </section>
+
+    <!-- ============ 8. MANIPULATION SKILL / ACT ============ -->
+    <section class="card" id="act">
+      <h2>ACT <span class="tag">行为克隆 Transformer</span></h2>
+      <p class="full-name">Action Chunking with Transformers (ACT) · 基于 Transformer 的动作分块行为克隆</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>ACT（Zhao et al. 2023）是一个用 Transformer 做行为克隆（Behavior Cloning）的操作策略，核心思想是每次预测一个「动作块」（action chunk，多步动作序列）而不是单步动作，减少在高频控制中的误差累积。Being-0 用 ACT 训练每一个操作技能（如「抓瓶子」「按按钮」）。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>ACT 的核心设计：</p>
+      <ul>
+        <li><strong>行为克隆（Behavior Cloning）</strong>：直接模仿人类遥操示范数据，最小化预测动作与示范动作的 L2 误差；</li>
+        <li><strong>Action Chunking</strong>：预测未来 K 步动作序列（chunk），而非单步动作，减少在决策过渡处的抖动；</li>
+        <li><strong>Transformer 架构</strong>：利用注意力机制处理多摄像头图像 + 关节状态，生成动作序列。</li>
+      </ul>
+
+      <h3><span class="num">2</span>本文中的训练配置</h3>
+      <p>Being-0 用 ACT 训练每个 manipulation skill（§3.1）：</p>
+      <ul>
+        <li><strong>输入</strong>：双目图像 \(o_l, o_r\)、上体关节位置 \(q_u\)、颈部关节位置 \(q_h\)；</li>
+        <li><strong>输出</strong>：K 步的上体+颈部关节目标位置 \([a_u, a_h]_t^{t+K}\)；</li>
+        <li><strong>训练时 K=30，部署时 K=10</strong>（更保守，允许更频繁重规划）；</li>
+        <li>每个技能独立训练，数据来自 Apple VisionPro 遥操采集，50–150 条轨迹，&lt;1 小时。</li>
+      </ul>
+
+      <h3><span class="num">3</span>遥操采集流程</h3>
+      <p>Using Apple VisionPro：操作者佩戴 VisionPro，双目图像投影到 VR 视野，人的头部/手腕/手指动作实时重定向（retarget）到机器人的颈部/手腕/手指关节——这使得操作者能以直觉方式控制机器人完成精细操作，采集高质量示范数据。</p>
+
+      <h3><span class="num">4</span>出处与对比</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>ACT 由 Zhao et al. 2023（Stanford Tony Zhao）提出，在 ALOHA 双臂操作平台上验证，能完成插充电线、打开零食等精细操作。相比 Diffusion Policy（Chi et al. 2023）的生成式动作分布建模，ACT 更轻量，训练更快，适合快速扩展技能库。Being-0 优先考虑了可扩展性（新技能&lt;1小时）而选用 ACT。</p>
+      </div>
+    </section>
+
+    <!-- ============ 9. JOYSTICK COMMAND ============ -->
+    <section class="card" id="joystick-command">
+      <h2>Joystick Command <span class="tag">摇杆速度指令</span></h2>
+      <p class="full-name">Joystick Velocity Command · 摇杆速度指令接口</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Joystick Command 是 locomotion skill 的高层接口——把「向前走多快、转多快」等高层意图编码为速度向量 \(v_g\)，locomotion 策略则负责把它实时转换为 50 Hz 的关节目标位置。Connector 正是通过发送 joystick command 来驱动机器人导航，无需关心底层关节控制细节。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Joystick Command（也叫 velocity command）是一个目标速度向量 \(v_g = (v_x, v_y, \omega_z)\)：</p>
+      <ul>
+        <li>\(v_x\)：前进/后退速度（m/s）；</li>
+        <li>\(v_y\)：左右侧移速度（m/s）；</li>
+        <li>\(\omega_z\)：偏航角速度（rad/s，转向）。</li>
+      </ul>
+      <p>Locomotion policy 以此为条件输入，实时输出满足速度命令同时保持平衡的关节目标位置。</p>
+
+      <h3><span class="num">2</span>本文中的离散化</h3>
+      <p>Being-0 不直接发连续的 \(v_g\)，而是把 joystick command 离散成 9 个命名技能（§3.1）：</p>
+      <ul>
+        <li>运动：<code>no action</code>、<code>go straight</code>、<code>walk backwards</code>、<code>turn left</code>、<code>turn right</code>、<code>sidestep left</code>、<code>sidestep right</code></li>
+        <li>视觉调整：<code>tilt head</code>、<code>turn head</code></li>
+      </ul>
+      <p>Connector VLM 预测的是这些离散技能名（分类问题），而不是连续速度值——这降低了 Connector 的输出空间复杂度，适合轻量 VLM 处理。</p>
+
+      <h3><span class="num">3</span>为什么用 joystick command 接口而非直接控制关节</h3>
+      <p>抽象层次的分离是关键设计原则：</p>
+      <ul>
+        <li><strong>安全性</strong>：locomotion policy 内部处理平衡约束，上层不会直接发出不安全的关节命令；</li>
+        <li><strong>简洁性</strong>：Connector 只需输出 9 类离散命令，不需要理解 13 DoF 下体动力学；</li>
+        <li><strong>可替换性</strong>：底层 locomotion policy 升级不影响 Connector 的工作方式。</li>
+      </ul>
+
+      <h3><span class="num">4</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 类比</div>
+        <p>Joystick Command 接口就像汽车的「油门+方向盘」——司机（Connector）只需控制加速减速和转向方向，不需要直接控制发动机气缸或悬挂系统（低层 locomotion policy 处理这些）。这个接口抽象使得驾驶变得可能，否则要同时处理几百个物理参数。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表（9 个）</div>
+    <ul>
+      <li><a href="#embodied-agent">Embodied Agent</a></li>
+      <li><a href="#foundation-model">Foundation Model</a></li>
+      <li><a href="#connector">Connector 模块</a></li>
+      <li><a href="#modular-skills">Modular Skills</a></li>
+      <li><a href="#vla">VLA 模型</a></li>
+      <li><a href="#locomotion-skill">Humanoid Locomotion Policy</a></li>
+      <li><a href="#rl-locomotion">RL Locomotion</a></li>
+      <li><a href="#act">ACT 行为克隆</a></li>
+      <li><a href="#joystick-command">Joystick Command</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · Being-0 (arXiv:2503.12533) · 配套笔记
+</footer>
+
+</body>
+</html>

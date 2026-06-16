@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SG-VLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.valuable { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border-color: #3b82f6; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>UC San Diego · Vision-Language-Action · Mobile Manipulation</span>
+    <h1>SG-VLA: Spatially-Grounded<br>Mobile Manipulation</h1>
+    <p class="subtitle">标准 <strong>imitation learning</strong> 对 mobile manipulation 监督信号太稀疏——加一套<strong>空间辅助解码器</strong>（分割/位姿/关节/抓取）强迫 VLA backbone 学会真正的<strong>空间感知表征</strong>，再配合多视角 RGB + depth 输入，从 60% 跳到 <strong>73% 成功率</strong>。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 直接命中 · 移动操作 VLA · NEW 2026</span>
+      <span class="pill">📅 2026-03</span>
+      <span class="pill">🏢 UC San Diego / Lambda Inc.</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2603.22760">arXiv:2603.22760</a></span>
+      <span class="pill">⚠️ 无公开代码</span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">最终平均成功率</div>
+    <div class="value">73<span class="unit">%</span></div>
+    <div class="desc">SG-VLA + all aux tasks</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">baseline 对比</div>
+    <div class="value">60<span class="unit">%</span></div>
+    <div class="desc">直接 imitation learning</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">动作维度</div>
+    <div class="value">13<span class="unit">D</span></div>
+    <div class="desc">底盘 3D + 躯干 1D + 臂 7D + 夹爪 2D</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">模型参数</div>
+    <div class="value">1.3<span class="unit">B</span></div>
+    <div class="desc">Prismatic VLM + 可选 100M Flow Matching</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea"><a href="./notes.html#vla" class="note-link">VLA</a> 直接做 imitation learning 对 mobile manipulation 的监督信号太<strong>稀疏</strong>——一根动作向量承载不了「机器人在哪、夹着什么、物体在哪、关节怎么摆」这些空间信息。真正的解法是：<strong>让模型同时重建这些可解释的中间信号</strong>（segmentation mask / 物体位姿 / 关节角 / 全局位置 / 抓取状态），用这些辅助监督「逼出」backbone 里的<strong>空间感知表征</strong>。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>Mobile manipulation 需要同时理解<strong>全局场景布局 + 精细物体几何 + 高维连续动作</strong>（13 DoF），远比桌面操作复杂。</li>
+          <li>标准 VLA 直接 imitation learning 仅输出动作向量，模型没有显式压力去学空间表征——结果只有 60% 成功率。</li>
+          <li>若在 shared visual-language backbone 上<strong>同时挂辅助解码器</strong>（重建 segmentation / 位姿 / 关节角等），则骨干被强迫学习"空间感知、操作感知"的 latent representation。</li>
+          <li>单纯挂解码器会破坏预训练 VLM——随机初始化的解码器产生大梯度干扰。需要<strong>渐进式三阶段训练</strong>先固定 backbone 适应解码器，再联合调优，最后单独训练 flow matching action head。</li>
+          <li>辅助任务 + multi-view depth 输入组合达到 73%，<strong>比直接 imitation learning 提升 22%</strong>，验证了"空间辅助监督"的思路。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#spatial-grounding" class="note-link">Spatial Grounding via Auxiliary Decoders</a></strong>：在 shared VLM backbone 上加 5 路解码器（Global Position MLP / Grasp Success MLP / Object Pose MLP / Joint Pose Transformer / Segmentation CNN）。这些解码器<strong>只在训练时存在</strong>，提供密集空间监督，不增加推理代价。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#multi-view-depth" class="note-link">Multi-view RGB + Depth 输入</a></strong>：Head camera（全局视野）+ Hand camera（近景）的 RGB + 归一化 depth 图，共 4 路输入。用 <a href="./notes.html#prismatic-vlm" class="note-link">Prismatic VLM</a>（DINOv2 + SigLIP 双编码器）融合。Multi-view + depth 组合相比单视角 RGB 从 0.04 提升到 0.60。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#progressive-training" class="note-link">渐进式三阶段训练</a></strong>：Stage 1 冻结 backbone 梯度只训解码器 → Stage 2 全梯度联合精调 → Stage 3 冻结 backbone 单独训练 <a href="./notes.html#flow-matching" class="note-link">Flow Matching</a> action head。不走这个顺序直接共训，成功率从 0.60 <strong>跌至 0.51</strong>。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 <strong>ManiSkill-HAB</strong> benchmark（TidyHouse / PrepareGroceries / SetTable 三类任务，44K episodes）上，SG-VLA 全辅助任务 + 渐进训练比直接 imitation learning 基线从 <strong>60% → 73%</strong>；比原始 OpenVLA（7B）从 <strong>4% → 73%</strong>。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>OpenVLA (7B, single-view RGB): 平均 0.04 成功率</li>
+            <li>Base VLM + multi-view + depth (direct IL): 0.60</li>
+            <li>SG-VLA naive co-training (无渐进): 0.51（降低）</li>
+            <li>SG-VLA + qpos only (渐进): 0.71</li>
+            <li>SG-VLA + all aux (渐进): <strong>0.73</strong></li>
+            <li>SG-VLA + action head (flow matching): 0.69（整体略降，pick 显著提升 0.13→0.27）</li>
+            <li>seg + obj pos 辅助任务在 TidyHouse pick 从 0.07 → 0.33，place 从 0.40 → 0.73</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）直接命中</strong>：这正是「如何让 VLA backbone 学到空间感知表征」的具体工程方案。辅助解码器 co-training + multi-view depth 输入的套路可直接借鉴到人形/移动操作系统。空间辅助监督中「joint pose decoder」「grasp decoder」对具身机器人尤为有价值。Track B（足式控制算法）<strong>不相关</strong>——本文不涉及 locomotion/底层步态控制。建议<strong>深读</strong>，特别是辅助任务设计和渐进训练策略。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：Mobile manipulation 的复杂度（13-DoF、全局导航+精细操作并存、部分可观测）让标准 VLA imitation learning 严重欠监督——直接套用已有 VLA 只有 4% 成功率。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">Mobile manipulation tasks require robots to simultaneously reason about global scene layout, fine-grained object geometry, and high-dimensional continuous actions, making standard imitation learning insufficient for robust control.</blockquote>
+          <div class="ev-trans">移动操作任务要求机器人同时推理全局场景布局、精细物体几何和高维连续动作，使得标准 imitation learning 不足以实现鲁棒控制。</div>
+          <div class="ev-gloss">这是全文的核心问题定义——不是「VLA 不够大」，而是「单靠动作监督无法让模型学到空间理解」。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §6.2</div>
+          <blockquote class="ev-quote">The original OpenVLA model (∼7B parameters) [16] with single-view RGB input achieves extremely poor performance across all tasks (0.04 average success rate) after trained with same number of epochs as our models, highlighting the limitations of standard vision-language models when applied directly to complex household manipulation scenarios.</blockquote>
+          <div class="ev-trans">原始 OpenVLA 模型（约 7B 参数）使用单视角 RGB 输入，在与我们模型相同 epoch 数训练后，在所有任务上达到极差的性能（0.04 平均成功率），突显了将标准 vision-language 模型直接应用于复杂家务操作场景的局限性。</div>
+          <div class="ev-gloss">7B 参数的 OpenVLA 不敌 1.3B 的 SG-VLA，说明问题不在模型大小而在感知输入与训练目标的设计。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心解法：在 shared VLM backbone 上挂 5 路<a href="./notes.html#spatial-grounding" class="note-link">辅助解码器</a>，重建可解释的空间中间信号，提供密集监督逼出「操作感知」的 latent representation。</div>
+        <figure>
+          <img src="./images/figure_1_architecture.png" alt="Figure 2: SG-VLA Architecture Overview">
+          <figcaption><strong>Figure 2（p.3）：</strong>完整架构图。左侧输入（Head/Hand RGB + Depth + language），中间 Prismatic VLM backbone（DINOv2+SigLIP+Qwen2.5-0.5B），右侧辅助解码器模块（5路）和动作输出（13D）。辅助解码器<strong>仅在训练时激活</strong>。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1–2 · Abstract</div>
+          <blockquote class="ev-quote">we co-train a suite of auxiliary decoders that reconstruct interpretable intermediate signals—including global robot position, joint configurations, grasp affordances, target-object relative pose, and segmentation masks—from shared visual-language features. These auxiliary objectives supply dense supervision that encourages the backbone to develop spatially grounded, manipulation-aware latent representations.</blockquote>
+          <div class="ev-trans">我们 co-train 一套辅助解码器，从共享的 visual-language 特征中重建可解释的中间信号——包括全局机器人位置、关节配置、抓取可供性、目标物体相对位姿和分割掩码。这些辅助目标提供密集监督，鼓励 backbone 发展出空间感知的、操作感知的 latent representation。</div>
+          <div class="ev-gloss">五路辅助监督各司其职：segmentation 给目标定位，object pose 给放置精度，joint pose 给运动规划，global pos 给导航，grasp label 给状态感知。</div>
+        </div>
+        <figure>
+          <img src="./images/figure_4_auxiliary_decoders.png" alt="Figure 2 Auxiliary Module Detail">
+          <figcaption><strong>辅助解码器模块放大图（p.3）：</strong>5 路解码器接收同一份 latent representation，各自重建对应的 GT 监督信号。不同解码器架构各异——低维目标用 MLP，高维关节角用 Transformer，分割掩码用 CNN 上采样。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点3 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> Multi-view RGB + depth 是最佳输入配置，相比单视角 RGB 提升 8×；加入历史帧反而有损，说明 mobile manipulation 任务基本是 reactive 的。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §6.2</div>
+          <blockquote class="ev-quote">OpenVLA with enhanced modalities (multi-view + depth) achieves a dramatic 8× improvement in average success rate (from 0.04 to 0.32), with particularly notable gains in drawer manipulation tasks where success rates increase from near-zero to 0.30-0.67.</blockquote>
+          <div class="ev-trans">使用增强模态（多视角 + 深度）的 OpenVLA 在平均成功率上实现了显著的 8 倍提升（从 0.04 到 0.32），在抽屉操作任务中尤其明显，成功率从接近零提升到 0.30-0.67。</div>
+          <div class="ev-gloss">depth 给出明确几何距离信息——这对需要对准插入的抽屉操作至关重要；多视角则同时覆盖全局场景和局部抓取区域。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §6.2</div>
+          <blockquote class="ev-quote">However, incorporating temporal history (past 4 actions) degrades performance to 0.49. This counter-intuitive result may indicate that the model struggles to effectively integrate temporal information, or that the evaluated tasks are sufficiently reactive that historical context provides limited additional information.</blockquote>
+          <div class="ev-trans">然而，加入时序历史（过去 4 帧动作）使性能降至 0.49。这一反直觉结果可能表明模型难以有效整合时序信息，或者被评测的任务足够 reactive 以至于历史上下文提供的额外信息有限。</div>
+          <div class="ev-gloss">与 π0.5 等需要历史的长程任务不同，ManiSkill-HAB 的每个 subtask 相对短程、状态驱动，历史帧可能引入噪声而非帮助。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 渐进式三阶段训练是辅助解码器 co-training 成功的关键——直接共训会使成功率从 0.60 跌到 0.51，渐进训练则提升至 0.73。</div>
+        <figure>
+          <img src="./images/figure_2_training_scheme.png" alt="Figure 3: Multi-stage Training Scheme">
+          <figcaption><strong>Figure 3（p.5）：</strong>三阶段训练示意。Stage 1 stop gradient（锁住 backbone）只训解码器；Stage 2 全梯度联合精调；Stage 3 冻结 backbone 单独训练 flow matching action head。三个阶段缺一不可。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §5.1</div>
+          <blockquote class="ev-quote">Our preliminary experiments revealed that directly co-training randomly initialized auxiliary decoders with the VLM backbone led to performance degradation. This phenomenon occurs because the untrained decoders generate large, noisy gradients that interfere with the learned representations in the pre-trained VLM.</blockquote>
+          <div class="ev-trans">我们的初步实验揭示，直接将随机初始化的辅助解码器与 VLM backbone 共训会导致性能下降。这一现象的发生是因为未训练的解码器产生大而嘈杂的梯度，干扰了预训练 VLM 中已学习到的表征。</div>
+          <div class="ev-gloss">「先稳住 backbone，让解码器学会看它的输出；再开放梯度让 backbone 随辅助任务细调」——这是预训练模型 co-training 的通用技巧，但在这里尤为关键。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7–8 · §6.3</div>
+          <blockquote class="ev-quote">Training all auxiliary tasks with progressive methodology ("+ all" with progressive training in Table 3) achieves 0.73 average success rate, representing a 22% improvement over the best input modality configuration alone.</blockquote>
+          <div class="ev-trans">使用渐进方法训练所有辅助任务（Table 3 中带渐进训练的 "+ all"）达到 0.73 平均成功率，相比仅有最佳输入模态配置提升了 22%。</div>
+          <div class="ev-gloss">22% 的绝对提升全部来自辅助监督——在输入已经最优（multi-view+depth）的基础上，结构化辅助目标是进一步增益的关键来源。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 各辅助任务贡献互补而非冗余：joint pose 提升最稳（0.71），grasp label 对 pick 最有帮助，global pos 对导航密集任务（open/close）提升巨大，segmentation+object pose 对 place 最关键。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §6.3</div>
+          <blockquote class="ev-quote">Joint position (qpos): Reconstructing qpos of current state provides the most substantial and consistent improvements across all task categories (0.71 average), particularly excelling in manipulation tasks like place (0.67) and drawer operations (0.70 and 0.90). This suggests that explicit joint awareness significantly enhances the model's understanding of manipulation dynamics.</blockquote>
+          <div class="ev-trans">关节位置（qpos）：重建当前状态的 qpos 在所有任务类别中提供了最实质性和一致的提升（0.71 平均），在 place（0.67）和抽屉操作（0.70 和 0.90）等操作任务中尤为突出。这表明明确的关节感知显著增强了模型对操作动态的理解。</div>
+          <div class="ev-gloss">知道「关节现在在哪」才能做精细操作——joint pose decoder 相当于让模型隐式学了一个正向运动学。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §6.3</div>
+          <blockquote class="ev-quote">Unlike previous auxiliary tasks that showed selective improvements, segmentation and object position reconstruction provide consistent benefits across all manipulation scenarios. Place tasks show the most substantial gains, with improvements ranging from 55-81% across different environments.</blockquote>
+          <div class="ev-trans">与之前显示选择性提升的辅助任务不同，分割和物体位置重建在所有操作场景中提供一致的好处。Place 任务显示出最实质性的提升，在不同环境中提升范围为 55-81%。</div>
+          <div class="ev-gloss">「把物体放到目标位置」需要精确知道「目标物体在哪」——seg+obj pose 正是提供这一信息，解锁了 place 任务。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> Flow Matching action head 对 pick/place 有益但伤害 open/close，揭示了离散 token 与连续动作在不同类型任务上的互补性——应该<a href="./notes.html#flow-matching" class="note-link">按任务类型自适应选择</a>动作生成模式。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §6.4</div>
+          <blockquote class="ev-quote">The flow matching action head shows a clear dichotomy in its effectiveness across different manipulation primitives. Pick tasks benefit substantially from continuous action generation, with success rates more than doubling from 0.13 to 0.27. This improvement suggests that the fine-grained control afforded by continuous actions is particularly valuable for precise grasping motions, where small variations in approach angle, grip force, or contact points can significantly impact success.</blockquote>
+          <div class="ev-trans">flow matching action head 在不同操作原语上的效果呈现出明显的二分性。Pick 任务从连续动作生成中受益显著，成功率从 0.13 翻倍以上至 0.27。这一提升表明连续动作提供的精细控制对精确抓取动作尤为有价值，其中进入角度、夹持力或接触点的细微变化可显著影响成功。</div>
+          <div class="ev-gloss">「抓」需要连续精细控制，「开关」需要离散的「走到正确位置」决策——这正是 flow matching 强于离散 token 的任务边界。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9 · §6.4</div>
+          <blockquote class="ev-quote">Conversely, the action head causes notable performance drops in Open tasks across both fridge and drawer categories. Fridge opening decreases from 0.87 to 0.76, while drawer opening drops from 0.77 to 0.60. These results suggest that the flow matching action head excels at generating fine-grained manipulation actions but struggles with mobility-oriented control, where discrete action tokens may be more suitable for coordinated base movement and navigation.</blockquote>
+          <div class="ev-trans">相反，action head 在冰箱和抽屉两类 Open 任务中导致明显的性能下降。冰箱开启从 0.87 降至 0.76，抽屉开启从 0.77 降至 0.60。这些结果表明 flow matching action head 擅长生成精细操作动作，但在以运动为主的控制中表现欠佳，其中离散 action token 可能更适合协调的底盘运动和导航。</div>
+          <div class="ev-gloss">这一发现对人形机器人设计有启示：底盘运动/导航用离散 token，末端执行器精细操作用 flow matching——按 subtask 类型切换模式。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 执行轨迹可视化证实了系统能完成 6 类家务 subtask（Close Fridge / Close Kitchen Counter / Open Fridge / Open Kitchen Counter / Pick / Place），base + arm 协调运动流畅。</div>
+        <figure>
+          <img src="./images/figure_3_execution_trajectories.png" alt="Figure 4: Execution Trajectories">
+          <figcaption><strong>Figure 4（p.6）：</strong>六类家务操作的执行轨迹。每行从左到右为时序帧，大图显示全局环境，小插图（从上到下）为 head depth / head RGB / hand depth / hand RGB 四路感知输入。可见 base 向目标移动、arm 精确执行抓取/开关动作的协调过程。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §6.1</div>
+          <blockquote class="ev-quote">We validate our approach on the challenging ManiSkill-HAB benchmark [28], showing that SG-VLA achieves average success rates of 73% compared to 60% for direct imitation learning on home rearrangement tasks, demonstrating the effectiveness of our proposed enhancements on a common VLA architecture.</blockquote>
+          <div class="ev-trans">我们在具有挑战性的 ManiSkill-HAB benchmark 上验证了我们的方法，显示 SG-VLA 在家务重排任务上达到 73% 平均成功率，相比直接 imitation learning 的 60%，证明了我们提出的增强在通用 VLA 架构上的有效性。</div>
+          <div class="ev-gloss">实验设置：30 episodes/task，PyTorch，8x A100，Adam lr=2e-5，batch size 512；评测包括 TidyHouse、PrepareGroceries、SetTable 三个场景的 Pick/Place/Open/Close 子任务。</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">论文未提供代码链接；致谢中提及 Lambda Inc. 的算力支持。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未公开</span> 论文正文及 arXiv 页面未提供任何代码仓库链接</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未公开</span> 无预训练权重发布</dd>
+        <dt>数据</dt><dd><span class="os-tag os-part">部分</span> 使用 ManiSkill-HAB benchmark 数据（公开），但 44K episodes 自采轨迹未释出</dd>
+        <dt>评测环境</dt><dd><span class="os-tag os-yes">公开</span> ManiSkill-HAB benchmark 已在 ICLR 2025 发表，<a href="https://arxiv.org/abs/2412.13211">可独立获取</a></dd>
+      </dl>
+      <div class="callout warn">
+        <div class="callout-head">⚙️ 复现难点</div>
+        <p>辅助任务数据（segmentation mask、object pose GT、joint pose GT）来自 ManiSkill-HAB 的仿真管线生成，虽然流程有描述（Section 3），但 44K episodes 的完整数据集和 3-stage 训练脚本均未开放。复现需从头重建数据生成流程。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.9 · §8 Acknowledgment</div>
+        <blockquote class="ev-quote">This work is supported by NSF award IIS-2127544 and NSF award IIS-2433768. We thank Lambda Inc. for their compute resource help on this project.</blockquote>
+        <div class="ev-trans">本工作由 NSF 奖项 IIS-2127544 和 IIS-2433768 资助。我们感谢 Lambda Inc. 在本项目上提供的算力支持。</div>
+        <div class="ev-gloss">NSF 资助的学术论文，无工业界开源压力；Lambda 提供算力但非研究主体——短期内不太可能开源。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 · 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>① 清晰的工程贡献：multi-view depth + 辅助解码器 + 渐进训练，每项都有受控消融验证，配方可直接借鉴。② 发现了 flow matching head 的「任务类型二分律」（精细操作受益 / 导航运动有损），对 action head 设计有实际指导价值。③ 辅助解码器设计细粒度（不同 decoder 用不同架构：MLP/Transformer/CNN），有理论逻辑支撑。④ 作为 2026 年的新工作，直接针对 mobile manipulation VLA 这一尚未充分研究的方向。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>仅在仿真中评测</strong>：ManiSkill-HAB 是纯仿真 benchmark，没有 sim-to-real gap 的任何讨论，实机结果未知。② <strong>基线太弱</strong>：主要对比是同架构的直接 IL，没有对比其他 mobile manipulation 方法（如 Mobile ALOHA、AC-DiT 等），难以判断绝对水平。③ <strong>无开源代码/权重</strong>，复现门槛高。④ <strong>Flow Matching head 结果混乱</strong>：平均性能反而不如无 action head 版本（0.69 vs 0.73），说明方法尚不成熟。⑤ 模型仅 1.3B，backbone 是 Qwen2.5-0.5B，语义推理能力相对有限。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge valuable">Valuable</span> &nbsp;辅助解码器 co-training 的工程思路清晰且有实用价值，但仅有仿真结果、无开源、基线薄弱限制了其影响力。可作为「空间辅助监督」方向的参考实现。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · SG-VLA (arXiv:2603.22760)</footer>
+
+</body>
+</html>

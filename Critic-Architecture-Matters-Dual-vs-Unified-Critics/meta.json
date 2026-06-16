@@ -1,0 +1,47 @@
+{
+  "title": "Critic Architecture Matters: Dual vs. Unified Critics for Humanoid Loco-Manipulation",
+  "title_cn": "Critic 架构很关键：人形 loco-manipulation 中双 critic 对单 critic",
+  "field": "humanoid",
+  "venue": "arXiv 2606.11891v1 (ICRA 2026 RL4IL Workshop)",
+  "date": "2026",
+  "one_liner": "控制变量对照：人形 loco-manip 单策略里把目标分给两个独立 critic，比用一个统一 critic 到达快 3.5×、吞吐 2×，且这件事比堆 reward 工程更管用。",
+  "framework": "idea-first",
+  "idea": "别让一个 critic 同时给『走』和『够』打分——locomotion 奖励会主导合并价值、压制 arm 动作；给每个目标配独立 critic、奖励信号互不串味，arm 才敢放手去够（分灶吃饭而非大锅饭）。",
+  "logic_chain": [
+    "控制变量：同一 Unitree G1、同一 13 级 curriculum、同一 PPO 超参，只换 critic 架构（统一 109-dim vs 双分离）",
+    "训练时两者看起来一样：reward 值、curriculum 进度、reach 计数都接近，标准训练指标分不出高下",
+    "换标准化评测（time-to-reach / throughput / validated reach）才暴露差距：dual 到达快 3.5×、吞吐 2×",
+    "机制证据：unified 下 arm 动作幅度仅 1.22（dual 是 2.54/3.04），合并价值被 locomotion 主导、压制了 arm 出手",
+    "推论：在 IL+RL 混合流程里，unified critic 的 locomotion 梯度会覆盖 IL 学到的 arm 行为；dual critic 隔离梯度、保住技能"
+  ],
+  "method_skeleton": [
+    "双 critic 分离奖励：两个价值函数各看各的 reward 互不混合（loco: 速度跟踪+能量；arm: 够取距离+位移），对照组拼成 109-dim 喂单 critic 估合并价值",
+    "分支完全独立 + frozen-branch transfer：Stage 7 冻结已学好的 locomotion 分支，arm 策略重新初始化训练",
+    "13 级 sequential curriculum（站立够取→行走够取→固定朝向→可变朝向 cone 20–80°），用 validated reach rate 作晋级门槛",
+    "Unitree G1 23 active DoF（12 腿+5 臂，腕/手固定），Isaac Lab 4096 并行环境，PPO lr 3e-4 cosine γ0.99 λ0.95 clip0.2"
+  ],
+  "core_points": [
+    "critic 架构是多目标人形 RL 里被忽视的设计旋钮，绝大多数论文默认选一种、从不对照",
+    "仅换 critic 架构（不动 reward），dual 到达快 3.5×（6.5 vs 22.6 步）、吞吐 2×（14.3 vs 7.0/1K）、站立 validated reach 65.2% vs 53.8%",
+    "机制：unified 把 arm 动作幅度压到 1.22（dual 2.54/3.04），导致收敛慢、超时多",
+    "在 dual 上再叠 5 个 anti-gaming 奖励无额外增益（60.9% vs 65.2%）——架构 > reward 工程",
+    "标准训练指标（reward/curriculum/reach 计数）会掩盖 3.5× 差距，必须用 time-to-reach/throughput 标准化评测才暴露",
+    "对 IL+RL 微调的启示：dual critic 把 RL 信号隔离到对应分支，理论上可防止 IL 学到的 manipulation 技能被 catastrophic forgetting（仅类比，未实测）"
+  ],
+  "effects": [
+    "到达速度 3.5×：dual 6.5 步 vs unified 22.6 步（站立，p.3 Tab.II）",
+    "吞吐 2×：dual 14.3 vs unified 7.0 validated reach/1K steps（站立）",
+    "Validated reach rate：dual 65.2% vs unified 53.8%（站立）/ 63.1% vs 51.1%（行走）",
+    "Arm action magnitude：unified 1.22 vs dual 2.54（机制证据，约一半）",
+    "anti-gaming 无增益：dual+AG 60.9% vs dual 65.2%（S7 只训到 Level 7）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "弱相关：无 vision-language / VLA 内容，仅在『RL 微调 IL 策略』议题上与 π*0.6 等有交集",
+    "track_B_legged": "正中命中：人形 loco-manipulation 单策略 RL（Unitree G1 + Isaac Lab + PPO + curriculum），直接给出『dual actor-critic + disjoint reward + frozen-branch transfer』的 whole-body controller 工程配方，以及『先定架构再调 reward』的优先级判断；并提出 dual critic 作为 IL+RL 微调防遗忘机制的工程假说，可用于 RL 精修 teleop/IL 习得的 manipulation 技能"
+  },
+  "open_source": "none",
+  "open_source_detail": "未发布代码/权重/项目页。arXiv 全文与 abstract 页（2026-06-16 联网核查）均无 GitHub/repo/project 链接；单作者短文，致谢仅注明用 AI 助手(Claude)辅助润色。论文可读：https://arxiv.org/abs/2606.11891 (v1, 10 Jun 2026, 收录 ICRA 2026 RL4IL Workshop)",
+  "open_source_checked": "2026-06-16",
+  "rating": "Incremental",
+  "summary": "summary.html"
+}

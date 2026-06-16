@@ -1,0 +1,47 @@
+{
+  "title": "Stubborn: A Streamlined and Unified Reinforcement Learning Framework for Robust Motion Tracking and Fall Recovery for Humanoids",
+  "title_cn": "Stubborn：统一动作跟踪与摔倒恢复的精简 RL 框架",
+  "field": "humanoid",
+  "venue": "arXiv:2606.12814 (cs.RO)",
+  "date": "2026",
+  "one_liner": "把人形的动作跟踪与摔倒恢复统一进单一 RL 策略（单阶段、无专门恢复奖励/恢复策略）：核心是把跟踪失败当成进入跌倒态流形的入口，用 Bernoulli 概率(软)终止替换硬终止给恢复留探索窗，再用误差驱动采样啃难片段；5 m/s 强扰动恢复成功率 100%（消融掉 PT 仅 77.5/85%），真机 Unitree G1 跑通空翻/特技/摔倒恢复。",
+  "framework": "idea-first",
+  "idea": "别把'摔了'当游戏结束而当'附加关卡'：跟踪失败是通往跌倒态流形的天然入口，训练时不立刻判负、而是掷一枚概率硬币决定是否终止，同一个策略在追踪动作的同时就自发学会爬起来——一套奖励、一个策略、一个阶段。",
+  "logic_chain": [
+    "立论：从精确跟踪到跌倒是连续过渡，跟踪失败正是进入'跌倒态流形'的天然门口，应利用而非用硬终止回避。",
+    "把硬终止换成 Bernoulli 软终止：误差超阈值后每步只以概率 p_term 终止，给恢复留约 200 步(4s)探索窗。",
+    "p_term 不拍脑袋：由物理恢复时间反推 E[T]=1/p_term=f_ctrl·t_rec=50Hz×4s=200 → 0.005；>99% 不稳定 episode 仍在步限前终止，避免截断造成 TD 价值估计偏差。",
+    "软终止后'是否终止'不再代表片段难度，改用在线跟踪误差 ē 直接驱动采样权重，把概率质量压向高误差/难片段。",
+    "验证：5 m/s 扰动恢复 100%（消融掉 PT 掉到 77.5–85%）；LAFAN1 全集跟踪误差优于 4 个 SOTA；真机 G1 完成空翻/特技/摔倒恢复。"
+  ],
+  "method_skeleton": [
+    "yaw-aligned 表示：把 body 位姿旋到去 yaw 的对齐帧，去掉全局漂移与朝向、保留重力相关 pitch/roll，扰动后不做无谓全局纠偏（推导见 Appendix §6.1）。",
+    "非对称 Actor-Critic：Critic 用仿真特权信息估价值，Actor 只用本体感知 → 可直接真机部署。",
+    "Bernoulli 概率(软)终止：误差超阈值后每步仅以 p_term=0.005 概率终止（θpos=0.25m, θquat=π/2），造恢复探索窗。",
+    "PT + 跟踪误差驱动自适应采样（AdpS）：θsuccess=0.06，按 ē 与是否到 Tmax 分三种更新权重（Φatt 局部衰减 / Φdist 局部重分布），归一化为下一次起始帧采样分布。",
+    "IsaacLab/MuJoCo 训练 + 域随机化（摩擦/动作延迟/Kp-Kd/质量/质心），真机 29-DoF Unitree G1 部署。"
+  ],
+  "core_points": [
+    "把动作跟踪与摔倒恢复统一进单一策略、单阶段、无专门恢复奖励、无单独恢复策略。",
+    "核心洞察：跟踪失败是通往跌倒态流形的天然入口，应利用而非回避（否定'两者梯度冲突需解耦'的前提）。",
+    "Bernoulli 概率(软)终止：超阈值后每步仅以 p_term=0.005 概率终止，留约 200 步(4s)恢复探索窗。",
+    "p_term 由物理恢复时间反推标定，>99% 不稳定 episode 仍在步限前终止，缓解 time-limit 截断的 TD 偏差。",
+    "误差驱动自适应采样：因软终止使'终止≠难度'，改用在线跟踪误差把采样质量压向难片段。",
+    "底座：非对称 Actor-Critic（Critic 特权信息 / Actor 本体感知）+ yaw-aligned 跟踪表示。"
+  ],
+  "effects": [
+    "强扰动恢复：5 m/s 扰动下带 PT 在 0.15m/0.25m 两档阈值均达 100% 恢复成功率，去掉 PT 仅 77.5%/85.0%（p.7 Tab.2）。",
+    "跟踪精度：LAFAN1 全集 MPBPE 48.85mm（5 法最优，From-scratch RL 62.68）、MPJVE 624.03（vs 887.87，−30%）、MPJPE 113.38（仅微降）、∆acc 17.09（≈最优 BFM-Zero 17.07）（p.6 Tab.1）。",
+    "AdpS 增益边际：MPJPE 120.7→119.4、MPJVE 548.5→541.5、∆acc 14.50→14.42（约 1%，p.7 Tab.3）。",
+    "真机：29-DoF Unitree G1 完成 flips / acrobatics / fall recovery（LAFAN1+AMASS 重定向动作，p.8 Fig.4）。"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "弱相关/不命中：无 VLA、无语言、无操作，纯底层 humanoid locomotion / motion-tracking RL。",
+    "track_B_legged": "强命中：人形高动态 motion tracking RL + fall recovery 统一框架，非对称 Actor-Critic + yaw-aligned 表示 + IsaacLab/MuJoCo + 域随机化 + 真机 Unitree G1 sim2real，全套 Track B 关键词。可直接借用：§3.1 Bernoulli 概率(软)终止——用一枚概率硬币替换 env 硬终止，几乎零成本提升强扰动恢复鲁棒性（77.5/85%→100%），且 p_term 有物理时间标定；§3.2 误差驱动采样啃难片段。落地门槛：代码未开源(Coming Soon)需自行复现，p_term 要按自家控制频率/恢复时间重标定。"
+  },
+  "open_source": "none",
+  "open_source_detail": "未开源。项目页 https://aislab-sustech.github.io/Stubborn/ 仅放真机演示视频，代码标注 'Coming Soon'，无权重、无 GitHub 仓库。训练用公开 mocap LAFAN1[37]+AMASS[38]（本身公开，非本文产出）。arXiv:2606.12814v1。2026-06-16 经 WebFetch 项目页 + WebSearch 核查，均未发现已发布代码/权重。",
+  "open_source_checked": "2026-06-16",
+  "rating": "Valuable",
+  "summary": "summary.html"
+}

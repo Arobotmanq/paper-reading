@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-VLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Tsinghua AIR · Shanghai AI Lab · Cross-Embodiment VLA</span>
+    <h1>X-VLA: Soft-Prompted<br>Cross-Embodiment VLA</h1>
+    <p class="subtitle">想让一个 VLA 同时驾驭数十种机器人硬件配置——与其用繁复的架构"切换头"，不如给每个数据源分配一组<strong>可学习嵌入（soft prompt）</strong>，让模型从训练早期就自动学会区分并利用跨本体异构特征，用最少新增参数实现最大泛化。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 项目强相关 · Track A 移动操作 VLA</span>
+      <span class="pill">📅 2025-10 / ICLR 2026</span>
+      <span class="pill">🏆 IROS 2025 AgiBot World Challenge 冠军</span>
+      <span class="pill">🏢 Tsinghua AIR + Shanghai AI Lab</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2510.10274">arXiv:2510.10274</a></span>
+      <span class="pill">⭐ <a href="https://github.com/2toinf/X-VLA">github.com/2toinf/X-VLA</a> · Apache-2.0 · 669★</span>
+      <span class="pill">🤗 <a href="https://huggingface.co/collections/2toINF/x-vla">HF: 2toINF/X-VLA 系列</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">模型规模</div>
+    <div class="value">0.9<span class="unit">B</span></div>
+    <div class="desc">Florence-2-Large + 标准 Transformer 编码器，比 π0 (3B) 小 3×</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">LIBERO 成功率</div>
+    <div class="value">98<span class="unit">%</span></div>
+    <div class="desc">全量微调后，超越所有同规模及更大规模对比方法</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">PEFT 参数量</div>
+    <div class="value">9<span class="unit">M</span></div>
+    <div class="desc">仅调 1% 参数可达到与完整微调 π0 (3B) 相当的成绩</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">预训练规模</div>
+    <div class="value">290<span class="unit">K ep</span></div>
+    <div class="desc">7 个硬件平台 · 5 类机械臂 · Droid/RoboMind/Agibot</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">跨本体训练的真正瓶颈不只是动作空间不同，而是<strong>相机配置、控制频率、任务分布全都异构</strong>——现有方法要么只在输出端换头（顾了动作、没顾视觉），要么靠人工文字描述（无法量化扩展）。X-VLA 的答案是：给每个数据源分配一组<strong>随机初始化、端到端学习的 soft prompt 嵌入</strong>，注入 Transformer 编码早期，让模型<strong>自动把硬件配置差异编进提示向量里</strong>，主干骨架保持通用，只有提示会随 embodiment 变化。参数极省（0.04%），训练稳定，且天然可扩展到新本体。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>跨本体数据集存在<strong>多维异构性</strong>：不只是动作空间不同，相机设置、控制频率、任务分布也各异——现有方法只在最终动作头上做区分，远远不够。</li>
+          <li>NLP 的 prompt tuning 证明：用<strong>少量可学习嵌入</strong>就能将大型预训练模型导向特定分布，无需修改主干权重——这种思路可以迁移到跨本体问题。</li>
+          <li>于是把"每个硬件配置 ≈ 一个任务"，给每个数据源分配独立的 <a href="./notes.html#soft-prompt" class="note-link">soft prompt</a> 嵌入注入编码早期，骨架保持通用 Transformer——<strong>只有提示感知 embodiment，骨架不用感知</strong>。</li>
+          <li>流匹配（<a href="./notes.html#flow-matching" class="note-link">flow matching</a>）action head 处理连续动作生成，提示提供条件信息——两者天然兼容，不需要离散 token 或额外解码器。</li>
+          <li>验证手段：预训练验证误差与下游适配成功率高度相关（R²=0.925）——所以可以用验证误差作为跨架构对比的代理指标，大幅减少全量评测开销。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#soft-prompt" class="note-link">Soft Prompt Library</a>（核心创新）</strong>：每个数据源分配一组可学习嵌入 \(p_i \in \mathbb{R}^k\)，通过 dataset id 查询，注入 Transformer 编码器输入端，与多模态 token 共同参与 self-attention。全部 embodiment-specific 参数（soft prompt + 输入/输出线性投影库）仅占模型总参数的 <strong>0.04%</strong>。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>解耦编码流水线</strong>：主视角 + 语言走预训练 <a href="./notes.html#vlm-backbone" class="note-link">VLM backbone</a>（Florence-2-Large，固定视角语义推理）；辅助视角（腕部相机等）走 Shared ViT（单独处理高频嘈杂输入）；本体感知状态 + 噪声动作 token 走轻量线性投影后融合，三流统一进标准 Transformer 编码器栈。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>两步适配（Two-step Adaptation）</strong>：Phase I 先冻结主干，仅优化新 embodiment 的 soft prompt（Prompt warm-up），让提示向量先锚定到预训练的 embodiment-agnostic 特征空间；Phase II 再解冻全部参数联合优化。PEFT 版本只调 9M 参数（LoRA），可达完整微调 π0(3B) 的水平。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 6 个仿真 benchmark（5 个创 SOTA）+ 3 个真实机器人平台全面超越所有对比方法（含 3B π0、7B OpenVLA）。最重要的消融是：<strong>加 soft prompt 后预训练验证误差从 0.053 降至 0.041，下游适配从 64.6% 升至 73.8%</strong>——与其他"对齐异构性"方法相比增益最大。Scaling 曲线在 0.9B + 290K ep + 7 个数据源处<strong>仍无饱和迹象</strong>。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>Simpler-WidowX：X-VLA 95.8% vs. SOTA 71.9%（7B 模型）——以 0.9B 大幅超越 7B 对手。</li>
+            <li>LIBERO 平均：98.1%（Spatial 98.2% / Object 98.6% / Goal 97.8% / Long 97.6%）。</li>
+            <li>CALVIN ABC→D：4.43 consecutive tasks（次于 FLOWER 的 4.53）。</li>
+            <li>NAVSIM PDMS：87.3 vs. UniVLA 81.7。</li>
+            <li>Cloth-folding（Agilex 双臂）：~100% 成功率，33 fold/小时，相当于闭源 π0-folding。</li>
+            <li>LoRA PEFT（9M 参数）：Libero 93%、Simpler-WidowX 54%，相比 π0(3B) 完整微调的 94%/55.7% 仅差 1-2%。</li>
+            <li>Scaling: 验证误差与下游成功率强相关，R²=0.925。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）直接命中</strong>：X-VLA 是目前最简洁、最易复现的跨本体 VLA 基础模型之一。Soft prompt 机制可直接套用于多机器人/多场景混合训练。代码与权重全部 Apache-2.0 开源，可基于 HF checkpoint 直接微调。<strong>Track B（足式控制算法）不相关</strong>——本文不涉及 locomotion 底层控制，但若要将 VLA 扩展到足式操作臂，soft prompt 的跨本体思路值得参考。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有 VLA 跨本体训练失败，根源不只是动作空间不同，而是相机配置、控制接口、任务分布等多维异构性全面干扰预训练与适配。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">A key challenge here is that VLA models face substantial heterogeneity from hardware configurations to data collection strategies. Such heterogeneity manifests not only in embodiment-specific action spaces, but also in setup variations such as camera settings, visual domains, and task distributions. These various dimensions of diversity induce severe distributional shifts as well as significant semantic misalignments across embodiments, confusing the model and ultimately leading to unsatisfactory pretraining and adaptation performance.</blockquote>
+          <div class="ev-trans">核心挑战在于 VLA 模型面临从硬件配置到数据收集策略的大量异构性。这种异构性不仅体现在 embodiment 特有的动作空间上，还体现在相机设置、视觉域、任务分布等设置变体上。这种多维多样性导致了跨 embodiment 的严重分布偏移和显著语义错位，使模型混乱，最终导致预训练和适配性能不理想。</div>
+          <div class="ev-gloss">问题被精准定位：不只是动作头不同，而是视觉语义层面的 semantic misalignment——这是 soft prompt 在输入端早期注入的必要性所在。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3 (a)</div>
+          <blockquote class="ev-quote">Existing VLA methods primarily assign distinct action decoder heads to accommodate embodiment-specific action spaces as their main focus, with other critical sources of heterogeneity ineluctably overlooked.</blockquote>
+          <div class="ev-trans">现有 VLA 方法主要通过分配不同的动作解码头来适配 embodiment 特有的动作空间，但其他关键的异构性来源被不可避免地忽略了。</div>
+          <div class="ev-gloss">直接指出 π0/GR00T N1 等"domain-specific action head"方案的共同盲点，为 soft prompt 铺路。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 soft prompt 机制 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 解法：<a href="./notes.html#soft-prompt" class="note-link">Soft Prompt</a> 将每个数据源的硬件配置编码为一组随机初始化、端到端学习的嵌入向量，注入编码器早期，主干完全共享——仅 0.04% 新参数但全维度解决异构性。</div>
+        <figure>
+          <img src="./images/figure_3_comparison_methods.png" alt="Figure 2: 四种异构性处理方法对比 + Figure 3 数据配方 + Figure 4 训练曲线">
+          <figcaption><strong>Figure 2（p.4）：</strong>左上=仅换动作头（现有主流）；右上=HPT-style 投影层（中间特征对齐）；左下=自然语言描述；右下=Soft Prompt（本文）。Figure 4 的训练曲线直观显示 soft prompt 收敛最稳。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3 (d)</div>
+          <blockquote class="ev-quote">we investigate a soft-prompt method that follows the meta-learning and multi-task learning philosophy by introducing domain-specific learnable parameters P_H = {p_i}_i=1^H to absorb heterogeneity across data sources. p_i is expected to encode the underlying hardware configuration: p_i ≈ Φ(h_i), where Φ : H → R^k denotes a latent mapping from hardware configurations to the prompt space. Notably, Φ is not predefined by hard templates as in language prompts (c) but is randomly initialized and then implicitly optimized through end-to-end training.</blockquote>
+          <div class="ev-trans">我们研究了一种软提示方法，遵循元学习和多任务学习的理念，通过引入特定域的可学习参数集合来吸收数据源间的异构性。p_i 期望编码底层硬件配置，Φ 是从硬件配置到提示空间的潜在映射。值得注意的是，Φ 不像语言提示那样由固定模板预定义，而是随机初始化后通过端到端训练隐式优化。</div>
+          <div class="ev-gloss">关键在于"随机初始化 + 端到端优化"：不需要人手工写硬件描述，让模型自己学会编码 embodiment 差异。</div>
+        </div>
+        <figure>
+          <img src="./images/figure_1_architecture_detail.png" alt="Figure C1: X-VLA 完整架构图">
+          <figcaption><strong>架构详图（Appendix C）：</strong>顶部=Soft Prompt Library + Input/Output Linear Projection Library（共 0.04% 参数）；下方=Model Forward Path：Lang+Main View 走预训练 VLM，Other Views 走 Shared ViT，Proprio + Noise Action 走 Input Projection，Soft Prompt 与 Multi-modal Tokens + Control Tokens 共同进入 N 层标准 self-attention Transformer Block，最后 Output Projection 产出 Action Chunk。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点3 为什么 soft prompt 优于其他方案 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 对比实验证明：HPT-style 投影层破坏预训练 VLM 表征导致训练不稳定；语言提示依赖人工模板无法扩展；而 soft prompt 同时避免了这两个缺陷，训练最稳定、性能最高。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5–6 · §3</div>
+          <blockquote class="ev-quote">HPT-style projection introduces different projection layers in the middle of the observation processing, which frequently alter feature distributions and are prone to corrupting pretrained VLM representations, often resulting in unstable training dynamics. Language prompts, on the other hand, rely on carefully scripted textual descriptions of hardware configurations, which greatly hinder adaptability and scalability in practice. In contrast, soft prompts offer a flexible and scalable solution for encoding domain-specific hardware configurations. They marry the advantages of both (b) and (c), integrating smoothly with the backbone while preserving pretrained representations and eliminating the need for handcrafted annotations.</blockquote>
+          <div class="ev-trans">HPT-style 投影在观测处理中间引入了不同投影层，经常改变特征分布，容易破坏预训练 VLM 表征，导致不稳定的训练动态。语言提示则依赖于对硬件配置的精心编写文字描述，这在实践中大大阻碍了适配性和可扩展性。相比之下，soft prompt 提供了一种灵活可扩展的解决方案，它同时吸收了(b)和(c)的优点，与骨架平滑集成，同时保留预训练表征，且无需手工标注。</div>
+          <div class="ev-gloss">这段是本文最核心的"为什么这个方案"的论证。实验对应 Fig.4 训练曲线：soft prompt 明显收敛最快最稳。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 消融路径 + 架构各组件贡献 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 逐步消融路径清楚量化了每个组件的贡献：soft prompt 单独贡献 +9.2% 适配成功率，是所有架构设计决策中增益最大的单项；最终完整模型达 95.8%。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §4 Table 1</div>
+          <blockquote class="ev-quote">naively training on heterogeneous data leads to degradation. Also, as the validation error decreases during PT, the AD success rate increases progressively, demonstrating a strong correlation between the two. Therefore, we use the validation error as a proxy for PT performance throughout this paper. It is evident that every component in Section 4 contributes to positive improvements for PT.</blockquote>
+          <div class="ev-trans">直接在异构数据上训练会导致性能下降。同时，随着预训练验证误差降低，适配成功率逐步提高，两者表现出强相关性。因此我们在整篇论文中将验证误差作为预训练性能的代理指标。显然，第4节中的每个组件都对预训练有正向贡献。</div>
+          <div class="ev-gloss">Table 1 是本文最精华的消融数据：Soft Prompt 从 Val Error 0.053 → 0.041，Acc 从 64.6% → 73.8%；Scaling up 再降到 0.032 / 89.6%；两步适配再到 95.8%。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 Scaling 行为 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> Scaling 行为：沿模型规模、数据多样性、数据量三个维度，X-VLA 的预训练验证误差均单调下降，且在最大测试配置（0.9B · 290K ep · 7 数据源）处<strong>没有饱和迹象</strong>——暗示进一步 scaling 仍有空间。</div>
+        <figure>
+          <img src="./images/figure_4_scaling_behavior.png" alt="Figure 5: X-VLA 三轴 Scaling 行为">
+          <figcaption><strong>Figure 5（p.8）：</strong>三列分别为模型规模、数据多样性（数据源数量）、数据量 scaling，纵轴均为验证预测误差（越低越好）。三条曲线末端均未显示趋于水平，说明当前配置尚未饱和。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §5.1</div>
+          <blockquote class="ev-quote">Notably, even at the largest tested configuration, X-VLA-0.9B (hidden size 1024, 24 Transformer blocks), trained on 290K episodes from 7 data sources, the scaling trend shows no sign of saturation. This indicates that further increases along these three axes could yield additional performance gains.</blockquote>
+          <div class="ev-trans">值得注意的是，即使在最大测试配置下——X-VLA-0.9B（隐藏维度 1024，24 个 Transformer Block）在来自 7 个数据源的 290K episode 上训练——scaling 趋势也没有显示出饱和迹象。这表明沿这三个轴的进一步增加可以带来额外的性能增益。</div>
+          <div class="ev-gloss">这是论文最有说服力的"潜力声明"。资源限制（64×A100，4 天）使当前规模保守，向 1B+ 和更多数据的方向明确可行。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 Soft Prompt 的可解释性 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 可解释性验证：T-SNE 可视化显示，soft prompt 形成与硬件配置高度吻合的聚类——且同类硬件（Franka 左/右视角）的提示向量互相交织，说明模型学到了跨本体相似性而非简单的数据分区。</div>
+        <figure>
+          <img src="./images/figure_5_tsne_softprompt.png" alt="Figure 8+9: T-SNE 可视化 + PEFT 对比">
+          <figcaption><strong>Figure 8（p.10–11）：</strong>T-SNE 显示 7 个数据源的 soft prompt 形成清晰聚类；两个 Franka 视角（Droid-Left/Right）的提示向量交织在一起，而非分离——证明提示编码了物理相似性而非纯粹的 dataset id 标记。Figure 9：预训练提示 vs. 随机初始化提示 vs. 两步适配——预训练提示早期收敛最快。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10–11 · §5.3</div>
+          <blockquote class="ev-quote">Fig. 8 reveals that the prompts form well-structured clusters that align closely with different hardware configurations, indicating that they successfully capture embodiment-specific information. More excitingly, the two Franka setups (with left and right views) derived from Droid data are intermingled rather than separated, as they only differ in their designated main view. This observation suggests that soft prompts do not merely partition data sources in a brute-force manner but instead leverage cross-embodiment similarities.</blockquote>
+          <div class="ev-trans">图 8 显示提示形成了与不同硬件配置高度对应的结构良好的聚类，表明它们成功捕获了 embodiment 特有信息。更令人兴奋的是，来自 Droid 数据的两个 Franka 设置（左视角和右视角）相互交织而不是分离，因为它们只在主视角方向上有所不同。这一观察表明，soft prompt 并不是以暴力方式划分数据源，而是利用了跨 embodiment 的相似性。</div>
+          <div class="ev-gloss">这是"质量验证"：模型自发学到了硬件拓扑结构（同品牌机械臂在提示空间中相近），为零样本/少样本跨本体迁移（用相似本体的 prompt 初始化新 prompt）提供了理论基础。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 两步适配与 PEFT -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 两步适配机制使 PEFT 极度高效：仅 9M 可调参数（LoRA），在 LIBERO 达 93%、Simpler-WidowX 达 54%，与完整微调的 π0(3B) 成绩几乎持平，却只用了后者 1/333 的可调参数量。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §1 &amp; p.10 · §5.2</div>
+          <blockquote class="ev-quote">By tuning only 1% of the model parameters (9M), X-VLA-0.9B achieves 93% success rate on LIBERO and 54% on Simpler-WidowX, which is comparable to π0 (Physical Intelligence et al., 2025), despite requiring 300×fewer parameters (3B vs. 9M).</blockquote>
+          <div class="ev-trans">只调整 1% 的模型参数（9M），X-VLA-0.9B 在 LIBERO 上达到 93% 的成功率，在 Simpler-WidowX 上达到 54%，与 π0 相当，尽管所需参数数量少 300 倍（3B vs. 9M）。</div>
+          <div class="ev-gloss">"300× 少参数实现相当成绩"是论文最有传播力的数字。对快速适配新机器人平台极为重要——意味着数据采集完成后微调成本极低。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 布料折叠 + 真实场景 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 真实世界验证：仅凭 1200 条示范数据，X-VLA-0.9B 在双臂 Agilex 平台上完成布料折叠任务，吞吐量与假定训练量远更大的闭源 π0-folding 相当，击败 ACT 和微调版 π0。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §5.2</div>
+          <blockquote class="ev-quote">Leveraging this dataset for adaptation, our X-VLA-0.9B model achieves a throughput of nearly 100% success rate and 33 completed folds per hour—comparable to the closed-source π0-folding model (Physical Intelligence et al., 2025), which is presumably trained on substantially larger and higher-quality datasets. For a fair comparison, we finetuned π0-base and trained a ACT (Zhao et al., 2023) model from scratch on Soft-Fold, but they failed to match the throughput of X-VLA-0.9B.</blockquote>
+          <div class="ev-trans">利用该数据集进行适配，我们的 X-VLA-0.9B 模型达到近 100% 成功率和每小时 33 次折叠完成的吞吐量——与闭源 π0-folding 模型相当（该模型推测在更大规模更高质量数据集上训练）。作为公平对比，我们在 Soft-Fold 上对 π0-base 进行了微调并从头训练了 ACT 模型，但它们均未能达到 X-VLA-0.9B 的吞吐量。</div>
+          <div class="ev-gloss">布料折叠是高度灵巧的双手协调任务，是 VLA 在 dexterous manipulation 方向的标志性评测——以 1200 条数据匹敌闭源大模型，说明预训练质量极高。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 <span style="font-size:0.7em;color:var(--success);font-weight:600;background:var(--success-bg);padding:0.1em 0.5em;border-radius:6px;border:1px solid var(--success);">实时核查 · 2026-06</span></h2>
+      <p class="lead">STEP 0 实时检查结果：代码、权重均已开源（Apache-2.0）；Soft-Fold 数据集计划开放；预训练数据本身是公开数据集（Droid/RoboMind/Agibot）。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/2toinf/X-VLA">github.com/2toinf/X-VLA</a>（Apache-2.0；669★；含训练/推理/评测脚本；train.py · peft_train.py · deploy.py · 多 benchmark 评测）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-yes">已开源</span> HuggingFace <a href="https://huggingface.co/collections/2toINF/x-vla">2toINF/X-VLA</a> 系列：X-VLA-Pt（预训练基础）· X-VLA-SoftFold · X-VLA-RoboTwin2 · WidowX · Franka · Agibot 等多个域特化版本；0.9B F32 safetensors；支持 <code>AutoModel.from_pretrained</code></dd>
+        <dt>数据</dt><dd><span class="os-tag os-part">部分开源</span> 预训练所用数据（Droid / RoboMind / Agibot-Beta）均为公开数据集；Soft-Fold 布料折叠数据集（1200 episodes）论文承诺开放（"we will release the dataset"），截至 2026-06 仍在处理中</dd>
+      </dl>
+      <div class="callout success">
+        <div class="callout-head">✅ 开源质量评估</div>
+        <p>代码组织清晰，包含针对 LeRobot/HDF5/散射轨迹格式的数据集 handler，配合 FastAPI 推理服务端。HF 格式转换注意事项：官方提示"HF 格式存在约 1% 性能损失，正在排查"，推荐使用原生 repo 的 checkpoint 而非 HF 端口进行精确复现。</p>
+      </div>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.25–26 · Appendix F</div>
+        <blockquote class="ev-quote">Importantly, we will release the dataset to facilitate future research in dexterous manipulation.</blockquote>
+        <div class="ev-trans">重要的是，我们将发布该数据集，以促进未来灵巧操作方向的研究。</div>
+        <div class="ev-gloss">Soft-Fold 数据集的开放承诺来自论文正文；但截至 2026-06 尚未在 HF 上检测到正式发布，建议关注 GitHub repo release 页。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>1. <strong>想法极简但效果极强</strong>：soft prompt 的新增参数不到 0.04%，却在多维异构性问题上大幅胜过同类设计——这是"以最小改动撬动最大收益"的范本。2. <strong>评测最全面</strong>：6 仿真 benchmark + 3 真实机器人，论文自称"to our knowledge, no prior model has reported such comprehensive evaluation"。3. <strong>Scaling 曲线清晰</strong>：三轴 scaling 趋势无饱和，给出了明确的"继续扩大训练有收益"的信号。4. <strong>完全开源可用</strong>：Apache-2.0 代码 + HF 权重，可立即 LoRA 适配新机器人。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留与局限</div>
+        <p>① <strong>部署仍需 embodiment-specific 适配</strong>：论文自认"零样本/即插即用部署仍是未解问题"，每个新平台仍需采集少量 demo + 微调。② <strong>Scaling 上限模糊</strong>：0.9B 是资源约束，并非设计极限，实际 1B+ 时 soft prompt 是否仍稳定是开放问题。③ <strong>监督信号单薄</strong>：低维动作标签信息量有限，论文自承"下采样意图抽象仅部分解决"，缺乏 3D/物理/子目标等丰富监督。④ <strong>Soft-Fold 数据未释</strong>：布料折叠这一核心 dexterous task 的数据集尚未正式开放，复现受限。⑤ <strong>CALVIN 成绩次于 FLOWER</strong>：4.43 vs. 4.53，在长序列基准上仍有差距。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;方法优雅简洁且高度实用；在跨本体 VLA 训练这一核心挑战上提供了当前最好的公开方案之一；但尚未突破"需要新 embodiment 适配"的根本限制，距"Breakthrough"差一步。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · X-VLA (arXiv:2510.10274) · ICLR 2026</footer>
+
+</body>
+</html>

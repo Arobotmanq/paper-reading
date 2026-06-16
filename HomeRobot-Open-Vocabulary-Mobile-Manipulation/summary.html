@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeRobot OVMM 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.valuable { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border-color: #3b82f6; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Georgia Tech · FAIR Meta AI · CMU · CoRL 2023</span>
+    <h1>HomeRobot:<br>Open-Vocabulary Mobile Manipulation</h1>
+    <p class="subtitle">机器人研究缺的不只是算法，而是<strong>统一的任务定义 + 可复现的基础设施</strong>：定义 OVMM（开放词汇移动操作）任务，同时提供 Habitat 仿真 + Hello Robot Stretch 真实机器人的<strong>共享软件栈</strong>，让不同实验室能在同一基准上公平比较。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🗂️ 评测基准基础设施 · Track A 背景参考 · 非 VLA</span>
+      <span class="pill">📅 2023-06 / CoRL 2023</span>
+      <span class="pill">🏢 Georgia Tech · FAIR Meta AI · CMU · SFU</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2306.11565">arXiv:2306.11565</a></span>
+      <span class="pill">⭐ <a href="https://github.com/facebookresearch/home-robot">github: home-robot</a></span>
+      <span class="pill">🌐 <a href="https://ovmm.github.io/">ovmm.github.io</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">基准规模</div>
+    <div class="value">200<span class="unit">场景</span></div>
+    <div class="desc">Habitat 仿真场景 (HSSD)</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">对象类别</div>
+    <div class="value">129<span class="unit">类</span></div>
+    <div class="desc">2,535 个标注对象实例</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">真实成功率</div>
+    <div class="value">20<span class="unit">%</span></div>
+    <div class="desc">RL baseline 真实世界</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">开源状态</div>
+    <div class="value">全<span class="unit">开源</span></div>
+    <div class="desc">代码 + 仿真 + 真实栈</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法骨架</strong>；结果只作验证。要核对原文细节再看下面「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea"><strong>移动操作研究的瓶颈不是算法缺乏，而是缺少统一的任务定义和可复现基础设施</strong>——HomeRobot 通过形式化 <a href="./notes.html#ovmm" class="note-link">OVMM</a> 任务、提供 <a href="./notes.html#habitat" class="note-link">Habitat 仿真</a>与 <a href="./notes.html#stretch" class="note-link">Stretch 真实机器人</a>的共享软件栈，让不同实验室第一次能在同一基准上公平比较——解决的是<strong>基础设施问题</strong>，而非提出新的感知或控制算法。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>家庭机器人助手需要整合感知、语言理解、导航和操作，但<strong>现有工作各自为政</strong>：离散动作空间、小单房间、有限对象集，无法跨实验室复现。</li>
+          <li>近年语言-视觉融合模型（CLIP 等）让机器人能泛化到开放词汇对象，但<strong>对比方法变得更难</strong>，因为测试环境、机器人平台均未标准化。</li>
+          <li>因此需要一个正式的任务定义 OVMM + 一个横跨仿真和真实世界的统一软件栈，让每个实验室的结果都能被其他实验室复现和对比。</li>
+          <li>HomeRobot 用 <a href="./notes.html#hssd" class="note-link">HSSD</a> 大规模多房间仿真场景 + Hello Robot Stretch 硬件 + 统一 API，填补这个空白。</li>
+          <li>两类 <a href="./notes.html#baselines" class="note-link">baseline agents</a>（启发式 + RL）的对比揭示了感知是当前最大瓶颈，为后续研究指出方向。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>OVMM 任务形式化</strong>：统一的指令格式 "Move (object) from (start_receptacle) to (goal_receptacle)"，阶段性评分（FindObj / Pick / FindRec / Place），区分 seen/unseen 类别和实例——为领域提供可复现的评测协议。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>仿真 + 真实共享 API</strong>：HomeRobot 库提供完全相同的 state/action 接口，分别对接 Habitat 仿真和真实 Stretch，使得仿真训练的策略能直接在真实机器人上运行，实现 <a href="./notes.html#sim2real" class="note-link">sim-to-real 迁移</a>。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>模块化启发式 vs. RL baseline</strong>：OVMMAgent 状态机驱动 FindObj / Gaze / Pick / FindRec / Place 技能；启发式用 DETIC + 运动规划，RL 用 DDPPO 训练深度+分割输入策略；两者都使用 <a href="./notes.html#detic" class="note-link">DETIC</a> 开放词汇检测器作为感知前端。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">真实世界 RL baseline 达到 <strong>20% 总体成功率</strong>；仿真中使用 Ground Truth 分割时最高达 <strong>14.8% 总体成功率</strong>（RL+RL 配置）；切换到 DETIC 分割后性能大幅下降（0.4–0.5%），揭示感知是当前主要瓶颈。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>仿真 Ground Truth + RL 全配置：总体 SR 14.8%，部分成功率 48.3%。</li>
+            <li>仿真 DETIC + 任意配置：总体 SR 降至 0.4–0.6%——感知误差是主要瓶颈。</li>
+            <li>真实世界 Heuristic Only：总体 15%；RL Only：总体 20%（20次实验）。</li>
+            <li>真实世界 FindObj 成功率两者均为 70%，差异主要在 Pick（35% vs 45%）。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性判断</div>
+        <p><strong>Track A（移动操作 VLA）：背景/基准参考，非直接方法借鉴。</strong> HomeRobot OVMM 定义了后续 VLA 工作（如 π0.5）被评测的任务空间和基础设施。它本身不是 VLA，不涉及大规模预训练或 co-training——但<strong>理解 OVMM 任务定义对看懂后续 VLA 评测</strong>至关重要。Track B（足式算法）<strong>完全不相关</strong>。建议：浏览速记层即可，深读层仅在你需要理解 OVMM 评测协议细节时再看。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文 (Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：<a href="./notes.html#ovmm" class="note-link">OVMM</a> 是家用机器人的核心挑战，但现有工作因缺乏标准化平台而无法跨实验室复现和公平比较。</div>
+        <figure>
+          <img src="./images/figure_1_task_real_world.png" alt="OVMM 真实世界任务执行：在真实公寓中将玩具动物从椅子移到桌子">
+          <figcaption><strong>Figure 1（p.1-2）上方：</strong>真实世界中 OVMM 任务执行——Stretch 机器人找到起始接收器上的目标对象，然后将其移至目标接收器（Chair → Table）。</figcaption>
+        </figure>
+        <figure>
+          <img src="./images/figure_2_task_sim_world.png" alt="OVMM 仿真任务执行：在 Habitat 环境中将水壶从抽屉移到餐车">
+          <figcaption><strong>Figure 1（p.1-2）下方：</strong>对应仿真版本——在 Habitat HSSD 场景中执行同一类型任务（Drawer → Serving Cart）。仿真与真实任务结构完全一致。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">Open-Vocabulary Mobile Manipulation (OVMM) is the problem of picking any object in any unseen environment, and placing it in a commanded location. This is a foundational challenge for robots to be useful assistants in human environments, because it involves tackling sub-problems from across robotics: perception, language understanding, navigation, and manipulation are all essential to OVMM.</blockquote>
+          <div class="ev-trans">开放词汇移动操作（OVMM）是在任何未见过的环境中拾取任意对象并将其放置到指定位置的问题。这是机器人成为人类环境中有用助手的根本挑战，因为它涉及跨越整个机器人学的子问题：感知、语言理解、导航和操作都是 OVMM 的必要组成。</div>
+          <div class="ev-gloss">OVMM 是领域的"北极星"任务，不是子任务的叠加，而是必须端到端整合的系统性挑战。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">comparison across methods has remained difficult and reproduction of results across labs impossible, since many aspects of the settings (environments, and robots) have not been standardized.</blockquote>
+          <div class="ev-trans">由于环境和机器人等设置的许多方面尚未标准化，方法间的比较一直很困难，跨实验室的结果复现也是不可能的。</div>
+          <div class="ev-gloss">这是本文的核心动机：算法研究的瓶颈不只在算法本身，基础设施的缺失同样阻碍了领域进步。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 主要贡献：基准+基础设施 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心贡献：HomeRobot 提出<strong>首个可复现的移动操作真实世界基准</strong>，配套大规模仿真场景，同时提供横跨仿真和真实世界的统一软件栈。</div>
+        <figure>
+          <img src="./images/figure_3_sim_real_robot.png" alt="Figure 2: 仿真与真实 Stretch 机器人的对比">
+          <figcaption><strong>Figure 2（p.4）：</strong>左侧仿真（Habitat），右侧真实（Stretch）——两者共享相同的任务定义和 API 接口。HomeRobot 的核心设计是让仿真结果可以直接迁移到真实机器人。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">OVMM: We propose the first reproducible mobile-manipulation benchmark for the real world, with an associated simulation component.</blockquote>
+          <div class="ev-trans">OVMM：我们提出了第一个可复现的真实世界移动操作基准，并配有相应的仿真组件。</div>
+          <div class="ev-gloss">"第一个可复现"是关键主张——与 ALFRED、RoboTHOR 等前作相比，HomeRobot 明确要求结果可在其他实验室复现。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">HomeRobot: We also propose HomeRobot, a software framework to facilitate extensive benchmarking in both simulated and physical environments. It comprises identical APIs that are implemented across both settings, enabling researchers to conduct experiments that can be replicated in both simulated and real-world environments.</blockquote>
+          <div class="ev-trans">HomeRobot：我们还提出 HomeRobot，一个促进仿真和物理环境中广泛基准测试的软件框架。它包含在两种设置中实现的相同 API，使研究人员能够进行可在仿真和真实世界环境中复现的实验。</div>
+          <div class="ev-gloss">"identical APIs"是关键设计——不是两套代码，而是同一套 API 在两个后端上的实现，极大降低 sim-to-real 迁移的摩擦。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 Stretch 机器人选择 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 硬件选择：选用 <a href="./notes.html#stretch" class="note-link">Hello Robot Stretch</a> 作为真实平台，因为它价格相对可负担（$25,000）、6 DoF 操作、人形安全，且已在 40+ 大学和工业实验室使用，具备可复制条件。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3 Open-Vocabulary Mobile Manipulation</div>
+          <blockquote class="ev-quote">We use the Hello Robot Stretch [22] with DexWrist as the mobile manipulation platform, because it (1) is relatively affordable at $25, 000 USD, (2) offers 6 DoF manipulation, and (3) is human safe and human-sized, making it safe to test in labs [24, 11] and homes [2], and can reach most places a human would expect a robot to go.</blockquote>
+          <div class="ev-trans">我们使用配备 DexWrist 的 Hello Robot Stretch 作为移动操作平台，因为它（1）相对实惠，售价 25,000 美元，（2）提供 6 自由度操作，（3）对人类安全且与人类同尺寸，可在实验室和家庭中安全测试，能够到达人类期望机器人去到的大多数地方。</div>
+          <div class="ev-gloss">可负担性是实现"40+ 实验室可复现"的前提——比工业臂便宜一个数量级，但功能足够完整。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 软件栈设计 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> HomeRobot 软件栈的核心是三层架构：高计算桌面 PC 运行感知和规划，机器人本体运行低层控制和 SLAM，通过消费级路由器连接——低门槛但功能完整。</div>
+        <figure>
+          <img src="./images/figure_4_software_stack.png" alt="Figure 4: HomeRobot 软件栈系统架构图">
+          <figcaption><strong>Figure 4（p.6）：</strong>系统架构——桌面端运行感知（DETIC）、规划代码和可视化（RVIZ）；移动操控器端运行 SLAM 和低层控制；通过普通消费级路由器（NetGear Nighthawk）连接。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §4 The HomeRobot Library</div>
+          <blockquote class="ev-quote">In our setup, it is assumed that users have access to a mobile manipulator and an NVIDIA GPU-powered workstation. The mobile manipulator runs the low-level controller and the localization module, while the desktop runs the high-level perception and planning stack.</blockquote>
+          <div class="ev-trans">在我们的设置中，假设用户能够访问一个移动操控器和一台 NVIDIA GPU 驱动的工作站。移动操控器运行低层控制器和定位模块，而桌面端运行高层感知和规划栈。</div>
+          <div class="ev-gloss">这种分布式架构将昂贵 GPU 计算留在固定工作站，机器人端只需运行轻量 ROS 节点——极大降低机器人本体的硬件要求。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 baseline 对比结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 实验结果：感知（而非导航/操作算法）是当前最大瓶颈——Ground Truth 分割 vs. <a href="./notes.html#detic" class="note-link">DETIC</a> 分割之间性能差距远超 RL vs. 启发式的差距。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7–8 · §5 Results</div>
+          <blockquote class="ev-quote">We observe that while the RL methods moved to the object more efficiently if an object was visible, the heuristic planner was better at long-horizon exploration. We also see a substantial drop in performance when switching from ground-truth segmentation to DETIC segmentation. This highlights the importance of the HomeRobot OVMM challenge, as only through viewing the problem holistically - integrating perception, planning, and action - can we build general-purpose home assistants.</blockquote>
+          <div class="ev-trans">我们观察到，虽然 RL 方法在对象可见时能更高效地移动到对象，但启发式规划器在长时域探索方面更好。我们还看到从 Ground Truth 分割切换到 DETIC 分割时性能大幅下降。这突出了 HomeRobot OVMM 挑战的重要性，因为只有通过整体看待问题——整合感知、规划和动作——才能构建通用家庭助手。</div>
+          <div class="ev-gloss">DETIC 导致总体 SR 从 ~15% 崩至 0.4%——感知误差比导航/操作算法选择的影响大 30 倍以上，直接指出了未来研究的优先方向。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §5 Results · Real World</div>
+          <blockquote class="ev-quote">RL performed slightly better than the Heuristic baseline, successfully completing 1 extra episode and achieving a success rate of 20%.</blockquote>
+          <div class="ev-trans">RL 的表现略优于启发式基线，多成功完成了 1 个 episode，达到了 20% 的成功率。</div>
+          <div class="ev-gloss">20% 是真实世界首次公开基线——低但有意义：证明了 sim-to-real 迁移成立（导航和放置技能），同时明确标注了当前差距。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 sim-to-real -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> Sim-to-real 迁移：导航和放置技能的 sim-to-real 迁移有证据支持，真实实验中 RL 放置比启发式更精准；抓取在仿真中通过"magic snap"近似，是已知局限。</div>
+        <figure>
+          <img src="./images/figure_5_real_execution.png" alt="Figure 16: 真实机器人执行两个完整 OVMM episode 的过程">
+          <figcaption><strong>Figure 16（Appendix，p.28）：</strong>真实机器人执行 OVMM 任务的完整过程——找玩具动物（Find Toy Animal）→ 拾取（Pick Up）→ 找餐桌（Find Dining Table）→ 放置（Place），以及另一个 Stuffed Animal → Sofa 任务。展示了 sim-to-real 迁移在实践中的工作状态。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">We implement both reinforcement learning and heuristic (model-based) baselines and show evidence of sim-to-real transfer of the nav and place skills. Our baselines achieve a 20% success rate in the real world; our experiments identify ways future work can improve performance.</blockquote>
+          <div class="ev-trans">我们实现了强化学习和启发式（基于模型）两种基线，并展示了导航和放置技能 sim-to-real 迁移的证据。我们的基线在真实世界中达到 20% 的成功率；我们的实验找出了未来工作改进性能的方法。</div>
+          <div class="ev-gloss">"show evidence of sim-to-real transfer"措辞谨慎——不是"完全解决了 sim-to-real"，而是"有证据表明可行"。这种诚实定调对后续使用者有参考价值。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 对照表：相比同期工作的独特性 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 对比同期工作：HomeRobot 在同期基准中是<strong>唯一同时具备大规模对象、连续动作空间、sim-to-real 验证和多用途真实软件栈</strong>的工作。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · Table 1</div>
+          <blockquote class="ev-quote">Uniquely, we also provide a multi-purpose, real-world robotics stack, with demonstrated sim-to-real capabilities, allowing others to reproduce and deploy their own solutions.</blockquote>
+          <div class="ev-trans">独特地，我们还提供了一个多用途的真实世界机器人软件栈，具有经过验证的 sim-to-real 能力，允许其他人复现和部署他们自己的解决方案。</div>
+          <div class="ev-gloss">Table 1 的对比显示：200 场景 + 150 对象类别 + 7,892 对象实例 + 连续动作空间 + Sim2Real 栈，在同期工作中无对手。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">论文发布时（2023-06）即完全开源，MIT 等宽松许可，已有 NeurIPS 2023 官方挑战赛。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/facebookresearch/home-robot">github.com/facebookresearch/home-robot</a>（含三个子库：<code>home_robot</code> 核心 + <code>home_robot_sim</code> 仿真栈 + <code>home_robot_hw</code> 硬件栈）</dd>
+        <dt>仿真环境</dt><dd><span class="os-tag os-yes">已开源</span> Habitat 仿真器 + HSSD 场景数据集（200 场景，60 个子集供实验）</dd>
+        <dt>模型权重</dt><dd><span class="os-tag os-yes">已开源</span> RL 和启发式 baseline agent 权重（DDPPO 训练）</dd>
+        <dt>真实数据</dt><dd><span class="os-tag os-part">部分开放</span> 真实公寓实验环境固定布局已文档化，但无真实数据集录像发布</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.6 · §4 The HomeRobot Library</div>
+        <blockquote class="ev-quote">To facilitate research on these challenging problems, we open-source the HomeRobot library, which implements navigation and manipulation capabilities supporting Hello Robot's Stretch [22].</blockquote>
+        <div class="ev-trans">为了促进这些挑战性问题的研究，我们开源了 HomeRobot 库，该库实现了支持 Hello Robot's Stretch 的导航和操作能力。</div>
+        <div class="ev-gloss">论文脚注 1 明确给出 GitHub 链接：<code>https://github.com/facebookresearch/home-robot</code>；NeurIPS 2023 HomeRobot OVMM 竞赛也基于此代码库运行。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>OVMM 任务定义和评分协议（四阶段部分成功）已成为后续工作的标准参照，理解它对读懂 π0.5 等 VLA 论文的评测设置至关重要。"感知是最大瓶颈"的实验结论（GT 分割 vs. DETIC 性能崩塌）直接指出了 VLA 为何需要强大的 open-vocabulary 感知能力。HomeRobot 软件栈（Habitat + Stretch 共享 API）至今仍是 mobile manipulation 研究的标准基础设施，理解其架构帮助理解后续研究的实验设置。</p>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① 仿真抓取用"magic snap"（魔法吸附），不物理模拟 gripper-object 交互，这是论文明确承认的局限（Appendix B），导致仿真与真实的最大差距恰恰在操作本身。② 真实测试环境极小（单个 3 房间公寓，固定家具布置，20 次实验），泛化结论非常有限。③ baseline 代表性不足：没有端到端学习方法，没有 VLM/LLM 规划基线，2023 年后的竞争对手（如 OWL-ViT、GPT-4V + 机器人）在此基准上未被覆盖。④ 15-20% 的成功率实用价值尚低，距真实部署场景还有很大距离。</p>
+      </div>
+
+      <p><strong>评级：</strong><span class="badge valuable">Valuable</span> &nbsp;作为定义领域任务和提供基础设施的论文，其价值在于<strong>标准化贡献</strong>而非算法创新——对你的 Track A 是"必须了解的背景知识"，深读价值中等。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · HomeRobot OVMM (arXiv:2306.11565) · CoRL 2023</footer>
+
+</body>
+</html>

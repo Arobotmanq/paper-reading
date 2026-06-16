@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WholeBodyVLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>WholeBodyVLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要背景知识才好理解的关键概念。每个概念给出定义、原理、在 WholeBodyVLA 中的具体用法，以及与其他方法的对比。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 WholeBodyVLA 综述</a>
+      <span class="pill">📚 当前 7 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2512.11047">arXiv:2512.11047</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. LAM ============ -->
+    <section class="card" id="lam">
+      <h2>LAM <span class="tag">Latent Action Model</span></h2>
+      <p class="full-name">Latent Action Model · 潜动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>LAM 是一个「看两帧画面，反推它们之间发生了什么动作」的神经网络——但输出的不是真实物理动作，而是 VQ-VAE 量化的<strong>离散潜动作码字</strong>。作用是给<strong>没有 action 标签的视频</strong>自动补上伪标签，让人类 egocentric 视频也能进 VLA 预训练。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义与原理</h3>
+      <p>LAM 的核心问题：给定相邻两帧 \((o_t, o_{t+k})\)，世界从状态 A 变到状态 B，中间发生了什么？LAM 用逆动力学的思路，用 VQ-VAE 将这个「变化」编码为离散码字：</p>
+      <div class="math-display">
+        \[ z_t = E_i(o_t, o_{t+k}), \quad c_t = \arg\min_{c \in \mathcal{C}_i} \|z_t - c\|_2 \]
+        \[ \hat{o}_{t+k} = D_i(o_t, c_t), \quad \mathcal{L}_{\text{LAM}} = \|o_{t+k} - \hat{o}_{t+k}\|^2 + \|\text{sg}[c_t] - z_t\|^2 + \beta\|c_t - \text{sg}[z_t]\|^2 \]
+      </div>
+      <p>编码器 \(E_i\) 基于 DINOv2 特征构建（spatio-temporal transformer）；解码器 \(D_i\) 接收当前帧和量化后的潜动作码字，重建未来帧。整个训练是<strong>自监督的</strong>——只需要视频，不需要 action 标注。</p>
+
+      <h3><span class="num">2</span>本文具体用法</h3>
+      <p>WholeBodyVLA 训练两个 LAM，分别对应两类数据：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>LAM</th><th>训练数据</th><th>捕获的动作语义</th><th>典型视觉变化模式</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Manipulation LAM</strong></td><td>AgiBot World 双臂操作数据集（真实机器人）</td><td>手臂关节运动、末端轨迹、物体交互</td><td>摄像机静止，手臂区域变化主导</td></tr>
+            <tr><td><strong>Locomotion LAM</strong></td><td>约 300h 单人头戴摄像机 egocentric 视频（向操作目标移动）</td><td>前进方向、横向移动、转向、蹲下</td><td>摄像机持续运动，整个场景随视角变化</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>LAM 预训练完成后，VLA 骨干（Prismatic-7B）被训练来<strong>联合预测两类潜动作码字</strong>：</p>
+      <div class="math-display">
+        \[ \min_\theta \left[-\log \pi_\theta(c_t^{\text{mani}}, c_t^{\text{loco}} \mid o_t, \ell)\right] \]
+      </div>
+      <p>这个联合预测强迫 VLA 学习 locomotion 和 manipulation 在统一潜空间中的交互关系。</p>
+
+      <h3><span class="num">3</span>为什么要两个 LAM 而非一个</h3>
+      <p>论文发现单一 LAM 在混合数据上性能次优，原因是两类数据的视觉模态根本不同：</p>
+      <ul>
+        <li><strong>静止摄像机（manipulation）</strong>：图像变化由手臂运动主导，LAM 倾向于关注手臂区域</li>
+        <li><strong>移动摄像机（locomotion）</strong>：整个场景相对摄像机运动，LAM 需要关注全局场景流</li>
+        <li>冲突：在 loco-manipulation 任务中，手臂始终在镜头内——单一 LAM 可能把摄像机运动引起的手臂位置变化误解为手臂自身运动（即把 locomotion 误认为 manipulation）</li>
+      </ul>
+      <p>实验验证：shared LAM（66.0%）确实优于 manipulation-only LAM（63.3%），但仍显著低于双 LAM（78.0%）。</p>
+
+      <h3><span class="num">4</span>对比 / 出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源与相关工作</div>
+        <p>LAM 思路来自 <strong>Genie (Bruce et al., 2024, ICML)</strong>——游戏世界模型，用 VQ-VAE 从视频中学习「潜动作」使世界可交互控制。<strong>LAPA (Ye et al., 2025, ICLR)</strong> 将其扩展到机器人操作。<strong>UniVLA (Bu et al., 2025, RSS)</strong>——同为 OpenDriveLab 团队，把 LAM 用于跨本体操作 VLA 预训练。WholeBodyVLA 的创新是<strong>将 LAM 扩展到 locomotion 域</strong>，并提出双 LAM 联合训练以处理两类数据模态的根本差异。</p>
+      </div>
+
+      <h3><span class="num">5</span>与 IDM（Inverse Dynamics Model）的区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方法</th><th>输出空间</th><th>训练监督</th><th>适用场景</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>LAM（本文）</strong></td><td>VQ-VAE 学出的抽象潜动作码字</td><td>自监督（重建未来帧）</td><td>无 action 标注的视频，跨本体/域</td></tr>
+            <tr><td><strong>IDM（如 VPT）</strong></td><td>真实物理动作空间（关节角等）</td><td>监督（需要有 action 标注的数据）</td><td>有大量真机 action 数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>类比：LAM 是「学会用抽象手势描述动作」，IDM 是「学会用精确数字描述动作」。前者更灵活、不依赖真机 action 数据，但输出是抽象码字而非可直接执行的指令。</p>
+    </section>
+
+    <!-- ============ 2. 统一潜学习 ============ -->
+    <section class="card" id="unified-latent-learning">
+      <h2>统一潜学习 <span class="tag">Unified Latent Learning</span></h2>
+      <p class="full-name">Unified Latent Learning · 统一潜动作学习框架</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>「统一」的核心是：让同一个 VLA 在<strong>同一次前向传播</strong>中同时预测 manipulation 潜动作和 locomotion 潜动作——强迫模型学到两者交互的内聚表征，而不是两个分开的子系统。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>统一潜学习是 WholeBodyVLA 的预训练框架，分三个阶段：</p>
+      <ul>
+        <li><strong>Stage I（LAM 预训练）</strong>：分别训练 manipulation LAM 和 locomotion LAM，在各自数据上学习离散潜动作码表</li>
+        <li><strong>Stage II（VLA 联合预训练）</strong>：固定 LAM，用 LAM 码字作为伪标签，训练 VLA 同时预测 \(c_t^{\text{mani}}\) 和 \(c_t^{\text{loco}}\)</li>
+        <li><strong>Stage III（finetune）</strong>：在少量真机遥操轨迹上用 LoRA 微调，将 VLA 输出的潜动作解码为真实控制信号</li>
+      </ul>
+
+      <h3><span class="num">2</span>本文用法</h3>
+      <p>「统一」体现在 Stage II：VLA 接收图像 \(o_t\) 和语言指令 \(\ell\)，<strong>在同一前向传播中输出两类潜动作码字</strong>。训练目标是联合 MLE：</p>
+      <div class="math-display">
+        \[ \min_\theta \left[-\log \pi_\theta(c_t^{\text{mani}}, c_t^{\text{loco}} \mid o_t, \ell)\right] \]
+      </div>
+      <p>这个联合目标强迫模型学到「当我要向前走时，我的手应该怎么配合」这类 loco-manipulation 交互先验。</p>
+
+      <h3><span class="num">3</span>与模块化方法的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>维度</th><th>统一潜学习（本文）</th><th>模块化方案（如 Being-0）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>表征</td><td>单一 VLA 内聚表征，locomotion+manipulation 共享权重</td><td>独立的 locomotion 规划器 + manipulation 策略</td></tr>
+            <tr><td>交互建模</td><td>隐式学习于联合训练目标中</td><td>显式定义「先导航，再操作」的接口</td></tr>
+            <tr><td>错误传播</td><td>端到端，无显式接口脆弱点</td><td>模块间接口处误差累积</td></tr>
+            <tr><td>数据需求</td><td>预训练用廉价视频，finetune 用少量遥操</td><td>通常各模块需要独立大量数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>具象例子</h3>
+      <p>任务：「拿起箱子，转身，放到推车上」。在统一潜学习框架里：</p>
+      <ol>
+        <li>VLA 看到当前画面（面朝箱子）和语言指令</li>
+        <li>同时输出 manipulation 潜动作（如码字 #3 = 双臂张开准备抓取）和 locomotion 潜动作（如码字 #0 = 保持原位）</li>
+        <li>抓取后，VLA 输出 locomotion 潜动作（如码字 #2 = 左转 90°）同时 manipulation 潜动作（如码字 #7 = 双臂持重稳定）</li>
+        <li>因为是联合训练的，模型知道「转身时手臂要保持特定姿态以维持稳定」——这是模块化方案无法隐式捕获的</li>
+      </ol>
+    </section>
+
+    <!-- ============ 3. LMO ============ -->
+    <section class="card" id="lmo">
+      <h2>LMO <span class="tag">Loco-Manipulation-Oriented RL</span></h2>
+      <p class="full-name">Loco–Manipulation–Oriented RL Policy · 面向 loco-manipulation 的 RL 控制器</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>LMO 是一个专为 loco-manipulation 设计的下肢 RL 控制器，核心创新是用<strong>离散三值指令</strong>（前/停/后，左/停/右，转/停/反转，蹲高度）替代连续速度追踪目标，配合两阶段 curriculum 和真实手臂扰动训练，实现精准启停和转向。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>LMO 将下肢控制建模为目标条件调节（goal-conditioned regulation），接收离散指令：</p>
+      <div class="math-display">
+        \[ u_t = [s_x, s_y, s_\psi, h^\star] \in \{-1, 0, 1\}^3 \times \mathbb{R} \]
+      </div>
+      <p>其中 \(s_x\)（前进/停止/后退）、\(s_y\)（左移/停止/右移）、\(s_\psi\)（左转/停止/右转）为三值离散标志，\(h^\star\) 为目标站立高度（处理蹲下动作）。</p>
+
+      <h3><span class="num">2</span>为什么要离散指令而非速度追踪</h3>
+      <p>连续速度追踪的问题：</p>
+      <ul>
+        <li><strong>启停不明确</strong>：速度从 0.5 m/s 减速到 0 时，没有明确的「停止」语义——RL 无法精确学习何时完全停止</li>
+        <li><strong>速度跨度训练不稳定</strong>：在 0~1.5 m/s 全速度范围采样训练，导致不同速度下步态碎片化</li>
+        <li><strong>偏航漂移</strong>：在前进途中无 yaw 指令时，仍可能累积偏航误差</li>
+        <li><strong>VLA 输出困难</strong>：VLA 预测连续速度值比预测离散码字难度更高（连续回归 vs. 分类）</li>
+      </ul>
+      <p>离散指令的收益：每种指令只有有限状态，RL 可以精确优化「有指令时开始、无指令时停止」的启停行为；VLA 只需要预测 3 个三值变量。</p>
+
+      <h3><span class="num">3</span>两阶段 curriculum</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>阶段</th><th>目标</th><th>关键设计</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Stage I 基础步态习得</strong></td><td>学会不摔倒、响应离散指令</td><td>随机采样速度幅值 \(v^{\text{goal}}_k \sim U([0, v^{\max}_k])\)；上身跟随随机 pose 目标；关节限制逐步放宽（curriculum）</td></tr>
+            <tr><td><strong>Stage II 精准稳定</strong></td><td>在操作扰动下保持精确轨迹</td><td>固定巡航速度消除碎片步态；终端偏航误差惩罚 \(J_{\text{dir}} = |\text{wrap}(\psi_{\text{end}} - \psi_{\text{start}})|\)；replay AgiBot-World 手臂动作片段作为结构化扰动；静止惩罚 \(J_{\text{stand}} = \|a^{\text{leg}}_i\|_2^2\)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>结构化扰动的关键作用</h3>
+      <p>Stage II 中，从 AgiBot-World 数据集采样真实手臂动作片段，插值后以不同速率 replay 给 RL 控制器作为上身扰动。这比随机力扰动更接近真实 loco-manipulation 中的惯性耦合：</p>
+      <ul>
+        <li>抓取重物时手臂向下用力 → 腿部需要向上补偿</li>
+        <li>双臂展开到侧面 → 整体重心横移 → 腿部需要快速调整支撑</li>
+        <li>快速将物体举高 → 惯性冲击向下传递 → 腿部需要吸收</li>
+      </ul>
+      <p>用真实手臂数据片段训练，比随机力扰动更有针对性，能让腿部策略适应真实操作场景的惯性耦合模式。</p>
+
+      <h3><span class="num">5</span>性能量化</h3>
+      <ul>
+        <li>LMO 转向精度（终端偏差）：<strong>0.05±0.01 rad</strong>，速度追踪 RL：0.26±0.01 rad（5倍差距）</li>
+        <li>LMO 前后走位置误差：0.21±0.01 m，速度追踪：0.24±0.04 m（且标准差更大）</li>
+        <li>在三任务评测中：LMO（78.0%）vs. 速度追踪 RL（54.0%），差距的 91.7% 来自有 locomotion 的子任务阶段</li>
+      </ul>
+    </section>
+
+    <!-- ============ 4. VQ-VAE ============ -->
+    <section class="card" id="vqvae">
+      <h2>VQ-VAE <span class="tag">Vector Quantized VAE</span></h2>
+      <p class="full-name">Vector Quantized Variational AutoEncoder · 向量量化变分自编码器</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VQ-VAE 把普通 VAE 的连续 latent 替换为「<strong>从一个可学习码本（codebook）里选最近邻 token</strong>」的自编码器。在 WholeBodyVLA 里，它是 LAM 的量化模块——把连续的帧间变化向量强制离散化为有限的码字集合，使得 VLA 可以用分类（预测码字索引）而非回归来学习动作。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心结构</h3>
+      <p>由 van den Oord et al. 2017 (DeepMind) 提出。三个组件：</p>
+      <pre><code>连续编码器输出 z_e (连续向量)
+       ↓ argmin 找码本最近邻
+     码本 C = {e_1, e_2, ..., e_K}  ←  K 个可学习原型向量
+       ↓ 量化
+     z_q = e_{k*}  (离散码字，可用索引 k* 表示)
+       ↓
+     解码器重建目标</code></pre>
+
+      <h3><span class="num">2</span>训练 loss</h3>
+      <div class="math-display">
+        \[ \mathcal{L} = \underbrace{\|x - \hat{x}\|^2}_{\text{重建}} + \underbrace{\|\text{sg}[z_e] - e_{k^*}\|^2}_{\text{codebook loss}} + \beta \cdot \underbrace{\|z_e - \text{sg}[e_{k^*}]\|^2}_{\text{commitment loss}} \]
+      </div>
+      <p>argmin 操作不可导，用 <strong>straight-through estimator</strong> 将梯度从 \(z_q\) 直接复制给 \(z_e\)。</p>
+
+      <h3><span class="num">3</span>在本文中的角色</h3>
+      <p>WholeBodyVLA 用 VQ-VAE 量化 LAM 的连续帧间变化向量：</p>
+      <ul>
+        <li>编码器（基于 DINOv2）输出连续向量 \(z_t\)，描述帧间的「运动语义」</li>
+        <li>VQ-VAE 将 \(z_t\) 量化为码本中最近的码字 \(c_t\)（离散索引）</li>
+        <li>VLA 预训练时只需预测这个<strong>离散索引</strong>——变成分类问题，比预测连续动作向量容易</li>
+        <li>finetune 时，一个轻量 decoder 将 VLA 预测的码字索引转换为真实控制信号</li>
+      </ul>
+
+      <h3><span class="num">4</span>为什么离散化有帮助</h3>
+      <p>对于 loco-manipulation 的潜学习，离散化特别有价值：</p>
+      <ul>
+        <li><strong>有限动作词汇</strong>：locomotion 的基元（前进、后退、左转、右转、蹲）本就是离散的；强制离散化与这个先验对齐</li>
+        <li><strong>跨域对应</strong>：人类「向前走」和机器人「向前走」映射到同一个码字索引，实现跨域语义对齐</li>
+        <li><strong>VLA 接口友好</strong>：预训练的 VLM 本就用 token 预测，潜动作码字 = 额外的 token 词表，无需修改架构</li>
+      </ul>
+    </section>
+
+    <!-- ============ 5. Loco-Manipulation ============ -->
+    <section class="card" id="loco-manip">
+      <h2>Loco-Manipulation <span class="tag">Locomotion + Manipulation</span></h2>
+      <p class="full-name">Loco-Manipulation · 移动-操作协同控制</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Loco-manipulation 指机器人在<strong>移动的同时（或移动后立即）执行操作</strong>，两者需要协调而非顺序执行。关键挑战是「manipulation-aware locomotion」：移动的方向、速度、停止位置必须主动为后续操作创造前提条件。</p>
+      </div>
+
+      <h3><span class="num">1</span>与普通 manipulation 的区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>维度</th><th>Tabletop Manipulation（传统操作）</th><th>Loco-Manipulation（本文）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>机器人基座</td><td>固定（桌面臂）</td><td>双足行走，动态平衡</td></tr>
+            <tr><td>工作空间</td><td>有限（臂长范围内）</td><td>大范围（本文 5m+）</td></tr>
+            <tr><td>任务结构</td><td>直接操作对象</td><td>先移动到合适位置/姿态，再操作</td></tr>
+            <tr><td>主要挑战</td><td>精准末端控制</td><td>移动和操作的协调 + 大范围导航</td></tr>
+            <tr><td>数据可用性</td><td>OXE、AgiBot World 等大规模数据集</td><td>几乎没有大规模全身 loco-manipulation 数据集</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>本文的三个测试任务</h3>
+      <ul>
+        <li><strong>Bag Packing（袋子打包）</strong>：双手抓纸袋 → 侧步到纸箱 → 蹲下 → 放入。评测：侧向精确移步 + 蹲起精度 + 双臂协调</li>
+        <li><strong>Box Loading（箱子装载）</strong>：蹲下抓箱子 → 站起来 → 转身 → 放到推车。评测：转向精度 + 蹲起 + 重物持稳</li>
+        <li><strong>Cart Pushing（推车）</strong>：抓住 50kg 推车把手 → 向前推进。评测：重载下的前进稳定性和方向保持</li>
+      </ul>
+
+      <h3><span class="num">3</span>为什么「manipulation-aware」是关键</h3>
+      <p>朴素的「先走到，再操作」方案的失败模式：机器人走到目标附近时停下，但此时的朝向、与目标的距离可能并不适合后续抓取。例如：</p>
+      <ul>
+        <li>侧步到纸箱旁，但距离偏了 5cm → 蹲下后手臂够不到</li>
+        <li>转身到面对推车，但偏了 10° → 双手无法对称抓住把手</li>
+      </ul>
+      <p>manipulation-aware locomotion 要求移动本身就以「为操作创造最优初始条件」为目标，而不只是「到达目标位置附近」。</p>
+    </section>
+
+    <!-- ============ 6. VLA Backbone ============ -->
+    <section class="card" id="vla-backbone">
+      <h2>VLA Backbone <span class="tag">Prismatic-7B</span></h2>
+      <p class="full-name">Vision-Language-Action Backbone · 视觉语言动作主干网络</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA = VLM（视觉语言模型）+ 动作输出头。WholeBodyVLA 用 Prismatic-7B 作为 VLA 主干——这是一个开源的 7B 参数视觉语言模型，通过 LoRA 高效微调适配机器人控制任务。</p>
+      </div>
+
+      <h3><span class="num">1</span>在本文的角色</h3>
+      <p>VLA 主干完成以下几件事：</p>
+      <ul>
+        <li>接收 egocentric 图像序列和语言任务指令</li>
+        <li>预训练阶段：输出两类潜动作码字（分类 head，对应 manipulation codebook 和 locomotion codebook）</li>
+        <li>finetune 阶段：输出连接到 action decoder 的特征，decoder 产生上身关节角和离散 locomotion 指令</li>
+      </ul>
+
+      <h3><span class="num">2</span>训练设置</h3>
+      <ul>
+        <li>预训练：8 × H100 GPU，LAM 训练 30,000 步（batch 256），VLA 预训练 20,000 步（batch 1024）</li>
+        <li>微调：LoRA（低秩适配），batch 64，10,000 步；一个模型同时覆盖三个任务（非任务专用微调）</li>
+        <li>推理：RTX 4090 工作站，VLA 约 10 Hz；LMO RL 在 NanoPi 板载计算机上 50 Hz</li>
+      </ul>
+
+      <h3><span class="num">3</span>对比其他 VLA 主干</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>VLA</th><th>骨干</th><th>动作输出</th><th>适用</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>WholeBodyVLA（本文）</td><td>Prismatic-7B + LoRA</td><td>潜动作码字 → decoder → 关节角 + 离散指令</td><td>全身 loco-manipulation</td></tr>
+            <tr><td>GR00T N1.5</td><td>Eagle2 VLM + flow matching</td><td>连续关节位置</td><td>双臂操作（无locomotion）</td></tr>
+            <tr><td>OpenVLA-OFT</td><td>Llama 系列</td><td>离散 token 动作</td><td>单臂/双臂操作</td></tr>
+            <tr><td>pi0</td><td>PaliGemma + flow matching</td><td>连续动作（flow matching）</td><td>通用操作</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 7. Action Decoder ============ -->
+    <section class="card" id="action-decoder">
+      <h2>Action Decoder <span class="tag">Lightweight Grounding</span></h2>
+      <p class="full-name">Action Decoder · 轻量动作解码器</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Action Decoder 是 VLA 和真实机器人之间的「翻译器」：将 VLA 预测的抽象潜动作码字，结合当前机器人状态，解码为可执行的上身关节角（manipulation）和离散 locomotion 指令（locomotion），实现「接地」（grounding）。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Action Decoder 是一个轻量网络 \(f\)，执行以下映射：</p>
+      <div class="math-display">
+        \[ a_t = f(\hat{c}_t^{\text{mani}}, \hat{c}_t^{\text{loco}}, s_t) \]
+      </div>
+      <p>其中 \(\hat{c}_t^{\text{mani}}, \hat{c}_t^{\text{loco}}\) 是 VLA 预测的潜动作码字，\(s_t\) 是当前机器人状态（关节位置、速度等），\(a_t\) 分为两部分：</p>
+      <ul>
+        <li><strong>上身关节角</strong>：直接发给双臂关节执行器（7-DoF × 2 臂）</li>
+        <li><strong>离散 locomotion 指令</strong>：\([s_x, s_y, s_\psi, h^\star]\)，发给 LMO RL 控制器在 50 Hz 执行</li>
+      </ul>
+
+      <h3><span class="num">2</span>为什么需要 Decoder 而非直接输出</h3>
+      <p>LAM 学到的是跨域共享的抽象潜动作（人类视频和机器人数据共用一套码本），而不同机器人平台的关节配置不同。Decoder 提供一个轻量的「本体适配层」：</p>
+      <ul>
+        <li>预训练阶段：VLA 学通用的 loco-manipulation 先验（与具体机器人无关）</li>
+        <li>finetune 阶段：Decoder 用少量真机遥操数据（每任务 50 次）学习具体机器人的映射</li>
+        <li>这种设计使得理论上同一 VLA 只需更换 Decoder 就能迁移到不同人形机器人平台</li>
+      </ul>
+
+      <h3><span class="num">3</span>与 flow matching head 的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>输出方式</th><th>代表</th><th>优点</th><th>缺点</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>轻量 Decoder（本文）</strong></td><td>WholeBodyVLA</td><td>简单高效，可扩展到离散指令输出</td><td>不如 diffusion/flow 处理多模态动作分布</td></tr>
+            <tr><td><strong>Flow Matching Head</strong></td><td>pi0、GR00T N1</td><td>强大的连续动作分布建模，处理多模态</td><td>推理时需要多步去噪，计算量大</td></tr>
+            <tr><td><strong>离散 Token 输出</strong></td><td>OpenVLA、RT-2</td><td>与 VLM 接口一致，无需额外 head</td><td>离散化损失连续动作精度</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表 (7)</div>
+    <ul>
+      <li><a href="#lam">LAM — Latent Action Model</a></li>
+      <li><a href="#unified-latent-learning">统一潜学习</a></li>
+      <li><a href="#lmo">LMO — 离散 RL 控制器</a></li>
+      <li><a href="#vqvae">VQ-VAE — 向量量化 VAE</a></li>
+      <li><a href="#loco-manip">Loco-Manipulation</a></li>
+      <li><a href="#vla-backbone">VLA Backbone (Prismatic-7B)</a></li>
+      <li><a href="#action-decoder">Action Decoder</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · WholeBodyVLA (arXiv:2512.11047) · OpenDriveLab · ICLR 2026 · 配套笔记
+</footer>
+
+</body>
+</html>

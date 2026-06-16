@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stubborn 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(99, 102, 241, 0.18);
+    color: #c7d2fe;
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #6366f1;
+    box-shadow: 0 0 12px #6366f1;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(99, 102, 241, 0.22); border-color: rgba(99, 102, 241, 0.5); color: #c7d2fe; }
+  .pill.back:hover { background: rgba(99, 102, 241, 0.32); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- PLACEHOLDER ---------- */
+  .placeholder {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 3em 2em;
+    text-align: center;
+    color: var(--muted);
+    background: repeating-linear-gradient(45deg, #fafafa, #fafafa 12px, #f4f4f5 12px, #f4f4f5 24px);
+  }
+  .placeholder .big { font-size: 2.4em; margin-bottom: 0.3em; }
+  .placeholder h2 { font-size: 1.3em; color: var(--text-soft); border: none; justify-content: center; margin: 0.2em 0 0.6em; }
+  .placeholder p { max-width: 540px; margin: 0.4em auto; }
+  .placeholder code { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>Stubborn 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      Stubborn 把"动作跟踪 + 摔倒恢复"焊进一个 RL 策略、一个训练阶段。这一页拆解四个支撑该框架的关键概念：概率软终止 (PT)、yaw-aligned 跟踪表示、误差驱动自适应采样 (AdpS)，以及 PT 想要缓解的 TD 截断偏差。每个概念给出定义、在本文的具体用法、与相近做法的区别，以及出处来源。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 Stubborn 综述</a>
+      <span class="pill">📚 当前 4 个概念</span>
+      <span class="pill">🔗 <a href="https://aislab-sustech.github.io/Stubborn/" style="color: #93c5fd; text-decoration: none;">Project Page</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ Probabilistic Termination ============ -->
+    <section class="card" id="probabilistic-termination">
+      <h2>PT <span class="tag">Probabilistic Termination</span></h2>
+      <p class="full-name">Bernoulli-based Probabilistic (Soft) Termination · 概率软终止</p>
+
+      <div class="callout">
+        <div class="callout-head">📌 一句话</div>
+        <p>跟踪误差超阈值后<strong>不立刻判负</strong>，而是每个控制步只<strong>掷一枚概率为 \(p_{term}\) 的硬币</strong>决定要不要终止 episode。这给"摔倒后怎么爬起来"留出了一段可探索的时间窗——本文恢复鲁棒性的承重机制。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>标准 RL 环境里，触发终止条件（如跌倒、跟踪误差过大）会<strong>确定性地</strong>结束当前 episode。PT 把这个"硬终止"换成<strong>条件 Bernoulli 软终止</strong>：只有当误差越过阈值后，才以一个固定小概率 \(p_{term}\) 终止，否则以 \(1-p_{term}\) 的概率继续往下走。</p>
+      <p>本文把高度误差 \(e^{p}_{root,z}\) 与朝向误差 \(e^{q}_{root}\)（由四元数内积在 SO(3) 上算出）作为触发量，终止指示 \(\tau_t\in\{0,1\}\) 服从：</p>
+      <div class="math-display">
+        \[ P(\tau_t = 1 \mid s_t) = \begin{cases} p_{term}, & (|e^{p}_{root,z}| > \theta_{pos}) \;\lor\; (e^{q}_{root} > \theta_{quat}) \\ 0, & \text{otherwise} \end{cases} \]
+      </div>
+      <p>进入不稳定区后，episode "再活过 \(k\) 步"的概率是几何分布 \(P(T>k)=(1-p_{term})^k\)，额外存活步数 \(T\sim \mathrm{Geo}(p_{term})\)。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>这是 Stubborn 实现"<strong>跟踪 + 恢复统一进一个策略</strong>"的核心枢纽：跟踪失败被视为通往跌倒态流形的天然入口，软终止不在入口处把策略赶走，而是让它在跌倒态里继续 rollout，从而<strong>自发学会恢复</strong>——无需专门的恢复奖励或单独的恢复策略。原文：</p>
+      <div class="callout">
+        <p style="font-style:italic">"when the tracking error exceeds a predefined threshold, the environment does not terminate the episode deterministically; instead, it triggers a termination with a user-specified probability."（§3.1, p.3）</p>
+      </div>
+      <p>关键在于 \(p_{term}\) <strong>不是拍脑袋</strong>，而是由物理恢复时间标定（详见 <a href="#td-truncation-bias">TD 截断偏差</a> 卡）：</p>
+      <div class="math-display">
+        \[ E[T] = \frac{1}{p_{term}} = f_{ctrl}\cdot t_{rec} = 50\,\mathrm{Hz}\times 4\,\mathrm{s} = 200\ \text{步} \;\Rightarrow\; p_{term}=0.005 \]
+      </div>
+      <p>实验取 \(\theta_{pos}=0.25\,\mathrm{m}\)、\(\theta_{quat}=\pi/2\,\mathrm{rad}\)。窗口太窄会退化回硬终止、学不到恢复；太宽则不稳定 episode 拖太久、训练不动。消融证据：5 m/s 强扰动下带 PT 恢复成功率 100%，去掉 PT 仅 77.5% / 85.0%（<a href="./summary.html#c7">见综述结果7</a>）。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>硬终止（主流 / BeyondMimic）</th><th>PT 软终止（本文）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>越阈后行为</td><td>立即结束 episode</td><td>每步以 \(p_{term}\) 概率结束</td></tr>
+            <tr><td>恢复探索</td><td>几乎为零——策略看不到跌倒态后续</td><td>平均 ~200 步的探索窗</td></tr>
+            <tr><td>恢复机制</td><td>需专门恢复奖励 / 单独恢复策略（HoST、HumanUP、HiFAR）</td><td>同一策略、同一套奖励顺带学会</td></tr>
+            <tr><td>训练阶段</td><td>常需多阶段 curriculum</td><td>单阶段</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>注意 PT <strong>不是</strong>"随机提前截断"那类正则化：它<strong>有条件触发</strong>（只在误差越阈后才掷币），且 \(p_{term}\) 被锚定在物理恢复时间上，目的恰恰是<strong>避免</strong>无标定截断带来的价值估计偏差，而非随意缩短 horizon。它也不同于课程式的"逐步放宽终止阈值"——阈值是固定的，变的只是越阈后的终止<strong>概率</strong>。</p>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>本文（Stubborn）提出</strong>的核心机制，作者命名为 "Bernoulli-based Probabilistic Termination (PT)"。其对照系是 <strong>BeyondMimic [Liao et al. 2025, arXiv:2508.08241]</strong> 一类"严重跟踪失败即硬终止"的 tracking RL 管线。把 time-limit 截断与价值估计偏差挂钩的思想可追溯到 <strong>Pardo et al. 2018 "Time Limits in Reinforcement Learning" (ICML)</strong>——PT 用物理时间标定 \(p_{term}\) 正是在回应该问题（见下一张卡）。</p>
+      </div>
+    </section>
+
+    <!-- ============ yaw-aligned tracking representation ============ -->
+    <section class="card" id="yaw-aligned-representation">
+      <h2>Yaw-Aligned <span class="tag">Drift-Invariant</span></h2>
+      <p class="full-name">Drift-Invariant Yaw-Aligned Tracking Representation · 去偏航对齐的跟踪表示</p>
+
+      <div class="callout">
+        <div class="callout-head">📌 一句话</div>
+        <p>把身体各刚体的位姿统一旋进一个"<strong>去掉 yaw（朝向）、去掉全局平移</strong>"的对齐坐标帧里再算跟踪误差，于是误差只反映<strong>局部全身协调</strong>，不被机器人漂到哪、朝向偏没偏所污染——扰动后就不会做无谓的全局纠偏。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>设世界帧 \(W\)、机器人基座帧 \(B\)，基座的世界位姿 \(T^W_B\in SE(3)\) 含旋转 \(R^W_B\) 与位置 \(p^W_B\)。用 Z-Y-X 欧拉角把 \(R^W_B = R_Z(\psi)R_Y(\theta)R_X(\phi)\) 分解为 yaw \(\psi\)、pitch \(\theta\)、roll \(\phi\)。定义<strong>对齐帧 \(\Psi\)</strong>，它只保留 yaw 旋转和基座平移：</p>
+      <div class="math-display">
+        \[ T^W_\Psi = \begin{bmatrix} R_Z(\psi) & p^W_B \\ 0_{1\times3} & 1 \end{bmatrix} \]
+      </div>
+      <p>任一刚体 \(i\) 在对齐帧下的局部位姿由 \(T^\Psi_i = (T^W_\Psi)^{-1}T^W_i\) 得到，即：</p>
+      <div class="math-display">
+        \[ \tilde{p}_i = R_Z^\top(\psi)\,(p^W_i - p^W_B), \qquad \tilde{R}_i = R_Z^\top(\psi)\,R^W_i \]
+      </div>
+      <ul>
+        <li>相对位移 \((p^W_i - p^W_B)\) <strong>消去全局平移</strong>；</li>
+        <li>逆 yaw 旋转 \(R_Z^\top(\psi)\) <strong>消去全局朝向分量</strong>；</li>
+        <li>但 pitch / roll <strong>保留</strong>——它们与重力方向相关，是平衡控制的关键物理线索。</li>
+      </ul>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>Stubborn 把这套变换<strong>只施加到 body 跟踪表示上</strong>，而<strong>root（基座）位姿仍定义在世界帧</strong>。原文（Appendix §6.1, p.11）：</p>
+      <div class="callout">
+        <p style="font-style:italic">"The yaw-aligned transformation is applied to the body tracking representation, while the root pose remains defined in the world frame, enabling the policy to reduce sensitivity to global drift while preserving gravity-related pitch and roll information."</p>
+      </div>
+      <p>它是恢复鲁棒性的一个<strong>隐性前提</strong>：强扰动会把机器人推离参考轨迹、产生全局平移与 yaw 漂移；若误差表示里包含这些全局项，策略会在跌倒/被推后徒劳地去"追回原来该在的位置和朝向"，与重新站稳的目标冲突。yaw-aligned 把这些全局项剥掉，<strong>误差只惩罚全身姿态的局部失配</strong>，于是"扰动后不做无谓全局纠偏"。本文把它和非对称 Actor-Critic 一起作为两个"现成但必要"的底座（综述 <a href="./summary.html#c3">观点3</a>）。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>表示方式</th><th>去掉什么</th><th>问题</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>世界帧绝对位姿跟踪</td><td>不去</td><td>漂移 / sim2real gap 下误差被全局项主导，扰动后过度纠偏</td></tr>
+            <tr><td><strong>yaw-aligned（本文）</strong></td><td>去全局平移 + 去 yaw，留 pitch/roll</td><td>误差聚焦局部协调，抗漂移</td></tr>
+            <tr><td>完全局部（root 帧）/ 去全部旋转</td><td>连 pitch/roll 也去</td><td>丢失重力相关线索，平衡控制变难</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>要点：<strong>只去 yaw、保 pitch/roll</strong> 是关键折中——pitch/roll 编码了机器人相对重力的倾倒姿态，是判断"会不会摔"的核心信号，不能一并旋掉。</p>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>非本文首创，是 humanoid tracking RL 的既有技术</strong>。Stubborn 明言其做法 "similar to [8, 9]"——即 <strong>RAMBO（Cheng et al. 2025, IEEE RA-L）</strong> 与 <strong>Lee, Jeon, Kim 2025（centroidal-momentum 多智能体 RL，IEEE RA-L）</strong>。同期 <strong>BeyondMimic（Liao et al. 2025）</strong> 也用了基本等价的 anchor-body yaw 对齐（按选定锚体提取并施加 yaw 分量、对齐高度与朝向）。Stubborn 的增量在于把它整合进统一的跟踪+恢复框架并明确其对抗漂移、利于恢复的作用，而非提出新表示。</p>
+      </div>
+    </section>
+
+    <!-- ============ tracking-error-driven adaptive sampling ============ -->
+    <section class="card" id="error-driven-adaptive-sampling">
+      <h2>AdpS <span class="tag">Adaptive Sampling</span></h2>
+      <p class="full-name">Tracking-Error-Driven Adaptive Sampling · 跟踪误差驱动的自适应采样</p>
+
+      <div class="callout">
+        <div class="callout-head">📌 一句话</div>
+        <p>按<strong>在线跟踪误差</strong>动态调整"从参考轨迹哪一帧起始训练"的概率：误差高的难片段被更频繁地采为起点，把训练算力压到难啃的地方。它是 PT 的<strong>配套补丁</strong>——因为软终止之后，"是否终止"不再能当难度信号用了。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>参考轨迹长 \(N\)，每个参考帧 \(t\) 有一个未归一化采样权重 \(w_t\)。每次 env reset 时，按归一化分布 \(p_t = \dfrac{\max(w_t,w_{min})}{\sum_j \max(w_j,w_{min})}\) 采一个起始帧 \(t_0\)，从那里跑一个最长 \(T_{max}\) 步的 episode。该段的<strong>平均关键点跟踪误差</strong>定义为</p>
+      <div class="math-display">
+        \[ \bar{e} = \frac{1}{T}\sum_{k=0}^{T-1} e_{kp,\,t_0+k} \]
+      </div>
+      <p>然后按 \(\bar e\) 与 episode 是否跑满 \(T_{max}\)，分三种情形更新权重增量 \(\Delta w_t\)：</p>
+      <div class="math-display">
+        \[ \Delta w_t = \begin{cases} +\Delta w_i, & \bar e \ge \theta_{success} \\ \Phi_{att}(t), & \bar e \lt \theta_{success}\ \land\ T=T_{max} \\ \Phi_{dist}(t), & \bar e \lt \theta_{success}\ \land\ T \lt T_{max} \end{cases} \]
+      </div>
+      <ul>
+        <li>误差未达标（\(\bar e \ge \theta_{success}\)）→ 整段<strong>加权</strong> \(+\Delta w_i\)，以后更常练；</li>
+        <li>误差达标且跑满 → 局部衰减算子 \(\Phi_{att}\)，整段<strong>降权</strong>（前半段降得更多）；</li>
+        <li>误差达标但提前终止 → 局部重分布算子 \(\Phi_{dist}\)，把概率质量<strong>沿段内位置重新分配</strong>（前段降、尾段加）。</li>
+      </ul>
+      <p>权重夹在 \([w_{min}, w_{max}]=[0.05, 1.0]\)，再归一化成下一次起始帧的采样分布。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>实验参数：\(\theta_{success}=0.06\)、\(\Delta w_i=0.10\)、\(\Delta w_d=0.05\)。核心动机是：</p>
+      <div class="callout">
+        <p style="font-style:italic">"more probability mass is assigned to high-error regions, encouraging training to focus on difficult motion segments."（§3.2, p.5）</p>
+      </div>
+      <p>它专门用来<strong>顶住 PT 带来的副作用</strong>：硬终止下可以拿"是否提前终止"当片段难度的代理来做 hard-sample mining；软终止把这个代理打破了（终止变成随机 + 受扰动影响），于是改用<strong>直接测量的在线误差 \(\bar e\)</strong> 当难度指标。注意本文消融显示 AdpS 的<strong>增益很小</strong>（MPJPE 120.7→119.4、∆acc 14.50→14.42，约 1%），它更像"为兼容软终止必须补的一块"，真正承重的是 PT（综述把这点列入<a href="./summary.html#c8">局限8</a>）。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>BeyondMimic 式 hard-sample mining</th><th>AdpS（本文）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>难度信号</td><td>episode 是否提前终止（隐式代理）</td><td>在线平均跟踪误差 \(\bar e\)（直接测量）</td></tr>
+            <tr><td>软终止下是否可靠</td><td>失效——终止变随机</td><td>仍可靠</td></tr>
+            <tr><td>调整对象</td><td>起始帧采样概率</td><td>起始帧采样概率（同）</td></tr>
+            <tr><td>粒度</td><td>整段</td><td>段内可按位置重分布（\(\Phi_{att}/\Phi_{dist}\)）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>它属于更广义的 <strong>课程学习 / 优先采样（prioritized / curriculum sampling）</strong>家族（思想上近似按 TD-error 优先回放，但这里优先的是"参考轨迹的起始帧"而非"经验池里的 transition"）。与固定均匀采样起始帧、或线性课程相比，AdpS 是<strong>数据驱动、在线自适应</strong>的。</p>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>本文（Stubborn）提出</strong>，全称 "tracking-error-driven adaptive sampling"，是为配合 PT 而设计的采样策略。其对照系是 <strong>BeyondMimic [Liao et al. 2025]</strong> 那种"用终止统计做 hard-sample mining"的做法（原文明确：under hard termination, segments with errors exceeding the threshold are more likely to terminate early [13]）。更上游的思想可关联到自适应课程学习与优先经验回放（prioritized experience replay）一类按难度/误差加权采样的范式。</p>
+      </div>
+    </section>
+
+    <!-- ============ TD distortion from truncation ============ -->
+    <section class="card" id="td-truncation-bias">
+      <h2>TD 截断偏差 <span class="tag">Truncation Bias</span></h2>
+      <p class="full-name">TD Distortion Caused by Time-Limit Truncation · 时序差分价值估计的截断扭曲</p>
+
+      <div class="callout">
+        <div class="callout-head">📌 一句话</div>
+        <p>当 episode 是因为"<strong>跑到了步数上限</strong>"（time limit）而非真正任务终结被掐断时，若把这种截断当成真正的 terminal 来更新价值，<strong>时序差分（TD）价值估计就会被扭曲</strong>。Stubborn 用物理时间标定 \(p_{term}\)，让 >99% 的不稳定 episode 在步限前自然以概率终止，从而绕开这种偏差。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>TD 学习用相邻时刻的价值差来 bootstrap 更新价值估计：\(V(s_t)\leftarrow r_t + \gamma V(s_{t+1})\)。这里有两种"episode 结束"要区分：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>真正终止 (termination)</th><th>截断 (truncation)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>原因</td><td>任务真的结束（成功/失败/吸收态）</td><td>仅仅是到了人为的步数上限，本可继续</td></tr>
+            <tr><td>正确处理</td><td>不 bootstrap（\(V\) 之后为 0）</td><td>应当 bootstrap（用 \(V(s_{t+1})\) 续上）</td></tr>
+            <tr><td>误处理后果</td><td>—</td><td>把"还能继续的状态"当 0 价值 → 价值被系统性低估，长时程优化不稳</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>把截断错当真正终止（即在时间上限处停止 bootstrap）会让 \(V\) 被低估、TD 目标有偏，这正是文献里所说的 "TD distortion caused by truncation"。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>这张卡是<strong>反过来用</strong>的：它不是 Stubborn 的方法，而是 Stubborn 在设计 <a href="#probabilistic-termination">PT</a> 时<strong>要规避的问题</strong>。如果软终止窗口开得太宽、\(p_{term}\) 太小，不稳定 episode 会一路拖到 \(T_{max}\) 才被强行截断——那就重新引入了截断偏差。所以作者把 \(p_{term}\) 锚定在物理恢复时间上：</p>
+      <div class="math-display">
+        \[ P(T \le T_{max}) = 1-(1-p_{term})^{T_{max}} = 1-(1-0.005)^{1000} \approx 0.993 \]
+      </div>
+      <p>即 \(p_{term}=0.005\)、\(T_{max}=1000\) 时，约 99.3% 的不稳定 episode 会在步限前以概率方式自然终止，而不是被时间上限硬截。原文（§3.1, p.4）：</p>
+      <div class="callout">
+        <p style="font-style:italic">"This substantially mitigates the TD distortion caused by truncation and promotes the stability of long-horizon optimization."</p>
+      </div>
+      <p>换句话说，PT 的 \(p_{term}\) 标定不只是"给恢复留窗"，<strong>同时</strong>是为了把绝大多数 episode 推到"概率终止"而非"步限截断"这一侧，从而保住 TD 价值估计的一致性。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <ul>
+        <li><strong>vs 折扣因子 \(\gamma\)</strong>：\(\gamma\) 是为了让无限时程问题有界、隐式截断 horizon；这里说的截断偏差是<strong>实现层面</strong>的——人为步数上限与对它的错误标注，二者不是一回事。</li>
+        <li><strong>vs 真正的吸收态</strong>：跌倒"真摔死了"是真正终止，应停止 bootstrap；而"被掐表"是截断，应继续 bootstrap。混淆两者正是偏差来源。</li>
+        <li><strong>vs 直接调大 \(T_{max}\)</strong>：单纯加长步数上限治标不治本（仍有截断、且拖慢训练）；PT 用概率终止让 episode 长度服从几何分布、期望对齐物理恢复时间，是更有针对性的解法。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout">
+        <div class="callout-head">📜 出处</div>
+        <p>"time-limit 截断会让 TD / 价值估计有偏，需把截断与真正终止区别对待（截断处应 bootstrap）"这一问题的经典出处是 <strong>Pardo, Tavakoli, Levdik, Kormushev 2018 — "Time Limits in Reinforcement Learning" (ICML 2018)</strong>；该区分如今已写入 <strong>Gymnasium</strong> 的 <code>terminated</code> / <code>truncated</code> 两个返回标志的标准接口。Stubborn 本身不提出新理论，而是<strong>引用并工程化应对</strong>这个已知问题——用 \(p_{term}\) 的物理标定来缓解它。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#probabilistic-termination">PT — 概率软终止</a></li>
+      <li><a href="#yaw-aligned-representation">Yaw-Aligned — 去偏航对齐表示</a></li>
+      <li><a href="#error-driven-adaptive-sampling">AdpS — 误差驱动自适应采样</a></li>
+      <li><a href="#td-truncation-bias">TD 截断偏差</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · Stubborn (arXiv:2606.12814) · 配套笔记
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+# ===== copyrighted / heavy — never publish =====
+*.pdf
+**/fulltext.txt
+
+# ===== internal working files (not part of the public site) =====
+CLAUDE.md
+*.py
+bg-options.html
+assets/icon/
+
+# ===== transient / caches =====
+.staging/
+.trash-duplicates/
+.rec_seen.json
+.rec_cron.log
+*.log
+.DS_Store
+.ipynb_checkpoints/

@@ -1,0 +1,41 @@
+{
+  "title": "Unified Vision-Language-Action Model",
+  "title_cn": "统一视觉-语言-动作模型 (UniVLA)",
+  "field": "vla",
+  "venue": "ICLR 2026",
+  "date": "2025",
+  "one_liner": "把视觉、语言、动作全部离散化为同一词表 token，用单一自回归 Transformer 统一建模，并插入无动作标注的世界模型后训练阶段，显著提升长程任务性能与数据效率。",
+  "framework": "idea-first",
+  "idea": "真正的视觉-语言-动作统一不是拼凑三个模块，而是把图像(VQ tokenizer)、语言(LM 词表)、动作(FAST/DCT 离散化)全变成同一词典里的 token，用 next-token prediction 统一训练；再插入世界模型后训练阶段(用大量无动作标注视频学时序因果动态)，让策略微调高效迁移。",
+  "logic_chain": [
+    "现有 VLA 的晚期融合、语言中心范式(ViT 编码器+LM+动作头)丢失了视频里的时序与因果结构。",
+    "真正统一：图像用 VQ tokenizer 离散化、动作用 FAST(DCT)离散化，与语言共享词表，同一自回归 Transformer 做 next-token prediction 即可统一建模所有模态。",
+    "用大量无动作标注的机器人视频做世界模型后训练，学到时序因果动态，再用少量带动作数据微调即可高效迁移。"
+  ],
+  "method_skeleton": [
+    "统一自回归架构：图像/语言/动作共享词表，单一 Transformer (基于 BAAI Emu3) 做 next-token prediction",
+    "世界模型后训练：622K 无动作机器人视频学习未来帧预测/时序动态",
+    "微调期视觉预测辅助损失：免费再涨点(CALVIN 平均 +0.19)"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "中-高相关：原生多模态统一架构 + 无动作视频世界模型预训练，对数据受限的移动操作 VLA 直接有用",
+    "track_B_legged": "不相关"
+  },
+  "validation": "LIBERO-Long +71.8pp、10% 微调数据即超过全量 GR-1——验证了世界模型后训练带来的数据效率与时序建模收益。",
+  "core_points": [
+    "统一 token 词表 + 单一自回归 Transformer 取代晚期融合范式",
+    "无动作视频的世界模型后训练是核心贡献",
+    "视觉预测辅助损失低成本提升",
+    "跨本体泛化，10% 数据胜全量基线"
+  ],
+  "effects": [
+    "LIBERO-Long +71.8pp",
+    "10% 微调数据 > 全量 GR-1",
+    "CALVIN 视觉损失 +0.19"
+  ],
+  "open_source": "code+weights",
+  "open_source_detail": "代码 github baaivision/UniVLA(2025-06-27)+权重 HF Yuqi1997/UniVLA；后训练数据均为公开集(RT-1/BridgeV2/DROID/CALVIN)；license 未明(基于 Emu3, 使用前确认)",
+  "open_source_checked": "2026-06-02",
+  "rating": "Important",
+  "summary": "summary.html"
+}

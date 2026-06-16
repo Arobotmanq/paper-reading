@@ -1,0 +1,47 @@
+{
+  "title": "SpatialVLA: Exploring Spatial Representations for Visual-Language-Action Model",
+  "title_cn": "SpatialVLA：探索视觉-语言-动作模型的空间表示",
+  "field": "vla",
+  "venue": "RSS 2025",
+  "date": "2025",
+  "one_liner": "在 VLA 的观测端注入 Ego3D 位置编码、动作端用自适应 Gaussian 格子离散化，让机器人策略在 1.1M episodes 预训练中同时学会3D空间感知和跨本体迁移。",
+  "framework": "idea-first",
+  "idea": "现有 VLA 仅处理2D观测和线性均匀动作离散化，缺乏3D空间感知。SpatialVLA 同时在输入（Ego3D PE：单目深度→自我中心3D坐标→加到视觉token）和输出（Adaptive Action Grids：数据分布Gaussian拟合→等概率切格子→3 tokens/step）两端注入3D信息，预训练后可通过格子re-discretization快速迁移到新机器人。",
+  "logic_chain": [
+    "现有 VLA 局限于2D观测，缺乏3D物理世界感知——这正是操控任务的关键",
+    "跨本体难点：观测端相机位姿各异（3D未对齐），动作端运动范围差异巨大（无法统一）",
+    "Ego3D PE：ZoeDepth估深度→反投影得自我中心3D坐标→正弦编码+MLP→加到SigLIP token——仅需内参，无需外参标定",
+    "Adaptive Action Grids：对全量数据拟合Gaussian→等概率切格子（高频区细/低频区粗）→3个token替代7个，20Hz推理",
+    "后训练：新机器人数据重拟Gaussian→新格子→三线性插值初始化token embedding→LoRA，小数据也能快速收敛"
+  ],
+  "method_skeleton": [
+    "Ego3D Position Encoding：O3d = X + MLP(γ(P))，P由ZoeDepth+反投影得到，无需外参标定，跨本体通用",
+    "Adaptive Action Grids：7D动作→极坐标ΔT+ΔR+grip→Gaussian拟合→等概率M-bin切分→V=8194词表，自回归预测3 token/step",
+    "Spatial Embedding Adaption（后训练）：新数据Gaussian→Gnew格子→三线性插值初始化Eanew→LoRA微调，LIBERO提升+4.6~5.4%"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "高度直接相关——Ego3D PE的无标定跨本体设计和Adaptive Action Grids的re-discretization迁移机制，对移动操作VLA的多相机和新平台快速适配有直接工程参考价值",
+    "track_B_legged": "不直接相关——本文专注桌面单臂操控，不涉及步态/全身控制；但3D空间感知思路对足式机器人的perception module有参考价值"
+  },
+  "validation": "SimplerEnv零样本71.9% Visual Matching（超RT-2-X 60.7%，参数量少15×）；LIBERO微调平均78.1%（第一）；消融：去Ego3D PE下降12.7%，Adaptive Grids vs线性256-bin高+36.5%；推理20Hz（比OpenVLA快4×）",
+  "core_points": [
+    "现有VLA局限2D观测，缺乏3D物理世界感知，这是操控泛化的根本瓶颈",
+    "Ego3D PE：单目深度估计+反投影+正弦编码，无需外参标定，跨本体通用",
+    "Adaptive Action Grids：Gaussian等概率切格子，3 token/step，精度+速度双优",
+    "Spatial Embedding Adaption：三线性插值初始化新格子token，小数据快速迁移",
+    "1.1M episodes（OXE+RH20T，28数据集）预训练，64×A100，10天",
+    "SimplerEnv超越55B RT-2-X（3.5B参数），消融充分验证两大创新各自贡献"
+  ],
+  "effects": [
+    "SimplerEnv零样本Visual Matching 71.9%，+15.6% vs RoboVLM（第二名）",
+    "LIBERO微调平均78.1%，全套任务第一名",
+    "Adaptive Grids vs 线性256-bin：Google Robot +36.5%（variant agg）",
+    "去Ego3D PE后variant aggregation下降12.7%",
+    "推理速度20Hz（3 tokens/step），比OpenVLA 5Hz快4×",
+    "GPU内存8.5GB（RTX 4090可运行）"
+  ],
+  "open_source": "code+weights+MIT",
+  "open_source_detail": "GitHub: github.com/SpatialVLA/SpatialVLA（MIT License，689★，51 forks，2026-06实时核查）；HuggingFace: IPEC-COMMUNITY/spatialvla-4b-224-pt（预训练）、spatialvla-4b-mix-224-pt、spatialvla-4b-224-sft-bridge、spatialvla-4b-224-sft-fractal；纯HuggingFace Transformers接口，8.5GB GPU",
+  "rating": "Important",
+  "summary": "summary.html"
+}

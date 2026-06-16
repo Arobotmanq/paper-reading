@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ψ0 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+  .pill.new { background: rgba(220,38,38,0.25); border-color: rgba(220,38,38,0.5); color: #fca5a5; font-weight: 700; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>USC PSI Lab · Humanoid VLA · RSS 2026</span>
+    <h1>Ψ0 (Psi-Zero):<br>Universal Humanoid<br>Loco-Manipulation</h1>
+    <p class="subtitle">不靠堆大杂烩数据，而是<strong>把 VLM 预训练和机器人运动专家彻底解耦</strong>——先用 egocentric 人手视频教模型「看懂操作语义」，再用高质量真实人形数据训练 flow 动作专家——用 10 倍少的数据超越所有基线 40% 以上。</p>
+    <div class="meta-pills">
+      <span class="pill new">🆕 NEW · RSS 2026</span>
+      <span class="pill rel">🎯 同时命中 Track A + Track B</span>
+      <span class="pill">📅 2026-03</span>
+      <span class="pill">🏢 USC PSI Lab · NVIDIA · WorldEngine</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2603.12263">arXiv:2603.12263</a></span>
+      <span class="pill">⭐ <a href="https://github.com/physical-superintelligence-lab/Psi0">Apache-2.0 · GitHub</a></span>
+      <span class="pill">🤗 <a href="https://huggingface.co/USC-PSI-Lab/psi-model">USC-PSI-Lab/psi-model</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">性能提升</div>
+    <div class="value">&gt;40%<span class="unit">SR</span></div>
+    <div class="desc">vs. GR00T N1.6（第二名）</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">人类视频</div>
+    <div class="value">~800<span class="unit">h</span></div>
+    <div class="desc">EgoDex egocentric 预训练</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">真实机器人数据</div>
+    <div class="value">30<span class="unit">h</span></div>
+    <div class="desc">post-training，极少量</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">任务长度</div>
+    <div class="value">&gt;2000<span class="unit">步</span></div>
+    <div class="desc">30 Hz，真·长程 loco-manip</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文再看下方「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">现有人形 VLA 把人类视频和机器人数据<strong>混在一起端到端 co-train</strong>，却忽视了两者动作分布从根本上不同——Ψ0 的洞察是：<strong>解耦</strong>。先让 VLM 从 egocentric 人手视频学「操作语义与视觉表征」，再让独立的 <a href="./notes.html#flow-action-expert" class="note-link">flow action expert</a> 从高质量人形数据学「关节空间精确控制」——两级各自最优，无缝衔接。<strong>数据质量 &gt; 数据数量。</strong></div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>人形 <a href="./notes.html#loco-manipulation" class="note-link">loco-manipulation</a> 需要大量遥操作数据，但数据采集代价极高、难以规模化。</li>
+          <li>人手 egocentric 视频是天然替代品——丰富、廉价——但人类与人形机器人之间存在根本的<strong>运动学和动力学差异</strong>（动作频率、自由度、运动模式都不同），单一模型无法同时学好两个分布。</li>
+          <li>关键洞察：VLM 预训练阶段<strong>不需要</strong>学精确关节控制——只需学「任务语义」和「视觉表征」，next-step 单步 48-DoF 任务空间动作预测就够了（用 FAST 离散 token 轻量化实现）。</li>
+          <li>关节空间的精确控制交给<strong>独立的 flow-based action expert</strong>（MM-DiT 架构），post-train 于高质量真实人形数据，避开混合训练的根本矛盾。</li>
+          <li>最终只需 80 条 task-specific 轨迹 fine-tune action expert，即可在 8 个长程 loco-manip 任务上超越用 10 倍以上数据训练的所有基线。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>Egocentric Video VLM 预训练</strong>：用 EgoDex（~829h 人手视频）+ Humanoid Everyday（31h 人形视频）预训练 <a href="./notes.html#egocentric-pretraining" class="note-link">Qwen3-VL-2B</a>，目标是 next-step 单步动作 token 预测（FAST 离散化到 ~20 token），学操作语义与视觉表征，完全回避 action chunking 的计算开销。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>Flow-based MM-DiT Action Expert</strong>：冻结 VLM，从零训练 ~500M 参数的 <a href="./notes.html#flow-action-expert" class="note-link">MM-DiT action expert</a>，在关节空间以 flow matching 预测 action chunk；相比 naive DiT，MM-DiT 的 joint attention 让 VL 特征与 action token 充分融合。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>训练时 Real-Time Chunking (RTC)</strong>：为解决 160ms 推理延迟导致的「走走停停」，在训练时随机遮掩前 d 步（模拟延迟），让 action expert 学会基于已承诺动作块预测连贯的下一块，实现 30 Hz 平滑全身控制而无需 test-time gradient guidance。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 8 个长程人形 loco-manip 任务上，<strong>Ψ0 的平均整体成功率超过第二名 GR00T N1.6 至少 40%</strong>，且所用预训练数据 &lt;1/10、实机数据仅 30h。消融实验表明：EgoDex 预训练、HE post-training、RTC、MM-DiT 架构每一项都不可缺。</p>
+        <details class="numbers">
+          <summary>点开看关键数字</summary>
+          <ul>
+            <li>预训练：EgoDex ~829h + Humanoid Everyday 31h（共 ~860h）。</li>
+            <li>post-training：Humanoid Everyday 数据集（~3M 帧，约 30h），32 x A100，~30h 训练时间。</li>
+            <li>fine-tuning：每个 task 仅 80 条遥操作轨迹，40000 steps。</li>
+            <li>baselines 败北：π0.5、GR00T N1.6、InternVLA-M1、H-RDT、EgoVLA、Diffusion Policy、ACT，所有任务所有基线均被超越。</li>
+            <li>RTC 在 ablation 中把 dual-arm carry 从 2/10 提升到 9/10（Table I, p.8）。</li>
+            <li>预训练仅用 EgoDex（无 HE）：overall 6/10 → 8/10（post-training on HE 后）。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（人形/移动操作 VLA）直接命中</strong>：这是 2026 年迄今数据效率最高的人形 VLA 范式——egocentric 预训练 + 解耦 flow expert 的组合可直接应用于 HU_M01 平台。<strong>Track B（足式先进算法）也命中</strong>：论文的 <a href="./notes.html#whole-body-control" class="note-link">whole-body control</a> 策略（RL lower-body controller + 上体 VLA 解耦）、RTC 推理延迟处理、遥操作系统设计，对足式平台 loco-manip 开发有直接参考价值。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 真正问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真正问题：co-train 人类与人形数据的策略因两者动作分布根本不同而天然次优，现有方法尽管堆了大量异构数据，效果依然不令人满意。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">While existing approaches often attempt to address this fundamental problem by co-training on large and diverse human and humanoid data, we argue that this strategy is suboptimal due to the fundamental kinematic and motion disparities between humans and humanoid robots. Therefore, data efficiency and model performance remain unsatisfactory despite the considerable data volume.</blockquote>
+          <div class="ev-trans">尽管现有方法通常试图通过在大规模多样化的人类和人形数据上 co-training 来解决这一根本问题，但我们认为，由于人类与人形机器人之间在运动学和运动上存在根本差异，这一策略是次优的。因此，尽管数据量相当可观，数据效率和模型性能仍不令人满意。</div>
+          <div class="ev-gloss">这是全文的 thesis：问题不是数据量不够，而是混合训练策略本身错了——一个模型不应同时学两个根本不同的分布。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 核心解法：解耦学习 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 解法核心：用分阶段解耦训练范式——VLM 预训练学操作语义与视觉表征，flow action expert post-training 学精确关节控制，两阶段目标不同、互不干扰。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">Ψ0 decouples the learning process to maximize the utility of heterogeneous data sources. Specifically, we propose a staged training paradigm with different learning objectives: First, we autoregressively pre-train a VLM backbone on large-scale egocentric human videos to acquire generalizable visual-action representations. Then, we post-train a flow-based action expert on high-quality humanoid robot data to learn precise robot joint control.</blockquote>
+          <div class="ev-trans">Ψ0 解耦学习过程以最大化异构数据源的利用价值。具体而言，我们提出了一种具有不同学习目标的分阶段训练范式：首先，在大规模 egocentric 人类视频上自回归预训练 VLM 骨干，以获得可泛化的视觉-动作表征。然后，在高质量人形机器人数据上 post-train 基于 flow 的动作专家，以学习精确的机器人关节控制。</div>
+          <div class="ev-gloss">「解耦」是全文的核心机制：两个阶段的数据来源、动作空间、训练目标都不同；VLM 阶段无需关节精度，action expert 阶段无需语义泛化能力。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_2_model_training_deployment_pipeline.png" alt="Figure 2: Ψ0 三阶段训练与部署流水线">
+          <figcaption><strong>Fig. 2（p.3）：</strong>左=Stage 1（VLM 预训练，egocentric 视频→离散 action token）；中=Stage 2（Action Expert post-training，关节空间 flow matching）；右=Deployment（System-0 RL lower-body controller 全身控制）。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点3 关键数据配方发现 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 关键数据配方：高质量 egocentric 人手操作视频预训练 + 少量 domain-specific 人形轨迹 post-training，显著优于用 10 倍以上数据（噪声网络视频或异构跨本体数据集）训练的基线。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">in contrast to approaches that scale with noisy Internet clips or heterogeneous cross-embodiment robot datasets, we demonstrate that pre-training on high-quality egocentric human manipulation data followed by post-training on domain-specific real-world humanoid trajectories yields superior performance.</blockquote>
+          <div class="ev-trans">与通过噪声互联网视频或异构跨本体机器人数据集进行规模扩展的方法相比，我们证明：在高质量 egocentric 人类操作数据上预训练，然后在 domain-specific 真实世界人形轨迹上 post-train，能取得更优性能。</div>
+          <div class="ev-gloss">这一发现直接反驳了「越多数据越好」的天真扩展律——质量与分布匹配才是关键，800h 精选 > 8000h 噪声数据。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">Ψ0 achieves the best performance using only about 800 hours of human video data and 30 hours of real-world robot data, outperforming baselines pre-trained on more than 10× as much data by over 40% in overall success rate across multiple tasks.</blockquote>
+          <div class="ev-trans">Ψ0 仅使用约 800 小时人类视频数据和 30 小时真实世界机器人数据就实现了最佳性能，在多个任务的整体成功率上比预训练数据超过 10 倍的基线高出 40% 以上。</div>
+          <div class="ev-gloss">这是论文最核心的量化结论：数据效率领先 10x 以上，性能提升 40% 以上——对资源受限团队极具参考价值。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 三系统架构 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 三系统架构：System-2（VLM 语义推理）→ System-1（MM-DiT Flow Action Expert 关节空间预测）→ System-0（RL lower-body tracking controller），三级解耦实现 43-DoF 全身控制。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §III-A</div>
+          <blockquote class="ev-quote">Ψ0 is a foundation model that adopts a triple-system architecture, following prior work. As shown in Fig. 2, the high-level policy consists of two end-to-end–trained components: a vision–language backbone (system-2) and a multi-modal diffusion transformer (MM-DiT) action expert (system-1). We use the state-of-the-art vision–language foundation model Qwen3-VL-2B-Instruct as system-2. The action expert is implemented as a flow-based MM-DiT inspired by Stable Diffusion 3, containing approximately 500M parameters.</blockquote>
+          <div class="ev-trans">Ψ0 采用三系统架构。如图 2 所示，高层策略由两个端到端训练的组件组成：视觉-语言骨干（system-2）和多模态扩散 transformer (MM-DiT) 动作专家（system-1）。我们使用最先进的视觉-语言基础模型 Qwen3-VL-2B-Instruct 作为 system-2。动作专家实现为受 Stable Diffusion 3 启发的基于 flow 的 MM-DiT，包含约 5 亿参数。</div>
+          <div class="ev-gloss">Qwen3-VL 提供 ~2B 参数语义理解；MM-DiT action expert 提供 ~500M 参数精密控制；AMO RL controller 处理 15-DoF 下肢控制。三者组合输出 43-DoF 全身动作。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 MM-DiT vs naive DiT -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> MM-DiT 架构优势：MM-DiT 的双路调制 + joint attention 使 VL 特征与 action token 充分融合，在关节空间动作预测上明显优于 naive DiT（原为文生图设计，用于 VL 引导动作预测时条件化能力弱）。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §IV-C-b</div>
+          <blockquote class="ev-quote">MM-DiT consistently outperforms the DiT variant. This improvement can be attributed to MM-DiT's dual-modulation design and its joint attention mechanism, which integrates VL features from the VLM backbone with Action (A) branch representations. Our analysis suggests that naive DiT, originally designed for text-conditioned image generation, provides weaker conditioning when applied to VL-guided action prediction.</blockquote>
+          <div class="ev-trans">MM-DiT 始终优于 DiT 变体。这一改进可归因于 MM-DiT 的双路调制设计及其 joint attention 机制——它将来自 VLM 骨干的 VL 特征与 Action (A) 分支表征整合在一起。我们的分析表明，专为文本条件图像生成设计的 naive DiT，在应用于 VL 引导的动作预测时，条件化能力更弱。</div>
+          <div class="ev-gloss">核心差异：naive DiT 用 FiLM 做单向条件化（VL→Action），MM-DiT 做双向 joint global attention——更充分的跨模态信息流，对精密关节控制至关重要。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 Real-Time Chunking -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 训练时 Real-Time Chunking (RTC)：通过在训练中随机遮掉前 d 步模拟推理延迟，让 action expert 学会输出与前一 chunk 连贯的动作序列，无需 test-time gradient guidance，实现 30Hz 平滑全身控制。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §III-C</div>
+          <blockquote class="ev-quote">To faithfully simulate inference delay during training, we randomly remove diffusion noise from the first d = uniform(0, dmax) tokens and mask them out in the loss computation in Eq. 2. Here, dmax ∈[0, H −s) denotes the maximum inference delay in timesteps, while H and s correspond to the action chunk prediction horizon and the execution horizon, respectively.</blockquote>
+          <div class="ev-trans">为了在训练中真实模拟推理延迟，我们随机去除前 d = uniform(0, dmax) 个 token 的扩散噪声并在损失计算中遮掩它们。这里 dmax ∈[0, H-s) 表示最大推理延迟步数，H 和 s 分别对应动作块预测视野和执行视野。</div>
+          <div class="ev-gloss">Ψ0 单次前向约 160ms。RTC 让模型学会「知道已经承诺了哪些动作，下一块要连贯」——ablation 中 dual-arm carry 从 2/10 直接跳到 9/10，RTC 效果最显著。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_4_realtime_chunking_system.png" alt="Figure 4: Real-Time Chunking 系统架构">
+          <figcaption><strong>Fig. (p.5/14)：</strong>Client-Server 架构：robot 端 30Hz 发送 obs，server 端 Inference Loop 用 RTC inpainting inference 生成连续 action chunk，30Hz 严格同步发回。控制循环与推理循环并发，无需停顿等待。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点7 遥操作系统设计 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 遥操作系统创新：提出专为 loco-manipulation 设计的解耦遥操作框架——MANUS 数据手套控制灵巧手，VR 头显+腕部追踪器捕获上身姿态，腰部+脚部追踪器提供高层行走指令——单人操控全身，同时提升数据质量与采集效率。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §III-D</div>
+          <blockquote class="ev-quote">By using a small set of wearable trackers and separating locomotion from in-place whole-body actions, our framework enables single-operator humanoid teleoperation with improved locomotion stability across diverse task scenarios. Furthermore, the combination of wrist trackers and MANUS gloves alleviates common occlusion and out-of-view issues in vision-based VR tracking, enabling accurate and reliable upper-body and hand tracking.</blockquote>
+          <div class="ev-trans">通过使用少量可穿戴追踪器并将行走运动与原地全身动作分开，我们的框架实现了单操作员的人形机器人遥操作，在各种任务场景中具有改进的行走稳定性。此外，腕部追踪器与 MANUS 手套的组合缓解了基于视觉的 VR 追踪中常见的遮挡和视野外问题，实现了准确可靠的上身和手部追踪。</div>
+          <div class="ev-gloss">这套遥操作系统直接决定了 fine-tuning 数据质量——而 Ψ0 整个流水线只需 80 条轨迹就能学会一个新任务，数据质量的乘数效应极大。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_3_teleoperation_setup.png" alt="Figure 5: 遥操作硬件设置">
+          <figcaption><strong>Fig. 5（p.5）：</strong>左=人类操作员穿戴 MANUS 手套、PICO 头显、腕部/腰部/脚部追踪器；右=Unitree G1 人形机器人执行同步全身动作（含 dexterous hand）。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点8 全面基准评测结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 全面基准评测：在 8 个长程真实 loco-manip 任务上，Ψ0 显著领先所有基线（π0.5、GR00T N1.6、InternVLA-M1、H-RDT、EgoVLA、DP、ACT），大量基线在大多数任务成功率为 0%。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §IV-B-4</div>
+          <blockquote class="ev-quote">our model outperforms all baselines by a large margin. Our model exhibits the most stable performance across all eight long-horizon dexterous loco-manipulation tasks. Notably, it achieves an average overall success rate that is at least 40% higher than that of the second-best baseline, GR00T-N1.6, which is the most recently released humanoid foundation model.</blockquote>
+          <div class="ev-trans">我们的模型以较大差距超越所有基线。我们的模型在所有八个长程灵巧 loco-manipulation 任务中表现最为稳定。值得注意的是，其平均整体成功率比第二名基线 GR00T-N1.6（最新发布的人形基础模型）至少高 40%。</div>
+          <div class="ev-gloss">图 7 数据显示，多数基线在 7/8 个任务成功率为 0%——说明这些 long-horizon loco-manip 任务对现有方法极难，Ψ0 实质上是唯一能有效解决这类任务的方法。</div>
+        </div>
+
+        <figure>
+          <img src="./images/figure_5_realworld_tasks_benchmark.png" alt="Figure 6: 8个真实世界任务">
+          <figcaption><strong>Fig. 6（p.6）：</strong>8 个真实 loco-manip 任务：从简单 pick-and-place、推物体、擦桌子，到灵巧的开水龙头、拉薯片托盘，再到需要全身运动（躯干旋转、下蹲）和行走的复合任务。每个任务 3-5 个子步骤，多数超 2000 步@30Hz。</figcaption>
+        </figure>
+      </div>
+
+      <!-- 观点9 开源生态 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点9</span> 全栈开源承诺：Ψ0 开源整个生态系统——数据处理与训练流水线、人形基础模型权重、实时动作推理引擎，是迄今开放程度最高的人形 loco-manip VLA 工作之一。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">We will open-source the entire ecosystem to the community, including a data processing and training pipeline, a humanoid foundation model, and a real-time action inference engine.</blockquote>
+          <div class="ev-trans">我们将向社区开源整个生态系统，包括数据处理和训练流水线、人形基础模型，以及实时动作推理引擎。</div>
+          <div class="ev-gloss">GitHub 实时核查（2026-06）：代码已在 physical-superintelligence-lab/Psi0（Apache-2.0）完整开源；模型权重在 HuggingFace USC-PSI-Lab/psi-model；数据集在 USC-PSI-Lab/psi-data（9 个真实世界任务）。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（2026-06）</h2>
+      <p class="lead">基于 STEP 0 实时 GitHub/HuggingFace 检索结果，<strong>当前开源状态极佳</strong>——论文与代码同步发布，Apache-2.0 许可。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/physical-superintelligence-lab/Psi0">github.com/physical-superintelligence-lab/Psi0</a>（Apache-2.0；训练/推理/遥操作全流程；2600+ stars）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://huggingface.co/USC-PSI-Lab/psi-model">USC-PSI-Lab/psi-model</a>（VLM backbone + action expert 预训练权重；fine-tuning 支持）</dd>
+        <dt>数据集</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://huggingface.co/USC-PSI-Lab/psi-data">USC-PSI-Lab/psi-data</a>（9 个真实世界遥操作任务 + SIMPLE 仿真任务数据）</dd>
+        <dt>许可证</dt><dd><span class="os-tag os-yes">Apache 2.0</span> 允许商业使用、修改、分发（需署名）</dd>
+        <dt>硬件平台</dt><dd><span class="os-tag os-part">部分</span> 基于 Unitree G1；依赖 AMO RL lower-body controller（需另行配置）</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.8 · §V · Conclusion</div>
+        <blockquote class="ev-quote">We introduce Ψ0, an open foundation model accompanied by a complete open-source suite for teleoperation, learning infrastructure, and deployment.</blockquote>
+        <div class="ev-trans">我们介绍 Ψ0——一个开放基础模型，配套完整的遥操作、学习基础设施和部署开源套件。</div>
+        <div class="ev-gloss">论文在 conclusion 明确强调「complete open-source suite」——与代码库实际开放状态一致，是真开源而非「代码/数据将陆续释出」的口头承诺。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 · 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>① <strong>思想清晰且有力</strong>：「解耦预训练 vs. 端到端 co-train」的对比实验（Table I）干净地钉死了核心 thesis，是难得的自我批判式消融。② <strong>极高数据效率</strong>：用 10 倍少的数据 + 40% 更高成功率，且只需 80 条 demo 适配新任务——对资源有限团队直接可用。③ <strong>全栈真·开源</strong>（Apache-2.0，代码+权重+数据+推理引擎一起放），社区杠杆极大。④ <strong>双轨命中</strong>：Track A 的 VLA 架构范式 + Track B 的全身控制解耦思路，都有直接参考价值。⑤ 遥操作系统设计细节充分，可直接复现。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留与局限</div>
+        <p>① <strong>评测规模有限</strong>：每个任务仅 10 次试验，评估者可介入协助推进失败子任务——不是严格自主成功率；真实鲁棒性存疑。② <strong>任务数量有限</strong>：8 个任务均在同一场景/机器人上，跨场景/跨机器人泛化能力未验证。③ <strong>计算成本高</strong>：VLM 预训练需 64 x A100 GPU × 10 天，门槛依然不低。④ <strong>论文自承局限</strong>：无法进一步扩展训练规模（计算/时间限制）；硬件 payload 约束了部分操作能力。⑤ RTC 实现细节（inpainting inference）需要仔细适配其他平台。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;清晰的思想贡献（解耦训练范式）+ 显著的量化结果 + 真开源，是 2026 年人形 loco-manip VLA 的重要基线和参考范式；距「Breakthrough」还差跨场景/大规模评测的封闭。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · Ψ0 (arXiv:2603.12263) · USC PSI Lab · RSS 2026</footer>
+
+</body>
+</html>

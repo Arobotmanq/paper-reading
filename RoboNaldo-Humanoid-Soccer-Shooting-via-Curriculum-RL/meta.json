@@ -1,0 +1,52 @@
+{
+  "title": "RoboNaldo: Accurate, Stable and Powerful Humanoid Soccer Shooting via Motion-Guided Curriculum Reinforcement Learning",
+  "title_cn": "RoboNaldo：用动作引导课程强化学习实现精准、稳定、大力的人形足球射门",
+  "field": "humanoid",
+  "venue": "arXiv 2606.11092v3 (preprint)",
+  "date": "2026",
+  "one_liner": "用三阶段 motion-guided curriculum RL，把固定参考的稳定性（motion tracking）与 task 奖励的精准性焊到一起，让 Unitree G1 在真草地全 onboard 打出精准、稳定、高冲量的全身足球射门（free-kick 0.73m 误差、球速 13.10 m/s 达职业 59–71%）。",
+  "framework": "idea-first",
+  "idea": "按每种学习信号能可靠提供什么来排课程：一条人类踢球参考当脚手架，奖励权重从 tracking 渐移到 task（跟踪↓、task↑），分稳定踢→适配球位→动球时机三阶段。",
+  "logic_chain": [
+    "诊断：motion tracking 给稳定但参考固定换不了接触点/方向/起脚时机；task-reward RL 给目标但从零探索不出平衡+摆腿+接触+瞄准——两者各缺一角。",
+    "对策：不二选一，而是按信号能力分三阶段，wtask 0→0.8→1.0，让 tracking 先供稳定、task 后供精准。",
+    "Stage 1 纯跟踪学稳定踢的全身协调；Stage 2 加球+目标+射门奖励并随机球位逼策略适配而非复读；Stage 3 用 locomotion 命令+kick 触发把动球射门拆成接近控制+接触时机决策。",
+    "为 sub-10ms 高冲量接触定制奖励（Instant Interaction Reward 加性分组防塌缩 + 弹道外推密集落点 + 近球 proximity 放松 + 击后稳定相），兼顾稳定与力量。",
+    "验证：仿真误差 0.5×/球速 2.96× 优于 PAiD；真草地 onboard 复现 0.73/0.86m 误差与 13.10 m/s 球速。"
+  ],
+  "method_skeleton": [
+    "三阶段课程：Motion Tracking → Shooting Adaptation → Task Generalization，顺序训练、逐阶段从上一 checkpoint 热启动；跟踪权重↓、task 权重↑。",
+    "模块化高层接口：locomotion 命令 + kick-trigger 信号连接高层 planner 与 low-level 策略；训练用规则 planner，部署可换人/神经高层而不重训 low-level。",
+    "Instant Interaction Reward：r=(Rcontact+Rgoal)(Rvel+Rforce)/4，加性分组覆盖接近-冲击-接触后球态全生命周期，避免 HDMI 位置×力乘积在短接触窗口塌缩。",
+    "Proximity-based tracking relaxation：Stage 3 近球时按项放松跟踪（feet vel µ=0.05、body ori µ=0.6），只在 task 与跟踪真冲突的项放手。",
+    "Densified Shooting Reward：弹道外推球态到球门线，每个击后步给预测落点误差奖励，密集化长程落点目标。",
+    "sim2real：Isaac Lab 4096 envs/RTX4090 训练，PPO(RSL-RL)，域随机化 + joint-index 重映射 + 10 步 warmup；G1 onboard 50Hz，LiDAR(MID-360)+IR(D435) 反光球感知 + AprilTag 目标。"
+  ],
+  "core_points": [
+    "真问题：射门是稳+准+力的高冲量全身接触，接触仅 3–5 物理步（200Hz），击球脚同时承重平衡，与持续接触任务本质不同。",
+    "两条 RL 路线各缺一角是核心诊断：tracking 稳但参考固定、task RL 探索难；课程为弥合两端而设。",
+    "motion-guided curriculum 是灵魂：单参考做脚手架，权重平滑从跟踪交接到 task，对任何'需稳定先验+任务适配'的全身技能可复用。",
+    "高冲量接触的奖励整形三件套（Instant Interaction Reward + proximity 放松 + 击后稳定相）是兼顾稳定与力量的关键工程。",
+    "仿真对照 PAiD：free-kick 误差 0.899m vs 1.850m（0.5×）、球速 14.79 vs 4.99 m/s（2.96×）、动球 1m 成功率 63.3% vs 9.3%。",
+    "真草地全 onboard：free-kick 136 试 124 有效（91.2% 触球、全存活）0.73m 误差；动球 27 试 20 有效 0.86m；峰值球速 13.10 m/s。",
+    "消融钉死失效模式：去自适应采样/稳定相存活率从 98.8% 崩到 32.8%/24.4%；用 HDMI 式稀疏奖励 free-kick 成功率从 28.8% 跌到 2.5%。",
+    "局限：单条参考动作 + 手工高层触发，难扩展多技能/对抗；动球退化集中在起脚触发 sim2real gap；感知绑死反光球。"
+  ],
+  "effects": [
+    "仿真 free-kick 误差 0.899m vs PAiD 1.850m（0.5×），峰值球速 14.79 m/s vs 4.99 m/s（2.96×）",
+    "仿真动球 1m 成功率 63.3% vs PAiD 9.3%；Stage 2 zero-shot 仅 7.2%（不能零样本迁移到动球）",
+    "真机 free-kick 0.73m 误差 / 80.6% 落 1m 内 / 触球 91.2% / 全存活（3m，124/136）",
+    "真机动球 0.86m 误差 / 70.0% 落 1m 内 / 触球 74.1%（27 试 20 有效）",
+    "峰值球速 13.10 m/s（47.2 km/h），达 UEFA 职业运动战射门速度的 59–71%",
+    "消融：去自适应采样/稳定相，存活率 98.8%→32.8%/24.4%；HDMI 式奖励使 free-kick 成功率 28.8%→2.5%"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "弱相关：无 VLA / 无语言，仅'高层接口可换控制器'一句留了未来接 VLA 或人类高层指令的口子；不涉及 mobile manipulation。",
+    "track_B_legged": "强命中：整篇是 Unitree G1 全身高冲量接触控制的 RL + 真机 sim2real。可直接借鉴：(1) motion-guided curriculum 这套'跟踪→task 权重迁移'配方，适用于任何需稳定先验+任务适配的全身技能；(2) proximity-based tracking relaxation（近球按项放松跟踪，脚速 µ=0.05/躯干姿态 µ=0.6）这一兼顾稳定与发力/自由度的实用 trick；(3) 高冲量接触奖励整形（加性分组防塌缩 + 弹道外推密集化 + 击后稳定相）；(4) 大量落地细节：joint-index 重映射（breadth-first vs depth-first）、10 步 warmup、域随机化、LiDAR/IR 反光球 onboard 感知。与 GRAIL（G1 motion-tracking loco-manip）、WholeBodyVLA-LMO（离散高层指令+curriculum 驱动 low-level RL）、LeVERB（高层指令→RL WBC）直接对照。"
+  },
+  "open_source": "none",
+  "open_source_detail": "项目页 https://opendrivelab.com/RoboNaldo 在线（含演示视频），并指向 GitHub 仓库 github.com/opendrivelab/RoboNaldo，但截至 2026-06-16 该仓库返回 HTTP 404、不可访问；论文正文称把 joint-index 重映射'列在 released code'中，即代码已承诺但尚未公开。无 checkpoint/数据集/license 发布。归类 none（承诺开源但尚未兑现），后续应重查仓库是否上线。",
+  "open_source_checked": "2026-06-16",
+  "rating": "Valuable",
+  "summary": "summary.html"
+}

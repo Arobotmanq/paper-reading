@@ -1,0 +1,48 @@
+{
+  "title": "Being-0: A Humanoid Robotic Agent with Vision-Language Models and Modular Skills",
+  "title_cn": "Being-0：基于视觉语言模型与模块化技能的人形机器人 Agent",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2025",
+  "one_liner": "在 FM（GPT-4o）与模块化技能库之间插入一个轻量 Connector VLM，专门解决双足不稳/FM 感知慢/导航停位不对三重挑战，使人形机器人长程任务完成率达 84.4%、导航效率提升 4.2×。",
+  "framework": "idea-first",
+  "idea": "人形机器人长程任务的失败根源不在于高层缺规划或低层缺技能，而在于两层之间缺一个处理「双足不稳频繁纠偏、FM 推理慢无法闭环、导航停位不利后续抓取」的实时中间层——用轻量 Connector VLM 填这个鸿沟是性价比最高的工程解法。",
+  "logic_chain": [
+    "人形机器人已有 RL 训好的 locomotion skill 和遥操+行为克隆训的 manipulation skill；缺的是把它们串起来的系统",
+    "直接用 GPT-4o 串接三个问题叠加：双足不稳需高频纠偏但 FM 太慢；FM 3D 空间理解差导致方向规划频繁出错；导航终止位姿不利于后续抓取",
+    "用轻量 VLM（VideoLLaMA2）在室内导航数据上微调得到 Connector，以约 1s 延迟做闭环：Grounded Skill Planning + Visual Navigation + Pose Adjustment",
+    "Connector 不替代 FM，而是在 FM 给出语言计划后实时落地执行，FM 只在关键决策点介入",
+    "结果：导航速度 4.2×，需导航的任务从 0% 提升到 75–90%，平均长程任务完成率 84.4%"
+  ],
+  "method_skeleton": [
+    "Foundation Model（GPT-4o，云端）：Reasoning + Detection + Planning，仅在关键决策点触发",
+    "Connector VLM（VideoLLaMA2 微调，板载 Jetson AGX，~1s 推理）：Grounded Skill Planning + 闭环视觉导航 + Pose Adjustment",
+    "Modular Skill Library（板载）：RL sim-to-real locomotion（50 Hz joystick 接口）+ ACT 行为克隆 manipulation（10 Hz，遥操 50–150 条轨迹/技能）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中——人形机器人移动操作 agent 的代表性系统实现，Connector 设计思路和 pose adjustment 策略可直接借鉴，评为深读",
+    "track_B_legged": "浅触及——locomotion skill 用 RL+sim-to-real 训练但仅作为 skill library 组件，不涉及高级 locomotion 算法（复杂地形/parkour 等），不适合作为 Track B 主要参考"
+  },
+  "validation": "5 类长程任务平均完成率 84.4%；Fetch-bottle/Deliver-basket/Prepare-coffee（需导航）去掉 Connector 均为 0%、加上后达 90%/80%/75%；导航速度 4.2×；Active camera 导航+操作全部 5/5（任何固定角度无法两全）",
+  "core_points": [
+    "FM 直连技能库的三重失效：双足不稳需频繁纠偏/FM 推理慢/FM 3D 理解差",
+    "Connector 是核心创新：轻量 VLM 微调，~1s 板载推理，实现 Grounded Skill Planning + Visual Navigation + Pose Adjustment",
+    "技能库上下体完全解耦：下体 RL locomotion（50 Hz joystick 接口），上体 ACT 行为克隆（50–150 条轨迹，<1h 即可扩展新技能）",
+    "Active Camera（2-DoF 颈关节）是系统的硬件关键：固定角度无法同时满足导航和操作需求",
+    "部署架构：唯独 FM 在云端，其余全部板载——这是实时性的工程基础",
+    "Pose Adjustment 是易被忽视的关键细节：导航终止的位姿直接决定后续抓取成功率（Grasp-coffee 1/5 → 4/5）"
+  ],
+  "effects": [
+    "长程任务平均完成率 84.4%（5 类任务）",
+    "导航效率 4.2× vs 纯 FM-based agent（9.6 cm/s vs 2.3 cm/s，成功率 5/5 vs 0/5）",
+    "Pose Adjustment 使 Grasp-coffee 成功率从 1/5 提升到 4/5",
+    "Active camera 使导航+操作任务均达 5/5（固定相机无法两全）",
+    "新操作技能采集成本：50–150 条遥操轨迹，<1 小时"
+  ],
+  "open_source": "none",
+  "open_source_note": "GitHub repo（MIT license）存在但代码尚未发布（README 声明 will release within this year）；权重和数据均未公开；项目页面提供视频演示",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "代码承诺发布但尚未放出, 无权重(GitHub MIT 占位)",
+  "open_source_checked": "2026-06-02"
+}

@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Reading · VLA 论文画廊</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#2563eb;--accent2:#06b6d4;--gold:#f59e0b;
+    --bg:#f7f7fb;--card:rgba(255,255,255,.86);--border:#e5e7eb;--text:#0f172a;--soft:#334155;--muted:#64748b;--codebg:#f1f5f9;
+    --sh:0 4px 16px rgba(15,23,42,.07);--shl:0 18px 44px rgba(15,23,42,.16);--r:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--text);font-family:"Inter","Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;background-color:var(--bg);background-image:radial-gradient(820px 520px at 6% -6%,rgba(37,99,235,.18),transparent 60%),radial-gradient(760px 520px at 104% 6%,rgba(14,165,233,.14),transparent 60%),radial-gradient(720px 640px at 50% 118%,rgba(37,99,235,.14),transparent 62%),radial-gradient(rgba(15,23,42,.045) 1px,transparent 1px);background-size:auto,auto,auto,24px 24px;background-attachment:fixed}
+  a{text-decoration:none;color:inherit}
+  /* hero */
+  .hero{background:linear-gradient(135deg,#0b1020,#15336e 55%,#0e7490) center/cover no-repeat;color:#fff;padding:5em 1.5em 4em;position:relative;overflow:hidden;min-height:320px}
+  .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,12,28,.86) 0%,rgba(13,42,92,.62) 48%,rgba(14,116,144,.5) 100%)}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(130% 130% at 82% 18%,transparent 0,rgba(8,12,28,.32) 82%)}
+  .hin{max-width:1240px;margin:0 auto;position:relative;z-index:1}
+  .eyebrow{display:inline-flex;align-items:center;gap:.5em;background:rgba(99,102,241,.18);color:#c7d2fe;border:1px solid rgba(99,102,241,.4);padding:.35em .9em;border-radius:999px;font-size:.8em;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+  .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:#818cf8;box-shadow:0 0 12px #818cf8}
+  .hero h1{font-size:2.4em;font-weight:800;letter-spacing:-.02em;margin:.4em 0 .2em;background:linear-gradient(135deg,#fff,#cbd5e1);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p{color:#cbd5e1;margin:0;max-width:680px}
+  .stats{display:flex;gap:.6em;flex-wrap:wrap;margin-top:1.3em}
+  .stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:.55em .9em;min-width:84px}
+  .stat b{display:block;font-size:1.5em;font-weight:800;line-height:1}
+  .stat span{font-size:.74em;color:#cbd5e1}
+  .stat.go b{color:#86efac}.stat.gd b{color:#fcd34d}.stat.gp b{color:#a5b4fc}
+  .hero-actions{display:flex;gap:.7em;flex-wrap:wrap;margin-top:1.5em}
+  .hbtn{display:inline-flex;align-items:center;gap:.55em;padding:.62em 1.1em;border-radius:12px;font-size:.92em;font-weight:700;border:1px solid rgba(255,255,255,.22);color:#fff;background:rgba(255,255,255,.1);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:transform .15s,background .15s,border-color .15s}
+  .hbtn:hover{transform:translateY(-2px);background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.42)}
+  .hbtn.primary{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#7c2d12;border-color:#fcd34d;box-shadow:0 6px 18px rgba(245,158,11,.4)}
+  .hbtn .ic{font-size:1.15em;line-height:1}
+  .hbtn small{font-weight:500;opacity:.82;font-size:.8em;margin-left:.1em}
+  /* toolbar */
+  .bar{position:sticky;top:0;z-index:20;background:rgba(247,247,251,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+  .bin{max-width:1240px;margin:0 auto;padding:.8em 1.5em;display:flex;gap:.6em;flex-wrap:wrap;align-items:center}
+  .search{flex:1 1 240px;display:flex;align-items:center;gap:.5em;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.5em .8em;box-shadow:var(--sh)}
+  .search input{border:0;outline:0;flex:1;font-size:.95em;background:transparent;color:var(--text)}
+  .bar select{font-family:inherit;font-size:.86em;color:var(--soft);background:var(--card);border:1px solid var(--border);border-radius:9px;padding:.5em .7em;cursor:pointer;box-shadow:var(--sh)}
+  .count{font-size:.82em;color:var(--muted);font-family:"JetBrains Mono",monospace;margin-left:auto;white-space:nowrap}
+  /* grid */
+  .wrap{max-width:1240px;margin:1.6em auto 5em;padding:0 1.5em}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:1.2em}
+  .card{display:flex;flex-direction:column;background:var(--card);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);position:relative;transition:transform .18s,box-shadow .18s,border-color .18s}
+  .card:hover{transform:translateY(-4px);box-shadow:var(--shl);border-color:#c7d2fe}
+  .cov{height:140px;background:#0f172a;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .cov img{width:100%;height:100%;object-fit:cover;object-position:center top}
+  .cov.ph{background:linear-gradient(135deg,#312e81,#0e7490)}
+  .cov.ph::after{content:attr(data-i);color:rgba(255,255,255,.85);font-weight:800;font-size:2.4em;font-family:"JetBrains Mono",monospace}
+  .ribbon{position:absolute;top:10px;left:10px;font-size:.72em;font-weight:800;padding:.2em .6em;border-radius:999px;backdrop-filter:blur(4px)}
+  .r-bt{background:linear-gradient(135deg,#fde68a,#fbbf24);color:#7c2d12;box-shadow:0 2px 8px rgba(245,158,11,.5)}
+  .r-imp{background:rgba(251,191,36,.92);color:#7c2d12}
+  .r-val{background:rgba(148,163,184,.9);color:#1e293b}
+  .r-inc{background:rgba(203,213,225,.9);color:#334155}
+  .card.tier-bt{border-color:#fcd34d}
+  .c-body{padding:.85em 1em 1em;display:flex;flex-direction:column;flex:1}
+  .c-title{font-weight:700;font-size:1.02em;line-height:1.3;color:var(--text)}
+  .c-cn{font-size:.82em;color:var(--muted);margin-top:.15em}
+  .c-one{font-size:.86em;color:var(--soft);line-height:1.5;margin:.5em 0 .7em;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .c-tags{margin-top:auto;display:flex;gap:.35em;flex-wrap:wrap;align-items:center}
+  .os{font-size:.72em;font-weight:700;padding:.12em .55em;border-radius:999px;border:1px solid}
+  .os-yes{background:#f0fdf4;color:#16a34a;border-color:#16a34a}
+  .os-part{background:#fffbeb;color:#d97706;border-color:#d97706}
+  .os-no{background:#fef2f2;color:#dc2626;border-color:#dc2626}
+  .trk{font-size:.72em;font-weight:700;padding:.12em .5em;border-radius:999px;border:1px solid}
+  .trk-A{background:#eef2ff;color:#4f46e5;border-color:#a5b4fc}
+  .trk-B{background:#f5f3ff;color:#7c3aed;border-color:#c4b5fd}
+  .yr{font-size:.72em;font-weight:700;color:var(--muted);font-family:"JetBrains Mono",monospace;margin-left:auto}
+  .empty{text-align:center;color:var(--muted);padding:4em 1em;display:none}
+  footer{text-align:center;color:var(--muted);font-size:.85em;padding:1em 1em 3em}
+  footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hin">
+    <span class="eyebrow"><span class="dot"></span>Paper Reading · VLA 画廊</span>
+    <h1>VLA 论文画廊</h1>
+    <p>移动操作 / 人形 VLA 全景库。搜索 + 按评级 / 开源 / Track / 年份筛选，点卡片进入「思想优先」证据综述。</p>
+    <div class="stats">
+      <div class="stat"><b>38</b><span>论文总数</span></div>
+      <div class="stat gd"><b>3</b><span>★ 突破</span></div>
+      <div class="stat go"><b>13</b><span>🟢 代码+权重</span></div>
+      <div class="stat gp"><b>30</b><span>Track A 相关</span></div>
+    </div>
+    <div class="hero-actions">
+      <a class="hbtn primary" href="./recommendations-curated.html"><span class="ic">🎯</span> 策展推荐<small>精选 · 按主线分组</small></a>
+      <a class="hbtn" href="./recommendations.html"><span class="ic">📰</span> 每日推荐<small>arXiv 最新</small></a>
+      <a class="hbtn" href="./skill.html"><span class="ic">📖</span> 方法论<small>Skill 实时同步</small></a>
+    </div>
+  </div>
+</header>
+<div class="bar">
+  <div class="bin">
+    <label class="search">🔎<input id="q" type="search" placeholder="搜索标题 / 关键词 / 机构…" autocomplete="off"></label>
+    <select id="f-rating"><option value="">评级 · 全部</option><option>Breakthrough</option><option>Important</option><option>Valuable</option><option>Incremental</option></select>
+    <select id="f-os"><option value="">开源 · 全部</option><option value="code+weights">🟢 开源</option><option value="partial">🟡 部分</option><option value="none">🔴 闭源</option></select>
+    <select id="f-track"><option value="">Track · 全部</option><option value="A">Track A</option><option value="B">Track B</option></select>
+    <select id="f-year"><option value="">年份 · 全部</option><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
+    <select id="sort"><option value="default">排序 · 评级↓</option><option value="year">年份 新→旧</option><option value="title">标题 A→Z</option></select>
+    <span class="count" id="count"></span>
+  </div>
+</div>
+<div class="wrap">
+  <div class="grid" id="grid">
+      <a class="card tier-bt" href="./pi05-Vision-Language-Action-Model-Open-World-Generalization/summary.html"
+         data-rating="Breakthrough" data-os="code+weights" data-track="A"
+         data-year="2025" data-tier="bt" data-text="π0.5: a vision-language-action model with open-world generalization π0.5：具备开放世界泛化能力的视觉-语言-动作模型 在 π0 之上用异构数据 co-training（97.6% 样本非来自移动操作机器人），让双臂移动机器人在完全没见过的真实家庭里端到端完成 10–15 分钟的扫厨房/收卧室长程任务。 pi05-vision-language-action-model-open-world-generalization arxiv preprint">
+        <div class="cov"><img loading="lazy" src="./pi05-Vision-Language-Action-Model-Open-World-Generalization/images/figure_3_model_overview.png" alt=""></div>
+        <span class="ribbon r-bt">★ 突破</span>
+        <div class="c-body">
+          <div class="c-title">π0.5: a Vision-Language-Action Model with Open-World Generalization</div>
+          <div class="c-cn">π0.5：具备开放世界泛化能力的视觉-语言-动作模型</div>
+          <div class="c-one">在 π0 之上用异构数据 co-training（97.6% 样本非来自移动操作机器人），让双臂移动机器人在完全没见过的真实家庭里端到端完成 10–15 分钟的扫厨房/收卧室长程任务。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="openpi 开源, Apache-2.0(π0.5 base/LIBERO/DROID), 2025-09">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-bt" href="./pi0-Vision-Language-Action-Flow-Model/summary.html"
+         data-rating="Breakthrough" data-os="code+weights" data-track="A"
+         data-year="2024" data-tier="bt" data-text="π0: a vision-language-action flow model for general robot control π0：面向通用机器人控制的视觉-语言-动作流模型 把 vlm 预训练的语义知识与 flow matching 的连续动作建模焊进同一 transformer，用「动作专家」独立权重块实现灵巧操作 vla 的基础范式。 pi0-vision-language-action-flow-model arxiv">
+        <div class="cov"><img loading="lazy" src="./pi0-Vision-Language-Action-Flow-Model/images/figure_1_overview.png" alt=""></div>
+        <span class="ribbon r-bt">★ 突破</span>
+        <div class="c-body">
+          <div class="c-title">π0: A Vision-Language-Action Flow Model for General Robot Control</div>
+          <div class="c-cn">π0：面向通用机器人控制的视觉-语言-动作流模型</div>
+          <div class="c-one">把 VLM 预训练的语义知识与 flow matching 的连续动作建模焊进同一 transformer，用「动作专家」独立权重块实现灵巧操作 VLA 的基础范式。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="openpi 开源, Apache-2.0(π0 base/FAST-DROID/ALOHA变体)">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2024</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-bt" href="./RT-2-VLA-Transfer-Web-Knowledge-to-Robotic-Control/summary.html"
+         data-rating="Breakthrough" data-os="none" data-track="A"
+         data-year="2023" data-tier="bt" data-text="rt-2: vision-language-action models transfer web knowledge to robotic control rt-2：视觉-语言-动作模型将网页知识迁移到机器人控制 把动作表示为文本 token，co-fine-tune vlm 与机器人数据，网页语义知识直接迁移到机器人控制的涌现能力与泛化 rt-2-vla-transfer-web-knowledge-to-robotic-control arxiv">
+        <div class="cov"><img loading="lazy" src="./RT-2-VLA-Transfer-Web-Knowledge-to-Robotic-Control/images/figure_1_rt2_overview_cofinetuning.png" alt=""></div>
+        <span class="ribbon r-bt">★ 突破</span>
+        <div class="c-body">
+          <div class="c-title">RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control</div>
+          <div class="c-cn">RT-2：视觉-语言-动作模型将网页知识迁移到机器人控制</div>
+          <div class="c-one">把动作表示为文本 token，co-fine-tune VLM 与机器人数据，网页语义知识直接迁移到机器人控制的涌现能力与泛化</div>
+          <div class="c-tags">
+            <span class="os os-no" title="DeepMind 从未公开代码/权重, 仅社区复现">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2023</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./AgiBot-World-Colosseo-GO-1-VLA/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A"
+         data-year="2026" data-tier="imp" data-text="agibot world colosseo: a large-scale manipulation platform for scalable and intelligent embodied systems agibot world colosseo：可扩展智能具身系统大规模操作平台（含 go-1 通用策略） 百台同构双臂机器人采集 1m+ 轨迹，配套 villa 框架（latent action + vlm latent planner + action expert）使人类视频和跨本体数据都能用于预训练，go-1 超越 rdt-1b 32%。 agibot-world-colosseo-go-1-vla iros 2025 best paper finalist / ieee tro 2026 / arxiv">
+        <div class="cov"><img loading="lazy" src="./AgiBot-World-Colosseo-GO-1-VLA/images/figure_1_platform_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">AgiBot World Colosseo: A Large-scale Manipulation Platform for Scalable and Intelligent Embodied Systems</div>
+          <div class="c-cn">AgiBot World Colosseo：可扩展智能具身系统大规模操作平台（含 GO-1 通用策略）</div>
+          <div class="c-one">百台同构双臂机器人采集 1M+ 轨迹，配套 ViLLA 框架（Latent Action + VLM Latent Planner + Action Expert）使人类视频和跨本体数据都能用于预训练，GO-1 超越 RDT-1B 32%。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="代码(OpenDriveLab/AgiBot-World)+权重(HF GO-1/GO-1-Air)+数据(AgiBotWorld-Alpha 92K/Beta 1M)全开放, CC BY-NC-SA 4.0(非商用)">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./CoCo-InEKF-State-Estimation-with-Learned-Contact/summary.html"
+         data-rating="Important" data-os="code+weights" data-track=""
+         data-year="2026" data-tier="imp" data-text="coco-inekf: state estimation with learned contact covariances in dynamic, contact-rich scenarios 动态接触场景下的学习接触协方差状态估计 可微 invariant ekf：用 240k 参数 mlp 端到端预测每个接触候选点的连续速度协方差，取代传统二值接触状态。 coco-inekf-state-estimation-with-learned-contact rss 2026 · disney research / eth zurich">
+        <div class="cov"><img loading="lazy" src="./CoCo-InEKF-State-Estimation-with-Learned-Contact/images/figure_1_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">CoCo-InEKF: State Estimation with Learned Contact Covariances in Dynamic, Contact-Rich Scenarios</div>
+          <div class="c-cn">动态接触场景下的学习接触协方差状态估计</div>
+          <div class="c-one">可微 Invariant EKF：用 240K 参数 MLP 端到端预测每个接触候选点的连续速度协方差，取代传统二值接触状态。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="🟢 开源">🟢 开源</span>
+            
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./GRAIL-Generating-Humanoid-Loco-Manipulation-from-3D-Assets-and-Video-Priors/summary.html"
+         data-rating="Important" data-os="none" data-track=""
+         data-year="2026" data-tier="imp" data-text="grail: generating humanoid loco-manipulation from 3d assets and video priors grail：从 3d 资产与视频先验生成人形 loco-manipulation 数据 倒置范式：不重建无约束视频，而是先指定 3d 场景 + 机器人比例化身，再用 vfm 在已知度量框架内生成参考交互；产出 20k+ 序列，零真机数据训练即可在 unitree g1 上抓取 84% / 爬楼 90%。 grail-generating-humanoid-loco-manipulation-from-3d-assets-and-video-priors arxiv preprint">
+        <div class="cov"><img loading="lazy" src="./GRAIL-Generating-Humanoid-Loco-Manipulation-from-3D-Assets-and-Video-Priors/images/figure_1_teaser.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">GRAIL: Generating Humanoid Loco-Manipulation from 3D Assets and Video Priors</div>
+          <div class="c-cn">GRAIL：从 3D 资产与视频先验生成人形 Loco-Manipulation 数据</div>
+          <div class="c-one">倒置范式：不重建无约束视频，而是先指定 3D 场景 + 机器人比例化身，再用 VFM 在已知度量框架内生成参考交互；产出 20K+ 序列，零真机数据训练即可在 Unitree G1 上抓取 84% / 爬楼 90%。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="🔴 闭源">🔴 闭源</span>
+            
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./HoMMI-Whole-Body-Mobile-Manipulation-Human-Demos/summary.html"
+         data-rating="Important" data-os="code+data+hardware" data-track="A"
+         data-year="2026" data-tier="imp" data-text="hommi: learning whole-body mobile manipulation from human demonstrations hommi：从人类示范中学习全身移动操作 给 umi 手持夹爪加头戴 iphone，用三个跨本体设计（3d 点云视觉、look-at 点头部动作、夹爪坐标系）将纯人类示范直接迁移到全身移动机器人，无需任何机器人遥操数据。 hommi-whole-body-mobile-manipulation-human-demos rss 2026">
+        <div class="cov"><img loading="lazy" src="./HoMMI-Whole-Body-Mobile-Manipulation-Human-Demos/images/figure_1_teaser_system_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">HoMMI: Learning Whole-Body Mobile Manipulation from Human Demonstrations</div>
+          <div class="c-cn">HoMMI：从人类示范中学习全身移动操作</div>
+          <div class="c-one">给 UMI 手持夹爪加头戴 iPhone，用三个跨本体设计（3D 点云视觉、look-at 点头部动作、夹爪坐标系）将纯人类示范直接迁移到全身移动机器人，无需任何机器人遥操数据。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="MIT许可证；代码（训练/部署/示范处理脚本，Diffusion Policy+DiT框架）+数据（三个任务示范数据）+硬件设计（CAD文件，Google Drive外链）均已发布；无预训练权重，需自行训练。已实时确认：github.com/xxm19/hommi">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Pragmatic-VLA-Foundation-Model/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A"
+         data-year="2026" data-tier="imp" data-text="a pragmatic vla foundation model lingbot-vla：实用型 vla 基础模型 用 20,000 小时真实双臂操作数据 + fsdp2 高效训练框架，首次系统实证 vla scaling law（数据量越大成功率持续上升），并在 gm-100 基准超越 π0.5/gr00t n1.6，全开源（代码/权重/数据）。 pragmatic-vla-foundation-model arxiv preprint">
+        <div class="cov"><img loading="lazy" src="./Pragmatic-VLA-Foundation-Model/images/figure_1_overview_lingbot_vla.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">A Pragmatic VLA Foundation Model</div>
+          <div class="c-cn">LingBot-VLA：实用型 VLA 基础模型</div>
+          <div class="c-one">用 20,000 小时真实双臂操作数据 + FSDP2 高效训练框架，首次系统实证 VLA scaling law（数据量越大成功率持续上升），并在 GM-100 基准超越 π0.5/GR00T N1.6，全开源（代码/权重/数据）。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="LingBot-VLA: 代码 Apache-2.0(Robbyant/lingbot-vla)+权重(HF lingbot-vla-4b)+GM-100基准开放; 20000h预训练数据未公开">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Psi0-Open-Foundation-Humanoid-Loco-Manipulation/summary.html"
+         data-rating="Important" data-os="code+weights+data" data-track="A B"
+         data-year="2026" data-tier="imp" data-text="psi0: an open foundation model towards universal humanoid loco-manipulation ψ0：面向通用人形移动操作的开放基础模型 解耦 vlm egocentric 预训练与 flow action expert，用 10 倍更少数据超越所有人形 loco-manip 基线 40% 以上 psi0-open-foundation-humanoid-loco-manipulation rss 2026">
+        <div class="cov"><img loading="lazy" src="./Psi0-Open-Foundation-Humanoid-Loco-Manipulation/images/figure_2_model_training_deployment_pipeline.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Psi0: An Open Foundation Model Towards Universal Humanoid Loco-Manipulation</div>
+          <div class="c-cn">Ψ0：面向通用人形移动操作的开放基础模型</div>
+          <div class="c-one">解耦 VLM egocentric 预训练与 flow action expert，用 10 倍更少数据超越所有人形 loco-manip 基线 40% 以上</div>
+          <div class="c-tags">
+            <span class="os os-no" title="Apache-2.0；代码 physical-superintelligence-lab/Psi0（GitHub，2600+ stars）；模型权重 USC-PSI-Lab/psi-model（HuggingFace）；数据集 USC-PSI-Lab/psi-data（9个真实任务+仿真任务）；包含遥操作、训练、部署全流程">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span><span class="trk trk-B">Track B</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./UniVLA-Unified-Vision-Language-Action-Model/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A"
+         data-year="2026" data-tier="imp" data-text="unified vision-language-action model 统一视觉-语言-动作模型 (univla) 把视觉、语言、动作全部离散化为同一词表 token，用单一自回归 transformer 统一建模，并插入无动作标注的世界模型后训练阶段，显著提升长程任务性能与数据效率。 univla-unified-vision-language-action-model iclr 2026">
+        <div class="cov"><img loading="lazy" src="./UniVLA-Unified-Vision-Language-Action-Model/images/figure_1_teaser_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Unified Vision-Language-Action Model</div>
+          <div class="c-cn">统一视觉-语言-动作模型 (UniVLA)</div>
+          <div class="c-one">把视觉、语言、动作全部离散化为同一词表 token，用单一自回归 Transformer 统一建模，并插入无动作标注的世界模型后训练阶段，显著提升长程任务性能与数据效率。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="代码 github baaivision/UniVLA(2025-06-27)+权重 HF Yuqi1997/UniVLA；后训练数据均为公开集(RT-1/BridgeV2/DROID/CALVIN)；license 未明(基于 Emu3, 使用前确认)">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Wall-OSS-0.5-Technical-Report/summary.html"
+         data-rating="Important" data-os="code+weights" data-track=""
+         data-year="2026" data-tier="imp" data-text="wall-oss-0.5 technical report wall-oss-0.5 · pretrain once, act anywhere 基于 qwen2.5-vl-3b 的 4b 开源 vla，用 gradient-bridged co-training 单阶段联合训练，预训练 checkpoint 无需微调即可直接当真机策略。 wall-oss-0.5-technical-report technical report · x square robot">
+        <div class="cov"><img loading="lazy" src="./Wall-OSS-0.5-Technical-Report/images/figure_1_capability_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Wall-OSS-0.5 Technical Report</div>
+          <div class="c-cn">Wall-OSS-0.5 · Pretrain Once, Act Anywhere</div>
+          <div class="c-one">基于 Qwen2.5-VL-3B 的 4B 开源 VLA，用 gradient-bridged co-training 单阶段联合训练，预训练 checkpoint 无需微调即可直接当真机策略。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="2026-05 全栈开源(权重+训练码+recipe), 4B">🟢 开源</span>
+            
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./WholeBodyVLA-Unified-Latent-VLA-Loco-Manipulation/summary.html"
+         data-rating="Important" data-os="none" data-track="A B"
+         data-year="2026" data-tier="imp" data-text="wholebodyvla: towards unified latent vla for whole-body loco-manipulation control wholebodyvla：面向全身 loco-manipulation 控制的统一潜动作 vla 用人类 egocentric 自拍视频训练双 lam（潜动作模型），在统一潜动作空间中同时学习操作与移动，端到端驱动人形机器人实现 large-space loco-manipulation wholebodyvla-unified-latent-vla-loco-manipulation iclr 2026">
+        <div class="cov"><img loading="lazy" src="./WholeBodyVLA-Unified-Latent-VLA-Loco-Manipulation/images/figure_2_pipeline_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">WholeBodyVLA: Towards Unified Latent VLA for Whole-Body Loco-Manipulation Control</div>
+          <div class="c-cn">WholeBodyVLA：面向全身 Loco-Manipulation 控制的统一潜动作 VLA</div>
+          <div class="c-one">用人类 egocentric 自拍视频训练双 LAM（潜动作模型），在统一潜动作空间中同时学习操作与移动，端到端驱动人形机器人实现 large-space loco-manipulation</div>
+          <div class="c-tags">
+            <span class="os os-no" title="🔴 闭源">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span><span class="trk trk-B">Track B</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./World-Model-for-Robot-Learning-A-Comprehensive-Survey/summary.html"
+         data-rating="Important" data-os="partial" data-track=""
+         data-year="2026" data-tier="imp" data-text="world model for robot learning: a comprehensive survey 面向机器人学习的世界模型：综述 policy-centric 的机器人世界模型综述：用统一的预测-控制联合分布把 policy/idm/passive·controllable wm 收编为同一分布的不同查询，并按『为策略 / 当模拟器 / 视频世界模型』三主线组织全领域（覆盖到 2026.3，含大量工业/最新工作）。 world-model-for-robot-learning-a-comprehensive-survey arxiv:2605.00080v1">
+        <div class="cov"><img loading="lazy" src="./World-Model-for-Robot-Learning-A-Comprehensive-Survey/images/figure_1.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">World Model for Robot Learning: A Comprehensive Survey</div>
+          <div class="c-cn">面向机器人学习的世界模型：综述</div>
+          <div class="c-one">policy-centric 的机器人世界模型综述：用统一的预测-控制联合分布把 policy/IDM/passive·controllable WM 收编为同一分布的不同查询，并按『为策略 / 当模拟器 / 视频世界模型』三主线组织全领域（覆盖到 2026.3，含大量工业/最新工作）。</div>
+          <div class="c-tags">
+            <span class="os os-part" title="综述本体不发布模型/权重；配套 awesome-list 仓库 github.com/NTUMARS/Awesome-World-Model-for-Robotics-Policy（在线·约581★·持续维护）+ 项目页 ntumars.github.io/wm-robot-survey。">🟡 部分</span>
+            
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./X-VLA-Soft-Prompted-Scalable-Cross-Embodiment-VLA/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A"
+         data-year="2026" data-tier="imp" data-text="x-vla: soft-prompted transformer as scalable cross-embodiment vision-language-action model x-vla：软提示 transformer 作为可扩展跨本体视觉-语言-动作模型 给每个机器人数据源分配一组可学习 soft prompt 嵌入（仅 0.04% 参数），注入 transformer 编码早期，让 0.9b 模型以最少新增参数实现跨 7 种硬件平台的稳定预训练与 peft 高效适配，在 5/6 仿真 benchmark 创 sota。 x-vla-soft-prompted-scalable-cross-embodiment-vla iclr 2026 / iros 2025 agibot world challenge 冠军">
+        <div class="cov"><img loading="lazy" src="./X-VLA-Soft-Prompted-Scalable-Cross-Embodiment-VLA/images/figure_1_architecture_detail.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">X-VLA: Soft-Prompted Transformer as Scalable Cross-Embodiment Vision-Language-Action Model</div>
+          <div class="c-cn">X-VLA：软提示 Transformer 作为可扩展跨本体视觉-语言-动作模型</div>
+          <div class="c-one">给每个机器人数据源分配一组可学习 soft prompt 嵌入（仅 0.04% 参数），注入 Transformer 编码早期，让 0.9B 模型以最少新增参数实现跨 7 种硬件平台的稳定预训练与 PEFT 高效适配，在 5/6 仿真 benchmark 创 SOTA。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="GitHub: github.com/2toinf/X-VLA (Apache-2.0, 669★); HuggingFace: 2toINF/X-VLA 系列（X-VLA-Pt/SoftFold/RoboTwin2/WidowX/Franka/Agibot 等多个 checkpoint，0.9B F32 safetensors）; 预训练数据均为公开数据集（Droid/RoboMind/Agibot-Beta）; Soft-Fold 数据集计划开放（截至 2026-06 尚未发布）; HF 格式有约 1% 性能损失（官方注明）">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Astribot-Async-Fast-Slow-VLA-Whole-Body-Manipulation/summary.html"
+         data-rating="Important" data-os="none" data-track="A"
+         data-year="2025" data-tier="imp" data-text="asynchronous fast-slow vision-language-action policies for whole-body robotic manipulation 用于全身机器人操作的异步快慢视觉-语言-动作策略 (duocore-fs / astribot s1) 真并行异步快慢双系统 vla（duocore-fs）：大 vlm 以 1–3 hz 异步刷新语义 bridge buffer，轻量 diffusion policy 以 30 hz 独立出全身动作，约 3× 提速同时维持精度。 astribot-async-fast-slow-vla-whole-body-manipulation arxiv preprint">
+        <div class="cov"><img loading="lazy" src="./Astribot-Async-Fast-Slow-VLA-Whole-Body-Manipulation/images/figure_1_architecture_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Asynchronous Fast-Slow Vision-Language-Action Policies for Whole-Body Robotic Manipulation</div>
+          <div class="c-cn">用于全身机器人操作的异步快慢视觉-语言-动作策略 (DuoCore-FS / Astribot S1)</div>
+          <div class="c-one">真并行异步快慢双系统 VLA（DuoCore-FS）：大 VLM 以 1–3 Hz 异步刷新语义 bridge buffer，轻量 diffusion policy 以 30 Hz 独立出全身动作，约 3× 提速同时维持精度。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="商业闭源。论文明确：DuoCore-FS 实现作为 Astribot 平台的一部分提供给商业用户。GitHub Astribot-Dev 仅有仿真描述仓库，无 VLA 代码/权重/数据。">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Being-0-Humanoid-Agent-VLM-Modular-Skills/summary.html"
+         data-rating="Important" data-os="none" data-track="A"
+         data-year="2025" data-tier="imp" data-text="being-0: a humanoid robotic agent with vision-language models and modular skills being-0：基于视觉语言模型与模块化技能的人形机器人 agent 在 fm（gpt-4o）与模块化技能库之间插入一个轻量 connector vlm，专门解决双足不稳/fm 感知慢/导航停位不对三重挑战，使人形机器人长程任务完成率达 84.4%、导航效率提升 4.2×。 being-0-humanoid-agent-vlm-modular-skills arxiv">
+        <div class="cov"><img loading="lazy" src="./Being-0-Humanoid-Agent-VLM-Modular-Skills/images/figure_1_framework_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Being-0: A Humanoid Robotic Agent with Vision-Language Models and Modular Skills</div>
+          <div class="c-cn">Being-0：基于视觉语言模型与模块化技能的人形机器人 Agent</div>
+          <div class="c-one">在 FM（GPT-4o）与模块化技能库之间插入一个轻量 Connector VLM，专门解决双足不稳/FM 感知慢/导航停位不对三重挑战，使人形机器人长程任务完成率达 84.4%、导航效率提升 4.2×。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="代码承诺发布但尚未放出, 无权重(GitHub MIT 占位)">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./EchoVLA-Declarative-Memory-Mobile-Manipulation/summary.html"
+         data-rating="Important" data-os="none" data-track="A"
+         data-year="2025" data-tier="imp" data-text="echovla: synergistic declarative memory for vla-driven mobile manipulation echovla：用于 vla 驱动移动操作的协同陈述性记忆 仿人脑双记忆（voxel 场景地图 + 情节 token buffer）驱动 per-part diffusion，解决移动操作 vla 的非马尔可夫难题 echovla-declarative-memory-mobile-manipulation arxiv">
+        <div class="cov"><img loading="lazy" src="./EchoVLA-Declarative-Memory-Mobile-Manipulation/images/figure_1_echovla_architecture_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">EchoVLA: Synergistic Declarative Memory for VLA-Driven Mobile Manipulation</div>
+          <div class="c-cn">EchoVLA：用于 VLA 驱动移动操作的协同陈述性记忆</div>
+          <div class="c-one">仿人脑双记忆（voxel 场景地图 + 情节 token buffer）驱动 per-part diffusion，解决移动操作 VLA 的非马尔可夫难题</div>
+          <div class="c-tags">
+            <span class="os os-no" title="代码、权重、MoMani 数据集均未公开（截至 2026-06 实时检查）；论文托管于 arXiv:2511.18112（v2: 2026-03-06）；硬件平台 TidyBot++ 本身开源（非本文贡献）">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./FAST-Efficient-Action-Tokenization-for-VLA/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A B"
+         data-year="2025" data-tier="imp" data-text="fast: efficient action tokenization for vision-language-action models fast：面向 vla 模型的高效动作 tokenization 用 dct 变频域 + bpe 去冗余，把高频机器人 action chunk 压缩为少量高信息密度 token，解决自回归 vla 无法处理高频灵巧任务的根本问题，训练速度提升 5×、性能追平扩散 vla。 fast-efficient-action-tokenization-for-vla arxiv">
+        <div class="cov"><img loading="lazy" src="./FAST-Efficient-Action-Tokenization-for-VLA/images/figure_4_fast_tokenization_pipeline.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">FAST: Efficient Action Tokenization for Vision-Language-Action Models</div>
+          <div class="c-cn">FAST：面向 VLA 模型的高效动作 Tokenization</div>
+          <div class="c-one">用 DCT 变频域 + BPE 去冗余，把高频机器人 action chunk 压缩为少量高信息密度 token，解决自回归 VLA 无法处理高频灵巧任务的根本问题，训练速度提升 5×、性能追平扩散 VLA。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="openpi + HF physical-intelligence/fast(FAST+ 通用tokenizer), Apache-2.0">🟢 开源</span>
+            <span class="trk trk-A">Track A</span><span class="trk trk-B">Track B</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./GR00T-N1-Open-Foundation-Model-Humanoid-Robots/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A B"
+         data-year="2025" data-tier="imp" data-text="gr00t n1: an open foundation model for generalist humanoid robots gr00t n1：面向通用人形机器人的开放基础模型 nvidia 提出双系统 vla（vlm推理 + dit执行），用数据金字塔策略整合网络视频/仿真/神经轨迹/真机数据，实现跨 embodiment 的通用人形机器人操作，2.2b 模型完全开源。 gr00t-n1-open-foundation-model-humanoid-robots arxiv">
+        <div class="cov"><img loading="lazy" src="./GR00T-N1-Open-Foundation-Model-Humanoid-Robots/images/figure_2_dual_system_arch.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">GR00T N1: An Open Foundation Model for Generalist Humanoid Robots</div>
+          <div class="c-cn">GR00T N1：面向通用人形机器人的开放基础模型</div>
+          <div class="c-one">NVIDIA 提出双系统 VLA（VLM推理 + DiT执行），用数据金字塔策略整合网络视频/仿真/神经轨迹/真机数据，实现跨 embodiment 的通用人形机器人操作，2.2B 模型完全开源。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="N1/N1.5/N1.6 权重开放但 NVIDIA 非商用许可；N1.7(2026)转 Apache-2.0 可商用；Isaac-GR00T 代码开放；数据部分开放">🟢 开源</span>
+            <span class="trk trk-A">Track A</span><span class="trk trk-B">Track B</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Galaxea-G0-Open-World-Dataset-Dual-System-VLA/summary.html"
+         data-rating="Important" data-os="code+weights+dataset(gated)" data-track="A"
+         data-year="2025" data-tier="imp" data-text="galaxea open-world dataset and g0 dual-system vla model galaxea 开放世界数据集与 g0 双系统 vla 模型 用 500h 真实开放世界单一本体数据驱动双系统 vla（vlm 慢规划 + vla 快执行），证明单一本体 stage-2 预训练比跨本体预训练更关键。 galaxea-g0-open-world-dataset-dual-system-vla arxiv">
+        <div class="cov"><img loading="lazy" src="./Galaxea-G0-Open-World-Dataset-Dual-System-VLA/images/figure_1_dual_system_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Galaxea Open-World Dataset and G0 Dual-System VLA Model</div>
+          <div class="c-cn">Galaxea 开放世界数据集与 G0 双系统 VLA 模型</div>
+          <div class="c-one">用 500h 真实开放世界单一本体数据驱动双系统 VLA（VLM 慢规划 + VLA 快执行），证明单一本体 Stage-2 预训练比跨本体预训练更关键。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="代码：github.com/OpenGalaxea/GalaxeaVLA（2026-01-04 前 Apache-2.0，之后 G0 PLUS Community License 非商业免费）；权重：HF OpenGalaxea 组织，含 G0_3B_base / G0Plus_3B_base / G0Tiny_250M_base / G0Plus_3B-pick_and_place；数据集：HF OpenGalaxea/Galaxea-Open-World-Dataset，CC BY-NC-SA 4.0 门控访问，2.87 TB LeRobot v2.1 格式">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Gemini-Robotics-Bringing-AI-into-Physical-World/summary.html"
+         data-rating="Important" data-os="none" data-track="A"
+         data-year="2025" data-tier="imp" data-text="gemini robotics: bringing ai into the physical world gemini robotics：将 ai 带入物理世界 把 gemini 2.0 的 frontier 世界知识与具身推理能力（gemini robotics-er）接到 vla 动作模型上，实现强泛化 + 灵巧操作 + 快速适配新任务/新本体 gemini-robotics-bringing-ai-into-physical-world arxiv (tech report)">
+        <div class="cov"><img loading="lazy" src="./Gemini-Robotics-Bringing-AI-into-Physical-World/images/figure_1_model_family_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Gemini Robotics: Bringing AI into the Physical World</div>
+          <div class="c-cn">Gemini Robotics：将 AI 带入物理世界</div>
+          <div class="c-one">把 Gemini 2.0 的 frontier 世界知识与具身推理能力（Gemini Robotics-ER）接到 VLA 动作模型上，实现强泛化 + 灵巧操作 + 快速适配新任务/新本体</div>
+          <div class="c-tags">
+            <span class="os os-no" title="闭源; On-Device 仅限合作伙伴; ER 1.6 仅API(2026-04)">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./LeVERB-Humanoid-Whole-Body-Latent-VL-Instruction/summary.html"
+         data-rating="Important" data-os="none" data-track="A B"
+         data-year="2025" data-tier="imp" data-text="leverb: humanoid whole-body control with latent vision-language instruction leverb：用潜在视觉语言指令实现人形全身控制 首个用学习的 latent verb 接口连接 vla 与 rl 全身控制器的人形机器人框架，同时覆盖 track a（vla）和 track b（sim-to-real wbc） leverb-humanoid-whole-body-latent-vl-instruction arxiv preprint (under review)">
+        <div class="cov"><img loading="lazy" src="./LeVERB-Humanoid-Whole-Body-Latent-VL-Instruction/images/figure_1_training_pipeline.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">LeVERB: Humanoid Whole-Body Control with Latent Vision-Language Instruction</div>
+          <div class="c-cn">LeVERB：用潜在视觉语言指令实现人形全身控制</div>
+          <div class="c-one">首个用学习的 latent verb 接口连接 VLA 与 RL 全身控制器的人形机器人框架，同时覆盖 Track A（VLA）和 Track B（sim-to-real WBC）</div>
+          <div class="c-tags">
+            <span class="os os-no" title="🔴 闭源">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span><span class="trk trk-B">Track B</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./RDT-1B-Diffusion-Foundation-Model-Bimanual-Manipulation/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A"
+         data-year="2025" data-tier="imp" data-text="rdt-1b: a diffusion foundation model for bimanual manipulation rdt-1b：双臂操作扩散基础模型 用扩散 transformer + 物理可解释统一动作空间，在 1m+ 多机器人数据上预训练出最大扩散型双臂操作 vla（1.2b），实现零样本/少样本泛化到未见物体、场景和技能。 rdt-1b-diffusion-foundation-model-bimanual-manipulation iclr 2025">
+        <div class="cov"><img loading="lazy" src="./RDT-1B-Diffusion-Foundation-Model-Bimanual-Manipulation/images/figure_1_architecture_framework.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">RDT-1B: a Diffusion Foundation Model for Bimanual Manipulation</div>
+          <div class="c-cn">RDT-1B：双臂操作扩散基础模型</div>
+          <div class="c-one">用扩散 Transformer + 物理可解释统一动作空间，在 1M+ 多机器人数据上预训练出最大扩散型双臂操作 VLA（1.2B），实现零样本/少样本泛化到未见物体、场景和技能。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="代码+权重+微调数据全开源, MIT(rdt-1b/rdt-170m)">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./SpatialVLA-Spatial-Representations-VLA/summary.html"
+         data-rating="Important" data-os="code+weights+MIT" data-track="A"
+         data-year="2025" data-tier="imp" data-text="spatialvla: exploring spatial representations for visual-language-action model spatialvla：探索视觉-语言-动作模型的空间表示 在 vla 的观测端注入 ego3d 位置编码、动作端用自适应 gaussian 格子离散化，让机器人策略在 1.1m episodes 预训练中同时学会3d空间感知和跨本体迁移。 spatialvla-spatial-representations-vla rss 2025">
+        <div class="cov"><img loading="lazy" src="./SpatialVLA-Spatial-Representations-VLA/images/figure_1_system_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">SpatialVLA: Exploring Spatial Representations for Visual-Language-Action Model</div>
+          <div class="c-cn">SpatialVLA：探索视觉-语言-动作模型的空间表示</div>
+          <div class="c-one">在 VLA 的观测端注入 Ego3D 位置编码、动作端用自适应 Gaussian 格子离散化，让机器人策略在 1.1M episodes 预训练中同时学会3D空间感知和跨本体迁移。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="GitHub: github.com/SpatialVLA/SpatialVLA（MIT License，689★，51 forks，2026-06实时核查）；HuggingFace: IPEC-COMMUNITY/spatialvla-4b-224-pt（预训练）、spatialvla-4b-mix-224-pt、spatialvla-4b-224-sft-bridge、spatialvla-4b-224-sft-fractal；纯HuggingFace Transformers接口，8.5GB GPU">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./pi-star-0.6-VLA-Learns-From-Experience/summary.html"
+         data-rating="Important" data-os="none" data-track="A"
+         data-year="2025" data-tier="imp" data-text="π*0.6: a vla that learns from experience π*₀.₆：从经验中学习的视觉-语言-动作模型 用 recap（advantage conditioning + 迭代 offline rl）让大型 flow matching vla 在真实部署中不断超越模仿学习上界——洗衣/咖啡/箱子组装吞吐量翻倍、失败率减半。 pi-star-0.6-vla-learns-from-experience arxiv">
+        <div class="cov"><img loading="lazy" src="./pi-star-0.6-VLA-Learns-From-Experience/images/figure_1_recap_system_overview.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">π*0.6: a VLA That Learns From Experience</div>
+          <div class="c-cn">π*₀.₆：从经验中学习的视觉-语言-动作模型</div>
+          <div class="c-one">用 RECAP（advantage conditioning + 迭代 offline RL）让大型 flow matching VLA 在真实部署中不断超越模仿学习上界——洗衣/咖啡/箱子组装吞吐量翻倍、失败率减半。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="论文无代码/权重开源声明，仅提供 pi.website/blog/pistar06 博客链接。openpi 仓库截至 2026-06 仅含 π0/π0-FAST/π0.5，无 π0.6/π*0.6 checkpoint（GitHub issue #860 确认为未实现状态）。模型卡 PDF 已公开（website.pi-asset.com）。">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Mobile-ALOHA-Bimanual-Mobile-Manipulation/summary.html"
+         data-rating="Important" data-os="partial" data-track="A"
+         data-year="2024" data-tier="imp" data-text="mobile aloha: learning bimanual mobile manipulation with low-cost whole-body teleoperation mobile aloha：低成本全身遥操的双臂移动操作学习 造一套 $32k 腰带式全身遥操硬件，再用静态双臂数据 co-training 补运动先验，50 次演示可学会电梯/柜子/厨房等复杂全身协调任务。 mobile-aloha-bimanual-mobile-manipulation arxiv">
+        <div class="cov"><img loading="lazy" src="./Mobile-ALOHA-Bimanual-Mobile-Manipulation/images/figure_1_system_overview_tasks.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Mobile ALOHA: Learning Bimanual Mobile Manipulation with Low-Cost Whole-Body Teleoperation</div>
+          <div class="c-cn">Mobile ALOHA：低成本全身遥操的双臂移动操作学习</div>
+          <div class="c-one">造一套 $32k 腰带式全身遥操硬件，再用静态双臂数据 co-training 补运动先验，50 次演示可学会电梯/柜子/厨房等复杂全身协调任务。</div>
+          <div class="c-tags">
+            <span class="os os-part" title="硬件+代码+演示数据开源, 无基础策略权重">🟡 部分</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2024</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./Octo-Open-Source-Generalist-Robot-Policy/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A"
+         data-year="2024" data-tier="imp" data-text="octo: an open-source generalist robot policy octo：开源通用机器人策略 用 800k oxe 轨迹预训练 transformer + readout token + diffusion action head，首个既能灵活微调到新观测/动作空间、又完全开源的通用机器人操作策略。 octo-open-source-generalist-robot-policy arxiv (tech report)">
+        <div class="cov"><img loading="lazy" src="./Octo-Open-Source-Generalist-Robot-Policy/images/figure_1_architecture_full.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">Octo: An Open-Source Generalist Robot Policy</div>
+          <div class="c-cn">Octo：开源通用机器人策略</div>
+          <div class="c-one">用 800k OXE 轨迹预训练 transformer + readout token + diffusion action head，首个既能灵活微调到新观测/动作空间、又完全开源的通用机器人操作策略。</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="代码+权重开源, MIT(octo-base/small-1.5), 数据=OXE">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2024</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-imp" href="./OpenVLA-Open-Source-Vision-Language-Action-Model/summary.html"
+         data-rating="Important" data-os="code+weights" data-track="A"
+         data-year="2024" data-tier="imp" data-text="openvla: an open-source vision-language-action model openvla：开源视觉-语言-动作模型 把 prismatic-7b vlm 直接在 970k oxe 机器人示范上 fine-tune，配合 lora 和 int4 量化，建立首个真正开源可消费级 gpu 部署的通用 vla 基准 openvla-open-source-vision-language-action-model arxiv (cs.ro)">
+        <div class="cov"><img loading="lazy" src="./OpenVLA-Open-Source-Vision-Language-Action-Model/images/figure_1_architecture.png" alt=""></div>
+        <span class="ribbon r-imp">重要</span>
+        <div class="c-body">
+          <div class="c-title">OpenVLA: An Open-Source Vision-Language-Action Model</div>
+          <div class="c-cn">OpenVLA：开源视觉-语言-动作模型</div>
+          <div class="c-one">把 Prismatic-7B VLM 直接在 970k OXE 机器人示范上 fine-tune，配合 LoRA 和 int4 量化，建立首个真正开源可消费级 GPU 部署的通用 VLA 基准</div>
+          <div class="c-tags">
+            <span class="os os-yes" title="代码+权重开源, MIT(openvla-7b + OFT变体)">🟢 开源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2024</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./A1-Transparent-Open-Source-Truncated-VLA/summary.html"
+         data-rating="Valuable" data-os="partial" data-track="A"
+         data-year="2026" data-tier="val" data-text="a1: a fully transparent open-source, adaptive and efficient truncated vision-language-action model a1：全透明开源、自适应高效的截断视觉-语言-动作模型 同时截断 vlm 骨干（action 一致性早退出）与 flow matching 头（层间热启动 δ=2 步去噪），以 76.6% 骨干算力削减 + 72% 延迟降低实现高效 vla 推理，并全栈开源。 a1-transparent-open-source-truncated-vla arxiv">
+        <div class="cov"><img loading="lazy" src="./A1-Transparent-Open-Source-Truncated-VLA/images/figure_2_overview_architecture.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">A1: A Fully Transparent Open-Source, Adaptive and Efficient Truncated Vision-Language-Action Model</div>
+          <div class="c-cn">A1：全透明开源、自适应高效的截断视觉-语言-动作模型</div>
+          <div class="c-one">同时截断 VLM 骨干（action 一致性早退出）与 flow matching 头（层间热启动 δ=2 步去噪），以 76.6% 骨干算力削减 + 72% 延迟降低实现高效 VLA 推理，并全栈开源。</div>
+          <div class="c-tags">
+            <span class="os os-part" title="{&quot;status&quot;: &quot;partial&quot;, &quot;code&quot;: &quot;yes — github.com/ATeam-Research/A1 (98% Python, 4 commits, 39 stars)&quot;, &quot;weights&quot;: &quot;partial — HuggingFace checkpoints available, no formal Release tag&quot;, &quot;data&quot;: &quot;partial — 6 public datasets used; self-collected 15,951 trajectories not independently released; data processing scripts promised&quot;, &quot;license&quot;: &quot;NOT DECLARED — no license in README; arXiv CC-BY covers paper only&quot;, &quot;gap_note&quot;: &quot;Paper title says &#x27;Fully Transparent Open-Source&#x27; but key gaps: no license, no self-collected data release, only 4 commits. Track post-publication updates.&quot;}">🟡 部分</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./AnoleVLA-Lightweight-VLA-State-Space-Mobile-Manipulation/summary.html"
+         data-rating="Valuable" data-os="partial" data-track="A"
+         data-year="2026" data-tier="val" data-text="anolevla: lightweight vision-language-action model with deep state space models for mobile manipulation anolevla：基于深度状态空间模型的轻量视觉-语言-动作模型用于移动操作 用 mamba (deep ssm) 替换 transformer backbone，o(l²)→o(l) 复杂度，在真实移动操作机器人上比 π0.5 成功率高 21 分、推理快 3 倍 anolevla-lightweight-vla-state-space-mobile-manipulation arxiv">
+        <div class="cov"><img loading="lazy" src="./AnoleVLA-Lightweight-VLA-State-Space-Mobile-Manipulation/images/figure_1_overview_performance.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">AnoleVLA: Lightweight Vision-Language-Action Model with Deep State Space Models for Mobile Manipulation</div>
+          <div class="c-cn">AnoleVLA：基于深度状态空间模型的轻量视觉-语言-动作模型用于移动操作</div>
+          <div class="c-one">用 Mamba (deep SSM) 替换 Transformer backbone，O(L²)→O(L) 复杂度，在真实移动操作机器人上比 π0.5 成功率高 21 分、推理快 3 倍</div>
+          <div class="c-tags">
+            <span class="os os-part" title="项目页有代码/视频, license 未明">🟡 部分</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./RoboNaldo-Humanoid-Soccer-Shooting-via-Curriculum-RL/summary.html"
+         data-rating="Valuable" data-os="none" data-track="B"
+         data-year="2026" data-tier="val" data-text="robonaldo: accurate, stable and powerful humanoid soccer shooting via motion-guided curriculum reinforcement learning robonaldo：用动作引导课程强化学习实现精准、稳定、大力的人形足球射门 用三阶段 motion-guided curriculum rl，把固定参考的稳定性（motion tracking）与 task 奖励的精准性焊到一起，让 unitree g1 在真草地全 onboard 打出精准、稳定、高冲量的全身足球射门（free-kick 0.73m 误差、球速 13.10 m/s 达职业 59–71%）。 robonaldo-humanoid-soccer-shooting-via-curriculum-rl arxiv 2606.11092v3 (preprint)">
+        <div class="cov"><img loading="lazy" src="./RoboNaldo-Humanoid-Soccer-Shooting-via-Curriculum-RL/images/figure_1_teaser.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">RoboNaldo: Accurate, Stable and Powerful Humanoid Soccer Shooting via Motion-Guided Curriculum Reinforcement Learning</div>
+          <div class="c-cn">RoboNaldo：用动作引导课程强化学习实现精准、稳定、大力的人形足球射门</div>
+          <div class="c-one">用三阶段 motion-guided curriculum RL，把固定参考的稳定性（motion tracking）与 task 奖励的精准性焊到一起，让 Unitree G1 在真草地全 onboard 打出精准、稳定、高冲量的全身足球射门（free-kick 0.73m 误差、球速 13.10 m/s 达职业 59–71%）。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="项目页 https://opendrivelab.com/RoboNaldo 在线（含演示视频），并指向 GitHub 仓库 github.com/opendrivelab/RoboNaldo，但截至 2026-06-16 该仓库返回 HTTP 404、不可访问；论文正文称把 joint-index 重映射&#x27;列在 released code&#x27;中，即代码已承诺但尚未公开。无 checkpoint/数据集/license 发布。归类 none（承诺开源但尚未兑现），后续应重查仓库是否上线。">🔴 闭源</span>
+            <span class="trk trk-B">Track B</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./SG-VLA-Spatially-Grounded-VLA-Mobile-Manipulation/summary.html"
+         data-rating="Valuable" data-os="none" data-track="A"
+         data-year="2026" data-tier="val" data-text="sg-vla: learning spatially-grounded vision-language-action models for mobile manipulation sg-vla：学习用于移动操作的空间感知视觉-语言-动作模型 在 vla backbone 上挂 5 路辅助解码器（分割/位姿/关节/抓取/全局位置）提供密集空间监督，配合多视角 rgb+depth 输入，将 mobile manipulation 成功率从 60% 提升至 73%。 sg-vla-spatially-grounded-vla-mobile-manipulation arxiv">
+        <div class="cov"><img loading="lazy" src="./SG-VLA-Spatially-Grounded-VLA-Mobile-Manipulation/images/figure_1_architecture.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">SG-VLA: Learning Spatially-Grounded Vision-Language-Action Models for Mobile Manipulation</div>
+          <div class="c-cn">SG-VLA：学习用于移动操作的空间感知视觉-语言-动作模型</div>
+          <div class="c-one">在 VLA backbone 上挂 5 路辅助解码器（分割/位姿/关节/抓取/全局位置）提供密集空间监督，配合多视角 RGB+depth 输入，将 mobile manipulation 成功率从 60% 提升至 73%。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="未见开源">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./Spatially-Conditioned-Diffusion-Policy-Single-RGB-Camera/summary.html"
+         data-rating="Valuable" data-os="none" data-track=""
+         data-year="2026" data-tier="val" data-text="spatially conditioned diffusion policy: learning precise and robust manipulation with a single rgb camera 空间条件扩散策略：用单个 rgb 相机学习精密且鲁棒的操作 非 vla 模型——单任务 imitation/diffusion policy（无语言）：把扩散去噪过程中的中间末端轨迹投影回图像当视觉注意力锚点，沿轨迹采样多尺度特征反馈去噪网络，让单个全局 rgb 相机也能做 usb 插入级精密接触操作，并追平甚至超过加腕相机的多相机基线。 spatially-conditioned-diffusion-policy-single-rgb-camera arxiv preprint (2606.14535v1)">
+        <div class="cov"><img loading="lazy" src="./Spatially-Conditioned-Diffusion-Policy-Single-RGB-Camera/images/figure_1_teaser_precision_robustness.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">Spatially Conditioned Diffusion Policy: Learning Precise and Robust Manipulation with a Single RGB Camera</div>
+          <div class="c-cn">空间条件扩散策略：用单个 RGB 相机学习精密且鲁棒的操作</div>
+          <div class="c-one">非 VLA 模型——单任务 imitation/diffusion policy（无语言）：把扩散去噪过程中的中间末端轨迹投影回图像当视觉注意力锚点，沿轨迹采样多尺度特征反馈去噪网络，让单个全局 RGB 相机也能做 USB 插入级精密接触操作，并追平甚至超过加腕相机的多相机基线。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="未发布。截至 2026-06-16 WebSearch + 查阅 arXiv:2606.14535 摘要页 + 作者 GitHub（kh11kim）：无代码、无权重、无项目主页、无数据集发布。论文 2026-06-12 上传 arXiv，尚未同行评审；基准 Meta-World/DexArt 为公开仿真环境，但 SCDP 实现与真机数据集（USB 180/Battery 90/Long-Horizon 120/其余各 50 演示）均未公开。后续可能补放，建议复查。">🔴 闭源</span>
+            
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./Stubborn-Unified-RL-Motion-Tracking-and-Fall-Recovery/summary.html"
+         data-rating="Valuable" data-os="none" data-track="B"
+         data-year="2026" data-tier="val" data-text="stubborn: a streamlined and unified reinforcement learning framework for robust motion tracking and fall recovery for humanoids stubborn：统一动作跟踪与摔倒恢复的精简 rl 框架 把人形的动作跟踪与摔倒恢复统一进单一 rl 策略（单阶段、无专门恢复奖励/恢复策略）：核心是把跟踪失败当成进入跌倒态流形的入口，用 bernoulli 概率(软)终止替换硬终止给恢复留探索窗，再用误差驱动采样啃难片段；5 m/s 强扰动恢复成功率 100%（消融掉 pt 仅 77.5/85%），真机 unitree g1 跑通空翻/特技/摔倒恢复。 stubborn-unified-rl-motion-tracking-and-fall-recovery arxiv:2606.12814 (cs.ro)">
+        <div class="cov"><img loading="lazy" src="./Stubborn-Unified-RL-Motion-Tracking-and-Fall-Recovery/images/figure_1_overview.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">Stubborn: A Streamlined and Unified Reinforcement Learning Framework for Robust Motion Tracking and Fall Recovery for Humanoids</div>
+          <div class="c-cn">Stubborn：统一动作跟踪与摔倒恢复的精简 RL 框架</div>
+          <div class="c-one">把人形的动作跟踪与摔倒恢复统一进单一 RL 策略（单阶段、无专门恢复奖励/恢复策略）：核心是把跟踪失败当成进入跌倒态流形的入口，用 Bernoulli 概率(软)终止替换硬终止给恢复留探索窗，再用误差驱动采样啃难片段；5 m/s 强扰动恢复成功率 100%（消融掉 PT 仅 77.5/85%），真机 Unitree G1 跑通空翻/特技/摔倒恢复。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="未开源。项目页 https://aislab-sustech.github.io/Stubborn/ 仅放真机演示视频，代码标注 &#x27;Coming Soon&#x27;，无权重、无 GitHub 仓库。训练用公开 mocap LAFAN1[37]+AMASS[38]（本身公开，非本文产出）。arXiv:2606.12814v1。2026-06-16 经 WebFetch 项目页 + WebSearch 核查，均未发现已发布代码/权重。">🔴 闭源</span>
+            <span class="trk trk-B">Track B</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./MoManipVLA-Transferring-VLA-for-Mobile-Manipulation/summary.html"
+         data-rating="Valuable" data-os="none" data-track="A"
+         data-year="2025" data-tier="val" data-text="momanipvla: transferring vision-language-action models for general mobile manipulation momanipvla：将 vla 模型迁移至通用移动操作 把固定基座 vla 当路径点生成器，通过物理可行性约束下的双层轨迹优化（上层优化底盘、下层优化臂轨迹），以极低训练成本将其迁移到移动操作平台。 momanipvla-transferring-vla-for-mobile-manipulation arxiv">
+        <div class="cov"><img loading="lazy" src="./MoManipVLA-Transferring-VLA-for-Mobile-Manipulation/images/figure_1_overview_pipeline.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">MoManipVLA: Transferring Vision-language-action Models for General Mobile Manipulation</div>
+          <div class="c-cn">MoManipVLA：将 VLA 模型迁移至通用移动操作</div>
+          <div class="c-one">把固定基座 VLA 当路径点生成器，通过物理可行性约束下的双层轨迹优化（上层优化底盘、下层优化臂轨迹），以极低训练成本将其迁移到移动操作平台。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="截至2026-06未见代码/权重(CVPR2025, 仅项目页)">🔴 闭源</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2025</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./OK-Robot-Open-Knowledge-Models-for-Robotics/summary.html"
+         data-rating="Valuable" data-os="partial" data-track="A"
+         data-year="2024" data-tier="val" data-text="ok-robot: what really matters in integrating open-knowledge models for robotics ok-robot：开放知识模型集成机器人——关键在哪里 把 clip、owl-vit、anygrasp、lang-sam 等开放知识模型拼成无训练家庭移动抓取系统，ovmm 成功率 58.5%，是竞赛冠军的 1.8×——关键不是用哪个模型，而是怎么把它们组合好。 ok-robot-open-knowledge-models-for-robotics arxiv (icra 2024 workshop / ra-l submission)">
+        <div class="cov"><img loading="lazy" src="./OK-Robot-Open-Knowledge-Models-for-Robotics/images/figure_1_system_overview.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">OK-Robot: What Really Matters in Integrating Open-Knowledge Models for Robotics</div>
+          <div class="c-cn">OK-Robot：开放知识模型集成机器人——关键在哪里</div>
+          <div class="c-one">把 CLIP、OWL-ViT、AnyGrasp、Lang-SAM 等开放知识模型拼成无训练家庭移动抓取系统，OVMM 成功率 58.5%，是竞赛冠军的 1.8×——关键不是用哪个模型，而是怎么把它们组合好。</div>
+          <div class="c-tags">
+            <span class="os os-part" title="代码开源但依赖闭源 AnyGrasp(教育许可)">🟡 部分</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2024</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./HomeRobot-Open-Vocabulary-Mobile-Manipulation/summary.html"
+         data-rating="Valuable" data-os="partial" data-track="A"
+         data-year="2023" data-tier="val" data-text="homerobot: open-vocabulary mobile manipulation homerobot：开放词汇移动操作 首个可复现的开放词汇移动操作基准：形式化 ovmm 任务定义，提供 habitat 仿真 + hello robot stretch 真实机器人的共享软件栈，让不同实验室能在同一基准上公平比较。 homerobot-open-vocabulary-mobile-manipulation corl 2023">
+        <div class="cov"><img loading="lazy" src="./HomeRobot-Open-Vocabulary-Mobile-Manipulation/images/figure_1_task_real_world.png" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">HomeRobot: Open-Vocabulary Mobile Manipulation</div>
+          <div class="c-cn">HomeRobot：开放词汇移动操作</div>
+          <div class="c-one">首个可复现的开放词汇移动操作基准：形式化 OVMM 任务定义，提供 Habitat 仿真 + Hello Robot Stretch 真实机器人的共享软件栈，让不同实验室能在同一基准上公平比较。</div>
+          <div class="c-tags">
+            <span class="os os-part" title="代码 MIT 开源, 无统一策略权重">🟡 部分</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2023</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-inc" href="./Critic-Architecture-Matters-Dual-vs-Unified-Critics/summary.html"
+         data-rating="Incremental" data-os="none" data-track="B"
+         data-year="2026" data-tier="inc" data-text="critic architecture matters: dual vs. unified critics for humanoid loco-manipulation critic 架构很关键：人形 loco-manipulation 中双 critic 对单 critic 控制变量对照：人形 loco-manip 单策略里把目标分给两个独立 critic，比用一个统一 critic 到达快 3.5×、吞吐 2×，且这件事比堆 reward 工程更管用。 critic-architecture-matters-dual-vs-unified-critics arxiv 2606.11891v1 (icra 2026 rl4il workshop)">
+        <div class="cov"><img loading="lazy" src="./Critic-Architecture-Matters-Dual-vs-Unified-Critics/images/figure_1_dual_actor_critic.png" alt=""></div>
+        <span class="ribbon r-inc">增量</span>
+        <div class="c-body">
+          <div class="c-title">Critic Architecture Matters: Dual vs. Unified Critics for Humanoid Loco-Manipulation</div>
+          <div class="c-cn">Critic 架构很关键：人形 loco-manipulation 中双 critic 对单 critic</div>
+          <div class="c-one">控制变量对照：人形 loco-manip 单策略里把目标分给两个独立 critic，比用一个统一 critic 到达快 3.5×、吞吐 2×，且这件事比堆 reward 工程更管用。</div>
+          <div class="c-tags">
+            <span class="os os-no" title="未发布代码/权重/项目页。arXiv 全文与 abstract 页（2026-06-16 联网核查）均无 GitHub/repo/project 链接；单作者短文，致谢仅注明用 AI 助手(Claude)辅助润色。论文可读：https://arxiv.org/abs/2606.11891 (v1, 10 Jun 2026, 收录 ICRA 2026 RL4IL Workshop)">🔴 闭源</span>
+            <span class="trk trk-B">Track B</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+  </div>
+  <div class="empty" id="empty">没有匹配的论文，试试放宽筛选条件。</div>
+</div>
+<footer>Paper Reading · 卡片画廊 · 由各 meta.json 重建（build_gallery.py）· 封面取自各论文关键图</footer>
+<script>
+(function(){
+  var grid=document.getElementById('grid');
+  var cards=[].slice.call(grid.querySelectorAll('.card'));
+  var q=document.getElementById('q'),fr=document.getElementById('f-rating'),
+      fo=document.getElementById('f-os'),ft=document.getElementById('f-track'),
+      fy=document.getElementById('f-year'),so=document.getElementById('sort'),
+      cnt=document.getElementById('count'),empty=document.getElementById('empty');
+  var tierOrder={bt:0,imp:1,val:2,inc:3};
+  function apply(){
+    var s=(q.value||'').trim().toLowerCase();
+    var r=fr.value,o=fo.value,t=ft.value,y=fy.value,vis=0;
+    cards.forEach(function(c){
+      var ok=true;
+      if(s && c.dataset.text.indexOf(s)<0) ok=false;
+      if(r && c.dataset.rating!==r) ok=false;
+      if(o && c.dataset.os!==o) ok=false;
+      if(t && (' '+c.dataset.track+' ').indexOf(' '+t+' ')<0) ok=false;
+      if(y && c.dataset.year!==y) ok=false;
+      c.style.display=ok?'':'none';
+      if(ok) vis++;
+    });
+    cnt.textContent=vis+' / '+cards.length+' 篇';
+    empty.style.display=vis?'none':'block';
+  }
+  function sortBy(mode){
+    var arr=cards.slice();
+    arr.sort(function(a,b){
+      if(mode==='year') return (b.dataset.year||'')-(a.dataset.year||'') || a.querySelector('.c-title').textContent.localeCompare(b.querySelector('.c-title').textContent);
+      if(mode==='title') return a.querySelector('.c-title').textContent.localeCompare(b.querySelector('.c-title').textContent);
+      var d=tierOrder[a.dataset.tier]-tierOrder[b.dataset.tier];
+      return d||((b.dataset.year||'')-(a.dataset.year||''));
+    });
+    arr.forEach(function(c){grid.appendChild(c)});
+  }
+  [q,fr,fo,ft,fy].forEach(function(el){el.addEventListener('input',apply)});
+  so.addEventListener('change',function(){sortBy(so.value);apply()});
+  apply();
+})();
+</script>
+<script>
+(function(){var c=["./assets/cars/opt1_lambo.jpg", "./assets/cars/opt2_taycan.jpg", "./assets/cars/opt3_bugatti.jpg"];var h=document.querySelector(".hero");if(h){h.style.backgroundImage="url('"+c[Math.floor(Math.random()*c.length)]+"')";}})();
+</script>
+</body>
+</html>

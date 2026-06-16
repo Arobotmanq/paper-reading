@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GR00T N1 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>NVIDIA · Humanoid VLA · Foundation Model</span>
+    <h1>GR00T N1:<br>Open Foundation Model<br>for Humanoid Robots</h1>
+    <p class="subtitle">人形机器人数据天然是「数据孤岛」——单一机器体的数据量级远不足以训练通用模型。GR00T N1 的核心思想：把<strong>网络视频、仿真轨迹、神经轨迹、真机演示</strong>组成「数据金字塔」，用 <strong>Dual-System（VLM推理 + DiT执行）</strong> 统一建模，实现跨 embodiment 的通用操作能力。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 命中 · 人形 VLA · Track B 部分相关 · 已深读</span>
+      <span class="pill">📅 2025-03</span>
+      <span class="pill">🏢 NVIDIA</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.14734">arXiv:2503.14734</a></span>
+      <span class="pill">⭐ <a href="https://github.com/NVIDIA/Isaac-GR00T">Isaac-GR00T</a></span>
+      <span class="pill">🤗 <a href="https://huggingface.co/nvidia/GR00T-N1-2B">HuggingFace</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">真机成功率</div>
+    <div class="value">76.8<span class="unit">%</span></div>
+    <div class="desc">GR00T-N1-2B Full Data 平均（4类任务）</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">数据效率</div>
+    <div class="value">+32.4<span class="unit">%</span></div>
+    <div class="desc">仅用 10% 数据 vs Diffusion Policy 全量</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">神经轨迹扩增</div>
+    <div class="value">10×</div>
+    <div class="desc">88h → 827h，用视频生成模型扩增</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">模型规模</div>
+    <div class="value">2.2<span class="unit">B</span></div>
+    <div class="desc">GR00T-N1-2B，开源权重+数据</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">人形机器人数据天然不足、且跨机型不互通，构成「数据孤岛」。GR00T N1 的回答是：<strong>把数据按「金字塔」结构分层组织</strong>——底层海量网络视频、中层仿真+神经生成、顶层真机演示——然后用<strong>双系统架构（System 2 VLM 推理 + System 1 DiT 执行）</strong>端到端统一训练，借助 <a href="./notes.html#latent-action" class="note-link">latent action</a> 和 IDM 把无动作视频纳入训练，以<strong>泛化和数据效率</strong>取代「只靠真机数据蛮力堆量」。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>人形机器人数据极稀缺，单体机器人数据量级远低于 VLA 所需——形成「数据孤岛」问题。</li>
+          <li>但网络视频和仿真轨迹规模大，关键在于如何把它们转化成可学习的动作标签：VQ-VAE latent action（无监督）+ IDM 伪标签（监督）解决这一问题。</li>
+          <li>视频生成模型可以从少量真机演示出发，生成大量反事实神经轨迹，实现 10× 数据扩增。</li>
+          <li><a href="./notes.html#dual-system" class="note-link">Dual-system 架构</a>：VLM（System 2）以 10Hz 做场景推理，<a href="./notes.html#dit" class="note-link">DiT（System 1）</a>以 120Hz 生成流畅动作——推理与执行频率解耦，通过 cross-attention 耦合。</li>
+          <li>embodiment-specific 的 encoder/decoder + 共享 DiT backbone → 一套权重覆盖单臂/双臂/人形多种机器体，后训练仅需微调 adapter 层。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>Dual-System 架构</strong>：<a href="./notes.html#eagle2" class="note-link">Eagle-2 VLM</a>（System 2，冻结语言组件）处理图像+语言 → 输出 token 序列；<a href="./notes.html#dit" class="note-link">Diffusion Transformer（DiT）</a>（System 1）cross-attend 到 VLM tokens，用 flow-matching 生成 chunk 动作。VLM 12th 层 embedding（中间层而非最后层）获得更好的速度与成功率。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>数据金字塔 + 双通道无动作标注</strong>：底层用 <a href="./notes.html#latent-action" class="note-link">VQ-VAE latent action</a> 从视频帧对提取跨 embodiment 共享的潜动作；中层神经轨迹用 latent action 或 <a href="./notes.html#idm" class="note-link">IDM</a> 伪标签，低数据量时 latent 略优，高数据量时 IDM 反超（因 IDM 标签质量随数据规模提升）。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>视频生成模型扩增 + co-training</strong>：fine-tune image-to-video 模型在 88h 真机数据上，生成 827h 神经轨迹（10×）；后训练时以 1:1 比例 co-train 真机轨迹与神经轨迹。仿真则用 DexMimicGen 从少量示范自动生成 78 万条轨迹（≈6500 小时）。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在三个仿真基准全面超越 BC-Transformer 与 Diffusion Policy；真机 GR-1 任务平均成功率 76.8%，<strong>仅 10% 数据时仍比 Diffusion Policy 全量高 3.8 个百分点</strong>——证明了预训练带来的数据效率。神经轨迹 co-training 在 RoboCasa 贡献 +4~9% 额外提升。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>仿真平均成功率：GR00T-N1-2B 45.0% vs Diffusion Policy 33.4%（100 demos/task）</li>
+            <li>GR-1 任务：50.0% vs 32.7%（+17%以上）</li>
+            <li>真机全量数据：76.8% vs 46.4%（+30.4%）</li>
+            <li>真机10%数据：42.6% vs 10.2%（+32.4%）</li>
+            <li>预训练零样本：76.6%（双手协调）/ 73.3%（新物体/新容器）</li>
+            <li>仿真轨迹生成：78万条，11小时完成（DexMimicGen）</li>
+            <li>神经轨迹生成：~30万条（827小时），~10.5万 L40 GPU 小时</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（人形/移动操作 VLA）直接命中</strong>：这是 NVIDIA 官方的人形 VLA 基础模型，双系统架构、数据金字塔策略、latent action/IDM 无动作数据利用、视频生成扩增——每一项都是 VLA 研究的核心范式参考。Track B（足式先进算法）<strong>部分相关</strong>：GR00T N1 专注 manipulation 而非 locomotion，但其数据生成策略（仿真 + 神经轨迹）和 co-training 思路在足式策略上有迁移价值。按框架<strong>深读</strong>，证据细节见下。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 核心问题：人形机器人数据形成「数据孤岛」，单体机器人数据量级不足以训练通用模型，这是 GR00T N1 要解决的根本瓶颈。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">the great variability in robot embodiments, sensors, actuator degrees of freedom, control modes, and other factors result in an archipelago of "data islands" rather than a coherent, Internet-scale dataset needed for training a true generalist model.</blockquote>
+          <div class="ev-trans">机器人 embodiment、传感器、执行器自由度、控制模式等方面的巨大差异，导致形成了「数据孤岛」的群岛，而非训练真正通用模型所需的连贯的 Internet 规模数据集。</div>
+          <div class="ev-gloss">这是全文核心动机：即使用了 Open X-Embodiment 等跨体数据，各机器体数据依然割裂。数据金字塔策略正是针对这一问题的系统性回应。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心架构：<a href="./notes.html#dual-system" class="note-link">Dual-System</a> 设计——System 2（VLM）在 10Hz 做环境理解，System 1（<a href="./notes.html#dit" class="note-link">Diffusion Transformer</a>）在 120Hz 生成闭环动作，两者联合优化。</div>
+        <figure>
+          <img src="./images/figure_2_dual_system_arch.png" alt="Figure 2: GR00T N1 Model Overview，dual-system架构">
+          <figcaption><strong>Figure 2（p.3）：</strong>GR00T N1 整体架构。左侧输入（图像+语言+机器人状态）经 Eagle-2 VLM 编码为 tokens，随后 Diffusion Transformer cross-attend 到这些 tokens，并通过 denoising 生成 Motor Action。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">It adopts a dual-system compositional architecture, inspired by human cognitive processing (Kahneman, 2011). The System 2 reasoning module is a pre-trained Vision-Language Model (VLM) that runs at 10Hz on an NVIDIA L40 GPU. It processes the robot's visual perception and language instruction to interpret the environment and understand the task goal. Subsequently, a Diffusion Transformer, trained with action flow-matching, serves as the System 1 action module. It cross-attends to the VLM output tokens and employs embodiment-specific encoders and decoders to handle variable state and action dimensions for motion generation. It generates closed-loop motor actions at a higher frequency (120Hz).</blockquote>
+          <div class="ev-trans">它采用双系统组合架构，受人类认知加工启发（Kahneman, 2011）。System 2 推理模块是在 NVIDIA L40 GPU 上以 10Hz 运行的预训练 VLM。它处理机器人的视觉感知和语言指令以理解环境和任务目标。随后，用 action flow-matching 训练的 Diffusion Transformer 充当 System 1 动作模块。它 cross-attend 到 VLM 输出 tokens，并使用 embodiment-specific 编码器和解码器处理变维度的状态和动作以生成运动。它以更高频率（120Hz）生成闭环电机动作。</div>
+          <div class="ev-gloss">VLM（慢系统）+ DiT（快系统）的频率解耦是关键：VLM 理解场景但推理慢，DiT 高频闭环但依赖 VLM 语义。两者都是 Transformer，通过 cross-attention 紧密耦合。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 架构细节：<a href="./notes.html#eagle2" class="note-link">Eagle-2 VLM</a> 提供中间层（第12层而非最后层）embedding，同时 DiT 交替 cross-attention（条件化 VLM tokens）和 self-attention（处理动作/状态），K=4 步去噪推理。</div>
+        <figure>
+          <img src="./images/figure_3_dit_arch.png" alt="Figure 3: GR00T N1 详细架构">
+          <figcaption><strong>Figure 3（p.4）：</strong>左为 Eagle-2 VLM（Vision Encoder + Text Tokenizer），右为 DiT blocks（交替 Cross-Attention 和 Self-Attention），底部为 embodiment-specific 的 State Encoder、Action Encoder/Decoder。预训练冻结的权重用蓝色标注。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §2.1 Model Architecture · Vision-Language Module</div>
+          <blockquote class="ev-quote">We found that using middle-layer instead of final-layer LLM embeddings resulted in both faster inference speed and higher downstream policy success rate. For GR00T-N1-2B, we use the representations from the 12th layer.</blockquote>
+          <div class="ev-trans">我们发现使用中间层而非最后层 LLM embedding 在推理速度和下游策略成功率上都更优。GR00T-N1-2B 使用第 12 层的表征。</div>
+          <div class="ev-gloss">这是个重要的工程细节：中间层 embedding 比最后层更适合作为动作生成的条件信号。这与 π0 等模型的经验一致——LLM 最后层倾向于过度处理成语言分布，中间层更保留视觉语义。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §2.1 · Diffusion Transformer Module</div>
+          <blockquote class="ev-quote">In practice, we found K = 4 inference steps to work well across all embodiments.</blockquote>
+          <div class="ev-trans">在实践中，我们发现 K=4 推理步骤在所有 embodiment 上都能良好工作。</div>
+          <div class="ev-gloss">4步去噪实现 63.9ms 推理时延（L40 GPU，bf16），比 DDPM 的50步快一个量级，flow-matching 的线性轨迹特性使极少步数成为可能。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 数据金字塔的核心技术：<a href="./notes.html#latent-action" class="note-link">VQ-VAE latent action</a> 把无动作视频统一编码为跨 embodiment 的潜动作空间，实现同一 codebook 对人类、单臂、双臂、人形的语义统一。</div>
+        <figure>
+          <img src="./images/figure_4_latent_actions.png" alt="Figure 4: Latent Actions 跨 embodiment 共享">
+          <figcaption><strong>Figure 4（p.6）：</strong>同一个 latent action 在 8 种不同 embodiment（含人类）上检索到语义一致的帧对：左列=右臂向左运动，右列=右臂向右运动。VQ-VAE codebook 实现了跨 embodiment 的动作语义统一。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §2.2 Training Data Generation · Latent Actions</div>
+          <blockquote class="ev-quote">For human egocentric videos and neural trajectories, we do not have any actions that we can directly use to train GR00T N1. For these data, we instead generate latent actions by training a VQ-VAE model to extract features from consecutive image frames from videos (Ye et al., 2025). The encoder takes the current frame x_t and the future frame x_{t+H} of a video with a fixed window size H and outputs the latent action z_t.</blockquote>
+          <div class="ev-trans">对于人类视角视频和神经轨迹，我们没有可直接用于训练 GR00T N1 的动作。对于这些数据，我们通过训练 VQ-VAE 模型从视频的连续帧中提取特征来生成潜动作（Ye et al., 2025）。编码器以当前帧 x_t 和固定窗口大小 H 后的未来帧 x_{t+H} 为输入，输出潜动作 z_t。</div>
+          <div class="ev-gloss">关键设计：训练时用量化，推理时用量化前的连续嵌入（pre-quantization embedding）——codebook 主要起训练时的正则化作用，强迫 latent space 围绕有限原型聚类。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §2.2 · Latent Actions</div>
+          <blockquote class="ev-quote">Training the VQ-VAE model on all heterogeneous data together allows us to unify all of the data to share the same learned latent action space, potentially improving cross-embodiment generalization.</blockquote>
+          <div class="ev-trans">在所有异构数据上共同训练 VQ-VAE 模型，使我们能够将所有数据统一到共享相同的学习潜动作空间中，从而可能改善跨 embodiment 的泛化。</div>
+          <div class="ev-gloss">这是数据层面的关键统一：不同来源的数据都被映射到同一动作语义空间，消除 embodiment 边界。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 神经轨迹扩增：用视频生成模型从 88h 真机数据生成 827h 神经轨迹（10×），捕获大量反事实场景；co-training 带来 +4~9% 成功率提升。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6 · §2.2 · Neural Trajectories</div>
+          <blockquote class="ev-quote">we fine-tune image-to-video generation models (Agarwal et al., 2025; Wan Team, 2025; Yang et al., 2024) on all of our 88 hours of in-house collected teleoperation data and generate 827 hours of video data given the existing initial frames with novel language prompts, augmenting it by around 10×. This enables generating training data that captures many more counterfactual scenarios in the real world without actually collecting teleoperation data for each of these cases</blockquote>
+          <div class="ev-trans">我们在全部 88 小时内部收集的遥操作数据上微调 image-to-video 生成模型，在给定现有初始帧和新语言提示的情况下生成 827 小时视频数据，约扩增 10×。这使得能够生成捕获真实世界中更多反事实场景的训练数据，而无需为每种情况实际收集遥操作数据。</div>
+          <div class="ev-gloss">神经轨迹的价值在于反事实：「拿左边物体放右边容器」这样的组合不需要逐一真机采集。视频生成模型的 Internet 预训练也带来了对未见物体和新动作的泛化。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.16 · §4.4 · Post-training w/ Neural Trajectories</div>
+          <blockquote class="ev-quote">We observe that GR00T N1 co-trained with neural trajectories consistently results in substantial gains compared to GR00T N1 only trained on real-world trajectories: +4.2%, +8.8%, +6.8% on average for 30, 100, and 300 data-regimes, respectively, for RoboCasa and +5.8% on average across the 8 tasks with the GR-1 Humanoid.</blockquote>
+          <div class="ev-trans">我们观察到，与仅在真实世界轨迹上训练的 GR00T N1 相比，与神经轨迹 co-train 的 GR00T N1 持续取得实质性提升：在 RoboCasa 的 30、100、300 数据量下分别平均提升 +4.2%、+8.8%、+6.8%，GR-1 人形机器人 8 个任务平均提升 +5.8%。</div>
+          <div class="ev-gloss">神经轨迹在各数据量级都有稳定提升，且 100 demos 时增益最大（+8.8%），说明中等数据量时神经轨迹的多样性价值最显著。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 主要定量结果：GR00T-N1-2B 在三个仿真基准全面超越基线，尤其在人形任务（GR-1）上超 Diffusion Policy 17%+；真机任务全量数据下达 76.8%，仅 10% 数据时仍优于 Diffusion Policy 全量。</div>
+        <figure>
+          <img src="./images/figure_real_results.png" alt="Table 2 & 3: 仿真与真机结果对比">
+          <figcaption><strong>Table 2 & 3（p.15）：</strong>上表=仿真结果（100 demos/task）；下表=真机 GR-1 任务结果。GR00T-N1-2B 在所有任务分类和数据量级下均显著优于 Diffusion Policy，真机 Pick-and-Place 全量数据达 82%。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.15 · §4.4 · Post-training Evaluations</div>
+          <blockquote class="ev-quote">GR00T-N1-2B, achieves a significantly higher success rate across all tasks, outperforming Diffusion Policy by 32.4% in the 10% Data setting and by 30.4% in the Full Data setting. Notably, GR00T-N1-2B trained on just 10% of the data performs only 3.8% lower than Diffusion Policy trained on the full dataset, highlighting its data efficiency.</blockquote>
+          <div class="ev-trans">GR00T-N1-2B 在所有任务上实现了显著更高的成功率，在 10% 数据设置下超越 Diffusion Policy 32.4%，在全量数据设置下超越 30.4%。值得注意的是，仅在 10% 数据上训练的 GR00T-N1-2B 仅比在全量数据上训练的 Diffusion Policy 低 3.8%，突显了其数据效率。</div>
+          <div class="ev-gloss">数据效率是预训练的核心价值体现。10% 数据 ≈ 全量基线，意味着预训练已经内化了大量通用操作知识，少量 fine-tuning 即可激活。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> LAPA vs IDM 二重奏：低数据量时 latent action（LAPA）略优；高数据量时 IDM 反超——两者互补而非冗余，应按数据可用性分层使用。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.16 · §4.4 · Post-training w/ Neural Trajectories</div>
+          <blockquote class="ev-quote">When comparing LAPA and IDM labels in RoboCasa, an interesting pattern emerges: LAPA slightly outperforms IDM in the relatively low-data regime (30), but as more data becomes available (100 and 300), the performance gap between LAPA and IDM widens. This trend is intuitive— with more data for IDM training, the pseudo-action labels become increasingly aligned with real-world actions, leading to stronger positive transfer.</blockquote>
+          <div class="ev-trans">在 RoboCasa 中比较 LAPA 和 IDM 标签时，出现了一个有趣的模式：LAPA 在相对低数据量（30）时略优于 IDM，但随着数据量增加（100 和 300），LAPA 和 IDM 之间的性能差距扩大。这一趋势符合直觉——随着 IDM 训练数据增加，伪动作标签与真实世界动作越来越对齐，带来更强的正向迁移。</div>
+          <div class="ev-gloss">这一 ablation 揭示了两种无动作标注方法的互补性：LAPA 是纯自监督（不依赖真机数据规模），IDM 是监督学习（随真机数据增益）。金字塔底层用 LAPA，中层神经轨迹按数据量选择。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 预训练泛化：零样本（仅预训练权重）在双手协调和新物体/新容器任务上达 76.6% / 73.3%，展示了大规模预训练赋予的泛化能力。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.15 · §4.4 · Pre-training Evaluations</div>
+          <blockquote class="ev-quote">GR00T-N1-2B achieves a success rate of 76.6% (11.5/15) in the first coordinated setting and 73.3% (11/15) in the second setting involving novel object manipulation. 0.5 stands for grasping the object correctly but failing to place the object into the container. The high performance under these two evaluation settings illustrates the effectiveness of large-scale pre-training.</blockquote>
+          <div class="ev-trans">GR00T-N1-2B 在第一个协调设置中实现了 76.6%（11.5/15）的成功率，在涉及新物体操作的第二个设置中实现了 73.3%（11/15）。0.5 表示正确抓取了物体但未能将其放入容器。这两个评估设置下的高性能说明了大规模预训练的有效性。</div>
+          <div class="ev-gloss">这是「零样本预训练能力」的直接证据。当模型被指示执行训练集以外的任务时（物体在左手侧、需要双手协调），它能主动策划双手传递策略——这种涌现能力来自大规模异构数据预训练。</div>
+        </div>
+      </div>
+
+      <!-- 观点9 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点9</span> 当前局限：专注于短程桌面操作，尚不支持 loco-manipulation（行走+操作）；仿真数据质量受限（视频生成模型难以精确遵守物理规律）；后训练会遗忘预训练中涌现的跨手协调能力。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.17 · §4.6 Limitations</div>
+          <blockquote class="ev-quote">Currently, our GR00T N1 model focuses primarily on short-horizon tabletop manipulation tasks. In future work, we aim to extend its capabilities to tackle long-horizon loco-manipulation, which will require advancements in humanoid hardware, model architecture, and training corpora.</blockquote>
+          <div class="ev-trans">目前，我们的 GR00T N1 模型主要专注于短程桌面操作任务。在未来工作中，我们旨在将其能力扩展到长程 loco-manipulation，这将需要在人形硬件、模型架构和训练语料库上取得进展。</div>
+          <div class="ev-gloss">Loco-manipulation（行走中同时操作）是人形机器人的终极目标，GR00T N1 尚未涉及。另一个值得关注的局限是后训练的「遗忘」——post-trained 模型失去了预训练中的双手协调能力（论文 §4.5），说明后训练策略仍需改进。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">GR00T N1 是 NVIDIA 官方开源的人形机器人基础模型，代码、权重、数据、仿真环境均已公开。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/NVIDIA/Isaac-GR00T">github.com/NVIDIA/Isaac-GR00T</a>（NVIDIA Isaac GR00T，含训练/推理/后训练流程）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://huggingface.co/nvidia/GR00T-N1-2B">huggingface.co/nvidia/GR00T-N1-2B</a>（2.2B 参数，bf16）</dd>
+        <dt>训练数据</dt><dd><span class="os-tag os-yes">已开源</span> HuggingFace Datasets 上的预训练数据集（含仿真轨迹和标注数据）</dd>
+        <dt>仿真环境</dt><dd><span class="os-tag os-yes">已开源</span> RoboCasa、DexMimicGen、GR-1 Tabletop 三套 benchmark 代码公开复现</dd>
+        <dt>真机自采数据</dt><dd><span class="os-tag os-part">部分公开</span> 88h 真机遥操作数据未完全公开；神经轨迹生成的 827h 数据具体公开情况需查看 HuggingFace 页面</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+        <blockquote class="ev-quote">Our GR00T-N1-2B model checkpoint, training data, and simulation benchmarks are publicly available here: GitHub and HuggingFace Datasets.</blockquote>
+        <div class="ev-trans">我们的 GR00T-N1-2B 模型权重、训练数据和仿真 benchmark 均已公开于：GitHub 和 HuggingFace Datasets。</div>
+        <div class="ev-gloss">这是论文正文中明确声明的开源承诺。NVIDIA 的「open foundation model」定位从一开始就是社区开放的。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判·评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>NVIDIA 官方发布的第一个真正开源的人形 VLA 基础模型，权重/代码/数据全开放——社区杠杆极大。<strong>双系统架构</strong>（VLM 推理 + DiT 执行频率解耦）是值得借鉴的工程范式。<strong>数据金字塔 + latent action/IDM 双通道</strong>系统性解决了无动作视频利用问题。<strong>神经轨迹扩增（10×）+ DexMimicGen 仿真（78万条）</strong>提供了可复现的数据策略。真机任务数据效率结果（10% 数据 ≈ 基线全量）有实用价值。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>局限于桌面短程任务</strong>：没有 locomotion，没有 loco-manipulation，与「通用人形机器人」的愿景有明显差距，更接近一个高质量的 manipulation VLA。② <strong>真机 benchmark 规模有限</strong>：4类任务，部分任务仅 5~10 trials，统计意义存疑。③ <strong>后训练遗忘问题</strong>：post-trained 模型丢失了预训练中涌现的跨手协调能力，说明 continual learning 方案缺失。④ <strong>神经轨迹质量瓶颈</strong>：视频生成模型难以保证物理一致性，论文自认「仍面临挑战」。⑤ Eagle-2 VLM 骨干相对较小（1.34B LLM 部分），视觉推理上限可能有限。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;系统性地整合了 VLA、数据生成、多 embodiment 支持的完整工程解决方案，开源策略使其成为人形 VLA 研究的重要基础设施；但「通用人形机器人」定位言过其实，locomotion 缺失是实质性局限。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · GR00T N1 (arXiv:2503.14734) · NVIDIA 2025</footer>
+
+</body>
+</html>

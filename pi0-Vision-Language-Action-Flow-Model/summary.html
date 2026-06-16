@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>π0 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Physical Intelligence · Vision-Language-Action</span>
+    <h1>π0: VLA Flow Model<br>for General Robot Control</h1>
+    <p class="subtitle">把 <strong>Internet 尺度的视觉语言知识</strong>（VLM 预训练）与<strong>连续动作的高精度建模</strong>（flow matching）焊在同一个模型里——用「动作专家」把 diffusion 头嫁接进 transformer，同时保留语义理解和精细控制的两种能力。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 移动操作 VLA · 基础必读</span>
+      <span class="pill">📅 2024-10 (v4: 2026-01)</span>
+      <span class="pill">🏢 Physical Intelligence</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2410.24164">arXiv:2410.24164</a></span>
+      <span class="pill">⭐ <a href="https://github.com/Physical-Intelligence/openpi">openpi (Apache-2.0)</a></span>
+      <span class="pill">🌐 <a href="https://physicalintelligence.company/blog/pi0">blog/pi0</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">预训练数据</div>
+    <div class="value">10,000<span class="unit">hr</span></div>
+    <div class="desc">7 机器人构型 · 68 任务</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">模型参数</div>
+    <div class="value">3.3<span class="unit">B</span></div>
+    <div class="desc">VLM 3B + 动作专家 300M</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">控制频率</div>
+    <div class="value">50<span class="unit">Hz</span></div>
+    <div class="desc">精细操作 (如洗衣折叠)</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">开源状态</div>
+    <div class="value" style="font-size:1.2em">代码+权重</div>
+    <div class="desc">openpi · Apache-2.0</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层: 思想 · 逻辑 · 方法 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">机器人操作的两大鸿沟：语言/视觉理解（VLM 擅长，但只会出 token）和精细连续动作（diffusion/flow 擅长，但缺语义）。π0 的核心洞察是：<strong>用「动作专家」这个分离权重块把 flow matching 头嫁接进 VLM transformer</strong>，语义理解和高频连续动作生成共享同一次 forward pass——不是两个模型的串联，而是<strong>一个架构里的双重能力</strong>。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>精细灵巧操作（洗衣折叠、装箱）需要<strong>高频连续动作分布</strong>——autoregressive token 化动作的 VLA 不支持 action chunking，在这类任务上直接失败。</li>
+          <li>但如果完全抛开 VLM、从头训 diffusion policy，就失去了语义理解和语言指令跟随能力——泛化和任务理解都受限。</li>
+          <li>关键设计：把 VLM（SigLIP + Gemma）当前缀 backbone，把动作 token 单独路由给一组<strong>独立权重的「动作专家」</strong>，用 flow matching loss 监督——两套权重共享同一 transformer forward。</li>
+          <li>训练分两阶段：<strong>预训练</strong>（大规模多机器人多任务，获得宽泛能力）→ <strong>后训练</strong>（高质量任务专属数据，精炼执行策略）——类比 LLM 的 pretrain/RLHF。</li>
+          <li>结果：VLM 的语言跟随能力能被高层策略（另一 VLM）调度，π0 既是低层执行器，也能被当作工具调用。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#action-expert" class="note-link">动作专家（Action Expert）</a> + 分离权重</strong>：图像/文本 token → VLM backbone；动作/状态 token → 独立 300M 参数专家块。两块在同一 transformer 层内共享 forward，但各自的 Q/K/V 权重独立——类 <a href="./notes.html#moe" class="note-link">MoE</a>，避免动作噪声污染语义表征。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#flow-matching" class="note-link">Flow Matching</a> 建模连续动作分布</strong>：以线性-高斯最优传输路径为概率路径，10 步 Euler 积分从噪声采样出 H=50 步的 action chunk，控制频率可达 50 Hz。action expert 用全双向注意力遮罩，保证 chunk 内 token 互看。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>预训练 + 后训练两段式配方</strong>：预训练 = 7 机器人 + OXE (~10k hr)，获得宽泛基础；后训练 = 高质量任务专属数据（5–100 hr），在特定任务上精炼。预训练使后训练数据效率大幅提升，尤其对难任务。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">预训练 π0 在所有 out-of-box 任务上<strong>远超 OpenVLA 和 Octo</strong>；后训练后能完成 10–20 分钟的长程灵巧任务（洗衣折叠、装箱）——而这些任务其他方法完全无法解决。这验证了「VLM 预训练 + flow matching 动作建模 + 两阶段训练配方」三者缺一不可。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>Out-of-box：全量 π0（700k steps）在 shirt folding、bussing easy 等任务得分 ~0.85–1.0，OpenVLA 和 Octo 几乎为 0。</li>
+            <li>语言跟随：π0 的 language following rate 显著优于 π0-small（无 VLM 初始化），后者无法从高层语言指令中获益。</li>
+            <li>后训练复杂任务（Figure 13）：全量 π0 在 laundry folding、box building 等任务得分 0.6–0.85，scratch 版本约 0.2–0.35。</li>
+            <li>Parity（160k steps）版 π0 仍优于所有 baseline，说明效益不仅来自算力。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）强相关</strong>：π0 是 π0.5 的基础模型，理解 action expert + flow matching 架构是理解后续 Physical Intelligence 系列工作的前提。其「VLM 骨干 + 分离动作专家 + 两段训练」是当前最有影响力的 VLA 范式之一，直接可借鉴。Track B（足式控制）<strong>不直接相关</strong>——本文涉及的是上肢灵巧操作，不含 locomotion；论文本身也提出「能否扩展到 legged locomotion 仍是未来工作」。故建议<strong>作为基础工作深读架构部分</strong>。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
+
+      <!-- 观点1 核心架构洞察 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有 VLA 用 autoregressive token 化动作，<strong>无法表达高频、连续、多模态</strong>的灵巧操作分布——这是与 diffusion/flow policy 差距的根本原因。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §II Related Work</div>
+          <blockquote class="ev-quote">our model employs a novel design that fine-tunes a VLM to produce actions via flow matching [32, 28], a variant of diffusion [20, 46]. This allows us to handle high-frequency action chunks [57] (up to 50 Hz) and highly dexterous tasks, which we show pose a major challenge for prior autoregressive VLAs [7].</blockquote>
+          <div class="ev-trans">我们的模型采用了一种新颖设计，将 VLM 微调为通过 flow matching 来生成动作——diffusion 的变体。这使我们能够处理高频动作 chunk（最高 50 Hz）和高度灵巧的任务，我们证明这对先前的自回归 VLA 是重大挑战。</div>
+          <div class="ev-gloss">OpenVLA 的实验失败直接印证了这点：它不支持 action chunking，在 out-of-box 任务中得分接近 0。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 动作专家架构 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心架构：<a href="./notes.html#action-expert" class="note-link">动作专家（action expert）</a>是一组独立权重，处理动作和状态 token，在同一 transformer 内与 VLM backbone 共享 forward——类 <a href="./notes.html#moe" class="note-link">MoE</a> 的双路由设计。</div>
+        <figure>
+          <img src="./images/figure_2_architecture.png" alt="Figure 3: π0 架构总览">
+          <figcaption><strong>Figure 3（p.4）：</strong>左侧数据混合（π 数据集 + OXE），中间 VLM backbone（SigLIP ViT 图像编码 + Gemma 2.6B）接收图像和语言，右侧 action expert（300M）接收状态和 noisy action chunk，输出 flow field 预测。两侧共享同一 transformer，但权重分离。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4–5 · §IV The π0 Model</div>
+          <blockquote class="ev-quote">This design is analogous to a mixture of experts [45, 25, 12, 16] with two mixture elements, where the first element is used for image and text inputs, and the second is used for robotics-specific inputs and outputs. We refer to the second set of weights as the action expert.</blockquote>
+          <div class="ev-trans">该设计类似于两个元素的混合专家：第一个元素用于图像和文本输入，第二个用于机器人专属输入和输出。我们将第二组权重称为动作专家。</div>
+          <div class="ev-gloss">与 Transfusion [59] 的不同之处在于，π0 让动作 token 有<strong>独立权重</strong>而非共享 FFN——防止动作训练信号污染 VLM 语义表征。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §IV The π0 Model</div>
+          <blockquote class="ev-quote">PaliGemma is an open-source 3 billion parameter VLM that offers a convenient trade-off between size and performance. We add 300M parameters for the action expert (which is initialized from scratch) for a total of 3.3 billion parameters.</blockquote>
+          <div class="ev-trans">PaliGemma 是一个 30 亿参数的开源 VLM，在大小和性能之间提供了方便的权衡。我们为动作专家增加了 3 亿参数（从头初始化），总计 33 亿参数。</div>
+          <div class="ev-gloss">动作专家从头初始化（无预训练），靠与 VLM backbone 共享 forward 来获得语义对齐；3B VLM 权重冻结或微调均可用 PaliGemma 开源。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 Flow Matching -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> <a href="./notes.html#flow-matching" class="note-link">Flow matching</a> 以线性-高斯最优传输路径建模连续动作分布，10 步 Euler 积分即可生成 H=50 步 action chunk，实时达 50 Hz。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §IV The π0 Model</div>
+          <blockquote class="ev-quote">we generate actions by integrating the learned vector field from τ = 0 to τ = 1, starting with random noise A0 t ∼N(0, I). We use the forward Euler integration rule: Aτ+δ t = Aτ t + δvθ(Aτ t , ot), where δ is the integration step size. We use 10 integration steps (corresponding to δ = 0.1) in our experiments.</blockquote>
+          <div class="ev-trans">我们从 τ=0 到 τ=1 对学到的向量场积分生成动作，从随机噪声 A⁰_t∼N(0,I) 出发，使用前向欧拉积分规则，步长 δ=0.1，实验中使用 10 步积分。</div>
+          <div class="ev-gloss">10 步 vs. DDPM 的 100+ 步——flow matching 的直线概率路径让步骤数大幅减少，这是实时控制可行的关键。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 预训练+后训练配方 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 训练配方：<strong>预训练（多样低质）→ 后训练（专属高质）</strong>，类比 LLM 的 pretrain/post-train 分离——预训练给恢复能力，后训练给执行精度。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §V Data Collection and Training Recipe</div>
+          <blockquote class="ev-quote">the diverse (but lower quality) pre-training data allows the model to recover from mistakes and handle highly varied situations, which might not otherwise occur in the high-quality post-training data, while the post-training data teaches the model to perform the task well.</blockquote>
+          <div class="ev-trans">多样（但较低质量）的预训练数据使模型能从错误中恢复并处理高度多变的情况——这些在高质量后训练数据中通常不会出现——而后训练数据教模型把任务做好。</div>
+          <div class="ev-gloss">这是该文训练配方的核心直觉：两种数据不是替代关系而是互补关系。Figure 11 中 scratch 版本在难任务（paper towel replacement）大幅落后 pretrained 版本，直接验证了这一点。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §III Overview</div>
+          <blockquote class="ev-quote">Our recipe mirrors the pre-training/post-training separation commonly seen in exascale language- and image-language models [1, 48], where the model is first pre-trained on a very large and diverse corpus, and then fine-tuned on more narrow and more carefully curated data to induce the desired pattern of behavior — in our case, dexterity, efficiency, and robustness.</blockquote>
+          <div class="ev-trans">我们的配方镜像了超算级语言/图像语言模型中常见的预训练/后训练分离：模型先在大型多样的语料上预训练，再在更窄更精心筛选的数据上微调，以诱导期望的行为模式——在我们的情况下是灵巧性、效率和鲁棒性。</div>
+          <div class="ev-gloss">明确宣称沿用 LLM 方法论，意义在于提出了机器人基础模型应有的训练范式，而非仅是一个具体系统。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 VLM预训练的价值 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> VLM 预训练的价值体现在<strong>语言跟随能力</strong>上：π0 的语言指令跟随率远高于无 VLM 初始化的 π0-small，使高层 VLM 策略的收益可以传递下来。</div>
+        <figure>
+          <img src="./images/figure_4_language_following.png" alt="Figure 9: 语言跟随与任务性能">
+          <figcaption><strong>Figure 9（p.9）：</strong>左：language following rate，π0 显著优于 π0-small（无 VLM 初始化）。右：任务完成分，π0-Human（有专家中间指令）和 π0-HL（有高层 VLM 策略）都受益，而 π0-small-Human 几乎无收益——因为它听不懂中间指令。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8–9 · §VI-B Following Language Commands</div>
+          <blockquote class="ev-quote">the language following accuracy of π0 is significantly better than that of π0-small. This suggests a significant improvement from the larger pre-trained VLM initialization. This capability translates to an improvement in performance with expert human guidance (π0-human) and with high-level model guidance (π0-HL).</blockquote>
+          <div class="ev-trans">π0 的语言跟随精度显著优于 π0-small，表明较大预训练 VLM 初始化带来了显著提升。该能力转化为在专家人类指导（π0-human）和高层模型指导（π0-HL）条件下的性能提升。</div>
+          <div class="ev-gloss">这是 VLM 预训练「有用」的直接因果链：语言理解好 → 能听懂中间语言指令 → 高层策略的分解收益被低层执行器利用。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 Out-of-box性能 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 预训练后直接 prompting：π0 在所有 out-of-box 任务上大幅领先所有 baseline，即使仅训练 160k 步（parity）也超越训练更久的 OpenVLA 和 Octo。</div>
+        <figure>
+          <img src="./images/figure_3_outofbox_results.png" alt="Figure 7: Out-of-box 评测结果">
+          <figcaption><strong>Figure 7（p.8）：</strong>π0（全量）在 Shirt Folding、Bussing 等任务得分约 0.85–1.0；parity 版（160k steps）仍全面超越 OpenVLA 和 Octo；π0-small 也优于两个 baseline——说明收益来自架构而非单纯算力。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §VI-A Evaluating the Base Model</div>
+          <blockquote class="ev-quote">The results, shown in Figure 7, show that π0 attains by far the best results across the board on all the out-of-box tasks, with near perfect success rates on shirt folding and the easier bussing tasks, and large improvements over all baselines. The "parity" version of π0, which is trained for only 160k steps, still outperforms all the baselines, and even π0-small outperforms OpenVLA and Octo.</blockquote>
+          <div class="ev-trans">结果显示，π0 在所有 out-of-box 任务中大幅领先，在 shirt folding 和较简单 bussing 任务上接近完美成功率，对所有 baseline 均有大幅提升。仅训练 160k 步的 parity 版 π0 仍超越所有 baseline，π0-small 也超越 OpenVLA 和 Octo。</div>
+          <div class="ev-gloss">OpenVLA 失败（得分约 0）是因为不支持 action chunking——这直接验证了「autoregressive token 化动作」是灵巧任务的架构瓶颈。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 长程复杂任务 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 后训练配方使 π0 能完成 5–20 分钟的长程灵巧任务（洗衣折叠、装箱等）——据作者所知是端到端学习策略中最长的灵巧任务。</div>
+        <figure>
+          <img src="./images/figure_5_complex_tasks_results.png" alt="Figure 13: 后训练复杂任务结果">
+          <figcaption><strong>Figure 13（p.11）：</strong>全量 π0（fine-tuned）在所有任务超越 scratch 和 out-of-box 版本；特别是对预训练中没有的任务（box building、to-go box、packing eggs），scratch 版几乎为 0，而 fine-tuned 达 0.65–0.85——预训练的正迁移至关重要。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §VI-D Mastering Complex Multi-Stage Tasks</div>
+          <blockquote class="ev-quote">We believe that this level of autonomous performance on such challenging tasks represents a new state of the art in dexterous robot manipulation with learned policies.</blockquote>
+          <div class="ev-trans">我们认为，在如此挑战性任务上的自主表现水平代表了学习策略在灵巧机器人操作上的新技术水平。</div>
+          <div class="ev-gloss">论文声称的 SOTA 比较来自实际评测：其他方法（ACT、Diffusion Policy、OpenVLA、Octo）在这些任务上得分极低，无法与之比较，故改用 ablation 作对比。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §II Related Work</div>
+          <blockquote class="ev-quote">To our knowledge, our work demonstrates the longest dexterous tasks in the end-to-end robot learning literature.</blockquote>
+          <div class="ev-trans">据我们所知，我们的工作展示了端到端机器人学习文献中时间最长的灵巧任务。</div>
+          <div class="ev-gloss">任务时长 5–20 分钟，涉及多件衣物连续折叠或多步装箱——这是对「长程多阶段」属性的明确声索。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 预训练数据规模 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 预训练混合：约 10,000 小时自采数据（7 机器人构型 · 68 任务） + OXE/Bridge/DROID 开源数据——据作者所知是当时最大的机器人操作预训练数据规模。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §II Related Work</div>
+          <blockquote class="ev-quote">we utilize a much larger dataset, with about 10,000 hours of demonstrations, complemented by the open-source OXE dataset [10]. To our knowledge, this represents by far the largest robot learning experiment in terms of the amount of robot data.</blockquote>
+          <div class="ev-trans">我们使用了规模大得多的数据集，约 10,000 小时示范数据，并由开源 OXE 数据集补充。据我们所知，这就机器人数据量而言是迄今最大的机器人学习实验。</div>
+          <div class="ev-gloss">其中 90.9% 是自采数据（903M timesteps，单/双臂），仅 9.1% 来自 OXE 等开源数据集——PI 自建数据是基础，开源社区数据作补充。</div>
+        </div>
+      </div>
+
+      <!-- 观点9 局限 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点9</span> 局限：不理解预训练数据组成的最优配方；部分任务不稳定；尚不清楚跨本体正迁移的边界——论文明确指出能否扩展到 legged locomotion 是未来工作。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.12 · §VII Discussion, Limitations, and Future Work</div>
+          <blockquote class="ev-quote">it remains to be seen how much positive transfer there is in combining highly diverse data, particularly from different tasks and different robots: although our results suggest that universal pre-trained robot foundation models might become a reality, it is left for future work to understand whether this universality extends to much more distinct domains, such as autonomous driving, navigation, and legged locomotion.</blockquote>
+          <div class="ev-trans">目前还不清楚结合高度多样数据（特别是来自不同任务和不同机器人的数据）能有多少正迁移：尽管我们的结果表明通用预训练机器人基础模型可能成为现实，但这种通用性是否延伸到更不同的领域（如自动驾驶、导航和足式运动）仍有待未来工作探索。</div>
+          <div class="ev-gloss">足式运动控制不在 π0 验证范围内——这条局限与 Track B 相关性的判断直接呼应。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">论文发布时（2024-10）提供博客/视频；<strong>Physical Intelligence 随后在 openpi 仓库开源了代码与预训练权重</strong>（Apache-2.0）。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/Physical-Intelligence/openpi">github.com/Physical-Intelligence/openpi</a>（Apache-2.0；JAX 实现；包含训练/微调/推理）</dd>
+        <dt>权重</dt><dd><span class="os-tag os-yes">已开源</span> <code>pi0_base</code> 等 checkpoint 已释出；HuggingFace <a href="https://huggingface.co/physical-intelligence/pi0">physical-intelligence/pi0</a></dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> ~10k hr 自采操作数据未释出；OXE/Bridge/DROID 子集本就公开</dd>
+      </dl>
+      <div class="evidence" style="margin-top:1em">
+        <div class="ev-loc">📍 p.1 · 论文页眉链接</div>
+        <blockquote class="ev-quote">https://physicalintelligence.company/blog/pi0</blockquote>
+        <div class="ev-trans">论文附带的博客链接，含视频演示和补充材料。</div>
+        <div class="ev-gloss">开源代码和权重通过 openpi 仓库统一分发；π0.5 的权重也在同一仓库，可迁移微调到自有硬件。</div>
+      </div>
+    </section>
+
+    <!-- ============ 简短批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>π0 是当前影响力最大的 VLA 架构论文之一：<strong>动作专家 + flow matching + 两段式训练</strong>的三件套成为后续 π0.5、FAST 等工作的直接基础。10k hr 规模的机器人数据预训练 + 跨本体能力 + 50 Hz 灵巧控制，在论文发表时是显著的技术边界扩展。openpi 开源后可直接微调，社区已有大量下游工作。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① 10k hr 数据绝大多数是 PI 自采且<strong>未公开</strong>，完整复现受限（虽有开源权重可微调）。② 消融实验不够系统：没有对 flow matching vs. diffusion 步数、action chunk 长度、VLM backbone 大小的完整 sweep。③ 评测指标是「average task progress」而非二元成功率，绝对失败率未完整披露。④ 跨本体实验仍局限在灵巧操作，能否迁移到足式/移动平台的 locomotion 完全未探索。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge breakthrough">Breakthrough</span> &nbsp;确立了 VLA 的重要范式（VLM backbone + action expert + flow matching）并以最大规模数据验证，是后续 PI 工作和社区 VLA 工作的重要参照。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · π0 (arXiv:2410.24164)</footer>
+
+</body>
+</html>

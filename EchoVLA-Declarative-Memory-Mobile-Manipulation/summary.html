@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EchoVLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+  .pill.new { background: rgba(234,179,8,0.2); border-color: rgba(234,179,8,0.5); color: #fef08a; font-weight: 700; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+  .badge.valuable { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e40af; border-color: #3b82f6; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Sun Yat-sen University · Huawei Noah's Ark · Memory-Aware VLA</span>
+    <h1>EchoVLA: Synergistic<br>Declarative Memory</h1>
+    <p class="subtitle">现有 VLA 是<strong>无记忆的马尔可夫策略</strong>，在需要跨房间导航+操作的长程任务中力不从心。EchoVLA 仿人脑<strong>海马体–海马旁回</strong>双记忆系统，为 VLA 附加持久场景记忆（voxel map）和情节记忆（token buffer），再以粗细双级交叉注意力融合驱动 per-part diffusion，使移动操作 SR 显著超越 π0.5。</p>
+    <div class="meta-pills">
+      <span class="pill new">★ NEW · Track A 核心</span>
+      <span class="pill rel">🎯 项目相关 · Track A 移动操作 VLA</span>
+      <span class="pill">📅 2025-11（v2: 2026-03）</span>
+      <span class="pill">🏢 Sun Yat-sen U / SJTU / Huawei Noah's Ark</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2511.18112">arXiv:2511.18112</a></span>
+      <span class="pill">⚠ 代码未开源（截至 2026-06）</span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">仿真 Mobile Manip SR</div>
+    <div class="value">0.31</div>
+    <div class="desc">超过 π0.5 基线 +0.11</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">仿真 Manip/Nav SR</div>
+    <div class="value">0.52</div>
+    <div class="desc">超过 π0.5 +0.20</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">真机平均 SR</div>
+    <div class="value">0.44</div>
+    <div class="desc">超过 π0.5(0.33) 和 Diffusion Policy(0.32)</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">MoMani 数据集</div>
+    <div class="value">9089<span class="unit">ep</span></div>
+    <div class="desc">7889 仿真 + 1200 真机</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层: 思想 · 逻辑 · 方法 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">移动操作需要穿越房间、记住开了哪些柜子、知道下一步在哪——这些都是<strong>非马尔可夫问题</strong>，单靠当前帧的 VLA 做不到。EchoVLA 的答案是：给 VLA <strong>装上人脑同款双记忆</strong>——用 voxel map 记住空间结构（海马旁回），用 token buffer 记住操作历史（海马体）——让 diffusion policy 在有记忆的条件下同时输出底盘和机械臂动作。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>移动操作是<strong>非马尔可夫问题</strong>：两帧视觉上相似的状态（"正要开柜" vs "柜已开"）需要历史记忆才能区分正确行为。</li>
+          <li>人脑靠<strong>海马旁回（PHC）存空间语义</strong>、<strong>海马体存时序经历</strong>来解决这类问题——这两种记忆是互补的。</li>
+          <li>场景记忆（Scene Memory）维护跨 episode 累积的 voxel 3D feature map，提供稳定的空间语义背景（慢变）；情节记忆（Episodic Memory）维护固定长度 FIFO token buffer，提供细粒度时序进度（快变）。</li>
+          <li>两类记忆用<strong>粗粒度（coarse）+ 细粒度（fine）cross-attention 分别融合</strong>，避免互相干扰；融合后的表示 \(\mathbf{H}_t\) 条件化 diffusion policy。</li>
+          <li>底盘（base）和机械臂（arm）用<strong>独立去噪器（per-part diffusion）</strong>解耦建模，同时生成协调动作。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#scene-memory" class="note-link">场景记忆（Scene Memory）</a>——空间语义地图</strong>：增量累积跨 episode 的 point cloud 到 voxel grid，用差异驱动更新（discrepancy-driven rule）避免重复写入；在推理时同样在线更新，适应环境变化。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#episodic-memory" class="note-link">情节记忆（Episodic Memory）</a>——任务进度缓冲</strong>：时间索引 FIFO buffer，存近 k 步的多模态 token \(\mathcal{M}^{\text{epi}} = \{(\mathbf{S}_{t-k}, t-k), \ldots, (\mathbf{S}_{t-1}, t-1)\}\)；保留原始 token（非压缩摘要），保留细粒度时序线索。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#per-part-diffusion" class="note-link">Per-part Diffusion Policy</a>——解耦底盘/机械臂</strong>：底盘动作和臂动作各有独立去噪器，共享记忆增强表示 \(\mathbf{H}_t\) 作为条件；训练目标为各部分去噪损失之和，使底盘运动和精细操作可以独立优化。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 RoboCasa 仿真上，EchoVLA 的移动操作 SR（0.31）<strong>超过强基线 π0.5（0.20）+0.11</strong>；消融表明去掉任一记忆模块（EM 或 SM）都显著掉点，证实双记忆互补而非冗余。真机 TidyBot++ 平台 7m×7m 场地，均值 SR 0.44 超过 π0.5（0.33）。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>仿真 Manipulation/Navigation 平均 SR：EchoVLA 0.52 vs. π0.5 0.32。</li>
+            <li>仿真 Mobile Manipulation 平均 SR：EchoVLA 0.31 vs. π0.5 0.20 vs. WB-VIMA 0.11。</li>
+            <li>真机 6 任务均值：EchoVLA 0.44，π0.5 0.33，Diffusion Policy 0.32。</li>
+            <li>最难长程任务 EnP（362 帧跨房间）：EchoVLA 0.10，π0.5 0.00——仅 EchoVLA 能完成。</li>
+            <li>消融（Mobile PnPC2S）：去 SM → SR 0.09；去 EM → SR 0.14；完整 → 0.17。</li>
+            <li>情节记忆窗口 L=8、更新阈值 τ=0.5 为最优超参。</li>
+            <li>MoMani：7889 仿真 + 1200 真机 episodes，覆盖 4 仿真 + 6 真机任务。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）直接命中</strong>：本文正面解决"VLA 驱动移动操作的记忆缺失"问题，提供了场景记忆 + 情节记忆 + per-part diffusion 的完整架构，以及 MoMani 数据集生成流程，与人形机器人长程任务研究高度相关。Track B（足式先进算法）<strong>不直接相关</strong>——本文不涉及 locomotion 控制算法。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有 VLA 大多局限于短程桌面操作，依赖马尔可夫决策，缺乏移动操作所需的记忆与推理能力。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">existing VLAs are mostly confined to short-horizon, table-top manipulation, lacking the memory and reasoning capability required for mobile manipulation, where agents must coordinate navigation and manipulation under changing spatial contexts.</blockquote>
+          <div class="ev-trans">现有 VLA 大多局限于短程桌面操作，缺乏移动操作所需的记忆与推理能力——在移动操作中，智能体必须在变化的空间语境下协调导航与操作。</div>
+          <div class="ev-gloss">这是全文的核心动机：Markovian VLA 在需要历史感知的任务中天然受限，例如区分"柜子已开"与"正要开"。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.1</div>
+          <blockquote class="ev-quote">We focus on non-Markovian tasks— two visually similar frames may correspond to completely different progress states (e.g., "cabinet opened" vs. "about to open"). Thus, a memory mechanism is needed.</blockquote>
+          <div class="ev-trans">我们聚焦于非马尔可夫任务——两帧视觉上相似的画面可能对应完全不同的进度状态（例如"柜子已开"vs"正要开"）。因此需要记忆机制。</div>
+          <div class="ev-gloss">明确点出非马尔可夫性是技术问题的根本来源，直接推导出双记忆设计的必要性。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 双记忆架构 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心设计：仿人脑海马旁回–海马体的双记忆——场景记忆维护持久 voxel map，情节记忆维护时间索引 token buffer，两者通过粗细双级交叉注意力融合。</div>
+        <figure>
+          <img src="./images/figure_2_neuro_memory_system.png" alt="Figure: 神经启发的双记忆系统架构图">
+          <figcaption><strong>EchoVLA 神经启发架构（p.2）：</strong>左侧多模态编码器输出 token 序列，分别送入 Voxel-Map Scene Memory（仿 PHC）和 Token-Buffer Episodic Memory（仿海马体），经 coarse- and fine-grained cross attention 融合后驱动 Per-part Diffusion Policy（Arm/Base）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">EchoVLA incorporates a synergistic declarative memory inspired by the human brain, consisting of a scene memory that maintains a collection of spatial–semantic maps and an episodic memory that stores task-level experiences with multimodal contextual features.</blockquote>
+          <div class="ev-trans">EchoVLA 融入了一种仿人脑的协同陈述性记忆，由两部分组成：维护空间语义地图集合的场景记忆，以及存储带多模态上下文特征的任务级经历的情节记忆。</div>
+          <div class="ev-gloss">两种记忆对应人脑的两个不同区域，分别负责空间语义（慢变/跨 episode）和任务进度（快变/时序），构成设计的神经科学根基。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §3</div>
+          <blockquote class="ev-quote">EchoVLA retrieves from scene memory and episodic memory with separate coarse- and fine-grained cross attention, and fuses them to guide per-part diffusion policies (arm/base).</blockquote>
+          <div class="ev-trans">EchoVLA 用各自的粗粒度和细粒度交叉注意力从场景记忆和情节记忆中检索，并将两者融合以指导 per-part diffusion policies（底盘/机械臂）。</div>
+          <div class="ev-gloss">粗/细两级分别对应场景记忆（3D voxel query）和情节记忆（多模态 token query），保持各自语义粒度。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 场景记忆实现 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 场景记忆通过差异驱动更新规则增量累积跨 episode 的 voxel 3D 特征，在推理时亦在线更新，适应环境变化。</div>
+        <figure>
+          <img src="./images/figure_1_echovla_architecture_overview.png" alt="Figure 2: EchoVLA 整体架构">
+          <figcaption><strong>Figure 2（p.5）：EchoVLA 整体流程。</strong>左侧多模态输入（RGB-D 多视角、point cloud、语言、本体感知）→ 统一 token 序列 → Memory Bank（Scene Memory + Episodic Memory）→ 粗/细双级 cross-attention 检索 → 融合表示条件化 per-part DiT 去噪器 → Base Action + Arm Action。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §3.3</div>
+          <blockquote class="ev-quote">the memory applies a discrepancy-driven rule: the current voxel features V3D t are compared with a reconstruction generated from the existing memory. Regions whose reconstruction error exceeds a threshold are updated with the new PointAttn features, while unchanged areas retain their previous values.</blockquote>
+          <div class="ev-trans">记忆应用差异驱动规则：将当前 voxel 特征 V3D_t 与现有记忆重建结果对比，重建误差超过阈值的区域用新的 PointAttn 特征更新，而未变化区域保留原值。</div>
+          <div class="ev-gloss">这使 scene memory 只在场景真正变化时写入，避免冗余更新，同时允许推理时在线适应未见过的环境或环境重排。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 情节记忆实现 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 情节记忆是固定大小 FIFO buffer，存储原始多模态 token（而非抽象摘要），保留解决非马尔可夫歧义所需的细粒度时序线索。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §3.3</div>
+          <blockquote class="ev-quote">By storing the original encoded tokens instead of compressing them into abstract summaries, the model preserves detailed temporal cues that are essential for resolving non-Markov ambiguities and maintaining consistent task execution across visually similar states.</blockquote>
+          <div class="ev-trans">通过存储原始编码 token 而非将其压缩为抽象摘要，模型保留了详细的时序线索——这对于解决非马尔可夫歧义、在视觉相似状态间维持一致任务执行至关重要。</div>
+          <div class="ev-gloss">不压缩是有意的设计选择：压缩为摘要会丢失精确位置、末端执行器构型等细节，而这些正是区分"正要抓"和"已抓"的关键。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 MoMani 基准 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> MoMani 是首个同时支持仿真自动生成和真机数据、覆盖完整"导航+操作"流程的移动操作基准，包含 9089 episodes。</div>
+        <figure>
+          <img src="./images/figure_3_momani_pipeline_stage1.png" alt="Figure 5: MoMani 数据生成流水线 Stage I">
+          <figcaption><strong>MoMani 生成流水线 Stage I（p.9）：</strong>输入任务规格 → MLLM prompter → Target-Aligned Departure Sampling (L1) → Safety-Aware Multi-Detour Navigation (L2) → Continuous Nav-Manip Stitching (L3) → Hard Quality Gates（零碰撞、精对齐、100% 任务成功）→ 可行候选池 D_pool。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.3 · §1</div>
+          <blockquote class="ev-quote">we further introduce MoMani, an automated benchmark that generates expert-level trajectories via MLLM-guided planning and feedback-based refinement. Compared with existing mobile manipulation benchmarks—which remain limited in scale and task diversity—as well as datasets like RoboTwin 2.0 and RoboCasa, MoMani offers richer task coverage and collects real-robot demonstrations on a holonomic mobile platform to support large scale training.</blockquote>
+          <div class="ev-trans">我们进一步引入 MoMani，一个通过 MLLM 引导规划和基于反馈的精炼来生成专家级轨迹的自动化基准。与现有移动操作基准（规模和任务多样性有限）以及 RoboTwin 2.0 和 RoboCasa 等数据集相比，MoMani 提供了更丰富的任务覆盖，并在全向移动平台上收集真机示范以支持大规模训练。</div>
+          <div class="ev-gloss">MoMani 的核心差异化是同时具备仿真自动生成（Co-Gen 模式）和真机数据，解决现有基准要么只有仿真要么规模受限的问题。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 仿真实验结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 仿真实验中 EchoVLA 在所有任务类别（Manipulation、Navigation、Mobile Manipulation）均超过全部基线，移动操作 SR 0.31 超过 π0.5 的 0.20。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.12 · §5.2</div>
+          <blockquote class="ev-quote">EchoVLA maintains the highest success rate (0.31) in Mobile Manipulation tasks, outperforming all other methods. This highlights the method's effectiveness in handling coordinated base–arm motion, long-range navigation, and sequential manipulation tasks.</blockquote>
+          <div class="ev-trans">EchoVLA 在移动操作任务中保持最高成功率（0.31），超过所有其他方法。这突显了该方法在处理协调的底盘–机械臂运动、远距离导航和序列操作任务中的有效性。</div>
+          <div class="ev-gloss">值得注意的是，从 Manip/Nav（0.52）到 Mobile Manip（0.31）的性能下降（约40%）在所有方法中普遍存在，说明同时协调底盘+臂是本质难题；EchoVLA 在这个困难设定下仍保持最大领先。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 消融研究 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 消融证实场景记忆（SM）和情节记忆（EM）各有不可替代的作用，point cloud 输入同样关键——移除任一模块都导致显著性能下降。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.13 · §5.3</div>
+          <blockquote class="ev-quote">The ablation rows in Table 3 show that disabling either EM or SM leads to substantial degradation, and removing both RGB or PC signals further compounds these effects. Overall, the results highlight that observation diversity (RGB + PC) and hierarchical memory (EM + SM) are both essential for robust performance in manipulation and mobile manipulation tasks in RoboCasa.</blockquote>
+          <div class="ev-trans">Table 3 的消融行显示，禁用 EM 或 SM 任意一个都会导致大幅性能下降，同时去掉 RGB 或 PC 信号会进一步加剧这些影响。总体来看，结果表明观测多样性（RGB + PC）和层次记忆（EM + SM）对于 RoboCasa 操作和移动操作任务的稳健性能都不可或缺。</div>
+          <div class="ev-gloss">Mobile PnPC2S 任务：无 SM → 0.09，无 EM → 0.14，完整模型 → 0.17。两者贡献不同：SM 贡献空间定位（移除后跌幅更大），EM 贡献时序状态跟踪。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 真机结果与失败分析 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 真机实验中 EchoVLA 仅能完成最长程任务 EnP（跨房间 362 帧），同时揭示 scene memory 对动态遮挡（如冰箱门打开）的脆弱性。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.13–14 · §5.4</div>
+          <blockquote class="ev-quote">EchoVLA achieves a mean success rate of 0.44, surpassing Diffusion Policy (0.32). EchoVLA excels in long-horizon precision, achieving 50% SR on RK while baselines fail (10%) due to memory drift.</blockquote>
+          <div class="ev-trans">EchoVLA 达到均值成功率 0.44，超过 Diffusion Policy（0.32）。EchoVLA 在长程精度方面表现突出，在 RK（旋转微波炉旋钮）任务上达到 50% SR，而基线因记忆漂移失败（10%）。</div>
+          <div class="ev-gloss">EM 的 temporal anchor 效果在 RK（高精度长程操作）任务上尤为显著；但 OR（开冰箱门）任务因动态几何变化导致 SM 退化，这是当前设计的固有局限。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.14 · §5.4</div>
+          <blockquote class="ev-quote">performance drops in OR due to dynamic occlusion. As the fridge door opens, rapidly changing geometry degrades EchoVLA's explicit 3D Scene Memory. Conversely, baselines relying on implicit "muscle memory" are more robust to such blind spots where explicit geometry fails.</blockquote>
+          <div class="ev-trans">在 OR 任务中性能下降是由于动态遮挡。随着冰箱门打开，快速变化的几何结构使 EchoVLA 的显式 3D 场景记忆退化。相反，依赖隐式"肌肉记忆"的基线在显式几何失效的盲点处更为鲁棒。</div>
+          <div class="ev-gloss">这个诚实的失败分析揭示了显式 3D 表示的固有弱点：静态假设 vs. 动态环境。作者提出未来用 visual-SLAM 或 loop-closure 缓解漂移。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时检查结果（截至 2026-06）</h2>
+      <p class="lead">经 WebSearch + arXiv HTML 页面实时核查，<strong>目前未发现任何公开代码或权重发布</strong>。</p>
+      <dl class="os-grid">
+        <dt>代码</dt>
+        <dd><span class="os-tag os-no">未开源</span> — arXiv 页面及 GitHub 无对应仓库</dd>
+        <dt>模型权重</dt>
+        <dd><span class="os-tag os-no">未发布</span> — 无 HuggingFace 或其他托管链接</dd>
+        <dt>MoMani 数据集</dt>
+        <dd><span class="os-tag os-no">未发布</span> — 论文中未提供下载链接</dd>
+        <dt>TidyBot++ 平台</dt>
+        <dd><span class="os-tag os-yes">已开源</span> — 硬件平台本身由 [47] 开源，非本文贡献</dd>
+        <dt>论文</dt>
+        <dd><span class="os-tag os-yes">公开</span> — <a href="https://arxiv.org/abs/2511.18112">arXiv:2511.18112</a>（v2: 2026-03-06）</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 搜索结果 · 2026-06-02</div>
+        <blockquote class="ev-quote">No direct links to code repositories, project pages, datasets, weights, or HuggingFace explicitly mentioned on the arXiv page.</blockquote>
+        <div class="ev-trans">arXiv 页面上未明确提及任何代码仓库、项目页、数据集、权重或 HuggingFace 链接。</div>
+        <div class="ev-gloss">EchoVLA 目前是一篇"仅论文"的工作；代码如有开源会出现在 arXiv abstract 页面的 GitHub 链接区域——截至检查日期不存在。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 · 评级 ============ -->
+    <section class="card" id="critique">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+
+      <div class="callout success">
+        <div class="callout-head">值得读的理由</div>
+        <p><strong>问题定位精准</strong>：明确将移动操作的核心难点归结为非马尔可夫性，并用神经科学类比提供了有据可查的双记忆设计动机。<strong>对 Track A 直接可借鉴</strong>：scene memory（voxel map + 差异更新）和 episodic memory（FIFO token buffer）的工程细节清晰，可复现；MoMani 的自动生成流水线（MLLM 引导 + Hard Quality Gates）对构建移动操作数据集有参考价值。失败分析（OR 任务动态遮挡）诚实，指出了改进方向。</p>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-head">主要保留 / 论文未提的问题</div>
+        <p><strong>规模局限</strong>：真机实验只有 20 次独立试验/任务，6 个任务，1 个机器人平台（TidyBot++），统计显著性有限。<strong>未开源</strong>：代码和数据不可用，重现难度大。<strong>计算开销未量化</strong>：voxel map 构建 + 实时差异检测 + 双重交叉注意力的推理延迟在论文中未报告，移动操作对实时性要求高。<strong>场景记忆假设强</strong>：依赖高质量深度流和精确位姿估计，累积里程计漂移会导致"ghosting"，在动态场景下更明显，论文已承认但未解决。<strong>π0.5 基线设置存疑</strong>：π0.5 是移动操作专门设计的强基线，但论文未说明 π0.5 是否使用了同等的 MoMani 数据训练。</p>
+      </div>
+
+      <p>综合评级：<span class="badge important">★★★ Important</span></p>
+      <p style="color:var(--muted); font-size:0.9em;">在 Track A 框架内是填补记忆空缺的重要工作；双记忆架构设计思路扎实，实验对比充分；但真机实验规模小、未开源、计算开销不明，降低一档至 Important（而非 Breakthrough）。</p>
+    </section>
+
+  </main>
+
+  <!-- ============ TOC ============ -->
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层</a></li>
+      <li><a href="#core">◆ 核心观点·证据</a>
+        <ul>
+          <li><a href="#core">观点1 真问题</a></li>
+          <li><a href="#core">观点2 双记忆设计</a></li>
+          <li><a href="#core">观点3 场景记忆</a></li>
+          <li><a href="#core">观点4 情节记忆</a></li>
+          <li><a href="#core">观点5 MoMani</a></li>
+          <li><a href="#core">观点6 仿真结果</a></li>
+          <li><a href="#core">观点7 消融</a></li>
+          <li><a href="#core">观点8 真机结果</a></li>
+        </ul>
+      </li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#critique">⚖ 批判·评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <div class="notes-link"><a href="./notes.html">📖 概念注解 →</a></div>
+  </aside>
+</div>
+
+<footer>
+  EchoVLA · arXiv:2511.18112 · Sun Yat-sen University / SJTU / Huawei Noah's Ark · 综述生成于 2026-06
+</footer>
+
+</body>
+</html>

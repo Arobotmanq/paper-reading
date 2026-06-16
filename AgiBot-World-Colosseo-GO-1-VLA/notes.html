@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgiBot World / GO-1 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code { background: none; color: inherit; padding: 0; border: 0; font-family: "JetBrains Mono", monospace; }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre { border-top-left-radius: 0; border-top-right-radius: 0; margin-top: 0; }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>AgiBot World / GO-1 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      GO-1 / ViLLA 论文里的关键概念——ViLLA、Latent Action、Latent Planner、Action Expert、VQ-VAE、VLA、MoE、跨本体学习、AgiBot World 数据集。每个概念给出定义、在本文的具体用法、对比与出处。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 GO-1 综述</a>
+      <span class="pill">📚 共 9 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.06669" style="color: #93c5fd; text-decoration: none;">arXiv:2503.06669</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ ViLLA ============ -->
+    <section class="card" id="villa">
+      <h2>ViLLA <span class="tag">框架名称</span></h2>
+      <p class="full-name">Vision-Language-Latent-Action · 视觉-语言-潜在动作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>ViLLA 是本文提出的总体框架名称。与 VLA（Vision-Language-Action）的本质区别：<strong>在"语言"和"动作"之间插入一个"潜在动作"中间层</strong>——VLM 不直接预测动作，而是先预测离散的潜在动作 token，再由 Action Expert 将其解码为真实控制信号。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>ViLLA = Vision + Language + <strong>Latent</strong> + Action 的缩写。相比 VLA，多出一个"Latent"层：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>框架</th><th>信息流</th><th>VLM 的直接预测目标</th></tr></thead>
+          <tbody>
+            <tr><td><strong>VLA</strong>（如 OpenVLA、RT-2）</td><td>图像 + 语言 → 动作</td><td>直接输出动作 token 或连续动作</td></tr>
+            <tr><td><strong>ViLLA</strong>（本文 GO-1）</td><td>图像 + 语言 → 潜在动作 token → 动作</td><td>输出离散的潜在动作 token；Action Expert 再做精控</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>本文用法</h3>
+      <p>GO-1 是 ViLLA 框架的具体实现，包含三个组件：</p>
+      <ul>
+        <li><strong>LAM（Latent Action Model）</strong>：学习潜在动作空间（Stage 1）</li>
+        <li><strong>Latent Planner</strong>：VLM 在潜在空间规划（Stage 2）</li>
+        <li><strong>Action Expert</strong>：扩散精控低层动作（Stage 3）</li>
+      </ul>
+      <p>三阶段顺序训练，逐步解锁能力。</p>
+
+      <h3><span class="num">3</span>为什么要加"Latent"层？</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>问题</th><th>ViLLA 如何解决</th></tr></thead>
+          <tbody>
+            <tr><td>VLM token 空间 vs 机器人动作空间不对齐</td><td>潜在动作是 VQ-VAE 学出的紧凑离散 token，维度远小于动作空间，VLM 适配代价低</td></tr>
+            <tr><td>人类视频/网络视频没有动作标签</td><td>LAM 无监督从帧差学潜在动作，任何视频都可用</td></tr>
+            <tr><td>跨本体泛化难</td><td>LAM 的 codebook 是所有本体共享的语义码本</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">📜 命名来源</div>
+        <p>ViLLA 是本文原创框架名称，首次提出。其思路来自 LAPA（Latent Action Pre-training from videos，ICLR 2025）的潜在动作预训练理念，但 ViLLA 进一步将其与 VLM 骨干和 Action Expert 整合成完整的三阶段层级框架。</p>
+      </div>
+    </section>
+
+    <!-- ============ Latent Action / LAM ============ -->
+    <section class="card" id="lam">
+      <h2>Latent Action <span class="tag">核心创新</span></h2>
+      <p class="full-name">Latent Action Model (LAM) · 潜在动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Latent Action 是从"看两帧画面"中无监督学出的<strong>紧凑离散动作语义表示</strong>，不需要任何动作标签。任何视频（人类操作视频、跨本体机器人视频）都能用来训练 LAM，解决了"有视频但无动作标签"这一核心瓶颈。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>给定连续两帧图像 \(I_t\) 和 \(I_{t+H}\)，LAM 学习：</p>
+      <div class="math-display">
+        \[ z_t = I(I_t, I_{t+H}) \quad \text{(编码器：逆动力学)} \]
+        \[ \hat{I}_{t+H} = F(I_t, z_t) \quad \text{(解码器：正向动力学)} \]
+      </div>
+      <p>其中 \(z_t = [z_t^0, \ldots, z_t^{k-1}]\)，\(k=4\) 个离散 token，通过 VQ-VAE 量化到码本 \(\mathcal{C}\) 中。</p>
+
+      <h3><span class="num">2</span>架构细节</h3>
+      <ul>
+        <li><strong>编码器</strong>：时空 Transformer，带因果时序 mask（借鉴 Genie 的设计，Bruce et al. ICML 2024）</li>
+        <li><strong>量化</strong>：VQ-VAE 目标，codebook 大小 |C|（论文未披露具体数值）</li>
+        <li><strong>解码器</strong>：空间 Transformer，输入初始帧 \(I_t\) + 量化后的 \(z_t\)，重建 \(I_{t+H}\)</li>
+        <li><strong>训练数据</strong>：Ego4D 人类视频 + 跨本体机器人数据（无需动作标签）</li>
+      </ul>
+
+      <h3><span class="num">3</span>与 IDM（Inverse Dynamics Model）的区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Latent Action (LAM)</th><th>IDM（如 GR00T N1 所用）</th></tr></thead>
+          <tbody>
+            <tr><td>输出空间</td><td><strong>潜在</strong>离散 token（与真实动作无直接对应）</td><td><strong>物理</strong>动作（关节角/末端速度等）</td></tr>
+            <tr><td>训练监督</td><td><strong>自监督</strong>（重建未来帧，不需要 action label）</td><td><strong>监督</strong>（需要带 ground-truth action 的真机数据）</td></tr>
+            <tr><td>跨本体</td><td>天然共享同一 codebook</td><td>需要每个本体单独训练</td></tr>
+            <tr><td>下游用途</td><td>作为 Latent Planner 的预测目标</td><td>作为策略的动作标签</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处与对比</div>
+        <p>Latent Action 的思路最早见于 <strong>Bruce et al. "Genie" (ICML 2024)</strong>，用于交互式环境生成。<strong>LAPA（Ye et al., ICLR 2025）</strong>首次将其引入机器人预训练，但未保留下游任务的潜在规划能力。GO-1 的贡献是将 Latent Action 与 VLM Latent Planner 整合并保留到推理阶段。</p>
+      </div>
+    </section>
+
+    <!-- ============ Latent Planner ============ -->
+    <section class="card" id="latent-planner">
+      <h2>Latent Planner <span class="tag">Stage 2</span></h2>
+      <p class="full-name">潜在动作规划器 · VLM 骨干在潜在空间做长程规划</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Latent Planner 是 GO-1 的"大脑"——基于 InternVL2.5-2B，接收多视角图像和语言指令，在 LAM 学出的潜在动作空间里做长程规划，输出潜在动作 token 序列。它充当了 VLM 通用知识与机器人精控之间的桥梁。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义与角色</h3>
+      <p>Latent Planner 是 ViLLA 框架的第二组件，解决"如何把 VLM 的通用理解能力迁移到机器人控制"这一问题：</p>
+      <div class="pre-label"><span>信息流</span><span>架构</span></div>
+<pre><code>输入: 多视角图像 {I_head, I_left_wrist, I_right_wrist} + 语言指令 l
+         ↓ InternViT 编码 → 投影到语言空间
+         ↓ 24层 Transformer（全双向注意力，bidirectional attention）
+         ↓ VLM 骨干逐层条件化（layer-by-layer conditioning）
+输出: 潜在动作 token 序列 z_t = [z_t^0, ..., z_t^{k-1}]
+训练目标: Masked Language Modeling（MLM，类 BERT）</code></pre>
+
+      <h3><span class="num">2</span>关键设计</h3>
+      <ul>
+        <li><strong>VLM 骨干</strong>：InternVL2.5-2B（InternViT 图像编码器 + InternLM 语言模型）——2B 参数在机器人任务中证明有效，且与 RDT、π0 同量级</li>
+        <li><strong>双向注意力</strong>：与 GPT 系列的单向不同，使用全双向注意力，更适合预测离散序列（类 BERT/masked LM）</li>
+        <li><strong>层级调制</strong>：VLM 主干的每一层输出都作为 Latent Planner 对应层的条件——信息从上到下逐层传递，而不是只用最终输出</li>
+        <li><strong>Stage 2 预训练目标</strong>：以 LAM 编码器（Stage 1）产出的 \(z_t\) 为监督信号做 MLM，训练 Latent Planner 学会预测潜在动作</li>
+      </ul>
+
+      <h3><span class="num">3</span>与 Action Expert 的分工</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Latent Planner</th><th>Action Expert</th></tr></thead>
+          <tbody>
+            <tr><td>角色</td><td>高层规划（"做什么"）</td><td>低层精控（"怎么做"）</td></tr>
+            <tr><td>输出</td><td>离散潜在动作 token \(z_t\)</td><td>连续动作 chunk \(A_t\)（H=30 步）</td></tr>
+            <tr><td>训练目标</td><td>Masked Language Modeling</td><td>扩散去噪（Diffusion）</td></tr>
+            <tr><td>依赖关系</td><td>依赖 LAM（Stage 1）</td><td>依赖 Latent Planner（Stage 2）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">💡 类比</div>
+        <p>Latent Planner = 大脑皮层（"我要把杯子移到左边"）；Action Expert = 小脑/脊髓（"具体怎样控制每个关节才能完成"）。两者分工使得高层知识（VLM 的语言/视觉理解）可以直接参与规划而无需关心低层控制细节。</p>
+      </div>
+    </section>
+
+    <!-- ============ Action Expert ============ -->
+    <section class="card" id="action-expert">
+      <h2>Action Expert <span class="tag">Stage 3</span></h2>
+      <p class="full-name">动作专家 · 扩散目标回归连续低层动作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Action Expert 是 GO-1 的"精控手"——与 Latent Planner 同架构（24 层 Transformer），但训练目标是扩散去噪（迭代去噪预测连续动作 chunk），由 VLM 主干和 Latent Planner 双重层级调制，实现高频灵巧操作。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Action Expert 是 ViLLA 框架第三组件，在 Stage 3 与 Latent Planner 联合训练：</p>
+      <div class="math-display">
+        \[ A_t = [a_t, a_{t+1}, \ldots, a_{t+H}], \quad H = 30 \]
+        \[ \mathcal{A}(A_t \mid I_t^h, I_t^l, I_t^r, p_t, l) \quad \text{(扩散目标)} \]
+      </div>
+      <p>其中 \(p_t\) 为本体感受状态（关节/末端位置），三视角图像 + 语言指令 + 本体感受作为条件。</p>
+
+      <h3><span class="num">2</span>与 π0 的 action expert 对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>GO-1 Action Expert</th><th>π0 action expert</th></tr></thead>
+          <tbody>
+            <tr><td>上游规划</td><td>Latent Planner（潜在动作 token）调制</td><td>VLM 主干（π0 用 PaliGemma）直接调制</td></tr>
+            <tr><td>扩散类型</td><td>扩散目标（论文引用 [34]，GEMS 框架）</td><td>Flow Matching</td></tr>
+            <tr><td>动作 chunk</td><td>H=30 步</td><td>H 步（具体值因任务）</td></tr>
+            <tr><td>与规划分离</td><td>✓ 分两级（Latent + Action Expert）</td><td>✗ 单级，VLM 直接到动作</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>层级调制（Hierarchical Conditioning）</h3>
+      <p>GO-1 的三组件形成严格的信息层级：</p>
+      <div class="pre-label"><span>调制链</span><span>推理时</span></div>
+<pre><code>VLM 主干（InternVL2.5-2B）
+    → 逐层调制 → Latent Planner
+                    → 预测 z_t（潜在动作 token）
+                        → 逐层调制 → Action Expert
+                                        → 去噪生成 A_t（连续动作 chunk）</code></pre>
+
+      <div class="callout note">
+        <div class="callout-head">📜 技术出处</div>
+        <p>扩散目标来自 <strong>[34] GEMS 框架（Bu et al., 2024, "Towards synergistic, generalized, and efficient dual-system for robotic manipulation"）</strong>——该框架提出了将高层语义规划与低层扩散控制分层结合的双系统思路，GO-1 的三阶段架构在其基础上进一步增加了潜在动作中间层。</p>
+      </div>
+    </section>
+
+    <!-- ============ VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">基准概念</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 是用预训练 VLM（大视觉语言模型）骨干直接输出机器人动作的框架。GO-1 的 ViLLA 是 VLA 的升级版——在"语言"和"动作"之间插入潜在动作层，避免 VLM 直接面对高维动作空间。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>VLA 模型接收视觉观测 \(I_t\) 和语言指令 \(l\)，直接输出机器人动作：</p>
+      <div class="math-display">
+        \[ a_t = \pi(I_t, l) \]
+      </div>
+      <p>代表性工作：<strong>RT-2</strong>（Google，2023）——把动作 token 化后接入 PaLI-X；<strong>OpenVLA</strong>（2024）——开源 VLA 基准；<strong>π0</strong>（Physical Intelligence，2024）——VLM（PaliGemma）+ Flow Matching action expert。</p>
+
+      <h3><span class="num">2</span>VLA vs ViLLA 的本质区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>维度</th><th>VLA</th><th>ViLLA（GO-1）</th></tr></thead>
+          <tbody>
+            <tr><td>预测目标</td><td>直接预测动作（或动作 token）</td><td>先预测潜在动作 token，再解码到实际动作</td></tr>
+            <tr><td>无标签视频利用</td><td>难——需要动作标签才能训练</td><td>易——LAM 从帧对无监督学习</td></tr>
+            <tr><td>VLM 适配代价</td><td>高——需要将动作空间对齐到 VLM token 空间</td><td>低——潜在动作空间维度小，语义紧凑</td></tr>
+            <tr><td>长程规划</td><td>隐式（通过单次 forward pass）</td><td>显式分层：Latent Planner 做规划 + Action Expert 精控</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>本文用法</h3>
+      <p>论文将 OpenVLA 作为"直接 VLM 适配"方法的代表进行对比：</p>
+      <blockquote style="border-left: 3px solid var(--border-strong); padding: 0.5em 1em; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; background: var(--quote-bg); margin: 0.5em 0;">
+        the latent action space is orders of magnitude smaller than the discretized low-level actions used in OpenVLA
+      </blockquote>
+      <p>这句话直接说明了 ViLLA 潜在空间比 OpenVLA 动作空间小"数量级"——是选用潜在动作而非直接动作 token 的核心理由。</p>
+    </section>
+
+    <!-- ============ VQ-VAE ============ -->
+    <section class="card" id="vqvae">
+      <h2>VQ-VAE <span class="tag">量化工具</span></h2>
+      <p class="full-name">Vector Quantized Variational AutoEncoder · 向量量化变分自编码器</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VQ-VAE 把连续的 latent vector 强制离散化到一个可学习的"码本（codebook）"里，使 latent 空间变成有限个原型 token 的集合。在 GO-1 中，它被用来量化 LAM 的潜在动作——使不同本体可以共享同一套动作语义码本。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心结构</h3>
+      <div class="pre-label"><span>VQ-VAE Pipeline</span><span>结构</span></div>
+<pre><code>输入帧对 (I_t, I_{t+H}) ──► 时空 Transformer 编码器 ──► z_e (连续向量)
+                                    │
+                                    ▼ 在 codebook {e_1, ..., e_K} 里找最近邻
+                                 z_q = e_{k*}  (离散 token)
+                                    │
+                                    ▼
+                                 空间 Transformer 解码器 ──► 重建 I_{t+H}</code></pre>
+
+      <h3><span class="num">2</span>训练目标</h3>
+      <div class="math-display">
+        \[ \mathcal{L} = \underbrace{\|I_{t+H} - \hat{I}_{t+H}\|^2}_{\text{重建}} + \underbrace{\|\text{sg}[z_e] - e_{k^*}\|^2}_{\text{codebook loss}} + \beta \cdot \underbrace{\|z_e - \text{sg}[e_{k^*}]\|^2}_{\text{commitment loss}} \]
+      </div>
+
+      <h3><span class="num">3</span>在 GO-1 中的作用</h3>
+      <p>VQ-VAE 量化的关键好处：</p>
+      <ul>
+        <li><strong>跨本体共享</strong>：所有数据（人类视频、单臂、双臂）共享同一码本，强迫模型学到跨本体通用的动作语义原型</li>
+        <li><strong>MLM 友好</strong>：离散 token 可直接作为 Latent Planner 的 masked language modeling 预测目标</li>
+        <li><strong>信息瓶颈</strong>：k=4 个 token 的压缩迫使模型捕捉最本质的动作语义，而非细节</li>
+      </ul>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>Van Den Oord et al. "Neural Discrete Representation Learning" (NeurIPS 2017)</strong>，即 VQ-VAE 原始论文。论文中直接引用为 [32]。</p>
+      </div>
+    </section>
+
+    <!-- ============ 跨本体学习 ============ -->
+    <section class="card" id="cross-embodiment">
+      <h2>Cross-Embodiment <span class="tag">数据策略</span></h2>
+      <p class="full-name">跨本体学习 · 不同硬件平台的数据迁移</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>跨本体学习指让一个模型能从不同硬件形态的机器人（单臂、双臂、不同关节数）甚至人类的数据中学习，使技能迁移而非从头训练。GO-1 通过 LAM 的共享潜在动作码本实现跨本体统一表示。</p>
+      </div>
+
+      <h3><span class="num">1</span>问题背景</h3>
+      <p>机器人数据的核心矛盾：不同机器人的观测空间（相机分辨率/位置）和动作空间（关节数/控制频率）完全不同，导致数据无法直接混合训练。OXE 尝试通过格式统一来解决，但各本体间的动作语义差异仍是瓶颈。</p>
+
+      <h3><span class="num">2</span>GO-1 的解决方案</h3>
+      <p>ViLLA 的潜在动作空间天然是跨本体共享的：</p>
+      <ul>
+        <li><strong>编码器端</strong>：VQ-VAE 只看图像帧差（哪里在动、怎么动），不关心是几关节机器人还是人手</li>
+        <li><strong>共享 codebook</strong>：不同本体的动作都被量化到同一套原型 token，"右手向左移"这个动作语义在人手和机械臂上对应同一个（或相近的）token</li>
+        <li><strong>预训练数据</strong>：Ego4D 人类第一视角视频 + 跨本体机器人数据均参与 Stage 1 训练</li>
+      </ul>
+
+      <h3><span class="num">3</span>本文的规模</h3>
+      <p>AgiBot World 本身虽然是同构数据集（全部 AgiBot G1 双臂机器人），但 GO-1 预训练还引入了：</p>
+      <ul>
+        <li>网络规模 VL 数据（Stage 2 VLM 预训练）</li>
+        <li>Ego4D 人类操作视频（Stage 1 LAM 训练）</li>
+        <li>跨本体机器人数据（Stage 1）</li>
+      </ul>
+      <p>三种数据来源在 LAM 的潜在动作空间中统一，再通过 Latent Planner 迁移到 AgiBot G1 的实机控制。</p>
+    </section>
+
+    <!-- ============ MoE（本文是否使用）============ -->
+    <section class="card" id="moe">
+      <h2>MoE <span class="tag">澄清说明</span></h2>
+      <p class="full-name">Mixture of Experts · 专家混合 · 在 GO-1 中的实际含义</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>GO-1 的"双专家系统"（Latent Planner + Action Expert）<strong>不是</strong>标准的 MoE（Mixture of Experts，门控路由）架构。它更像是"层级专家分工"——两个专家串行条件化，而非并行路由选择。这里的"Expert"是功能性分工，不是 MoE 的技术含义。</p>
+      </div>
+
+      <h3><span class="num">1</span>标准 MoE 是什么</h3>
+      <p>标准 MoE 指：给定输入，通过<strong>门控网络</strong>选择 Top-K 个"专家子网络"并加权求和其输出。常见于大语言模型（如 Mistral MoE、DeepSeek-V2）以在参数量不变的情况下扩展容量。</p>
+
+      <h3><span class="num">2</span>GO-1 的"双专家"实际上是什么</h3>
+      <p>GO-1 的 Latent Planner 和 Action Expert 是<strong>层级调制关系</strong>，不是 MoE 路由：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>特性</th><th>标准 MoE</th><th>GO-1 双专家</th></tr></thead>
+          <tbody>
+            <tr><td>关系</td><td>并行，门控选择</td><td>串行，层级调制</td></tr>
+            <tr><td>信息流</td><td>同一输入 → 多个专家 → 加权合并</td><td>VLM → Latent Planner → Action Expert（单向流）</td></tr>
+            <tr><td>推理时</td><td>选 Top-K 激活</td><td>全部组件都参与，无路由选择</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">📌 用语澄清</div>
+        <p>论文中"dual-expert system"的"expert"是描述两个专门化模块的功能角色（规划专家 + 精控专家），不是 MoE 的技术术语。如果读到 GO-1 时看到"MoE"，需要区分语境——本文架构中没有使用标准 MoE 门控路由。</p>
+      </div>
+    </section>
+
+    <!-- ============ AgiBot World Dataset ============ -->
+    <section class="card" id="agibot-world-dataset">
+      <h2>AgiBot World <span class="tag">数据平台</span></h2>
+      <p class="full-name">AgiBot World Colosseo · 大规模机器人操作数据集与生态</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>AgiBot World 是当前规模最大的<strong>同构双臂人形机器人</strong>操作数据集（1M+ 轨迹），配套全栈工具链和基础模型，全部 CC BY-NC-SA 4.0 开源。与 OXE 的"聚合各种异构数据"不同，AgiBot World 追求"同构 + 质量 + 长程"。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心统计</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>维度</th><th>数值</th></tr></thead>
+          <tbody>
+            <tr><td>轨迹数</td><td>1,001,552 条（Beta 版）</td></tr>
+            <tr><td>总时长</td><td>2976.4 小时</td></tr>
+            <tr><td>任务数</td><td>217 个具体任务</td></tr>
+            <tr><td>技能数</td><td>87 个原子技能</td></tr>
+            <tr><td>场景数</td><td>106 个场景</td></tr>
+            <tr><td>物体数</td><td>3000+ 种</td></tr>
+            <tr><td>机器人数</td><td>100+ 台同构 AgiBot G1</td></tr>
+            <tr><td>采集频率</td><td>30 Hz</td></tr>
+            <tr><td>设施规模</td><td>4000 m²</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>五大场景</h3>
+      <p>家居（Domestic）· 零售（Retail）· 工业（Industrial）· 餐厅（Restaurant）· 办公（Office）——1:1 还原真实场景。</p>
+
+      <h3><span class="num">3</span>与其他数据集的关键差异</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>特性</th><th>AgiBot World</th><th>OXE (1.4M)</th><th>DROID (76k)</th></tr></thead>
+          <tbody>
+            <tr><td>硬件</td><td>同构双臂人形</td><td>异构（几十种机器人）</td><td>单臂固定</td></tr>
+            <tr><td>任务时长</td><td>主要 30-60s，部分 &gt;2min</td><td>主要 &lt;5s</td><td>主要 5-20s</td></tr>
+            <tr><td>质量控制</td><td>人在回路 + 失败恢复标注</td><td>无</td><td>无系统性质控</td></tr>
+            <tr><td>灵巧手</td><td>✓（6-DoF）</td><td>✗</td><td>✗</td></tr>
+            <tr><td>视触觉传感</td><td>✓</td><td>✗</td><td>✗</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>开源版本</h3>
+      <ul>
+        <li><strong>Alpha</strong>（Jan 2025）：92,214 轨迹，~8.5T tokens，Beta 的 ~14%</li>
+        <li><strong>Beta</strong>（Mar 2025）：1,003,672 轨迹，~43.8T tokens，完整版</li>
+        <li><strong>AgiBotWorldChallenge-2025</strong>：竞赛专用数据集</li>
+        <li><strong>许可证</strong>：CC BY-NC-SA 4.0，学术免费，商用需额外授权</li>
+      </ul>
+    </section>
+
+    <!-- ============ 扩散/流式动作头 ============ -->
+    <section class="card" id="diffusion-action">
+      <h2>Diffusion Action Head <span class="tag">精控组件</span></h2>
+      <p class="full-name">扩散动作头 · 迭代去噪生成连续动作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Diffusion Action Head（或 action expert 的扩散分支）用迭代去噪（DDPM/DDIM 类）生成连续动作 chunk，相比直接回归能更好地捕捉多模态动作分布（同一场景可以有多种合理操作方式）。GO-1 的 Action Expert 使用扩散目标，π0 使用 Flow Matching——两者都是生成式动作头，思路类似。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要生成式动作头</h3>
+      <p>机器人操作的动作分布往往是<strong>多模态的</strong>（抓杯子可以从左抓也可以从右抓），直接 MSE 回归会学到均值，导致"平均姿态"而非任一有效动作。扩散/流匹配通过建模分布解决这一问题：</p>
+      <div class="math-display">
+        \[ A_t \sim p_\theta(A_t \mid z_t, I_t, p_t, l) \]
+      </div>
+
+      <h3><span class="num">2</span>Diffusion vs Flow Matching</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Diffusion (GO-1)</th><th>Flow Matching (π0)</th></tr></thead>
+          <tbody>
+            <tr><td>采样路径</td><td>非直线（随机噪声 → 数据）</td><td>接近直线（线性插值）</td></tr>
+            <tr><td>去噪步数</td><td>通常多步（10-100）</td><td>通常少步（1-10）</td></tr>
+            <tr><td>训练目标</td><td>预测噪声 \(\epsilon\)</td><td>预测速度场 \(v\)</td></tr>
+            <tr><td>推理速度</td><td>较慢</td><td>较快</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>两者在实践效果上接近，GO-1 选择 Diffusion 主要是继承 GEMS [34] 框架的设计；π0 选择 Flow Matching 因其推理效率更高。</p>
+
+      <h3><span class="num">3</span>在 GO-1 中的位置</h3>
+      <p>扩散动作头是 Action Expert 的训练目标，与 Latent Planner 的 MLM 目标并列，在 Stage 3 联合训练：</p>
+      <ul>
+        <li>Latent Planner：预测 \(z_t\)（MLM，离散）</li>
+        <li>Action Expert：去噪生成 \(A_t\)（Diffusion，连续）</li>
+        <li>两者在推理时串行执行：先 Latent Planner 输出 \(z_t\)，再 Action Expert 以 \(z_t\) 为条件去噪</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表（9）</div>
+    <ul>
+      <li><a href="#villa">ViLLA — 框架总览</a></li>
+      <li><a href="#lam">Latent Action (LAM)</a></li>
+      <li><a href="#latent-planner">Latent Planner</a></li>
+      <li><a href="#action-expert">Action Expert</a></li>
+      <li><a href="#vla">VLA — 基准对比</a></li>
+      <li><a href="#vqvae">VQ-VAE — 量化工具</a></li>
+      <li><a href="#cross-embodiment">Cross-Embodiment</a></li>
+      <li><a href="#moe">MoE — 澄清说明</a></li>
+      <li><a href="#agibot-world-dataset">AgiBot World 数据集</a></li>
+      <li><a href="#diffusion-action">Diffusion Action Head</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · AgiBot World Colosseo / GO-1 (arXiv:2503.06669) · 配套笔记
+</footer>
+
+</body>
+</html>

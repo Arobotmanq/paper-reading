@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRAIL 综述</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- CLAIM + EVIDENCE (核心观点 + 证据块) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  /* evidence sub-block */
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "“"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "”"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  /* multiple evidence rows inside one claim */
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.95em; }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th { text-align: left; padding: 0.85em 1.1em; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.75em 1.1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.winner { background: linear-gradient(90deg, rgba(118, 185, 0, 0.1), rgba(118, 185, 0, 0.04)); }
+  tr.winner td { font-weight: 700; color: var(--nv-green-dark); }
+  tr.winner td:first-child::before { content: "★ "; color: var(--nv-green); }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     PAPER-READING TEMPLATE · "证据优先" (evidence-first) 版式
+     用法: 复制整个 CSS + 骨架, 用目标论文内容替换.
+     核心模式 = 「中文核心观点 + 证据块」:
+       .claim
+         .claim-statement (一句中文论点)
+         .evidence
+           .ev-loc   📍 p.X · §Y          ← 真实页码/章节
+           .ev-quote 逐字英文原文           ← Ctrl-F 锚点, 必须逐字
+           .ev-trans 该段中文译文
+           .ev-gloss 一句解读
+     一个 claim 可含多个 .evidence(多条原文支撑).
+     ========================================================= -->
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>NVIDIA · UCLA · Humanoid Data Generation</span>
+    <h1>GRAIL<br>从 3D 资产 + 视频先验生成人形 Loco-Manipulation 数据</h1>
+    <p class="subtitle">"全数字化"数据生成流水线：先指定 3D 场景（物体几何、相机、尺度、机器人比例化身），再用 <strong>视频基础模型 (VFM)</strong> 生成参考交互视频，重建度量级 4D HOI 轨迹并重定向到 Unitree G1，配合 <strong>object-aware latent adaptor</strong> 与 <strong>scene-aware tracker</strong> 训练 task-general 策略。20,000+ 序列、零真机采集，直接 sim-to-real 部署。</p>
+    <div class="meta-pills">
+      <span class="pill">📄 arXiv:2606.05160v1 · 2026-06</span>
+      <span class="pill">🏢 NVIDIA × UCLA</span>
+      <span class="pill">🤖 Unitree G1</span>
+      <span class="pill">🔗 <a href="https://research.nvidia.com/labs/dair/grail/">Project Page</a></span>
+      <span class="pill">📄 <a href="https://arxiv.org/abs/2606.05160">arXiv</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green"><div class="label">生成数据规模</div><div class="value">20K<span class="unit">+ seq</span></div><div class="desc">pick-up / 全身操作 / 坐 / 地形穿越</div></div>
+  <div class="kpi purple"><div class="label">真机抓取成功率</div><div class="value">84<span class="unit">%</span></div><div class="desc">仅用 GRAIL 数据；未见物体 80%</div></div>
+  <div class="kpi blue"><div class="label">真机爬楼成功率</div><div class="value">90<span class="unit">%</span></div><div class="desc">egocentric RGB 策略</div></div>
+  <div class="kpi gold"><div class="label">开源</div><div class="value">⚠<span class="unit">仅项目页</span></div><div class="desc">代码/数据/权重未公开承诺</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
+
+      <figure>
+        <img src="./images/figure_1_teaser.png" alt="Figure 1: GRAIL teaser">
+        <figcaption><strong>Figure 1：</strong>"From Fully Digital Data Generation to Real-World Deployment"——上：仿真中 G1 执行生成的 pick-up / 全身操作 / 坐 / 地形穿越；下：仅用 GRAIL 数据训练的 egocentric 策略在真 G1 上爬楼 + 抓取。</figcaption>
+      </figure>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 论文的核心反直觉做法：<strong>不要从无约束视频里反推 4D 场景</strong>；先把 3D 场景完全指定，再让 VFM 在已知度量框架内生成交互——把"4D 重建"从病态问题降级为受约束的优化。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">instead of recovering the entire 3D interaction from an uncontrolled video, can we first specify the 3D scene and then use video generative priors to synthesize diverse interactions for humanoid policy learning?</blockquote>
+          <div class="ev-trans">与其从无约束视频中恢复整个 3D 交互，不如先指定 3D 场景，再用视频生成先验来合成多样的交互用于人形策略学习？</div>
+          <div class="ev-gloss">这是与 DAViD / ZeroHSI 一类"视频→4D"路线的关键分歧。GRAIL 把相机/尺度/物体几何/化身比例都提前固定为已知量。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">GRAIL starts from fully specified 3D configurations in which object geometry, camera parameters, metric scale, environment depth, and a robot-proportioned character are known before video generation and reused during reconstruction.</blockquote>
+          <div class="ev-trans">GRAIL 从完全指定的 3D 配置出发——物体几何、相机参数、度量尺度、环境深度以及机器人比例化身都在视频生成前已知，并在重建时复用。</div>
+          <div class="ev-gloss">"privileged setup" 是全文的承重墙：所有后续模块（物体追踪、深度对齐、接触约束）都吃这块红利。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 数据生成三阶段：(i) Robot-Centric Human Video Generation — 用预拟合到目标机器人的人形角色 + Blender + VFM (Kling) 静态相机生成视频；(ii) 4D HOI 重建；(iii) 重定向到 G1 并训追踪策略。</div>
+        <figure>
+          <img src="./images/figure_2_4dhoi.png" alt="Figure 2: Asset-Conditioned 4D HOI Generation">
+          <figcaption><strong>Figure 2：</strong>3D 资产 → 渲染首帧 → VFM 生成静态相机交互视频 → 用关键点/深度/接触损失联合优化得到度量级 4D HOI 轨迹。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §3.1</div>
+          <blockquote class="ev-quote">A VLM (OpenAI, 2024) generates an interaction prompt from the rendered frame, and a VFM (e.g., Kling (Kuaishou, 2025)) then synthesizes the reference HOI video {I_t}_{t=1}^T under a static-camera setting that preserves the known camera parameters (CK, CE) for reconstruction.</blockquote>
+          <div class="ev-trans">VLM 从渲染首帧生成交互 prompt，再由 VFM（如 Kling）在静态相机设定下合成参考 HOI 视频，保留已知相机参数供重建使用。</div>
+          <div class="ev-gloss">"静态相机 + 已知内外参"是让 VFM 输出可被精确反演的关键工程约束。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 为什么"生成人类视频"而不是"生成机器人视频"：当前 VFM 对人类操作有强先验，且人体/手部重建工具远比机器人重建成熟——这是一次实用主义路径选择。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §3.1</div>
+          <blockquote class="ev-quote">Although one could generate robot videos directly, current VFMs have stronger priors over human manipulation, and human body and hand reconstruction tools are more mature than robot reconstruction tools. We therefore synthesize human interaction videos using a character asset prefitted to the target humanoid, which facilitates retargeting the recovered motion to the robot.</blockquote>
+          <div class="ev-trans">虽然可以直接生成机器人视频，但当前 VFM 对人类操作具有更强先验，且人体与手部重建工具远比机器人重建成熟；因此我们用预拟合到目标人形的角色资产合成人类交互视频，便于把恢复的动作重定向回机器人。</div>
+          <div class="ev-gloss">"预拟合化身"在源头消除了重定向时的形态错配——是 SMPL-X→G1 数据链能成立的关键。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 4D HOI 重建的联合优化目标：5 项损失（关键点对齐 + 物体投影 + 度量深度对齐 + 接触对齐 + 正则化），优化 residual 而非完整轨迹，并用 <a href="./notes.html#smplx" class="note-link">SMPL-X</a> 部件 + VLM 接触标签做接触感知。运行时依赖 <a href="./notes.html#foundationpose" class="note-link">FoundationPose</a>（6-DoF 物体追踪）和 <a href="./notes.html#genmo" class="note-link">GENMO</a>（人体 pose 估计）。</div>
+        <figure>
+          <img src="./images/figure_3_trackers.png" alt="Figure 3: Task-General Tracking">
+          <figcaption><strong>Figure 3：</strong>互补的两类 tracker——object-aware 适配器只学潜在残差 Δz + 手部动作（控制器冻结）；scene-aware tracker 微调控制器并加 height-map 编码器，用于地形/坐姿。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.2.2 Eq.1</div>
+          <blockquote class="ev-quote">L = λ_kp L_kp + λ_proj L_proj + λ_depth L_depth + λ_cont L_cont + λ_reg L_reg,</blockquote>
+          <div class="ev-trans">联合优化损失为关键点 + 投影 + 深度 + 接触 + 正则化五项加权和。</div>
+          <div class="ev-gloss">把"漂移接触/穿模/深度尺度漂移"三个传统 HOI 重建顽疾用专门项治理；接触损失只惩罚深度方向偏差以避免与投影项冲突。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.2.2</div>
+          <blockquote class="ev-quote">Rather than optimizing full trajectories directly, we optimize residual motion parameters {ΔΘ^H_t} and {ΔΘ^O_t}</blockquote>
+          <div class="ev-trans">不直接优化完整轨迹，而是优化残差运动参数。</div>
+          <div class="ev-gloss">残差优化是稳定收敛的实用 trick；6D 旋转表示保证连续可导。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 任务通用追踪策略架构：在预训练的全身控制器 <a href="./notes.html#sonic" class="note-link">SONIC</a> 上，操作类轨迹训练 <strong>object-aware latent adaptor</strong>（只学 64 维潜在残差 Δz + 手部 2 维基元，控制器冻结，含 <a href="./notes.html#fsq" class="note-link">FSQ</a> 量化与 <a href="./notes.html#bps" class="note-link">BPS</a> 物体形状编码）；地形/坐姿训练 <strong>scene-aware tracker</strong>（连同 height-map 编码器一起微调控制器）。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §3.3 Eq.6</div>
+          <blockquote class="ev-quote">(Δz_t, a^hand_t) = π_φ(s_t, o_t),  a^body_t = G(z_t + λΔz_t),</blockquote>
+          <div class="ev-trans">适配器输出潜在残差 Δz_t 和手部动作 a^hand_t，再叠加到原编码 z_t 上送入冻结的解码器 G。</div>
+          <div class="ev-gloss">λ=0.1 的残差缩放 + FSQ 量化让"加操作能力"不破坏原有 locomotion 行为——一种"软"的 LoRA 思路。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 数据规模与覆盖：1,000 物体 × 1,000 程序生成地形 → 20,000+ 序列；覆盖 pick-up、全身操作、坐、地形穿越四大类，是当前最大的人形 loco-manipulation 合成集之一。</div>
+        <figure>
+          <img src="./images/figure_4_data.png" alt="Figure 4: Generated dataset">
+          <figcaption><strong>Figure 4：</strong>仿真 G1 执行生成数据的代表样本，覆盖四大类任务和多样物体/场景几何。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §4.2 Scaling Loco-Manipulation Data</div>
+          <blockquote class="ev-quote">we generate a large-scale loco-manipulation dataset for the Unitree G1 with 1,000 object assets sourced from Robocasa (Nasiriany et al., 2024), ComAsset (Kim et al., 2024), OMOMO (Li et al., 2023a), and Hunyuan3D (Team, 2025), paired with 1,000 procedurally generated terrain configurations. The resulting dataset contains over 20,000 sequences</blockquote>
+          <div class="ev-trans">我们用 1,000 个物体资产（来自 Robocasa、ComAsset、OMOMO、Hunyuan3D）配 1,000 个程序生成的地形配置，为 Unitree G1 生成包含 2 万多条序列的大规模 loco-manipulation 数据集。</div>
+          <div class="ev-gloss">"程序化地形"对真机爬楼成功率至关重要，且这是现有数据集 underrepresented 的盲区。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> HOI 生成质量主表压倒性领先：物理可执行率 88.9% vs DAViD 24.0% / HOIDiff 15.8% / CHOIS 10.5%；接触距离、穿模率、Interaction Score 等几乎全项第一。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §4.1 Comparison</div>
+          <blockquote class="ev-quote">GRAIL achieves the strongest performance across nearly all metrics: the lowest contact distance and penetration ratio, the highest interaction score, the smoothest object trajectories, and, by a large margin, the highest tracking success rate with the lowest body and object deviation.</blockquote>
+          <div class="ev-trans">GRAIL 在几乎所有指标上都最强：最低接触距离与穿模率、最高交互得分、最平滑物体轨迹，并以巨大差距取得最高跟踪成功率、最低身体与物体偏差。</div>
+          <div class="ev-gloss">"physically executable"是 HOI 数据真正能喂给 RL 控制器的硬指标，差 3-5× 不是细节优化能补的，"先指定再生成"的范式差异显现。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 操作 tracker SR 81.4% vs HDMI 48.5% / ResMimic 49.2%；消融显示：去掉 SONIC 跌到 45.0%（身体追踪崩），去掉 π_φ 跌到 39.7%（操作成功率最低，但身体追踪反而最好——证明"身体模仿好≠会操作"），去掉相对观察跌到 57.9%。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §4.2 Ablation Study</div>
+          <blockquote class="ev-quote">Disabling the latent adaptor π_φ (i.e., vanilla SONIC) yields the lowest manipulation success rate despite the best body tracking, indicating that accurate body imitation alone is insufficient for object interaction.</blockquote>
+          <div class="ev-trans">关闭潜在适配器 π_φ（即纯 SONIC）虽然身体跟踪最好但操作成功率最低，说明仅靠精确身体模仿不足以完成物体交互。</div>
+          <div class="ev-gloss">这是 loco-manipulation 区别于"运动模仿"的强证据：成功率指标必须挂在物体上，不能只看关节误差。</div>
+        </div>
+      </div>
+
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点9</span> 真机部署：egocentric RGB 策略蒸馏自 tracker，输出 SONIC 潜在 token，相机 10 Hz 推理（RTX 5090 + OAK-D W）；爬楼 90%、抓取 84%（5 类已见物体）、未见 80%（5 类）。</div>
+        <figure>
+          <img src="./images/figure_5_real.png" alt="Figure 5: Sim-to-Real">
+          <figcaption><strong>Figure 5：</strong>仅用 GRAIL 生成数据训练的 egocentric 策略在真 G1 上完成抓取与爬楼。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.11 · §4.3 Sim-to-Real Deployment</div>
+          <blockquote class="ev-quote">For stair-climbing, a policy trained on diverse terrain-traversal sequences from GRAIL achieves a 90% real-world success rate, as shown in Fig. 5. For object pick-up, we train on 200 approach-and-pick-up sequences per object across cubes, apples, tea boxes, carrots, and wet wipes. The resulting policy achieves an 84% real-world success rate, as shown in Table 3, and transfers effectively to unseen objects, attaining an 80% success rate.</blockquote>
+          <div class="ev-trans">爬楼策略真机成功率 90%；抓取策略在每类物体 200 条接近-抓取序列上训练，真机成功率 84%，未见物体 80%。</div>
+          <div class="ev-gloss">"零真机数据 → 真机 80%+"是这个范式最大的卖点；侧面证明 GRAIL 数据的物理一致性足以承受 sim-to-real gap。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.12 · §6 Limitations</div>
+          <blockquote class="ev-quote">Reconstruction quality degrades under severe occlusion, fast motion, or inconsistent object appearance from the VFM, and the failure-filtering step discards a non-trivial fraction of sequences.</blockquote>
+          <div class="ev-trans">在严重遮挡、快速运动或 VFM 物体外观不一致时重建质量下降，失败过滤步骤会丢弃非平凡比例的序列。</div>
+          <div class="ev-gloss">作者自承的"yield 率"是该范式真实成本的隐含变量；论文未公开过滤比例，是工程复现的关键 unknown，应与真机结果并列阅读。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未公开</span> 论文未承诺 GitHub release</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未公开</span> tracker/visual policy checkpoint 均未提及</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> 20K+ 生成序列与 1K 资产管线均未承诺释出</dd>
+        <dt>项目页</dt><dd><a href="https://research.nvidia.com/labs/dair/grail/">research.nvidia.com/labs/dair/grail</a>（视频 demo）</dd>
+        <dt>外部依赖</dt><dd>Kling（商用 VFM）、Infinigen、Blender、FoundationPose、GENMO、WiLoR、SAM2、MoGe-2、SONIC、GMR、Isaac Lab</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · header</div>
+        <blockquote class="ev-quote">https://research.nvidia.com/labs/dair/grail/</blockquote>
+        <div class="ev-trans">仅给出 NVIDIA 项目主页。</div>
+        <div class="ev-gloss">全文未出现 GitHub / HuggingFace / dataset 释出字样；与 NVIDIA 多篇近期人形论文（SONIC、HOVER 等）的"先论文+demo"发布风格一致。复现门槛较高，且 Kling 商用 VFM 也是付费依赖。</div>
+      </div>
+    </section>
+
+    <!-- ============ 简短批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>把"先指定 3D 场景再用 VFM 生视频"这个倒置范式跑成端到端可工作的人形数据流水线，且把每一步（4D 重建损失、tracker 架构、sim2real 蒸馏）都用受控对比验证。HOI 生成质量主表上 88.9% vs 24% 的 4× 差距，加上零真机数据下 84%/90% 的真机成功率，是非常强的工程结果。Table 2 的"去掉 π_φ → 身体追踪反而最好但操作 SR 最低"是教科书级反例。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>① 完全依赖 Kling 等商用 VFM 与多个外部预训练模型（SONIC/GENMO/FoundationPose/WiLoR/MoGe-2），范式可复现性差；② 关键参数 ——失败过滤丢弃比例、20K 序列的成本/吞吐——均未披露；③ 真机抓取仅 5 类已见 + 5 类未见，每类 10 trials，统计样本小；④ 物理执行率 88.9% 的"成功"阈值放在 0.25 归一化偏差，是相对宽松的标尺；⑤ VFM 的物体外观漂移问题在 Limitations 自承但无量化补救；⑥ 与同年 WholeBodyVLA / VideoMimic 等"从真人视频学"路线缺少直接对比。</p></div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;在 humanoid 数据范式上做出明确转向（"don't reconstruct uncontrolled video, generate inside a known 3D scene"），具备社区参考价值；但因严重外部依赖 + 未开源，不算 Breakthrough。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#core">◆ 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 证据优先版式 · 阅读笔记</footer>
+
+</body>
+</html>

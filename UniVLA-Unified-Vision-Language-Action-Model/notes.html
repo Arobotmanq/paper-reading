@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UniVLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>UniVLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      UniVLA 论文里反复出现、需要一定背景知识才好理解的关键概念。每个概念给出定义、在 UniVLA 中的具体用法、与相关方法的对比，以及直观类比。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 UniVLA 综述</a>
+      <span class="pill">📚 当前 5 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2506.19850" style="color: #93c5fd; text-decoration: none;">arXiv:2506.19850</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. Unified Autoregressive VLA ============ -->
+    <section class="card" id="unified-ar">
+      <h2>Unified Autoregressive VLA <span class="tag">Architecture</span></h2>
+      <p class="full-name">统一自回归视觉-语言-动作模型 · UniVLA 的核心范式</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把图像、语言、动作全部变成同一本词典里的"单词"（离散 token），然后用一个标准 Transformer 做"下一个词预测"——视觉理解、语言对话、机器人控制，全是同一个 loss，同一套权重。</p>
+      </div>
+
+      <h3><span class="num">1</span>背景：现有 VLA 的两条路线</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>路线</th><th>代表</th><th>视觉处理</th><th>动作处理</th><th>弱点</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>纯动作预测</strong></td><td>RT-2, OpenVLA, π0</td><td>独立 ViT → 连续 embedding</td><td>离散 token 或 flow matching</td><td>视觉是"晚期融合"，丢失时序因果</td></tr>
+            <tr><td><strong>视觉引导动作</strong></td><td>SuSIE, GR-1, UniPi</td><td>预测未来帧 → 解码动作</td><td>从生成帧中反推</td><td>生成模型与策略模型分离，无法端到端联合优化</td></tr>
+            <tr><td><strong>统一自回归（UniVLA）</strong></td><td>UniVLA（本文）</td><td>VQ tokenizer → 离散 token</td><td>FAST（DCT）→ 离散 token</td><td>（待验证）高分辨率场景的空间细节受 VQ 压缩影响</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>在 UniVLA 里是怎么实现的</h3>
+      <p>模型基础是 <strong>Emu3</strong>（BAAI，8.5B 参数的自回归多模态 Transformer）。数据格式：</p>
+      <div class="pre-label"><span>UniVLA 序列格式</span><span>策略微调阶段</span></div>
+<pre><code>[lang tokens] [boi] [img tokens] [eoi] [boa] [action tokens] [eoa]
+              [boi] [img tokens] [eoi] [boa] [action tokens] [eoa]  ...
+                 ↑                             ↑
+        VQ tokenizer 离散化               FAST（DCT）离散化
+        （8× 空间压缩，256×256 → 32×32 token grid）  （词表大小 1024）</code></pre>
+      <p>训练目标是 <strong>cross-entropy next-token prediction</strong>，但不同阶段对不同 token 类型开关 loss mask：</p>
+      <ul>
+        <li>世界模型后训练：只对<strong>视觉 token</strong> 计算 loss</li>
+        <li>策略微调：只对<strong>动作 token</strong> 计算 loss</li>
+        <li>多模态推断（grounding）：只对<strong>文本 token</strong> 计算 loss</li>
+      </ul>
+
+      <h3><span class="num">3</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 直觉类比</div>
+        <p>想象一个速记员，用同一套速记符号记录"什么东西"（视觉）、"说了什么"（语言）和"做了什么动作"（动作）。现有 VLA 是三个速记员分别记录再汇总；UniVLA 是同一个速记员用同一本符号手册记录全部内容——所以他能感知"昨天拿过这里"（历史动作）和"刚才桌子上出现了新东西"（视觉变化）之间的因果联系。</p>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <p>统一多模态 token 序列的想法可追溯到 <strong>Gato（DeepMind 2022）</strong> 和 <strong>Unified-IO</strong>；图像离散化（VQ tokenizer）源自 <strong>VQVAE（van den Oord 2017）</strong> 和 <strong>DALL-E（OpenAI 2021）</strong>。UniVLA 的新意在于把 <em>机器人动作</em>（通过 FAST/DCT 离散化）也纳入同一框架，并加入世界模型后训练。</p>
+    </section>
+
+    <!-- ============ 2. World Model Post-Training ============ -->
+    <section class="card" id="world-model">
+      <h2>World Model Post-Training <span class="tag">Training Strategy</span></h2>
+      <p class="full-name">世界模型后训练 · UniVLA 三阶段训练的第二阶段</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在策略微调之前插一个"中间阶段"：用大量<strong>无动作标注的机器人视频</strong>，训练模型预测"给了这个指令，接下来视觉会变成什么"——这让模型学到时序因果知识，之后策略微调就像站在巨人肩膀上，数据效率大幅提升。</p>
+      </div>
+
+      <h3><span class="num">1</span>什么是世界模型</h3>
+      <p>世界模型（World Model）学习环境的<strong>状态转移函数</strong>：</p>
+      <div class="math-display">
+        \[ P(s_{t+1} \mid s_t, a_t) \]
+      </div>
+      <p>给定当前状态 \(s_t\) 和动作 \(a_t\)，预测下一个状态 \(s_{t+1}\)。UniVLA 用<strong>语言指令代替动作</strong>（因为此阶段没有动作标注），训练目标变为：</p>
+      <div class="math-display">
+        \[ P(s_{t+1}, s_{t+2}, \ldots, s_T \mid s_1, \text{instruction}) \]
+      </div>
+
+      <h3><span class="num">2</span>在 UniVLA 里怎么做</h3>
+      <div class="pre-label"><span>世界模型后训练序列格式</span><span>Sv</span></div>
+<pre><code>输入序列 Sv = {L¹_t, L¹_v, L²_v, ..., Lᵀ_v}
+              ↑语言指令  ↑第1帧   ↑第2帧     ↑第T帧
+
+Loss 只算在 L²_v ... Lᵀ_v（未来视觉 token）上
+不需要任何动作标注！</code></pre>
+      <p>用 622K 机器人视频（RT-1、BridgeV2、DROID、CALVIN 等，见 Table 8），32 × A100 训练约 50k 步（4-5 天）。</p>
+
+      <h3><span class="num">3</span>消融：为什么是世界模型，不是其他后训练</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>后训练策略</th><th>序列</th><th>监督</th><th>LIBERO-Long ↑</th><th>CALVIN ↑</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>无后训练（基线）</td><td>—</td><td>—</td><td>17.4</td><td>1.46</td></tr>
+            <tr><td>动作预测</td><td>T, I, A</td><td>动作</td><td>10.6 (−6.8)</td><td>0.52 (−0.94)</td></tr>
+            <tr><td>文本到图像</td><td>T, I</td><td>视觉（单帧）</td><td>55.8 (+38.4)</td><td>3.79 (+2.33)</td></tr>
+            <tr><td>视频预测</td><td>I₁, …, Iₜ</td><td>视觉（多帧）</td><td>80.8 (+63.4)</td><td>3.59 (+2.13)</td></tr>
+            <tr><td><strong>世界模型（本文）</strong></td><td><strong>T, I₁, …, Iₜ</strong></td><td><strong>视觉（指令+多帧）</strong></td><td><strong>89.2 (+71.8)</strong></td><td><strong>4.61 (+3.15)</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>关键洞察：仅视频（无文字）学不到"因为这个指令导致了这个变化"；仅文字图像对（无时序）学不到运动动态。<strong>必须同时有指令（文字）+ 时序视觉（多帧）</strong>。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 直觉类比</div>
+        <p>就像外科住院医在进手术室之前要先看大量手术录像——他不需要亲自操刀（动作标注），只需要<strong>理解"做了这个操作，组织会怎么变化"</strong>（世界模型）。有了这些知识，真正上手时的学习曲线会大幅缩短。</p>
+      </div>
+    </section>
+
+    <!-- ============ 3. FAST Action Tokenization ============ -->
+    <section class="card" id="fast">
+      <h2>FAST <span class="tag">Action Tokenizer</span></h2>
+      <p class="full-name">Frequency-space Action Sequence Tokenization · 频域动作序列 tokenizer</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>FAST 用<strong>离散余弦变换（DCT）</strong>把连续动作序列压缩成一串离散 token——就像把音频压成 MP3，保留最重要的低频成分，截断高频噪声。压缩后的 token 可以直接插进语言模型词表，让 VLM 用自回归方式生成动作。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要 action tokenization</h3>
+      <p>机器人动作是高维连续向量（7 DOF 末端位姿 + 夹爪 = 7 维，每步一个），不能直接进 LM 词表。有两条路：</p>
+      <ul>
+        <li><strong>连续方案</strong>：flow matching（π0）、Diffusion Policy——精度高，但与语言模型接口不兼容</li>
+        <li><strong>离散方案（FAST）</strong>：先把 chunk（例如 10 步）的动作序列做 DCT，只保留前 N 个低频系数，再均匀量化成 token ID——与语言词表兼容，next-token prediction 直接可用</li>
+      </ul>
+
+      <h3><span class="num">2</span>DCT 离散化流程</h3>
+      <div class="pre-label"><span>FAST Tokenizer Pipeline</span><span>简化示意</span></div>
+<pre><code># 输入：H 步动作序列，每步 d 维
+A_{1:H} = {a_1, a_2, ..., a_H}   (H×d 矩阵)
+
+# Step 1: 按维度做 1D DCT（时域 → 频域）
+F = DCT(A_{1:H})    → 保留低频系数，截断高频
+
+# Step 2: 归一化到 [0, 1024) 整数
+T_n = quantize(F_n)   → token ID，共 n 个
+
+# 词表替换：FAST 占用语言词表最后 1024 个 ID
+# (Emu3 的原语言词表最后 1024 位被 FAST token 替代)</code></pre>
+      <p>UniVLA 用 <code>action chunk size = 10</code>（CALVIN/LIBERO），每个 chunk 产生可变长度 <code>n</code> 个 token（视频序列中 n 由 DCT 精度决定）。</p>
+
+      <h3><span class="num">3</span>与连续动作方案的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>FAST（离散）</th><th>Flow Matching（π0）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>与 LM 接口</td><td>天然兼容（共享词表）</td><td>需要单独 action expert</td></tr>
+            <tr><td>推理速度</td><td>一次 forward（自回归）</td><td>需要多步去噪（通常 10-50 步）</td></tr>
+            <tr><td>动作精度</td><td>受量化精度限制</td><td>连续，高精度</td></tr>
+            <tr><td>长程一致性</td><td>DCT 低频优先 = 天然平滑</td><td>需要设计噪声调度</td></tr>
+            <tr><td>UniVLA 如何用</td><td>世界模型后训练 + 策略微调</td><td>未使用（UniVLA 纯离散）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 来源</div>
+        <p>FAST 由 <strong>Pertsch et al. 2025（Physical Intelligence + Stanford）</strong> 提出（arXiv:2501.09747）。π0-FAST 是其在 π0 上的应用，LIBERO 平均成功率 85.5%。UniVLA 把 FAST 移植到 Emu3 架构，不同之处：不用 flow matching head，纯粹依赖 next-token prediction，在 LIBERO 上达到 95.5%。</p>
+      </div>
+    </section>
+
+    <!-- ============ 4. VQ Tokenizer for Vision ============ -->
+    <section class="card" id="vq-tokenizer">
+      <h2>VQ Vision Tokenizer <span class="tag">Image Discretizer</span></h2>
+      <p class="full-name">Vector-Quantized Image Tokenizer · 向量量化图像离散化器</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VQ tokenizer 把一张图像切成小格（patch），每个 patch 在"视觉词典"里找最近的"视觉单词"——输出的是一串整数 ID，就像把图像"翻译"成视觉语言。这些 ID 和文字 token 拼在一起，统一进 Transformer。</p>
+      </div>
+
+      <h3><span class="num">1</span>原理：向量量化</h3>
+      <p>VQ（Vector Quantization）的核心操作：</p>
+      <div class="math-display">
+        \[ z_q = e_{k^*}, \quad k^* = \arg\min_k \|z_e - e_k\|_2 \]
+      </div>
+      <p>编码器输出连续向量 \(z_e\)，在 codebook \(\{e_1, \ldots, e_K\}\) 中找最近邻，替换成对应的"视觉词汇" \(e_{k^*}\)，输出整数 index \(k^*\)。</p>
+
+      <h3><span class="num">2</span>在 UniVLA 里的具体参数</h3>
+      <ul>
+        <li>基于 <strong>MoVQ（Zheng et al. 2022）</strong>，与 Emu3 相同设计</li>
+        <li>空间压缩因子 8：256×256 图像 → 32×32 token grid = <strong>1024 个视觉 token</strong></li>
+        <li>codebook 大小 32768（视觉词典有 32768 个"视觉单词"）</li>
+        <li>世界模型后训练时每次输入 6 帧，序列最大长度 6400 token（含语言+多帧视觉）</li>
+      </ul>
+
+      <h3><span class="num">3</span>与 ViT patch embedding 的区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>VQ Tokenizer（UniVLA）</th><th>ViT Patch Embedding（OpenVLA/π0）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>输出类型</td><td><strong>离散整数 ID</strong>，可进 LM 词表</td><td>连续 embedding 向量</td></tr>
+            <tr><td>与语言统一</td><td>天然统一（共享词表）</td><td>需要额外 projector 对齐</td></tr>
+            <tr><td>信息损失</td><td>有量化损失（特别是细节/纹理）</td><td>无量化损失，但语义对齐靠训练</td></tr>
+            <tr><td>生成能力</td><td>解码器可重建图像（世界模型输出）</td><td>不支持图像生成</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>为什么 VQ 对世界模型至关重要</h3>
+      <p>世界模型训练的监督目标是"预测未来视觉 token"——这要求视觉输出必须是<strong>可预测的离散符号</strong>，不能是连续向量（连续向量无法用 cross-entropy 直接做 next-token prediction）。VQ tokenizer 正是把图像变成"视觉语言"的关键一步。</p>
+    </section>
+
+    <!-- ============ 5. Cross-Embodiment Generalization ============ -->
+    <section class="card" id="cross-embodiment">
+      <h2>Cross-Embodiment Generalization <span class="tag">Transfer</span></h2>
+      <p class="full-name">跨本体泛化 · 从多种机器人平台的数据中学习可迁移的策略</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>用来自多种机器人（单臂、双臂、移动臂等）的数据训练同一个模型，让它学到跨平台通用的视觉-动作知识——UniVLA 通过统一 token 框架自然实现：不同机器人的动作、视觉全部进同一词表，共享 Transformer 权重。</p>
+      </div>
+
+      <h3><span class="num">1</span>UniVLA 里的跨本体数据</h3>
+      <p>622K 后训练视频来自 14 个数据集，涵盖：</p>
+      <ul>
+        <li><strong>真实单臂</strong>：RT-1（Google）、BridgeV2（伯克利 WidowX）、DROID（多机构 Franka）</li>
+        <li><strong>真实双臂/工业</strong>：Kuka、FMB、Berkeley UR5 等</li>
+        <li><strong>仿真多任务</strong>：CALVIN（Franka 4 环境）、LIBERO、ManiSkill2</li>
+        <li><strong>人类视频</strong>：SSV2（Something-Something v2，220K 视频，<strong>无动作标注</strong>）</li>
+      </ul>
+      <p>策略微调阶段（ALOHA 真机）用 8 类任务约 4000 条轨迹，平台是 AgileX Cobot Magic V2.0 双臂机器人（14 维动作，3 个 RGB 相机）。</p>
+
+      <h3><span class="num">2</span>与 π0.5 跨本体方案的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>UniVLA（本文）</th><th>π0.5（Physical Intelligence）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>统一方式</td><td>统一 token 词表，所有模态共享</td><td>异构 co-training，flow matching 动作头</td></tr>
+            <tr><td>视觉处理</td><td>VQ tokenizer（无独立 ViT）</td><td>SigLIP ViT（400M 参数）</td></tr>
+            <tr><td>世界模型</td><td>显式后训练阶段（视觉 token 预测）</td><td>无专门世界模型阶段</td></tr>
+            <tr><td>真机评测</td><td>ALOHA 双臂（定性，8 类任务）</td><td>移动操作机器人（定量，3 个真实家庭）</td></tr>
+            <tr><td>优势场景</td><td>长程任务、数据高效</td><td>开放世界家庭泛化</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>局限性</h3>
+      <div class="callout note">
+        <div class="callout-head">⚠️ 需要注意</div>
+        <p>UniVLA 的跨本体泛化<strong>目前主要在仿真基准上验证</strong>，真机实验（ALOHA）仅定性展示，没有与其他方法的定量对比。不同机器人平台的动作空间差异（关节角 vs 末端位姿，不同自由度）通过 FAST 统一离散化来处理，但高精度操作（毫米级放置）可能受 VQ 图像压缩限制。</p>
+      </div>
+
+      <h3><span class="num">4</span>对 Track A（移动操作 VLA）的启示</h3>
+      <p>如果你的机器人平台没有大量自采数据，UniVLA 的路线提供了一个可行配方：</p>
+      <ol>
+        <li>用已有开源机器人视频（无动作标注）做世界模型后训练，初始化时序理解</li>
+        <li>在目标平台上少量微调（10% 数据可超全数据 GR-1）</li>
+        <li>UniVLA 权重和代码已在 HuggingFace + GitHub 开源，直接 fine-tune 可行</li>
+      </ol>
+    </section>
+
+    <!-- ============ 6. Visual Prediction in Policy Learning ============ -->
+    <section class="card" id="visual-loss">
+      <h2>Visual Prediction Loss <span class="tag">Fine-tuning Trick</span></h2>
+      <p class="full-name">策略微调中的视觉预测辅助 loss · 微调阶段保留视觉 token 的监督信号</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在策略微调阶段，除了对动作 token 计算 loss，<strong>同时以 0.5 的权重保留对视觉 token 的预测 loss</strong>——即使不做完整的世界模型后训练，加这一项辅助 loss 也能显著提升策略性能（CALVIN +0.19 avg）。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么有效</h3>
+      <p>UniVLA 采用<strong>视频格式的交错序列</strong>微调（而非单帧），每个时间步都有视觉 token 和动作 token 交错出现。在自回归框架下，模型在预测每个动作 token 之前已经"看到"了当前帧的视觉 token——如果同时让模型也预测下一帧的视觉 token，就自然地引入了"这个动作会导致什么视觉变化"的世界模型训练信号，哪怕此时后训练阶段已经完成。</p>
+
+      <h3><span class="num">2</span>消融数字（Table 6a）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>配置</th><th>CALVIN avg ↑</th><th>LIBERO avg ↑</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>后训练 + 动作 loss 只</td><td>4.42</td><td>88.7</td></tr>
+            <tr><td><strong>后训练 + 动作 loss + 视觉 loss</strong></td><td><strong>4.61</strong></td><td><strong>94.2</strong></td></tr>
+            <tr><td>无后训练，无视觉 loss</td><td>1.46</td><td>48.5</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>即使<strong>没有世界模型后训练</strong>，仅在微调中加视觉预测 loss（weight 0.5）也可从 1.46 提升到约 4.42（见 Table 6a 推算）——这说明自回归架构的统一 token 设计让"顺手学视觉"变得几乎"免费"。</p>
+
+      <h3><span class="num">3</span>实现方式</h3>
+      <div class="pre-label"><span>微调 loss</span><span>Table 6a 注释</span></div>
+<pre><code>L_total = L_action + 0.5 × L_vision
+
+# L_action：仅对 [boa ... eoa] 之间的 action token 计算 cross-entropy
+# L_vision：仅对 [boi ... eoi] 之间的 vision token 计算 cross-entropy
+# 权重 0.5：防止视觉 loss 压过动作 loss；无后训练时用此平衡</code></pre>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表（5）</div>
+    <ul>
+      <li><a href="#unified-ar">Unified Autoregressive VLA</a></li>
+      <li><a href="#world-model">World Model Post-Training</a></li>
+      <li><a href="#fast">FAST Action Tokenization</a></li>
+      <li><a href="#vq-tokenizer">VQ Vision Tokenizer</a></li>
+      <li><a href="#cross-embodiment">Cross-Embodiment Generalization</a></li>
+      <li><a href="#visual-loss">Visual Prediction Loss</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · UniVLA (arXiv:2506.19850) · ICLR 2026 · 配套笔记
+</footer>
+
+</body>
+</html>

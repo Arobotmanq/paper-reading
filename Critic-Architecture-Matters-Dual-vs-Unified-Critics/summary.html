@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critic Architecture Matters 综述</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  /* ============================================================
+     语义色锁定（不要加新颜色）：
+       红    = 问题 / 风险 / 未开源
+       琥珀  = 洞察 / 部分开源 / 保留意见
+       靛紫  = 方法 / 结构 / 链接 (--accent)
+       绿    = 结果 / 正向 / 开源 (--success, 全站唯一绿)
+       灰    = 局限 / 次要
+     --brand 仅用于 hero 点缀，每篇可改，默认 = accent。
+     ============================================================ */
+  :root {
+    --brand: #6366f1;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --c-problem: #dc2626; --c-insight: #d97706; --c-method: #6366f1; --c-result: #16a34a; --c-limit: #64748b;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO（轻量：subtitle 一句话 ≤40 字，方法综述下沉到速记层） ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #312e81 100%); color: #fff; padding: 3em 1.5em 3.4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 480px; height: 480px; background: radial-gradient(circle, color-mix(in srgb, var(--brand) 30%, transparent), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(255,255,255,0.08); color: #c7d2fe; border: 1px solid rgba(255,255,255,0.25); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 12px var(--brand); }
+  .hero h1 { font-size: clamp(1.7em, 4vw + 1em, 2.8em); font-weight: 800; line-height: 1.18; margin: 0.5em 0 0.3em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.1em; color: #e2e8f0; max-width: 720px; margin: 0 0 1.3em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.1em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rating { background: rgba(202, 138, 4, 0.22); border-color: rgba(250, 204, 21, 0.5); color: #fde68a; font-weight: 700; }
+  .pill.rating a { color: inherit; }
+
+  /* ---------- KPI（数字卡必须带对照锚 + 链到证据 claim；状态事实用状态卡，不伪装成数字） ---------- */
+  .kpi-strip { max-width: 1020px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { display: block; color: inherit; text-decoration: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  a.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi .status { margin: 0.45em 0; font-size: 0.95em; }
+  .kpi.green .value { color: var(--success); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT（正文列 ≤720px ≈ 42 个中文字行长） ---------- */
+  .layout { max-width: 1020px; margin: 2.6em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: minmax(0, 720px) 230px; gap: 2.5em; justify-content: center; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc ul.toc-claims { margin: 0.3em 0 0.3em 0.5em; padding-left: 0.7em; border-left: 1px dashed var(--border); font-size: 0.9em; }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.8em 2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 0.65em; flex: 0 0 30px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.95em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+  section.card[id], .claim[id] { scroll-margin-top: 1.2em; }
+
+  /* ---------- ① 30 秒分诊条（hero 之下第一卡：痛点/做法/结果/读法） ---------- */
+  .snap { padding: 1.2em 1.6em; }
+  .snap-row { display: flex; gap: 1em; padding: 0.45em 0; border-bottom: 1px dashed var(--border); align-items: baseline; }
+  .snap-row:last-child { border-bottom: 0; }
+  .snap-k { flex: 0 0 3.2em; text-align: center; font-size: 0.78em; font-weight: 700; border-radius: 6px; padding: 0.15em 0; }
+  .snap-k.kp { background: var(--danger-bg); color: var(--c-problem); }
+  .snap-k.km { background: #eef2ff; color: var(--c-method); }
+  .snap-k.kr { background: var(--success-bg); color: var(--c-result); }
+  .snap-k.kh { background: var(--gold-bg); color: var(--gold); }
+  .snap-row > div { color: var(--text-soft); }
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.18em 0.7em; border-radius: 999px; font-weight: 700; font-size: 0.85em; background: var(--gold-bg); color: #92400e; border: 1px solid #f59e0b; }
+
+  /* ---------- ② 速记层（90 秒读完就走的一层） ---------- */
+  .gist-card { border-left: 5px solid var(--accent); }
+  .gist-block { margin: 1.1em 0; }
+  .gb-label { font-size: 0.82em; font-weight: 700; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.12em; font-weight: 600; color: var(--text); background: #eef2ff; border-radius: var(--radius); padding: 0.9em 1.1em; line-height: 1.7; }
+  ol.chain { counter-reset: ch; list-style: none; padding-left: 0; }
+  ol.chain li { counter-increment: ch; position: relative; padding-left: 2.2em; margin: 0.55em 0; }
+  ol.chain li::before { content: counter(ch); position: absolute; left: 0; top: 0.15em; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--code-bg); border: 1px solid var(--border-strong); color: var(--accent-dark); font-size: 0.8em; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pipeline-line { font-size: 0.98em; background: var(--code-bg); border-radius: 8px; padding: 0.6em 1em; color: var(--text); }
+  ul.rel-list { padding-left: 1.2em; }
+  ul.rel-list b { color: var(--text); }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2em 0 1.2em; color: var(--muted); font-size: 0.88em; font-weight: 600; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- ③ 深读层：CLAIM（分型 + 短标题 + 细节收纳 + 折叠证据） ---------- */
+  .claim-group { display: flex; align-items: center; gap: 0.7em; margin: 1.8em 0 0.2em; font-size: 0.8em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .claim-group::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--k, var(--accent)); border-radius: var(--radius); padding: 1.05em 1.3em; margin: 1.1em 0; background: var(--card); }
+  .claim.k-problem { --k: var(--c-problem); } .claim.k-insight { --k: var(--c-insight); }
+  .claim.k-method  { --k: var(--c-method); }  .claim.k-result  { --k: var(--c-result); }
+  .claim.k-limit   { --k: var(--c-limit); }
+  .claim-head { display: flex; align-items: baseline; gap: 0.55em; flex-wrap: wrap; }
+  .claim-head .cn { font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 700; color: var(--k, var(--accent)); }
+  .kicker { font-size: 0.7em; font-weight: 700; padding: 0.1em 0.6em; border-radius: 999px; background: color-mix(in srgb, var(--k, var(--accent)) 12%, #fff); color: var(--k, var(--accent)); flex: 0 0 auto; }
+  .claim-title { font-size: 1.08em; font-weight: 700; color: var(--text); margin: 0; line-height: 1.5; }
+  .claim-body { font-weight: 400; color: var(--text-soft); margin: 0.4em 0 0; line-height: 1.7; }
+  .claim-how { margin-top: 0.5em; font-size: 0.88em; color: var(--muted); padding-left: 0.7em; border-left: 2px solid var(--border); }
+  .claim.key { border-left-color: var(--gold); }
+  .claim.key .cn::after { content: " ★"; color: var(--gold); }
+
+  /* evidence：解读常驻，引文+译文折叠（Ctrl-F 在 Chromium 会自动展开命中的 details；
+     或先点「展开全部证据」再 Ctrl-F） */
+  .evidence { margin-top: 0.75em; }
+  .evidence + .evidence { padding-top: 0.75em; border-top: 1px dashed var(--border); }
+  .ev-gloss { font-size: 0.95em; color: var(--text); background: #fafaf9; border-radius: 6px; padding: 0.35em 0.7em; margin: 0.4em 0; display: flex; gap: 0.6em; }
+  .ev-tag { flex: 0 0 auto; font-size: 0.72em; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 0 0.45em; height: fit-content; margin-top: 0.35em; background: var(--card); }
+  details.ev-fold { margin: 0.45em 0 0; }
+  details.ev-fold > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 0.5em; list-style: none; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.18em 0.7em; }
+  details.ev-fold > summary::-webkit-details-marker { display: none; }
+  details.ev-fold > summary .ev-hint { color: var(--muted); font-weight: 400; }
+  details.ev-fold[open] > summary { margin-bottom: 0.45em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "Source Serif 4", Georgia, "Noto Serif SC", serif; font-style: italic; font-size: 0.97em; line-height: 1.6; color: #1e293b; }
+  .ev-quote::before { content: "“"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "”"; color: var(--muted); font-weight: 700; }
+  .ev-quote mark { background: #fef3c7; color: inherit; font-style: normal; padding: 0 0.1em; border-radius: 3px; }
+  .ev-row { display: flex; gap: 0.6em; margin: 0.4em 0; }
+  .ev-trans { font-size: 0.95em; color: var(--text-soft); }
+  #ev-toggle-all { float: right; font: 600 0.78em "JetBrains Mono", monospace; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.3em 0.8em; cursor: pointer; }
+  #ev-toggle-all:hover { border-color: var(--accent); }
+
+  /* 数字行（≥3 个对比数字禁止写成长句，用 stat-chip 或 mini-table） */
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.45em; margin: 0.55em 0; }
+  .stat { font: 600 0.82em "JetBrains Mono", monospace; padding: 0.18em 0.7em; border-radius: 999px; border: 1px solid var(--border); background: var(--code-bg); color: var(--text-soft); }
+  .stat.win { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+  .stat.dim { opacity: 0.65; }
+
+  /* ---------- 术语：行内兜底释义（概念卡建立前用 .term；建立后升级为 note-link，可双带 data-gloss） ---------- */
+  .term, .note-link { position: relative; cursor: help; }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; cursor: pointer; }
+  .term { border-bottom: 1px dotted var(--muted); }
+  .term[data-gloss]:hover::after, .term[data-gloss]:focus::after,
+  .note-link[data-gloss]:hover::after {
+    content: attr(data-gloss); position: absolute; left: 0; bottom: 1.7em; z-index: 20;
+    width: max-content; max-width: min(46ch, 80vw); background: #0f172a; color: #e2e8f0;
+    font-size: 0.78em; font-weight: 400; font-style: normal; line-height: 1.5;
+    padding: 0.5em 0.8em; border-radius: 8px; box-shadow: var(--shadow-lg);
+  }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.1em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+
+  /* ---------- TABLE（mini 对照表：本文行 tr.winner，末列 📍 页码） ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.1em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: #f8fafc; }
+  th { text-align: left; padding: 0.7em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65em 1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.loc { font-family: "JetBrains Mono", monospace; font-size: 0.82em; color: var(--muted); white-space: nowrap; }
+  tr.winner { background: var(--success-bg); }
+  tr.winner td { font-weight: 700; color: var(--success); }
+  tr.winner td:first-child::before { content: "★ "; }
+
+  /* ---------- FIGURE（必须可点开原图；caption = 内容 + 看点） ---------- */
+  figure { margin: 1.2em 0 0.5em; text-align: center; }
+  figure a { border: none !important; }
+  figure img { max-width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); cursor: zoom-in; }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER / PRINT ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+  @media print {
+    .hero { background: #fff; color: #000; padding: 1em 0; }
+    .hero h1 { background: none; -webkit-text-fill-color: initial; color: #000; }
+    .hero .subtitle, .pill { color: #333; }
+    .kpi-strip { margin-top: 1em; }
+    .toc, #ev-toggle-all { display: none; }
+    section.card { box-shadow: none; }
+    .claim, .evidence, figure { break-inside: avoid; }
+    details.ev-fold { open: true; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Çukurova University · Humanoid RL · 控制变量对照</span>
+    <h1>Critic Architecture Matters<br>双 critic vs 单 critic</h1>
+    <p class="subtitle">人形 loco-manip 单策略里，分离 critic 比合并 critic 到达快 3.5×。</p>
+    <div class="meta-pills">
+      <span class="pill rating"><a href="#verdict">⚖ Incremental</a></span>
+      <span class="pill">📄 Empirical · 4 页短文</span>
+      <span class="pill">📅 2026 · ICRA RL4IL Workshop</span>
+      <span class="pill">🏢 单作者 · Çukurova Univ.</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2606.11891">arXiv:2606.11891</a></span>
+      <span class="pill">⏱ 速记 ~80s · 全文 ~5min</span>
+    </div>
+  </div>
+</header>
+
+<!-- KPI: 数字卡带对照锚并链到证据 claim; 状态事实用状态卡 -->
+<div class="kpi-strip">
+  <a class="kpi green" href="#c3"><div class="label">到达速度</div><div class="value">3.5<span class="unit">×</span></div><div class="desc">6.5 vs 22.6 sim steps（dual vs unified）↗结果3</div></a>
+  <a class="kpi blue" href="#c3"><div class="label">吞吐</div><div class="value">2<span class="unit">×</span></div><div class="desc">14.3 vs 7.0 validated reach/1K ↗结果3</div></a>
+  <a class="kpi purple" href="#c3"><div class="label">Validated reach</div><div class="value">65.2<span class="unit">%</span></div><div class="desc">dual vs unified 53.8%（站立）↗结果3</div></a>
+  <div class="kpi"><div class="label">开源</div><div class="status"><span class="os-tag os-no">无代码/权重</span></div><div class="desc">全文无 repo/项目页（已联网核查）</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ ① 30 秒分诊条 ============ -->
+    <section class="card snap" id="snap">
+      <div class="snap-row"><span class="snap-k kp">痛点</span><div>多目标人形 RL（走 + 够取塞进一个策略）里，critic 用<b>统一</b>还是<b>分离</b>几乎没人系统比较，大家随手选一种就发论文。</div></div>
+      <div class="snap-row"><span class="snap-k km">做法</span><div>把 critic 架构当唯一变量做对照：单 critic 估所有目标的合并价值 vs 双 critic 各管一份 reward，跑在 Unitree G1 + 13 级 curriculum 上。</div></div>
+      <div class="snap-row"><span class="snap-k kr">结果</span><div>dual 比 unified 到达快 <b>3.5×</b>（6.5 vs 22.6 步）、吞吐 <b>2×</b>（14.3 vs 7.0/1K）、validated reach <b>65.2% vs 53.8%</b>；再叠 5 个 anti-gaming 奖励无额外增益（60.9%）。</div></div>
+      <div class="snap-row"><span class="snap-k kh">读法</span><div><span class="badge">Incremental</span> 做 IL+RL 微调 / whole-body controller → 看<a href="#c6">洞察6</a>（dual critic 防遗忘）和<a href="#c4">洞察4</a>（机制）。只想知道结论 → 速记层即止。⚡ 最短路径：Fig.1（架构）→ Table II（主榜）→ §IV.C 讨论。</div></div>
+    </section>
+
+    <!-- ============ ② 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">⚡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲思想、逻辑、方法；效果只作验证。要核对原文再进下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">🧭 背景 · 为什么重要（不熟此子方向先读我）</div>
+        <p><span class="term" tabindex="0" data-gloss="行走与够取/操作同时进行的人形任务">Loco-manipulation</span> 要在一个策略里同时管「走稳」和「够准」两个目标。RL 训这种多目标策略时，<a href="./notes.html#dual-vs-unified-critic" class="note-link" data-gloss="RL 里估状态价值、给 actor 提供优势信号的网络">critic</a>（价值网络）有两种接法：一个统一 critic 估两目标合并后的价值，或两个 critic 各估各的。绝大多数人形 RL 论文（HOVER、ULC 等）默认选一种、从不对照。本文专门把这个被忽视的旋钮单拎出来测。</p>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">别让一个 critic 同时打分「走」和「够」——locomotion 奖励早期就压过 arm，合并价值会把够取动作"打折"。给每个目标配一个独立 critic、奖励信号互不串味，arm 才敢放手去够。这是"分灶吃饭"而非"大锅饭"。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么成立</div>
+        <ol class="chain">
+          <li>控制变量：同一 G1、同一 13 级 curriculum、同一 PPO 超参，只换 critic 架构（统一 109-dim vs 双分离）。</li>
+          <li>训练时两者"看起来一样"：reward 值、curriculum 进度、reach 计数都接近——标准训练指标分不出高下。</li>
+          <li>换标准化评测（time-to-reach、throughput、<a href="./notes.html#validated-reach" class="note-link" data-gloss="三条件校验：位置接近+发生位移+在时限内，才算一次有效到达">validated reach</a>）才暴露差距：dual 到达快 3.5×、吞吐 2×。</li>
+          <li>机制证据：unified 下 arm 动作幅度只有 1.22（dual 是 2.54/3.04）——合并价值被 locomotion 主导、压制了 arm 出手。</li>
+          <li>推论：在 IL+RL 混合流程里，unified critic 的 locomotion 梯度会覆盖 IL 学到的 arm 行为；dual critic 隔离梯度、保住技能。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 管线一句话 + 三个设计决策</div>
+        <p class="pipeline-line">G1 本体+arm 观测 → 两支独立 PPO（πloco/Vloco · πarm/Varm）→ disjoint reward（loco: 速度跟踪+能量 · arm: 够取距离+位移）→ 12 腿关节 + 5 臂关节动作；Stage 7 冻结 loco、只新训 arm</p>
+        <ul>
+          <li><b>① 双 critic 分离奖励</b>：两个价值函数各看各的 reward、互不混合；对照组是把两路观测拼成 109-dim 喂一个 unified critic 估合并价值。</li>
+          <li><b>② 分支独立 + <a href="./notes.html#frozen-branch-transfer" class="note-link" data-gloss="迁移时冻结一支（locomotion）、只新初始化训练另一支（arm）">frozen-branch transfer</a></b>：Stage 7 冻结已学好的 locomotion 分支，arm 策略重新初始化训练。</li>
+          <li><b>③ 13 级 sequential curriculum</b>：站立够取 → 行走够取 → 固定朝向 → 可变朝向 cone（20°–80°），用 validated reach rate 作晋级门槛。</li>
+        </ul>
+        <figure>
+          <a href="./images/figure_1_dual_actor_critic.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_dual_actor_critic.png" alt="Figure 1: Dual Actor-Critic architecture" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 1 (p.2)：</strong>双 actor-critic 架构——locomotion 分支（绿）与 arm 分支（橙）各持独立 critic、奖励信号互不混合；unified 变体（图未画）把两路观测拼成单个 109-dim critic 输入。<strong>看点：</strong>中间红字 "Disjoint Rewards — No Signal Mixing" + 右下 FROZEN/FRESH(Stage 7)，这就是与合并 critic 的全部分野。</figcaption>
+        </figure>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p>仅换 critic 架构（不动 reward），dual 在站立评测全面碾压 unified；arm 动作幅度翻倍是机制证据。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>指标（站立）</th><th class="num">Unified S6u</th><th class="num">Dual S6s</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr class="winner"><td>Validated reach rate</td><td class="num">53.8%</td><td class="num">65.2%</td><td class="loc">p.3 · Tab.II</td></tr>
+              <tr><td>Time-to-reach</td><td class="num">22.6 步</td><td class="num">6.5 步</td><td class="loc">p.3 · Tab.II</td></tr>
+              <tr><td>Validated / 1K steps</td><td class="num">7.0</td><td class="num">14.3</td><td class="loc">p.3 · Tab.II</td></tr>
+              <tr><td>Arm action magnitude</td><td class="num">1.22</td><td class="num">2.54</td><td class="loc">p.3 · Tab.II</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🗺 放进你的知识图谱（已读库定位）</div>
+        <ul class="rel-list">
+          <li><b>同问题不同切口</b>：<a href="../WholeBodyVLA-Unified-Latent-VLA-Loco-Manipulation/summary.html">WholeBodyVLA（LMO）</a> 给 loco-manip 定制了离散指令 RL 控制器 + 两阶段 curriculum；本文聚焦同一单策略里更底层的 critic 架构选择。</li>
+          <li><b>直接对话</b>：<a href="../pi-star-0.6-VLA-Learns-From-Experience/summary.html">π*0.6</a> 用 RL 从经验微调 IL/VLA 策略；本文论证 dual critic 能在这种 IL+RL 流程里隔离梯度、防止遗忘 manipulation 技能。</li>
+          <li><b>同硬件同范式</b>：<a href="../GRAIL-Generating-Humanoid-Loco-Manipulation-from-3D-Assets-and-Video-Priors/summary.html">GRAIL</a> 也是 G1 上 motion-tracking RL loco-manip，可对照其 critic/reward 设计。</li>
+        
+          <li><b>IL+RL 微调对象</b>：<a href="../Psi0-Open-Foundation-Humanoid-Loco-Manipulation/summary.html">Ψ0</a> 这类用 IL 预训练、再用 RL 精修的人形 loco-manip 基座，正是本文 dual-critic"隔离梯度防遗忘"假说的适用场景。</li>
+        </ul>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🎯 与你项目的相关性</div>
+        <p><b>Track B（足式/whole-body RL）正中命中</b>：单策略同时走+操作的控制器设计；可直接抄的工程配方 = dual actor-critic + disjoint reward + frozen-branch transfer，以及"先定架构、再调 reward"的优先级判断。对你做 RL 微调 IL/teleop 策略尤其有用——dual critic 把 locomotion 梯度隔离在另一支，理论上能防止 arm 技能被 <a href="./notes.html#catastrophic-forgetting" class="note-link" data-gloss="RL 微调时把先前 IL 学会的技能覆盖、遗忘掉；dual critic 隔离梯度防它">catastrophic forgetting</a>。<b>落地门槛</b>：仅 sim、单 seed、5-DoF arm、且存在混淆变量（见<a href="#c7">局限7</a>），结论是方向性而非定量定论，需自己复现。<b>Track A（移动操作 VLA）弱相关</b>：无 vision-language，仅在 IL+RL 议题上有交集。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ ③ 深读层：核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据 <button id="ev-toggle-all" type="button">展开全部证据</button></h2>
+      <p class="lead">每条 = 分型论点（常驻）+ 解读（常驻）+ 折叠的逐字原文/译文（📍真实页码，Ctrl-F 锚点）。7 观点 · 9 证据。</p>
+
+      <h3 class="claim-group" id="g-problem">问题与方法</h3>
+
+      <div class="claim k-problem" id="c1">
+        <div class="claim-head"><span class="cn">1</span><span class="kicker">问题</span><h3 class="claim-title">critic 架构是被忽视的旋钮</h3></div>
+        <p class="claim-body">多目标人形 RL 里"统一 vs 分离 critic"几乎没人比较——大家默认选一种就发论文，没人把它当变量测过。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是本文的立意：不是提新算法，而是把一个被默认掉的设计选择拎出来做对照——对自己搭 whole-body controller 的人是个提醒。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · §I Introduction <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">This choice is <mark>rarely discussed in the humanoid RL literature</mark>, where most works adopt one architecture <mark>without comparing alternatives</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">这一选择在人形 RL 文献里很少被讨论，多数工作直接采用某一种架构，从不比较替代方案。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method" id="c2">
+        <div class="claim-head"><span class="cn">2</span><span class="kicker">方法</span><h3 class="claim-title">Dual Actor-Critic + 冻结分支迁移</h3></div>
+        <p class="claim-body">把系统拆成完全独立的两支：locomotion（πloco/Vloco）和 arm（πarm/Varm），两个 critic 拿互不混合的 reward；Stage 7 冻结 loco、只新训 arm。</p>
+        <div class="claim-how">G1 共 23 active DoF：12 腿关节 + 5 臂关节（腕/手固定）。Loco obs 57-dim（本体速度/重力投影/腿关节/速度指令/步态相位）→12 腿目标，reward=速度跟踪+能量；Arm obs 52-dim（S7 加 3 个 anti-gaming 特征→55-dim）→5 臂关节 residual，reward=够取距离+位移。Unified 对照把两路拼成 109-dim 喂单 critic。PPO，lr 3e-4 cosine，γ=0.99，λ=0.95，clip 0.2，4096 并行环境。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>"fully independent branches" + "disjoint reward signals" 是核心机制；frozen-branch transfer 是把已学的 loco 当地基、只新训 arm 的迁移技巧，与 IL+RL 防遗忘同构。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §III.A System Overview <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The revised design (Fig. 1) separates the system into <mark>fully independent branches</mark>. ... The two critics receive <mark>disjoint reward signals</mark>: locomotion critic on velocity tracking and balance, arm critic on reaching distance and displacement only.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">改进设计（图1）把系统拆为完全独立的分支……两个 critic 接收互不重叠的奖励信号：locomotion critic 只管速度跟踪与平衡，arm critic 只管够取距离与位移。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>第三个变体 S7 在 dual 基础上叠 anti-gaming，且用了冻结迁移——这也是后面"reward 工程无增益"对照的设置。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §III.C Anti-Gaming <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">This variant uses the dual-critic architecture with a <mark>frozen locomotion branch</mark> and <mark>freshly initialized arm policy</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">该变体采用双 critic 架构，冻结 locomotion 分支、重新初始化 arm 策略。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-result">结果与边界</h3>
+
+      <div class="claim k-result key" id="c3">
+        <div class="claim-head"><span class="cn">3</span><span class="kicker">结果</span><h3 class="claim-title">dual 到达快 3.5×、吞吐 2×</h3></div>
+        <p class="claim-body">仅换 critic 架构，dual 平均 6.5 步到达（unified 22.6 步），validated reach/1K 达 14.3（unified 7.0），站立 validated reach 65.2% vs 53.8%。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>指标</th><th class="num">S6u 统一</th><th class="num">S6s 双</th><th class="num">S7 双+AG</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr><td>Curriculum level</td><td class="num">10/12</td><td class="num">12/12</td><td class="num">7/7</td><td class="loc">Tab.II</td></tr>
+              <tr class="winner"><td>Validated reach（站）</td><td class="num">53.8%</td><td class="num">65.2%</td><td class="num">60.9%</td><td class="loc">p.3</td></tr>
+              <tr><td>Time-to-reach（站）</td><td class="num">22.6</td><td class="num">6.5</td><td class="num">5.8</td><td class="loc">p.3</td></tr>
+              <tr><td>Validated / 1K（站）</td><td class="num">7.0</td><td class="num">14.3</td><td class="num">13.0</td><td class="loc">p.3</td></tr>
+              <tr><td>Timeout（站）</td><td class="num">41.0%</td><td class="num">27.3%</td><td class="num">28.1%</td><td class="loc">p.3</td></tr>
+              <tr><td>Validated reach（走）</td><td class="num">51.1%</td><td class="num">63.1%</td><td class="num">56.2%</td><td class="loc">p.3</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>"快 3.5×"是全文头号卖点。注意评测是单环境、确定性动作、3000 步/模式——量级差距可信，但单 seed、无方差。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §IV.B Results <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">the unified-critic policy requires <mark>22.6 simulation steps</mark> (0.45s) to reach a target on average, while the dual-critic policy requires only <mark>6.5 steps</mark> (0.13s)—a <mark>3.5× improvement</mark>. This directly translates to throughput: dual critics achieve <mark>14.3 validated reaches per 1,000 steps</mark> compared to 7.0 for the unified critic, a 2× improvement.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">统一 critic 策略平均需 22.6 仿真步（0.45 秒）才到达目标，双 critic 仅需 6.5 步（0.13 秒）——提升 3.5×。这直接转化为吞吐：双 critic 每千步完成 14.3 次有效到达，统一 critic 为 7.0，提升 2×。</div></div>
+          </details>
+        </div>
+        <figure>
+          <a href="./images/figure_2_g1_reaching.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_g1_reaching.png" alt="Figure 2: G1 dual-critic policy reaching" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 2 (p.3)：</strong>训练好的 dual-critic 策略（S6s）在 play 评测中边走边够取目标（绿球为目标、红点为末端跟踪点）。<strong>看点：</strong>只是定性演示，无量化信息；真正的对照在 Table II。</figcaption>
+        </figure>
+      </div>
+
+      <div class="claim k-insight key" id="c4">
+        <div class="claim-head"><span class="cn">4</span><span class="kicker">洞察</span><h3 class="claim-title">机制：unified 压制 arm 动作幅度</h3></div>
+        <p class="claim-body">unified 下 arm 动作幅度均值仅 1.22，约为 dual（2.54/3.04）的一半——合并价值被 locomotion 主导，arm "出手没底气"，导致收敛慢、超时多。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是把"为什么 dual 更好"落到可测量的物理量上：动作幅度。对调试自家多目标策略，arm action magnitude 是个值得盯的诊断指标。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §IV.B Results <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">the unified critic produces actions with <mark>mean magnitude 1.22</mark>, roughly half that of the dual critics (2.54 and 3.04). This suggests the unified critic’s value landscape <mark>partially suppresses arm actions</mark>—the arm moves, but with <mark>less commitment</mark>, resulting in slower convergence to targets and more timeouts.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">统一 critic 产生的动作均值幅度为 1.22，约为双 critic（2.54、3.04）的一半。这表明统一 critic 的价值地形部分压制了 arm 动作——arm 在动，但"不够放开"，导致更慢收敛与更多超时。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-result" id="c5">
+        <div class="claim-head"><span class="cn">5</span><span class="kicker">结果</span><h3 class="claim-title">reward 工程不及架构；训练指标会骗人</h3></div>
+        <p class="claim-body">在 dual 上再叠 5 个 anti-gaming 奖励无额外增益（60.9% vs 65.2%）；而 reward/curriculum/reach 计数这些标准训练指标完全看不出 3.5× 的差距。</p>
+        <div class="claim-how">S7 只训到 Level 7（S6s 到 12），少训的部分很可能解释这点小差。Unified 那边达 Level 10、累计 3.3M reaches、reward 36.2，数字与 dual 看着差不多。anti-gaming 5 机制：绝对工作空间采样+最小距离、三条件 validated reach（式1）、velocity-toward-target+stillness 惩罚、validated rate 作晋级、gaming 检测启发式。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>结论是"先解决架构瓶颈，再做 reward 工程才有意义"——对花大量时间调奖励防刷分的工程师是个优先级警示。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §IV.C Discussion <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The dual-critic policy without anti-gaming mechanisms (S6s, 65.2%) <mark>slightly outperforms</mark> the variant with five anti-gaming mechanisms (S7, 60.9%). ... once the architectural bottleneck is resolved, <mark>additional reward engineering for anti-gaming is unnecessary</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">不带 anti-gaming 的双 critic 策略（S6s，65.2%）略优于带五个 anti-gaming 机制的变体（S7，60.9%）……一旦架构瓶颈被解决，额外的 anti-gaming 奖励工程就没有必要了。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>方法学贡献：标准训练曲线会掩盖效率差异，必须用 time-to-reach/throughput 这类标准化评测才能暴露——这也是 abstract 强调的"often overlooked"。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §IV.C Discussion <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The 3.5× speed difference and 2× throughput gap are <mark>invisible to these standard metrics</mark> and only emerge through <mark>standardized evaluation</mark> with time-to-reach and throughput measurements.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">3.5× 速度差与 2× 吞吐差对这些标准指标是不可见的，只有通过带 time-to-reach 与吞吐测量的标准化评测才会显现。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight" id="c6">
+        <div class="claim-head"><span class="cn">6</span><span class="kicker">洞察</span><h3 class="claim-title">对 IL+RL 微调的启示（防遗忘）</h3></div>
+        <p class="claim-body">在"先 IL 学 manipulation、再 RL 微调"的混合流程里，unified critic 的 locomotion 梯度会覆盖 IL 学到的 arm 行为；dual critic 把 RL 信号隔离到对应分支，保住已学技能。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是与你项目最相关的一条：把多目标 critic 干扰类比成 catastrophic forgetting，给"dual critic 当防遗忘机制"提供了一个工程假说（但论文未实测 IL+RL，仅类比）。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §IV.C(4) Discussion <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">A dual-critic architecture naturally <mark>isolates the RL fine-tuning signal</mark> to the relevant branch, <mark>preserving the imitation-learned behavior</mark> in other branches. This architectural choice may be critical for <mark>preventing catastrophic forgetting</mark> of IL-acquired skills during RL refinement.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">双 critic 架构天然把 RL 微调信号隔离到相关分支，在其他分支上保留模仿学习得到的行为。这一架构选择对于防止 RL 精修期间遗忘 IL 习得的技能可能至关重要。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>abstract 同口径表述，把"competing locomotion gradients"点名为风险来源——即多目标梯度互相打架。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">when refining a pre-trained manipulation policy with RL, a unified critic risks <mark>suppressing the learned behavior</mark> through <mark>competing locomotion gradients</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">当用 RL 精修一个预训练的 manipulation 策略时，统一 critic 有通过相互竞争的 locomotion 梯度压制已学行为的风险。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-limit" id="c7">
+        <div class="claim-head"><span class="cn">7</span><span class="kicker">局限</span><h3 class="claim-title">混淆变量 + 仅 sim、单 seed</h3></div>
+        <p class="claim-body">S6u 与 S6s 同时差在 critic 架构和 arm 动作维度（12 vs 5 DoF），作者承认这是混淆；加上仅仿真、单 seed、5-DoF arm，结论是方向性而非严格因果。</p>
+        <div class="claim-how">作者的辩护：5-DoF 是 12-DoF 动作空间的严格子集，所以 critic 架构是"最可能的解释变量"；未来工作要做隔离 action 维度的受控消融、扩到 29-DoF 双臂 Triple Actor-Critic、并做 sim-to-real。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是读这篇时最该挂在心上的保留：3.5× 的归因里混着"动作维度从 12 降到 5"的影响，纯 critic 架构的净效应还没被干净分离出来。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §IV.C Confounding factors <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">We note that S6u and S6s differ in <mark>arm action dimensionality (12 vs 5 DoF)</mark> and critic architecture ... Nevertheless, the 5-DoF arm is a <mark>strict subset</mark> of the 12-DoF action space, making the critic architecture the <mark>most likely explanatory variable</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">我们注意到 S6u 与 S6s 在 arm 动作维度（12 vs 5 DoF）和 critic 架构上都不同……不过 5-DoF arm 是 12-DoF 动作空间的严格子集，使得 critic 架构成为最可能的解释变量。</div></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态（必须实时联网核查，标注核查日期） ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06-16）</h2>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未发布</span> arXiv 全文及页面均无 GitHub / repo 链接</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未发布</span> 无 checkpoint / 模型发布</dd>
+        <dt>项目页</dt><dd><span class="os-tag os-no">无</span> 未检索到任何 project page</dd>
+        <dt>论文</dt><dd><span class="os-tag os-yes">可读</span> <a href="https://arxiv.org/abs/2606.11891">arXiv:2606.11891v1</a>（10 Jun 2026）· 收录于 ICRA 2026 RL4IL Workshop</dd>
+      </dl>
+      <p style="font-size:0.9em;color:var(--muted);">核查方式：WebSearch 论文标题/作者 + WebFetch arXiv abstract 页（2026-06-16）。单作者短文，正文与致谢均无开源声明；致谢仅注明用 AI 助手（Claude）辅助润色文稿。若后续放出代码会更新。</p>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>把一个被默认掉的设计旋钮（critic 架构）单拎出来对照，给出"分离 critic 防止目标互相压制"的可测机制（arm 动作幅度 1.22 vs 2.54）；并提出"dual critic 可作 IL+RL 微调的防遗忘机制"这一对 Track B 有用的工程假说。结论清晰、可直接试。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>核心对照<b>存在混淆</b>（S6u/S6s 同时差 critic 架构与 arm DoF 12 vs 5，见<a href="#c7">局限7</a>）；仅 sim、单 seed、无方差、自建基准、单环境评测；IL+RL 的"防遗忘"只是类比、未实测；未开源、非正式同行评审（workshop 短文）。</p></div>
+      <p><strong>评级：</strong><span class="badge">Incremental</span> &nbsp;命题有价值、对 Track B 有启发，但证据强度弱（混淆 + 单 seed + sim-only），是一个有想法的初步观察而非定论。建议当"假说来源"而非"已验证结论"读。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#snap">⏱ 30 秒速读</a></li>
+      <li><a href="#gist">⚡ 速记层</a></li>
+      <li><a href="#core">◆ 核心观点</a>
+        <ul class="toc-claims">
+          <li><a href="#c1">1 问题 · critic 少人比较</a></li>
+          <li><a href="#c2">2 方法 · Dual Actor-Critic</a></li>
+          <li><a href="#c3">3 结果 · 快 3.5×/吞吐 2× ★</a></li>
+          <li><a href="#c4">4 洞察 · 压制 arm 动作 ★</a></li>
+          <li><a href="#c5">5 结果 · 架构 > reward 工程</a></li>
+          <li><a href="#c6">6 洞察 · IL+RL 防遗忘</a></li>
+          <li><a href="#c7">7 局限 · 混淆变量</a></li>
+        </ul>
+      </li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 三层阅读架构（30s 分诊 / 90s 速记 / 按需深读）· 阅读笔记</footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('ev-toggle-all');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.dataset.open !== '1';
+      btn.dataset.open = open ? '1' : '0';
+      document.querySelectorAll('details.ev-fold').forEach(function (d) { d.open = open; });
+      btn.textContent = open ? '收起全部证据' : '展开全部证据';
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var links = [].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) {
+            a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id);
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('section.card[id], .claim[id]').forEach(function (t) { spy.observe(t); });
+  }
+})();
+</script>
+
+</body>
+</html>

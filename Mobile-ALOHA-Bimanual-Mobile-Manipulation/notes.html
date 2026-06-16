@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobile ALOHA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>Mobile ALOHA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要背景知识才能理解的关键概念。覆盖硬件设计、imitation learning 方法、co-training 原理等。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 Mobile ALOHA 综述</a>
+      <span class="pill">📚 当前 8 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2401.02117" style="color: #93c5fd; text-decoration: none;">arXiv:2401.02117</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. Imitation Learning / Behavior Cloning ============ -->
+    <section class="card" id="imitation-learning">
+      <h2>Imitation Learning <span class="tag">BC</span></h2>
+      <p class="full-name">Imitation Learning / Behavior Cloning · 模仿学习 / 行为克隆</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Imitation Learning 让机器人通过看人类示范学会技能，最简单的形式是 Behavior Cloning（BC）：把「观测→动作」映射当成监督学习问题，把人的演示当成训练标签。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心思想</h3>
+      <p>给定人类示范轨迹 \(\{(o_1, a_1), (o_2, a_2), \ldots, (o_T, a_T)\}\)，训练策略 \(\pi_\theta(o_t)\) 最小化：</p>
+      <div class="math-display">
+        \[ \mathcal{L}_{BC} = \mathbb{E}_{(o_t, a_t) \sim \mathcal{D}} \left[ \| \pi_\theta(o_t) - a_t \|^2 \right] \]
+      </div>
+      <p>本质是把专家经验当成有标注的数据集做监督学习——不需要定义奖励函数，不需要与环境交互试错，直接从示范中学。</p>
+
+      <h3><span class="num">2</span>在本文中的用法</h3>
+      <p>Mobile ALOHA 使用 BC 的两个扩展版本：</p>
+      <ul>
+        <li><strong><a href="#act">ACT</a></strong>（Action Chunking Transformer）：核心 baseline，本文主要结果用 ACT。</li>
+        <li><strong><a href="#diffusion-policy">Diffusion Policy</a></strong>：另一个 BC 变体，通过扩散去噪生成动作序列。</li>
+        <li><strong>VINN</strong>：基于检索的 BC，用视觉表征最近邻检索动作，不通过梯度优化策略网络。</li>
+      </ul>
+      <p>所有方法都使用同一份 Mobile ALOHA 演示数据 + 静态 ALOHA 数据进行 <a href="#co-training">co-training</a>。</p>
+
+      <h3><span class="num">3</span>BC 的核心局限</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>问题</th><th>描述</th><th>本文如何应对</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Compounding error（复合误差）</td><td>训练时的动作分布 ≠ 执行时遇到的分布，误差随时间步累积</td><td>使用 Action Chunking 减少每步推断次数；co-training 提供更丰富的先验</td></tr>
+            <tr><td>Data efficiency（数据效率低）</td><td>需要大量演示覆盖所有变化</td><td>co-training 用静态数据补充，50 demos 即可</td></tr>
+            <tr><td>Distribution shift（分布漂移）</td><td>策略看到训练集外的观测时会失败</td><td>开环重放成功率=0，说明本文的任务确实需要闭环校正</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">📜 历史背景</div>
+        <p>Behavior Cloning 最早来自 Pomerleau 1989 年的 ALVINN（自动驾驶）。机器人操作里的大规模应用始于 2022 年 RT-1（Google），此后 BC 配合 <a href="#act">ACT</a>、<a href="#diffusion-policy">Diffusion Policy</a> 等强表达力架构成为主流范式。</p>
+      </div>
+    </section>
+
+    <!-- ============ 2. ACT — Action Chunking Transformer ============ -->
+    <section class="card" id="act">
+      <h2>ACT <span class="tag">Action Chunking</span></h2>
+      <p class="full-name">Action Chunking Transformer · 动作分块 Transformer</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>ACT 是 Mobile ALOHA 的主要学习算法。关键创新是<strong>动作分块（Action Chunking）</strong>：每次不预测单步动作，而是预测未来 k 步的动作序列，然后执行完再重新推断——减少推断次数，降低复合误差，提升连贯性。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心结构</h3>
+      <p>ACT 由 Zhao et al. 2023（ALOHA 论文）提出。基于 CVAE + Transformer 架构：</p>
+      <div class="pre-label"><span>ACT Forward Pass</span><span>结构</span></div>
+<pre><code>训练时（生成 latent z）：
+  Encoder: [RGB x3, joints] + [action chunk a_{t:t+k}] → z ~ N(μ, σ)
+
+推断时（生成动作 chunk）：
+  z = 0（直接用均值）
+  Decoder: [RGB x3, joints, z] → action chunk a_{t:t+k}</code></pre>
+
+      <p>动作表示为关节目标位置，通过位置控制直接发送给机器人。</p>
+
+      <h3><span class="num">2</span>动作分块（Action Chunking）原理</h3>
+      <p>传统 BC 每步推断一次 → 每步都有可能出错 → 误差累积。Action Chunking 的思路：</p>
+      <ul>
+        <li>每次预测 <strong>k 步</strong>动作序列（chunk），执行完整个 chunk 再重新推断。</li>
+        <li>推断频率降低 k 倍，复合误差减少。</li>
+        <li>连续动作更连贯（不会因为每步随机采样而抖动）。</li>
+      </ul>
+      <p>本文在 Mobile ALOHA 上还有额外好处：底盘速度控制有延迟 d，手臂位置控制无延迟。通过执行 chunk 中<strong>前 k-d 步手臂动作 + 后 k-d 步底盘动作</strong>错位执行，优雅地处理了硬件延迟差异。</p>
+
+      <h3><span class="num">3</span>与 Diffusion Policy 的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>ACT</th><th>Diffusion Policy</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>架构</td><td>CVAE + Transformer</td><td>UNet / Transformer + DDPM/DDIM</td></tr>
+            <tr><td>动作分块</td><td>原生支持</td><td>原生支持</td></tr>
+            <tr><td>推断速度</td><td>快（单次前向传播）</td><td>慢（多步去噪，DDIM 可加速）</td></tr>
+            <tr><td>数据需求</td><td>低，50 demos 够用</td><td>较高，文中 50 demos 略不足（推测需 250+）</td></tr>
+            <tr><td>表达力</td><td>中等（CVAE latent 限制了多模态性）</td><td>高（可建模任意多模态动作分布）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>本文的主要结果都用 ACT，Diffusion Policy 在 50 demos 下 Wipe Wine 仅 65%，说明数据量不足时 ACT 更鲁棒。</p>
+    </section>
+
+    <!-- ============ 3. Co-training ============ -->
+    <section class="card" id="co-training">
+      <h2>Co-training <span class="tag">联合训练</span></h2>
+      <p class="full-name">Co-training with Heterogeneous Data · 异构数据联合训练</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Co-training 是本文最核心的方法贡献：将<strong>静态双臂数据</strong>（任务无关、形态不同）与<strong>移动操作数据</strong>按固定比例混合，同时训练同一个策略网络——不是序贯的 pre-train → fine-tune，而是<strong>同步交替</strong>采样两类数据。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么 co-training 而非 pre-training</h3>
+      <p>直觉上「先在静态数据上预训练，再在移动数据上微调」似乎更自然，但实验证明 co-training 远优：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方法</th><th>Wipe Wine 成功率</th><th>原因分析</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Co-train</strong></td><td>95%</td><td>持续接触两类数据，抓取先验不会被遗忘</td></tr>
+            <tr><td>Pre-train → Fine-tune</td><td>50%</td><td>Fine-tuning 时网络遗忘静态数据上的经验（灾难性遗忘）</td></tr>
+            <tr><td>No Co-train</td><td>50%</td><td>仅 50 demos，精细操作数据不足</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>这个结论有重要含义：静态数据的价值<strong>依赖于持续同时暴露</strong>，序贯训练无法保留。</p>
+
+      <h3><span class="num">2</span>实现细节</h3>
+      <div class="pre-label"><span>Co-training 损失函数</span><span>公式</span></div>
+<pre><code>L_total = E_{(o,a_arms,a_base) ~ D_mobile} [L(a_arms, a_base, π(o))]
+        + E_{(o,a_arms) ~ D_static}          [L(a_arms, [0,0], π(o))]
+
+批次大小 = 16，mobile 和 static 各 50% 采样
+静态数据底盘动作 zero-pad 为 [0, 0]（2维）
+静态数据忽略前置摄像头（与 mobile 对齐，都用 3 个相机输入）</code></pre>
+
+      <h3><span class="num">3</span>鲁棒性：对数据比例不敏感</h3>
+      <p>Wipe Wine 任务上实验了 30%/50%/70% 静态数据比例，成功率分别为 95%/95%/90%——说明 co-training 对精确的混合比例不敏感，减少了调参负担。</p>
+
+      <h3><span class="num">4</span>正迁移的来源</h3>
+      <p>为什么任务无关、形态不同的静态数据也能帮助移动操作？论文的假设：</p>
+      <ul>
+        <li>静态数据里有丰富的<strong>精细接触先验</strong>（电池槽定位、螺丝刀递接等），这些运动模式与移动操作中的精细子任务（拧水龙头、按按钮）相似。</li>
+        <li>腕部摄像头视角提供了一种<strong>视角不变性</strong>：无论底盘如何运动，腕摄的近距离视野与静态数据较为一致。</li>
+        <li>更多样的视觉数据可以<strong>防止过拟合</strong>（仅 50 demos 的低数据场景下尤为重要）。</li>
+      </ul>
+    </section>
+
+    <!-- ============ 4. Whole-body Teleoperation ============ -->
+    <section class="card" id="whole-body-teleop">
+      <h2>Whole-body Teleoperation <span class="tag">全身遥操</span></h2>
+      <p class="full-name">Whole-body Teleoperation · 全身遥控操作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>全身遥操指同时控制移动底盘和机械臂的所有自由度，使操作者能录制「底盘移动同时双臂精细操作」的协调演示。Mobile ALOHA 用物理腰带绑定实现，操作者用身体驱动底盘，双手控制手臂。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么全身遥操难</h3>
+      <p>双臂移动操作的遥操面临根本矛盾：<strong>双手已经被两条手臂占用，无法再额外控制底盘</strong>。常见解法及其缺点：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方法</th><th>代表系统</th><th>局限</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>游戏手柄/键盘控制底盘</td><td>Hello Robot Stretch, Fetch</td><td>不支持全身同步；底盘和手臂无法同时精细控制</td></tr>
+            <tr><td>动作捕捉系统</td><td>TIAGo retargeting</td><td>需要标定；场地受限；只控单臂</td></tr>
+            <tr><td>触觉设备 + 脚踏板</td><td>PR1（PR2 遥操版）</td><td>设备复杂、价格昂贵</td></tr>
+            <tr><td>VR 头显 + 手柄</td><td>多种人形系统</td><td>需 FPV 视频流回传；延迟问题；不适合长时间操作</td></tr>
+            <tr><td><strong>腰带物理绑定（本文）</strong></td><td>Mobile ALOHA</td><td>操作者需在现场；无力矩控制（仅 backdrive）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>腰带 backdrive 设计</h3>
+      <p>Mobile ALOHA 的解决方案极简：将操作者腰部通过连接架固定到机器人底盘，底盘车轮的驱动电机在「扭矩关闭」模式下仅有 13N 的滚动阻力（普通人可轻松克服）。操作者行走时自然带动底盘移动，同时双手操控 ALOHA leader arms，实现真正的全身同步控制。</p>
+      <p><strong>额外好处</strong>：机器人碰到障碍物时会通过腰带给操作者<strong>粗略的触觉反馈</strong>，无需额外力反馈设备。</p>
+
+      <h3><span class="num">3</span>快速学习曲线</h3>
+      <p>用户研究显示 8 名参与者（4 人无遥操经验）在 5 次试验后均能接近专家速度：</p>
+      <ul>
+        <li>Wipe Wine：46s → 28s（-39%）</li>
+        <li>Use Cabinet：75s → 36s（-52%）</li>
+      </ul>
+      <p>学习曲线平缓意味着数据采集可以低成本扩展（无需专职遥操专家）。</p>
+    </section>
+
+    <!-- ============ 5. Diffusion Policy ============ -->
+    <section class="card" id="diffusion-policy">
+      <h2>Diffusion Policy <span class="tag">扩散策略</span></h2>
+      <p class="full-name">Diffusion Policy · 扩散策略</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Diffusion Policy 将 DDPM 扩散模型应用于机器人动作生成：从高斯噪声出发，经过多步去噪，最终生成一段连贯的动作序列。优点是能建模高度多模态的动作分布；缺点是推断慢（需多步去噪）且对数据量要求较高。</p>
+      </div>
+
+      <h3><span class="num">1</span>基本原理</h3>
+      <p>来自 Chi et al. 2023（哥伦比亚大学）。核心思想：把动作生成建模为<strong>条件去噪过程</strong>：</p>
+      <div class="math-display">
+        \[ a_0 = \text{Denoise}(a_T, o_t) \quad \text{其中 } a_T \sim \mathcal{N}(0, I) \]
+      </div>
+      <p>扩散模型学习条件评分函数 \(\epsilon_\theta(a_k, o_t, k)\)，从随机噪声 \(a_T\) 逐步去噪到干净动作 \(a_0\)。本文使用 DDIM scheduler 加速推断。</p>
+
+      <h3><span class="num">2</span>在本文中的表现</h3>
+      <p>Diffusion Policy 在 Mobile ALOHA 上与 ACT 性能相近但略差：</p>
+      <ul>
+        <li>Push Chairs：co-train 100%（与 ACT 相同）</li>
+        <li>Wipe Wine：co-train 65%（vs ACT 100%）</li>
+      </ul>
+      <p>论文推测 50 demos 对 Diffusion Policy 不够（其他工作通常用 250+ demos），其强表达力在低数据制下反而造成更多过拟合风险。本文对其使用了图像数据增强来缓解过拟合。</p>
+
+      <h3><span class="num">3</span>Co-training 效果</h3>
+      <p>Diffusion Policy 也从 co-training 中受益：Wipe Wine +30%、Push Chairs +20%，与 ACT 的趋势一致——说明 co-training 的正迁移效果与具体学习算法无关。</p>
+    </section>
+
+    <!-- ============ 6. Bimanual Mobile Manipulation ============ -->
+    <section class="card" id="bimanual-mobile-manipulation">
+      <h2>Bimanual Mobile Manipulation <span class="tag">双臂移动操作</span></h2>
+      <p class="full-name">Bimanual Mobile Manipulation · 双臂移动机器人操作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>双臂移动操作 = 移动底盘 + 两条机械臂同时配合，处理那些「单臂做不了 / 站着够不到」的现实任务。挑战在于：自由度高（14+2=16维动作空间）、底盘误差会累积到臂端、全身协调控制复杂。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要双臂 + 移动</h3>
+      <p>考虑收纳重锅入柜这个基础家务任务：</p>
+      <ul>
+        <li><strong>移动性</strong>：需要先导航到柜子位置（单纯操作臂做不到）</li>
+        <li><strong>全身协调</strong>：开柜门时需要边后退边持续抓住两个把手（底盘 + 双臂同步）</li>
+        <li><strong>双臂力量</strong>：重锅（1.4kg）超过单臂 750g 负载，需要两臂同时抓握把手</li>
+      </ul>
+      <p>这类任务不能分解为「先导航，再操作」，必须全身协调同步执行。</p>
+
+      <h3><span class="num">2</span>Mobile ALOHA 的任务难点</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>任务</th><th>主要难点</th><th>Co-training 提升</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Wipe Wine</td><td>导航 + 精细抓杯 + 清洁</td><td>+45%</td></tr>
+            <tr><td>Call Elevator</td><td>15m 长距导航 + 2cm×2cm 按钮精定位</td><td>+95%（Press Button）</td></tr>
+            <tr><td>Rinse Pan</td><td>拧不锈钢水龙头旋钮（4cm×0.7cm）</td><td>+80%（Turn On Faucet）</td></tr>
+            <tr><td>Use Cabinet</td><td>双臂抓把手同时后退 + 举重锅</td><td>持平（已饱和）</td></tr>
+            <tr><td>Push Chairs</td><td>5 把椅子外推（3 把见过，2 把 OOD）</td><td>+80%（OOD 椅子）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>与后续工作的关系</h3>
+      <p>Mobile ALOHA 建立了双臂移动操作的标准问题设定和评测任务集，直接影响了后续工作：</p>
+      <ul>
+        <li><strong>π0.5</strong>（Physical Intelligence, 2025）：在类似平台上用更大规模数据 + VLA 扩展到未见过的家庭</li>
+        <li><strong>RoboVLMs</strong> 等 VLA 工作：引用 Mobile ALOHA 作为移动操作 benchmark 和数据来源</li>
+        <li>Mobile ALOHA 的演示数据通过 RT-X 发布，成为跨本体 co-training 数据集的一部分</li>
+      </ul>
+    </section>
+
+    <!-- ============ 7. ALOHA ============ -->
+    <section class="card" id="aloha">
+      <h2>ALOHA <span class="tag">原始平台</span></h2>
+      <p class="full-name">A Low-cost Open-source Hardware System for Bimanual Teleoperation · 低成本开源双臂遥操系统</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>ALOHA 是 Mobile ALOHA 的前身——一套基于 ViperX 300 手臂的低成本桌面双臂遥操系统，由 Zhao et al. 2023 发布。Mobile ALOHA 将其装到轮式底盘上，扩展到全身移动操作。</p>
+      </div>
+
+      <h3><span class="num">1</span>ALOHA 系统结构</h3>
+      <p>ALOHA 使用 4 条 ViperX 300 手臂（2 条 leader / 2 条 follower），采用「puppeteering」遥操方式：操作者移动 leader 手臂，follower 手臂实时跟随。</p>
+      <ul>
+        <li>成本约 $20k（不含移动平台）</li>
+        <li>14 DoF 双臂关节（每臂 6 DoF + 1 DoF 夹爪）</li>
+        <li>两臂相对面向（inward facing），适合桌面操作</li>
+        <li>伴随 ACT 算法（Action Chunking Transformer）一同发布</li>
+      </ul>
+
+      <h3><span class="num">2</span>Mobile ALOHA 的改动</h3>
+      <p>Mobile ALOHA 在原版 ALOHA 基础上的主要改动：</p>
+      <ul>
+        <li>将双臂<strong>改为并排朝前</strong>（parallel facing forward）而非相对朝内，扩大工作空间</li>
+        <li>添加 AgileX Tracer AGV 移动底盘（$7k）</li>
+        <li>设计腰带全身遥操结构</li>
+        <li>新增前置顶部摄像头（top camera）用于全局感知</li>
+        <li>添加板载计算（Nvidia 3070 Ti 笔记本）和 1.26kWh 电池</li>
+      </ul>
+
+      <h3><span class="num">3</span>静态 ALOHA 数据</h3>
+      <p>本文的 co-training 核心依赖原始 ALOHA 数据集，通过 RT-X 发布，包含 825 条演示，覆盖 Ziploc 封口、叉子拾取、糖果包装、撕纸巾等 10+ 种桌面操作任务。这些任务看似与移动操作无关，但其中丰富的精细接触先验对移动操作的学习至关重要。</p>
+    </section>
+
+    <!-- ============ 8. Action Chunking ============ -->
+    <section class="card" id="action-chunking">
+      <h2>Action Chunking <span class="tag">动作分块</span></h2>
+      <p class="full-name">Action Chunking · 动作序列预测块</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Action Chunking 是一种让策略一次预测多步（而非单步）动作的技术。核心好处：降低推断频率、提升动作连贯性、减少复合误差。在 Mobile ALOHA 中还额外用来处理底盘和手臂之间的控制延迟差异。</p>
+      </div>
+
+      <h3><span class="num">1</span>解决的问题</h3>
+      <p>标准 BC 每步推断一次，意味着：</p>
+      <ul>
+        <li>每步都有误差 → T 步后误差累积到 \(O(T)\) 量级（compounding error）</li>
+        <li>推断频率 = 执行频率 → 每步都受策略推断随机性影响 → 动作抖动</li>
+        <li>神经网络推断有延迟 → 实时控制性能受限</li>
+      </ul>
+
+      <h3><span class="num">2</span>Action Chunking 原理</h3>
+      <div class="pre-label"><span>Action Chunking 执行逻辑</span><span>伪代码</span></div>
+<pre><code>chunk_length k = 100  # 预测未来 100 步动作
+
+loop:
+    obs = get_observation()
+    chunk = policy(obs)            # 一次前向传播，得到 k 步动作
+    for i in range(k):
+        execute(chunk[i])          # 执行完整 chunk
+    # 重新推断（只推断了 1 次，执行了 k 次）</code></pre>
+
+      <h3><span class="num">3</span>Mobile ALOHA 的特殊用法</h3>
+      <p>Mobile ALOHA 存在硬件延迟不对称问题：底盘速度控制有 d 步延迟，而手臂位置控制延迟极小。通过 Action Chunking 可以优雅处理：</p>
+      <div class="math-display">
+        \[ \text{执行 chunk 前} (k-d) \text{ 步的手臂动作} + \text{后} (k-d) \text{ 步的底盘动作} \]
+      </div>
+      <p>这样底盘动作提前 d 步发送，补偿了硬件延迟，无需修改学习算法或增加特殊传感器。</p>
+
+      <h3><span class="num">4</span>对 VINN 的影响</h3>
+      <p>VINN 原本是检索单步动作的方法。本文将 Action Chunking 加入 VINN（检索一段 chunk 而非单步动作），发现<strong>显著提升性能</strong>——说明 Action Chunking 的好处不依赖于特定学习算法，而是对机器人控制的普遍改进。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>Action Chunking 的思想最早在 ACT 论文（Zhao et al. 2023）中系统提出并验证。后来被 Diffusion Policy（Chi et al. 2023）等方法广泛采用，成为机器人模仿学习的标准做法。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表 (8)</div>
+    <ul>
+      <li><a href="#imitation-learning">Imitation Learning / BC</a></li>
+      <li><a href="#act">ACT — Action Chunking Transformer</a></li>
+      <li><a href="#co-training">Co-training — 联合训练</a></li>
+      <li><a href="#whole-body-teleop">Whole-body Teleoperation</a></li>
+      <li><a href="#diffusion-policy">Diffusion Policy — 扩散策略</a></li>
+      <li><a href="#bimanual-mobile-manipulation">Bimanual Mobile Manipulation</a></li>
+      <li><a href="#aloha">ALOHA — 原始平台</a></li>
+      <li><a href="#action-chunking">Action Chunking — 动作分块</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>概念解读笔记 · Mobile ALOHA (arXiv:2401.02117)</footer>
+
+</body>
+</html>

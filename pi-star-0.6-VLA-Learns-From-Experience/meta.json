@@ -1,0 +1,45 @@
+{
+  "title": "π*0.6: a VLA That Learns From Experience",
+  "title_cn": "π*₀.₆：从经验中学习的视觉-语言-动作模型",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2025",
+  "one_liner": "用 RECAP（advantage conditioning + 迭代 offline RL）让大型 flow matching VLA 在真实部署中不断超越模仿学习上界——洗衣/咖啡/箱子组装吞吐量翻倍、失败率减半。",
+  "framework": "idea-first",
+  "idea": "模仿学习天花板受限于示范质量；让 VLA 通过 binarized advantage indicator（文本 token）端到端接受价值函数信号，无需 log-likelihood 即可做 iterated offline RL，从真实部署的 rollouts 和人类干预中持续自主提升。",
+  "logic_chain": [
+    "模仿学习策略最多达到人类示范水平，累积误差还会更差——需要 RL 突破天花板",
+    "大型 flow matching VLA 没有解析 log-likelihood，PPO/REINFORCE 难以直接扩展",
+    "关键洞察：把 binarized advantage（好/坏）作为文本 token 输入给 VLA，模型以 SL 目标同时学条件与无条件策略，推理时强制 I=True 即得改进策略",
+    "数据统一：demonstrations + autonomous rollouts + 人类干预全部进入同一 offline RL 框架，人类干预强制标 I=True",
+    "迭代循环（K 次）：采数据 → 更新 distributional VF → 更新 π → 重复，每次从预训练 checkpoint 微调以避免 drift"
+  ],
+  "method_skeleton": [
+    "RECAP advantage-conditioned RL：用 'Advantage: positive/negative' 文本 token 注入 VLA，训练目标 = SL loss on all data（不丢弃低优数据），推理时强制 positive 条件",
+    "Distributional value function：Gemma 3 270M backbone，201-bin 分布预测距成功步数，MC 估计 + 交叉熵 loss，语言条件化，多任务共享",
+    "从经验/干预中学习：自主 rollout 按 advantage 区分好坏样本；人类 DAgger 式干预强制置 I=True；每次迭代从预训练 checkpoint 微调以避免 drift"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "高度相关：π0 家族最新成员，展示了如何让 flow matching VLA 通过 RL 从真实部署中持续提升；advantage conditioning 对人形操作 VLA 有直接参考价值",
+    "track_B_legged": "不相关：本文聚焦固定双臂操作平台，不涉及 locomotion 或足式控制"
+  },
+  "validation": "在洗衣（多样）、咖啡制作、箱子组装任务上：RECAP vs. offline RL+SFT 基线吞吐量 >2×，失败率 ~2× 降低；最终 espresso/box assembly 成功率 90%+；T-shirt 严格折叠 2 轮 600 rollouts/iter → 97% 成功率；连续运行 13 小时制作咖啡无中断。",
+  "core_points": [
+    "RECAP：统一框架把 demonstrations、autonomous rollouts、expert interventions 三类数据纳入 iterated offline RL，advantage conditioning 使 flow matching VLA 端到端 RL 训练成为可能",
+    "Advantage conditioning 显著优于 AWR（数据利用率低）和 PPO（off-policy 不稳定），是适配 flow matching 模型的简洁 policy extraction 方法",
+    "Distributional value function 用 Monte Carlo 估计 + 201-bin 分布预测，避免 Bellman backup 误差，多任务语言条件化，稳定可靠",
+    "π*₀.₆ 建立在 π₀.₆ 之上（Gemma 3 4B + 860M action expert），通过添加 advantage indicator text token 支持 RL 训练，无需改变模型结构",
+    "局限：系统不完全自主（需人工奖励标注/干预/reset），探索策略较贪婪，仅在固定双臂平台验证"
+  ],
+  "effects": [
+    "吞吐量 >2× 提升（diverse laundry + espresso，on-robot RL 迭代后 vs. SFT 基线）",
+    "失败率 ~2× 降低（最难任务上）",
+    "最终 90%+ 成功率（espresso 和 box assembly）",
+    "严格洗衣任务 2 轮 RECAP → 97% 成功率（纯 RL，无干预数据）",
+    "Advantage conditioning vs. AWR/PPO 在 T-shirt 任务上吞吐量显著领先"
+  ],
+  "open_source": "none",
+  "open_source_detail": "论文无代码/权重开源声明，仅提供 pi.website/blog/pistar06 博客链接。openpi 仓库截至 2026-06 仅含 π0/π0-FAST/π0.5，无 π0.6/π*0.6 checkpoint（GitHub issue #860 确认为未实现状态）。模型卡 PDF 已公开（website.pi-asset.com）。",
+  "rating": "Important",
+  "summary": "summary.html"
+}

@@ -1,0 +1,46 @@
+{
+  "title": "EchoVLA: Synergistic Declarative Memory for VLA-Driven Mobile Manipulation",
+  "title_cn": "EchoVLA：用于 VLA 驱动移动操作的协同陈述性记忆",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2025",
+  "one_liner": "仿人脑双记忆（voxel 场景地图 + 情节 token buffer）驱动 per-part diffusion，解决移动操作 VLA 的非马尔可夫难题",
+  "framework": "idea-first",
+  "idea": "给 VLA 装上人脑同款双记忆——scene memory（voxel map，仿海马旁回）记空间，episodic memory（token buffer，仿海马体）记历史，粗细双级交叉注意力融合后条件化 per-part diffusion policy 同时输出底盘和机械臂动作",
+  "logic_chain": [
+    "移动操作是非马尔可夫问题：视觉相似帧可能对应截然不同的进度状态",
+    "人脑用PHC（空间语义）+ 海马体（时序情节）两种互补记忆解决此类问题",
+    "scene memory（voxel 3D feature map）持久跨 episode 累积空间结构，慢变",
+    "episodic memory（FIFO token buffer，窗口 k=8）存储最近任务历史，快变",
+    "粗/细双级 cross-attention 分别融合两记忆，条件化 per-part diffusion 生成协调的底盘+臂动作"
+  ],
+  "method_skeleton": [
+    "场景记忆（Scene Memory）：差异驱动更新的 voxel 3D feature volume，跨 episode 累积，推理时在线自适应",
+    "情节记忆（Episodic Memory）：时间索引 FIFO token buffer（k=8步），存原始多模态 token，细粒度 cross-attention 检索",
+    "Per-Part Diffusion Policy：底盘和机械臂各有独立 DiT 去噪器，共享双记忆融合表示 H_t 作为条件"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中——正面解决 VLA 驱动移动操作的记忆缺失，双记忆架构 + per-part diffusion + MoMani 数据集对人形/移动操作 VLA 研究高度相关",
+    "track_B_legged": "不相关——不涉及 locomotion 控制算法或足式机器人"
+  },
+  "validation": "仿真 Mobile Manip SR 0.31（超 π0.5 +0.11），Manip/Nav SR 0.52（超 π0.5 +0.20）；真机 6 任务均值 SR 0.44（超 π0.5 0.33）；消融证明 EM 和 SM 各自不可缺",
+  "core_points": [
+    "现有 VLA 依赖马尔可夫决策，在需要跨房间导航和长程操作记忆的任务中本质受限",
+    "仿人脑 PHC+海马体的双记忆设计：scene memory（voxel map）+ episodic memory（token buffer）互补",
+    "差异驱动更新规则使 scene memory 增量稳定，推理时在线自适应未见环境",
+    "FIFO token buffer 存储原始多模态 token（非摘要），保留解决非马尔可夫歧义的细粒度线索",
+    "Per-part diffusion policy 解耦底盘和机械臂建模，共享双记忆融合表示作为条件",
+    "MoMani 是首个同时支持 Co-Gen 自动生成和真机数据的移动操作基准（9089 episodes）",
+    "场景记忆对动态遮挡（如冰箱门打开）脆弱，是当前主要局限"
+  ],
+  "effects": [
+    "仿真移动操作 SR 0.31 vs π0.5 0.20（+55%）",
+    "真机均值 SR 0.44 vs π0.5 0.33 vs Diffusion Policy 0.32",
+    "最长程跨房间任务 EnP：EchoVLA 0.10，π0.5 0.00（仅 EchoVLA 能完成）",
+    "消融：去 SM 后 Mobile SR 0.09，去 EM 后 0.14，完整 0.17"
+  ],
+  "open_source": "none",
+  "open_source_detail": "代码、权重、MoMani 数据集均未公开（截至 2026-06 实时检查）；论文托管于 arXiv:2511.18112（v2: 2026-03-06）；硬件平台 TidyBot++ 本身开源（非本文贡献）",
+  "rating": "Important",
+  "summary": "summary.html"
+}

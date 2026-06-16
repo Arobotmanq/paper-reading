@@ -1,0 +1,47 @@
+{
+  "title": "Octo: An Open-Source Generalist Robot Policy",
+  "title_cn": "Octo：开源通用机器人策略",
+  "field": "vla",
+  "venue": "arXiv (tech report)",
+  "date": "2024",
+  "one_liner": "用 800k OXE 轨迹预训练 transformer + readout token + diffusion action head，首个既能灵活微调到新观测/动作空间、又完全开源的通用机器人操作策略。",
+  "framework": "idea-first",
+  "idea": "把 transformer 的 token 化思想彻底应用到机器人策略——readout token 被动汇聚嵌入、block-wise causal mask 支持模态插拔、diffusion head 处理多模态连续动作——在最大公开机器人数据集上预训练后，~100 示范 + <5h 单卡微调即可适配任意新机器人设置。",
+  "logic_chain": [
+    "单机器人从头训练既费数据又难泛化，需要跨本体预训练的通用策略",
+    "现有 GRP（RT-1-X、RT-2-X）锁死输入格式、不支持有效微调、不开源",
+    "Octo 用 block-wise causal mask 和 readout token 实现模态无痛插拔",
+    "Diffusion action head 解决多模态分布拟合问题（MSE 均值化、离散精度不足）",
+    "OXE 800k 数据混合预训练后，~100 示范 <5h 单卡微调到新域，平均 72% 成功率"
+  ],
+  "method_skeleton": [
+    "Transformer backbone + readout tokens（被动汇聚，block-wise causal mask）",
+    "Diffusion action head（3层MLP，20步DDPM，预测action chunk）",
+    "模块化 tokenizer（T5-base冻结语言编码，浅层CNN图像patch化，缺失模态全零mask）",
+    "OXE 800k预训练（25数据集，多样性高的数据集加权，hindsight goal relabeling）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "重要参考——Octo是跨本体预训练+灵活微调范式的基石实现，readout token/diffusion head/OXE数据混合被GR00T N1、π0等广泛引用，理解Octo是理解后续VLA的前置基础",
+    "track_B_legged": "不相关——Octo仅做单/双臂操作，不涉及locomotion或足式控制"
+  },
+  "validation": "零样本下Octo-93M平均高于RT-1-X 29%，与RT-2-X 55B持平；微调6域平均72%成功率，次佳基线20%（高出52%）；消融证明diffusion头83% > MSE 35% > 离散18%；数据宽度（25数据集83% > 11数据集60% > 单Bridge 43%）",
+  "core_points": [
+    "真问题：现有GRP锁死输入格式、不支持有效微调到新观测/动作空间，且不开源",
+    "Octo是第一个能有效微调到新观测/动作空间的GRP，也是第一个完全开源的通用机器人操作策略",
+    "Readout token被动汇聚嵌入、不影响其他token，配合block-wise因果mask实现无痛插拔",
+    "Diffusion action head显著优于MSE（能建模多模态分布）和离散头（保留连续精度）",
+    "数据宽度比单一数据集更重要：OXE 25数据集 > RT-X 11数据集 > 单一Bridge",
+    "ViT-first架构在大数据下优于ResNet+Transformer，但小数据场景下ResNet仍更优",
+    "零样本泛化分析：已见分布85%，新物体80%，新环境40%，新技能仅5%——新技能仍是瓶颈"
+  ],
+  "effects": [
+    "零样本：Octo-93M平均成功率高于RT-1-X(35M) 29%，与RT-2-X(55B)持平",
+    "微调6域平均72%，次佳（从头训练20%，VC-1 15%）高出52%",
+    "消融：diffusion 83% vs MSE 35% vs 离散 18%（WidowX 40 trials）"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "代码+权重开源, MIT(octo-base/small-1.5), 数据=OXE",
+  "open_source_checked": "2026-06-02"
+}

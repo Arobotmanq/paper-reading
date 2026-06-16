@@ -1,0 +1,46 @@
+{
+  "title": "WholeBodyVLA: Towards Unified Latent VLA for Whole-Body Loco-Manipulation Control",
+  "title_cn": "WholeBodyVLA：面向全身 Loco-Manipulation 控制的统一潜动作 VLA",
+  "field": "vla",
+  "venue": "ICLR 2026",
+  "date": "2026",
+  "one_liner": "用人类 egocentric 自拍视频训练双 LAM（潜动作模型），在统一潜动作空间中同时学习操作与移动，端到端驱动人形机器人实现 large-space loco-manipulation",
+  "framework": "idea-first",
+  "idea": "Humanoid loco-manipulation 数据极度稀缺——与其死磕遥操数据，不如用廉价人类 egocentric 视频通过 VQ-VAE Latent Action Model 学出统一潜动作表征，让同一个 VLA 在统一潜空间中同时学 manipulation 和 locomotion，再配合专为 loco-manipulation 设计的离散指令 RL 控制器（LMO），实现从廉价视频到精准全身控制的完整链路",
+  "logic_chain": [
+    "人形全身遥操数据几乎不存在，现有数据集把 locomotion 和 manipulation 分开，成本决定了无法大规模采集",
+    "人类 egocentric 视频隐含 locomotion 方向、末端轨迹、物体 affordance 等关键信息，是免费的大数据",
+    "LAM（Latent Action Model）用 VQ-VAE 将帧间变化压缩为离散码字，无需 action 标注即可将视频变成有效伪标签",
+    "manipulation 和 locomotion 的视觉模式根本不同（摄像机静/动），分开训两个 LAM 再联合监督 VLA 预训练",
+    "现有速度追踪 RL 控制器的连续目标导致启停不精确、偏航漂移——用离散三值指令接口（LMO）专门优化 loco-manipulation 的精准启停和转向"
+  ],
+  "method_skeleton": [
+    "双 LAM 预训练：manipulation LAM（AgiBot World 操作数据）+ locomotion LAM（~300h 人类 egocentric 视频），VQ-VAE 架构，DINOv2 特征，自监督重建训练",
+    "VLA 联合预训练：Prismatic-7B 骨干同时预测两类潜动作码字，强制学到 loco-manipulation 交互表征；轻量 action decoder finetune 用少量遥操数据（每任务 50 次）将码字解码为关节角 + 离散指令",
+    "LMO RL 控制器：离散三值指令接口 [sx, sy, sψ, h*] ∈ {-1,0,1}³×R，两阶段 curriculum（基础步态 → 精准稳定），结构化手臂扰动训练，MuJoCo sim2real，50 Hz 部署"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中：用廉价视频预训练 VLA 以减少遥操数据需求，端到端统一操作+移动控制——是移动操作 VLA 的核心范式挑战的直接探索",
+    "track_B_legged": "直接命中：LMO 是一个专为 loco-manipulation 设计的非速度追踪离散指令 RL 控制器，两阶段 curriculum 和结构化扰动训练是足式控制算法的重要参考"
+  },
+  "validation": "AgiBot X2 三任务（bag packing / box loading / cart pushing）：WholeBodyVLA 78.0% vs. Modular Design 64.0%（+21.3pp）vs. GR00T N1.5 w/ LMO 42.0%；LAM 预训练增益 38.7pp；LMO vs. 速度追踪 RL 增益 24pp；扩展泛化任务（视觉导航、地形穿越、吸尘、擦桌）均保持优势",
+  "core_points": [
+    "manipulation-aware locomotion 缺失是现有方法的根本缺陷——移动必须主动为操作创造前提条件",
+    "全身 loco-manipulation 遥操数据几乎不存在，成本决定无法大规模采集",
+    "LAM（Latent Action Model）通过 VQ-VAE 将视频帧间变化压缩为离散潜动作码字，将无 action 视频变为有效预训练信号",
+    "manipulation 和 locomotion 视觉模式根本不同（摄像机静/动），必须分两个 LAM 分别训练再联合监督",
+    "统一潜学习让同一 VLA 在单一前向传播中同时预测两类潜动作，强制学到 loco-manipulation 交互表征",
+    "LMO 离散指令接口（三值 + 蹲高度）替代连续速度追踪，精准启停和转向；两阶段 curriculum 专为 loco-manipulation 稳定性优化",
+    "LAM 预训练后，25 条遥操轨迹可媲美无预训练时 200 条的效果——廉价视频大幅提升数据效率"
+  ],
+  "effects": [
+    "WholeBodyVLA 78.0% 平均成功率，超 Modular Design +21.3pp，超 GR00T N1.5 +36pp",
+    "LAM 预训练增益 38.7pp（78.0% vs 39.3%）",
+    "LMO vs. 速度追踪 RL：+24pp，91.7% 差距来自有 locomotion 的子任务阶段",
+    "LMO 转向精度：0.05±0.01 rad，速度追踪：0.26±0.01 rad（5倍改善）",
+    "50%+ 视频预训练：25 条遥操 ≈ 无预训练 200 条（8倍数据效率）"
+  ],
+  "open_source": "none",
+  "rating": "Important",
+  "summary": "summary.html"
+}

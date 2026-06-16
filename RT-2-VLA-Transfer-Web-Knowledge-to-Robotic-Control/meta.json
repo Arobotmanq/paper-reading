@@ -1,0 +1,48 @@
+{
+  "title": "RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control",
+  "title_cn": "RT-2：视觉-语言-动作模型将网页知识迁移到机器人控制",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2023",
+  "one_liner": "把动作表示为文本 token，co-fine-tune VLM 与机器人数据，网页语义知识直接迁移到机器人控制的涌现能力与泛化",
+  "framework": "idea-first",
+  "idea": "将机器人动作离散化为文本 token，与网页 VQA 数据在同一训练集中 co-fine-tune 大型 VLM（PaLI-X/PaLM-E），无需新参数即可让 VLM 变成 VLA，且自动继承 VLM 的语义推理与涌现能力",
+  "logic_chain": [
+    "VLM 在网页数据上学到了丰富的语义/推理/常识，但输出的是语言 token，无法直接控制机器人",
+    "机器人动作（6-DoF + 抓手 + 终止）可均匀离散为 256 bins，用整数 token 表示，与语言完全同质化",
+    "统一 token 格式后，机器人轨迹与网页 VQA 数据混在同一训练集，co-fine-tuning 无需新参数",
+    "co-fine-tuning 防止灾难性遗忘——纯 fine-tuning 遗忘 VLM 知识，泛化崩塌",
+    "结果：VLA 自动获得涌现能力（符号理解/多语言/推理/人物识别），这些能力完全未出现在机器人训练数据中"
+  ],
+  "method_skeleton": [
+    "action-as-text-tokens：8 维动作均匀离散为 256 bins，拼接为整数字符串，共享 VLM tokenizer",
+    "co-fine-tuning：机器人数据与原始 VLM 网页数据同时在 batch 中混合，按采样权重平衡",
+    "两大 backbone：PaLI-X（5B/55B，encoder-decoder）和 PaLM-E（12B，decoder-only），验证方法通用性"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "强命中——RT-2 是 VLA 范式奠基论文，action-as-text-tokens + co-fine-tuning 是后续所有 VLA 的共同起点；已深读",
+    "track_B_legged": "不相关——本文不涉及 locomotion 底层控制"
+  },
+  "validation": "6000 次真实机器人评测；泛化未见场景约 2×（vs RT-1/MOO）；涌现能力约 3×（vs RT-1）；co-fine-tuning > fine-tuning > from scratch；55B > 5B 单调有效",
+  "core_points": [
+    "核心问题：VLM 输出语言 token，机器人需要低层控制动作，两者存在表示鸿沟",
+    "核心方法：action-as-text-tokens——将机器人动作离散为整数 token，与语言完全同质化，无新参数",
+    "co-fine-tuning 是关键配方：同时保留网页数据与机器人数据，防止遗忘 VLM 知识",
+    "整体泛化：未见物体/场景约 2× 于 RT-1，seen tasks 持平",
+    "涌现能力：符号理解/推理/人物识别约 3× 于 RT-1，来自 VLM 网页预训练的纯迁移",
+    "chain-of-thought：少量数据增强即可让 RT-2 先输出 Plan 再输出 Action，单模型兼做规划与执行",
+    "规模有效：55B（1-3 Hz TPU 云端）显著优于 5B",
+    "主要局限：运动技能仍受限于机器人训练数据，VLM 不能带来新的物理动作"
+  ],
+  "effects": [
+    "泛化未见场景均值 62%（RT-2-PaLI-X-55B）vs RT-1 32%，约 2× 提升",
+    "涌现能力均值 60%（RT-2-PaLI-X-55B）vs RT-1 17%，约 3.5× 提升",
+    "Language-Table 仿真：RT-2-PaLI-3B 90±10 vs RT-1 74±13",
+    "55B 模型在 multi-TPU 云端运行 1-3 Hz；5B 约 5 Hz"
+  ],
+  "open_source": "none",
+  "rating": "Breakthrough",
+  "summary": "summary.html",
+  "open_source_detail": "DeepMind 从未公开代码/权重, 仅社区复现",
+  "open_source_checked": "2026-06-02"
+}

@@ -1,0 +1,45 @@
+{
+  "title": "AgiBot World Colosseo: A Large-scale Manipulation Platform for Scalable and Intelligent Embodied Systems",
+  "title_cn": "AgiBot World Colosseo：可扩展智能具身系统大规模操作平台（含 GO-1 通用策略）",
+  "field": "vla",
+  "venue": "IROS 2025 Best Paper Finalist / IEEE TRO 2026 / arXiv",
+  "date": "2025",
+  "one_liner": "百台同构双臂机器人采集 1M+ 轨迹，配套 ViLLA 框架（Latent Action + VLM Latent Planner + Action Expert）使人类视频和跨本体数据都能用于预训练，GO-1 超越 RDT-1B 32%。",
+  "framework": "idea-first",
+  "idea": "ViLLA（Vision-Language-Latent-Action）在 VLM 和动作之间插入一个跨本体共享的潜在动作空间（VQ-VAE 无监督学习），使 VLM 在低维离散潜在空间规划，Action Expert 负责高频精控——让无动作标签的人类视频和跨本体数据都能参与预训练。",
+  "logic_chain": [
+    "现有数据集任务短、质量差、硬件异构，无法驱动通用双臂操作策略",
+    "直接用 VLM token 空间对齐机器人动作空间（如 OpenVLA）开销大且泛化差",
+    "LAM（VQ-VAE）从帧对无监督学出跨本体共享的潜在动作 token，任何视频都可用",
+    "Latent Planner（InternVL2.5-2B 骨干）在潜在空间做 MLM 规划，适配代价低",
+    "Action Expert（扩散目标）由 Latent Planner 层级调制，实现高频灵巧精控"
+  ],
+  "method_skeleton": [
+    "Stage 1 - Latent Action Model (LAM)：VQ-VAE 从视频帧对无监督学离散潜在动作 token（k=4）",
+    "Stage 2 - Latent Planner：InternVL2.5-2B + 24层 Transformer，MLM 目标预测 z_t，实现长程规划",
+    "Stage 3 - Action Expert：与 Latent Planner 同架构，扩散目标回归连续动作 chunk（H=30），层级调制"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中，必读——ViLLA 三阶段训练是产业界最完整的双臂操作 VLA 开源生态范式，数据集可直接用于预训练",
+    "track_B_legged": "不相关——本文不涉及 locomotion 或足式控制"
+  },
+  "validation": "GO-1 均值完成分 0.78（vs RDT 0.46、GO-1 w/o LP 0.66），AgiBot World vs OXE +0.30/+0.29（in-dist/OOD），数据扩展幂律 r=0.97，质量消融 +0.18",
+  "core_points": [
+    "ViLLA 框架通过潜在动作空间桥接 VLM 与机器人控制，使无标签视频可参与预训练",
+    "LAM 用 VQ-VAE 从帧对无监督学跨本体共享离散动作 token",
+    "Latent Planner 在低维潜在空间做 MLM 规划，VLM 适配代价显著低于直接对齐动作空间",
+    "AgiBot World Alpha（236h）已超过 OXE（~2000h）成功率——质量 > 数量",
+    "幂律扩展 r=0.97，从 9.2k 到 1M 轨迹单调增长，数据扩展有明确回报"
+  ],
+  "effects": [
+    "GO-1 vs RDT-1B: +32%（均值 0.78 vs 0.46）",
+    "Latent Planner 消融: +0.12 完成分，Fold Shorts 提升最显著（1.00 vs 0.87）",
+    "AgiBot World vs OXE: +0.30（in-domain）/ +0.29（OOD）",
+    "数据质量消融: 528 条验证数据 vs 482 条未验证 +0.18",
+    "幂律扩展 Pearson r=0.97（9.2k~1M 轨迹）"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "代码(OpenDriveLab/AgiBot-World)+权重(HF GO-1/GO-1-Air)+数据(AgiBotWorld-Alpha 92K/Beta 1M)全开放, CC BY-NC-SA 4.0(非商用)"
+}

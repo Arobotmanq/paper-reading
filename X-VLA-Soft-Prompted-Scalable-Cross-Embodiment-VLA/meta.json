@@ -1,0 +1,47 @@
+{
+  "title": "X-VLA: Soft-Prompted Transformer as Scalable Cross-Embodiment Vision-Language-Action Model",
+  "title_cn": "X-VLA：软提示 Transformer 作为可扩展跨本体视觉-语言-动作模型",
+  "field": "vla",
+  "venue": "ICLR 2026 / IROS 2025 AgiBot World Challenge 冠军",
+  "date": "2025",
+  "one_liner": "给每个机器人数据源分配一组可学习 soft prompt 嵌入（仅 0.04% 参数），注入 Transformer 编码早期，让 0.9B 模型以最少新增参数实现跨 7 种硬件平台的稳定预训练与 PEFT 高效适配，在 5/6 仿真 benchmark 创 SOTA。",
+  "framework": "idea-first",
+  "idea": "Soft Prompt 将每个 embodiment 的硬件配置（相机、频率、机型）编码为可学习嵌入向量，从 Transformer 编码早期注入，无需修改预训练 VLM 骨架，以极少参数（0.04%）覆盖跨本体全维度异构性。",
+  "logic_chain": [
+    "跨本体数据存在多维异构性（动作/相机/频率/任务分布），现有方法只在动作头层面区分，视觉语义层面完全未处理。",
+    "NLP prompt tuning 证明：少量可学习嵌入可以将大模型导向特定分布，无需修改主干权重——此思路可迁移到跨本体问题。",
+    "每个数据源分配独立 soft prompt 向量（随机初始化+端到端学习），注入 Transformer 输入端，骨架保持通用、只有提示感知 embodiment。",
+    "Flow matching action head 与标准 Transformer 编码器天然兼容，比 DiT 更稳定；预训练验证误差与下游成功率强相关（R²=0.925），可用作廉价代理指标。",
+    "两步适配（先暖启动新 prompt，再联合微调）使 PEFT 极高效：9M 参数达到完整微调 π0(3B) 的同等成绩。"
+  ],
+  "method_skeleton": [
+    "Soft Prompt Library：每数据源独享可学习嵌入 p_i ∈ R^k，按 dataset id 查询，注入 Transformer 输入序列前端；配套独立 Input/Output Linear Projection Library，合计 0.04% 参数。",
+    "解耦编码流水线：主视角+语言走预训练 Florence-2-Large VLM（冻结/低 LR）；辅助视角（腕部相机）走 Shared ViT；本体+噪声动作走轻量线性投影；三流 concat 进 N 层标准 Transformer 编码器。",
+    "Flow matching action head：OT 路径速度场，10 步 Euler ODE 推理；动作统一为 EEF absolute pose + Rotate6D；预训练用意图抽象（4 秒 30 锚点下采样）；适配用两步机制（Prompt warm-up → Joint fine-tune）。"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中：X-VLA 是目前最简洁、最高效的跨本体 VLA 基础模型之一，soft prompt 机制可直接套用于多机器人/多场景混合训练，代码与权重完全开源，可立即 LoRA 适配新机器人。",
+    "track_B_legged": "不直接相关：论文不涉及 locomotion 底层控制；但若要将 VLA 扩展到足式操作臂，soft prompt 的跨本体思路值得参考。"
+  },
+  "validation": "6 仿真 benchmark（5 创 SOTA）+ 3 真实机器人平台。LIBERO 98.1%、Simpler-WidowX 95.8%（7B 模型最高为 71.9%）、NAVSIM PDMS 87.3。LoRA PEFT 9M 参数达到与 π0(3B) 完整微调相当的成绩（LIBERO 93% vs. 94%）。布料折叠任务以 1200 条 demo 媲美闭源 π0-folding。",
+  "core_points": [
+    "真问题不只是动作空间异构：相机、频率、任务分布等多维异构性才是跨本体训练失败的根本原因，现有方法只解决了动作头层面的差异。",
+    "Soft Prompt 以 0.04% 参数覆盖全维度异构性：随机初始化的可学习嵌入向量，注入编码早期，让模型自动学会区分 embodiment 差异而无需手工设计。",
+    "标准 Transformer 编码器替代 DiT 使训练更稳定：DiT 的 AdaLN 条件化在异构混训时导致特征分布混乱，换用标准 self-attention 后验证误差大幅下降。",
+    "T-SNE 可解释性验证：soft prompt 聚类高度对应物理硬件相似性（Franka 左/右视角交织），证明模型学到了跨 embodiment 相似性而非简单数据分区。",
+    "Scaling 无饱和：沿模型规模、数据多样性、数据量三轴，在最大测试配置（0.9B·290K ep·7 数据源）处仍无饱和迹象。",
+    "9M 参数 PEFT 媲美 3B 完整微调：两步适配（Prompt warm-up + Joint fine-tune）使新 embodiment 适配极度高效。"
+  ],
+  "effects": [
+    "LIBERO 平均成功率 98.1%（Spatial 98.2% / Object 98.6% / Goal 97.8% / Long 97.6%），超越所有更大规模对比方法",
+    "Simpler-WidowX 95.8%，远超 7B 模型最高的 71.9%",
+    "NAVSIM PDMS 87.3 vs. UniVLA(9B) 81.7，在自动驾驶仿真也创 SOTA",
+    "布料折叠 ~100% 成功率 · 33 fold/小时 · 仅用 1200 条 demo · 媲美闭源 π0-folding",
+    "LoRA PEFT 9M 参数：LIBERO 93% / Simpler-WidowX 54%，对比 π0(3B) 完整微调的 94% / 55.7%，差距不足 2%",
+    "Scaling 相关系数 R²=0.925（验证误差与下游适配成功率）"
+  ],
+  "open_source": "code+weights",
+  "open_source_detail": "GitHub: github.com/2toinf/X-VLA (Apache-2.0, 669★); HuggingFace: 2toINF/X-VLA 系列（X-VLA-Pt/SoftFold/RoboTwin2/WidowX/Franka/Agibot 等多个 checkpoint，0.9B F32 safetensors）; 预训练数据均为公开数据集（Droid/RoboMind/Agibot-Beta）; Soft-Fold 数据集计划开放（截至 2026-06 尚未发布）; HF 格式有约 1% 性能损失（官方注明）",
+  "rating": "Important",
+  "summary": "summary.html"
+}

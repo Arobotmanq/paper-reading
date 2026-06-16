@@ -1,0 +1,49 @@
+{
+  "title": "π0.5: a Vision-Language-Action Model with Open-World Generalization",
+  "title_cn": "π0.5：具备开放世界泛化能力的视觉-语言-动作模型",
+  "field": "vla",
+  "venue": "arXiv preprint",
+  "date": "2025",
+  "one_liner": "在 π0 之上用异构数据 co-training（97.6% 样本非来自移动操作机器人），让双臂移动机器人在完全没见过的真实家庭里端到端完成 10–15 分钟的扫厨房/收卧室长程任务。",
+  "core_points": [
+    "真问题：VLA 在与训练分布相近的环境表现好，但在野外能泛化多远仍未决。",
+    "解法：异构数据 co-training——其它机器人、高层语义预测、口头指令、网络多模态数据混入同一序列建模框架。",
+    "架构：同一模型做两级推理，先预测语义子任务再据此预测低层动作 chunk，类似 chain-of-thought。",
+    "表示：预训练用 FAST 离散 token（快、利于 VLM 接口），后训练加 action expert 用 flow matching 出连续动作。",
+    "首次：据作者所知是首个能在完全新的真实家庭端到端完成长程灵巧操作（扫厨房/收卧室）的学习型系统。",
+    "泛化随训练场景数增长，104 场景模型≈直接在测试家训练的上界，co-training 补平泛化鸿沟。",
+    "消融：跨本体数据（ME+CE）对成功率最关键；web 数据主要提升对 OOD 物体的语言跟随；VI 数据仅占 11% 却关键。",
+    "高层推理：完整 π0.5 甚至超过人类 oracle；implicit HL 次优，说明子任务预测数据本身即在塑造表征。"
+  ],
+  "effects": [
+    "97.6% 训练样本不来自移动操作机器人（直采移动操作数据仅约 2.4%，约 400 小时）",
+    "在 3 个训练集外真实家庭完成扫厨房/收卧室等 10–15 分钟长程任务",
+    "104 训练场景模型≈把测试家纳入训练的对照上界",
+    "完整 π0.5 高层推理超过人类 oracle；显著优于 π0 与 π0-FAST+Flow",
+    "代码与权重已于 2025-09 在 openpi 开源（pi05_base/droid/libero，Apache-2.0）；自采数据未公开"
+  ],
+  "open_source": "code+weights",
+  "rating": "Breakthrough",
+  "summary": "summary.html",
+  "framework": "idea-first",
+  "idea": "复杂长程任务无法在目标机器人上穷举采数据；像人一样靠迁移——把别的机器人/网页/口头指令等异构数据全铸成token序列、混进同一VLA联合训练。泛化靠迁移，不靠蛮力扩数据。",
+  "logic_chain": [
+    "长程家务场景组合爆炸，目标机器人上穷举采数据不可行",
+    "人靠迁移应付新环境（别处技能+书本/口头知识+少量当前经验）",
+    "VLA能把图像/文字/动作统一成token序列→模仿学习=下一token预测",
+    "于是任何能写成序列的数据都能拼进同一模型co-training",
+    "再让同一模型先出子任务再出动作(两级推理)，高层借网页/语言、低层借别的机器人动作"
+  ],
+  "method_skeleton": [
+    "异构co-training：6类数据源混训(MM/ME/CE/HL/WD/VI)，直采移动数据占比极小",
+    "同模型两级推理：high-level子任务→low-level动作，共用一套权重(非两模型)",
+    "离散训练+连续推理：FAST离散token预训练 → flow matching action expert实时连续动作"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中-已深读",
+    "track_B_legged": "不相关-不涉及locomotion"
+  },
+  "validation": "新真实家庭端到端扫厨房/收卧室；去掉跨本体数据就崩、去掉口头指令就弱——消融反向验证'迁移'思想成立",
+  "open_source_detail": "openpi 开源, Apache-2.0(π0.5 base/LIBERO/DROID), 2025-09",
+  "open_source_checked": "2026-06-02"
+}

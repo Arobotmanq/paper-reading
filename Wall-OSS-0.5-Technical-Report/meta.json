@@ -1,0 +1,23 @@
+{
+  "title": "Wall-OSS-0.5 Technical Report",
+  "title_cn": "Wall-OSS-0.5 · Pretrain Once, Act Anywhere",
+  "field": "vla",
+  "venue": "Technical Report · X Square Robot",
+  "date": "2026",
+  "one_liner": "基于 Qwen2.5-VL-3B 的 4B 开源 VLA，用 gradient-bridged co-training 单阶段联合训练，预训练 checkpoint 无需微调即可直接当真机策略。",
+  "core_points": [
+    "离散动作 CE 当“梯度桥”(主导骨干更新，约占 95%)、多模态 CE 当接地锚(方向正交)、flow matching 当部署接口(仅约 5%)，三者单阶段端到端联合优化，不切断梯度",
+    "三设计落地配方：MoT 双专家路由 + Vision-Aligned RVQ Action Tokenizer + Action-Space Supervision",
+    "与最近邻 π₀.₅ 的关键分野：保持端到端梯度而非 stop-gradient；用学习式 RVQ 替代规则化 FAST"
+  ],
+  "effects": [
+    "零样本无微调即执行真机任务：Block Sorting 100%、Ring Stacking 86%、held-out 形变 Rope Tightening 82%",
+    "微调 15 任务平均 60.5%，+17.5pp 超 π₀.₅、+27.1pp 超 DreamZero",
+    "Embodied Grounding +21.8pp(不退化反增)；RVQ 较 FAST +18.9pp；推理 4× 加速、实时 15 Hz"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "2026-05 全栈开源(权重+训练码+recipe), 4B",
+  "open_source_checked": "2026-06-02"
+}

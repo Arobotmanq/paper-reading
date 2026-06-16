@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EchoVLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>EchoVLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里涉及的关键概念——声明性记忆、空间语义地图、情节记忆、移动操作、VLA、MoMani、per-part diffusion。每个概念给出定义、原理、本文用法及类比。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 EchoVLA 综述</a>
+      <span class="pill">📚 当前 7 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2511.18112" style="color: #93c5fd; text-decoration: none;">arXiv:2511.18112</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. Declarative Memory ============ -->
+    <section class="card" id="declarative-memory">
+      <h2>Declarative Memory <span class="tag">神经科学</span></h2>
+      <p class="full-name">Declarative Memory · 陈述性记忆（显性记忆）</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>陈述性记忆是人类大脑中<strong>可以被意识提取、用语言描述</strong>的记忆系统，分为<strong>语义记忆</strong>（知道"世界是什么"）和<strong>情节记忆</strong>（知道"自己经历了什么"）。EchoVLA 用它类比机器人记忆：scene memory ≈ 语义记忆，episodic memory ≈ 情节记忆。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>心理学将记忆分为两大类：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>子类型</th><th>内容</th><th>例子</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="2"><strong>陈述性记忆（Declarative）</strong></td><td>语义记忆（Semantic）</td><td>关于世界的事实与概念</td><td>"巴黎是法国首都"</td></tr>
+            <tr><td>情节记忆（Episodic）</td><td>个人经历与时序事件</td><td>"我昨天在厨房开了抽屉"</td></tr>
+            <tr><td colspan="2"><strong>程序性记忆（Procedural）</strong></td><td>技能与习惯（无需意识）</td><td>骑车、打字</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>陈述性记忆依赖<strong>海马体（Hippocampus）</strong>和<strong>海马旁回（Parahippocampal Cortex, PHC）</strong>：PHC 负责编码空间和场景语义，海马体整合时序情节。</p>
+
+      <h3><span class="num">2</span>在 EchoVLA 中的用法</h3>
+      <p>EchoVLA 将这一神经科学框架映射到机器人记忆设计：</p>
+      <ul>
+        <li><strong>PHC → Scene Memory</strong>：维护 voxel 3D 特征地图，代表"这个房间的空间结构和物体布局"（语义/空间记忆）。</li>
+        <li><strong>Hippocampus → Episodic Memory</strong>：维护时间索引 token buffer，代表"我刚才做了什么、拿了什么"（情节/时序记忆）。</li>
+      </ul>
+      <p>两种记忆<strong>互补而非冗余</strong>：场景记忆提供慢变的空间背景，情节记忆提供快变的任务进度。这种分离正是人脑应对长程任务的机制。</p>
+
+      <h3><span class="num">3</span>为什么叫"协同"（Synergistic）</h3>
+      <p>论文标题中的 "Synergistic" 指两种记忆不是简单拼接，而是通过<strong>粗细双级交叉注意力协同融合</strong>：scene memory 先用粗粒度 attention 贡献全局空间约束，episodic memory 再用细粒度 attention 贡献精确时序线索，两者的融合表示 \(\mathbf{H}_t\) 才驱动策略。</p>
+    </section>
+
+    <!-- ============ 2. Scene Memory / Spatial-Semantic Map ============ -->
+    <section class="card" id="scene-memory">
+      <h2>Scene Memory <span class="tag">空间语义地图</span></h2>
+      <p class="full-name">Scene Memory · 场景记忆 / Spatial-Semantic Map · 空间语义地图</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>EchoVLA 的场景记忆是一个<strong>增量累积的 voxel 3D 特征地图</strong>，跨 episode 持续更新；用差异驱动规则只在场景真正变化时写入，并在推理时在线自适应。它给策略提供"这个房间长什么样"的稳定空间背景。</p>
+      </div>
+
+      <h3><span class="num">1</span>数据结构</h3>
+      <p>场景记忆是一个 <strong>voxelized 3D feature volume</strong>：</p>
+      <div class="math-display">
+        \[ \mathbf{V}^{3D}_t \in \mathbb{R}^{X \times Y \times Z \times C} \]
+      </div>
+      <p>其中 \(X \times Y \times Z\) 是 voxel 网格维度，\(C\) 是特征维度。每个 voxel 存储由 PointAttn 网络（可学习 3D 编码器）从 depth 观测提取的几何特征，包含自由空间、支撑面、物体边界等信息。</p>
+
+      <h3><span class="num">2</span>差异驱动更新（Discrepancy-Driven Rule）</h3>
+      <p>关键工程细节：不是每帧都全量写入，而是<strong>只在重建误差超过阈值 τ 的区域更新</strong>：</p>
+      <pre><code>当前点云 → PointAttn → V3D_t（新特征）
+比较：recon_error = ||V3D_t - reconstruct(M_scene)||
+if recon_error[voxel] > τ:
+    M_scene[voxel] = V3D_t[voxel]  # 更新
+else:
+    keep M_scene[voxel]             # 保留旧值</code></pre>
+      <p>这设计有两个好处：(1) 避免冗余写入，记忆稳定；(2) 允许在线自适应，推理时遇到未见过的环境也能逐步建图。超参 τ=0.5 经消融验证为最优（τ=0.1 不稳定，τ=0.7 "ghosting"）。</p>
+
+      <h3><span class="num">3</span>检索方式</h3>
+      <p>用当前 3D 特征 \(\mathbf{V}^{3D}_t\) 作为 query，通过 cosine similarity 在记忆库中选 top-k 匹配，再做<strong>粗粒度 cross-attention</strong>：</p>
+      <div class="math-display">
+        \[ \mathbf{Z}^{\text{scene}}_t = \text{CrossAttn}(\text{q}=\mathbf{V}^{3D}_t,\ \text{k/v}=\mathcal{M}^{\text{scene}}_{\text{sel}}) \]
+      </div>
+
+      <h3><span class="num">4</span>局限</h3>
+      <p>论文诚实承认：若环境几何<strong>快速变化</strong>（如冰箱门打开），显式 3D 记忆会出现"ghosting"（残影），导致性能下降。未来计划整合 visual-SLAM 或 loop-closure 缓解。</p>
+    </section>
+
+    <!-- ============ 3. Episodic Memory ============ -->
+    <section class="card" id="episodic-memory">
+      <h2>Episodic Memory <span class="tag">情节记忆</span></h2>
+      <p class="full-name">Episodic Memory · 情节记忆 / Task Progress Buffer</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>EchoVLA 的情节记忆是一个<strong>时间索引 FIFO token buffer</strong>，存储最近 k 步的完整多模态 token（不压缩为摘要），通过细粒度 cross-attention 为策略提供"我刚才做了什么"的精确时序线索，解决非马尔可夫歧义。</p>
+      </div>
+
+      <h3><span class="num">1</span>形式定义</h3>
+      <div class="math-display">
+        \[ \mathcal{M}^{\text{epi}} = \{(\mathbf{S}_{t-k}, t-k),\ \ldots,\ (\mathbf{S}_{t-1}, t-1)\} \]
+      </div>
+      <p>其中 \(\mathbf{S}_t = [\mathbf{L}, \mathbf{V}_t, \mathbf{P}_t, \mathbf{R}_t]\) 是当前时刻的多模态 token 序列（语言 + 多视角图像 + 点云 + 本体感知）。窗口大小 k=8 经消融验证为最优。</p>
+
+      <h3><span class="num">2</span>为什么不压缩为摘要</h3>
+      <p>关键设计选择：<strong>存储原始 token 而非抽象摘要</strong>。摘要会丢失区分"正要抓"和"已抓"所必需的精确位置、末端执行器构型等细节。完整 token 虽占用更多空间，但对解决非马尔可夫歧义至关重要。</p>
+
+      <h3><span class="num">3</span>检索方式</h3>
+      <p>用当前多模态 token \(\mathbf{S}_t\) 作为 query，通过 cosine similarity 选最相关子集，再做<strong>细粒度 cross-attention</strong>：</p>
+      <div class="math-display">
+        \[ \mathbf{Z}^{\text{epi}}_t = \text{CrossAttn}(\text{q}=\mathbf{S}_t,\ \text{k/v}=\mathcal{M}^{\text{epi}}_{\text{sel}}) \]
+      </div>
+
+      <h3><span class="num">4</span>与场景记忆的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Scene Memory</th><th>Episodic Memory</th></tr></thead>
+          <tbody>
+            <tr><td><strong>对应人脑区域</strong></td><td>海马旁回（PHC）</td><td>海马体（Hippocampus）</td></tr>
+            <tr><td><strong>存储内容</strong></td><td>环境空间结构（voxel 3D features）</td><td>任务历史 token 序列</td></tr>
+            <tr><td><strong>变化速度</strong></td><td>慢（跨 episode 稳定）</td><td>快（每步更新）</td></tr>
+            <tr><td><strong>注意力粒度</strong></td><td>粗粒度（coarse）</td><td>细粒度（fine）</td></tr>
+            <tr><td><strong>解决的问题</strong></td><td>空间定位、物体布局</td><td>非马尔可夫歧义、任务进度</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 4. Long-Horizon Mobile Manipulation ============ -->
+    <section class="card" id="long-horizon-mobile-manipulation">
+      <h2>Long-Horizon Mobile Manipulation <span class="tag">任务定义</span></h2>
+      <p class="full-name">长程移动操作 · 协调导航与精细抓取的序列任务</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>长程移动操作 = 机器人需要<strong>跨空间导航</strong>（底盘移动）+ <strong>精细操作</strong>（机械臂抓取/放置）+ <strong>多步序列</strong>（涉及数百帧），且两帧视觉相似但任务进度可能完全不同。这是当前 VLA 的主要未攻克难题。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么难</h3>
+      <ul>
+        <li><strong>空间跨度大</strong>：需要在 7m×7m 甚至更大场地内导航，单帧观测无法看到全局。</li>
+        <li><strong>非马尔可夫性强</strong>："已开冰箱门"和"将开冰箱门"视觉相似，但所需动作截然不同；策略必须记住历史。</li>
+        <li><strong>底盘-机械臂协调</strong>：底盘运动和臂精细操作的动力学差异大（一个是低频粗粒度，一个是高频精细），统一建模困难。</li>
+        <li><strong>数据稀缺</strong>：收集多步骤长程移动操作数据代价高，现有基准规模有限。</li>
+      </ul>
+
+      <h3><span class="num">2</span>EchoVLA 中的具体任务</h3>
+      <p><strong>仿真任务（RoboCasa）：</strong>PickPlaceCounterToStove、PickPlaceSinkToCounter、TurnOnSinkFaucet、TurnOnStove，以及增加了初始位置偏移和后续导航的 Mobile Manipulation 变体。</p>
+      <p><strong>真机任务（TidyBot++）：</strong>Open Drawer (OD)、Close Microwave (CM)、Place Cup Into Sink (PCIS)、Open Refrigerator (OR)、Rotate Knob (RK)、Enter room and Place pears (EnP)。其中 EnP 是最具挑战性的跨房间任务（平均 362 帧）。</p>
+
+      <h3><span class="num">3</span>类比</h3>
+      <p>类比"帮人整理厨房"：先要走过去（导航），记住哪些已经整理了（情节记忆），知道柜子在哪里（场景记忆），然后精确拿取放置（操作）。这正是 EchoVLA 设计目标的最直观描述。</p>
+    </section>
+
+    <!-- ============ 5. VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">Vision-Language-Action</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 是将<strong>视觉感知、自然语言指令理解和机器人动作生成</strong>统一在同一个模型中的端到端框架。它通常基于大型视觉-语言模型（VLM）预训练，再接动作生成头（自回归 token 或 diffusion）。EchoVLA 在 VLA 基础上附加了双记忆模块。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心思路</h3>
+      <p>VLA 的关键洞见：机器人控制可以看作"以图像和语言为条件的序列预测"，与 LLM 的 next-token prediction 统一。这允许借助大规模视觉-语言预训练来获得强泛化能力，然后 fine-tune 到机器人控制。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>代表模型</th><th>动作表示</th><th>特点</th></tr></thead>
+          <tbody>
+            <tr><td>RT-2</td><td>离散 action token</td><td>首次大规模 VLA，利用 web 预训练</td></tr>
+            <tr><td>OpenVLA</td><td>离散 action token</td><td>开源，7B 参数</td></tr>
+            <tr><td>π0 / π0.5</td><td>diffusion（连续）</td><td>per-part 底盘+臂分离，移动操作专用</td></tr>
+            <tr><td><strong>EchoVLA</strong></td><td>per-part diffusion + 双记忆</td><td>为长程非马尔可夫任务增加记忆机制</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>当前局限（EchoVLA 的切入点）</h3>
+      <p>现有 VLA 大多是<strong>马尔可夫策略</strong>：每步决策只看当前帧，不维护历史。这在桌面短程操作中够用，但在移动操作中会因"历史遗忘"失败。EchoVLA 的贡献正是打破这个限制。</p>
+
+      <h3><span class="num">3</span>技术细节（EchoVLA 的 backbone）</h3>
+      <p>EchoVLA 使用<strong>冻结 SigLIP</strong> 作为语言和图像编码器（保留跨模态对齐），可学习 PointAttn 处理 3D 点云，小 MLP 处理本体感知，最终形成统一 token 序列 \(\mathbf{S}_t = [\mathbf{L}, \mathbf{V}_t, \mathbf{P}_t, \mathbf{R}_t]\) 驱动记忆检索和 diffusion policy。</p>
+    </section>
+
+    <!-- ============ 6. Per-Part Diffusion Policy ============ -->
+    <section class="card" id="per-part-diffusion">
+      <h2>Per-Part Diffusion Policy <span class="tag">动作生成</span></h2>
+      <p class="full-name">Per-Part Diffusion · 分部件扩散策略</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Per-part diffusion 是为底盘（base）和机械臂（arm）分别设置<strong>独立的去噪扩散网络</strong>，但共享同一个记忆增强条件 \(\mathbf{H}_t\)。这样底盘运动和精细操作可以独立优化，同时保持协调。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么要分离</h3>
+      <p>底盘和机械臂的动力学特性差异显著：</p>
+      <ul>
+        <li><strong>底盘（base）</strong>：低精度、大范围移动，全向驱动，误差容忍度较高。</li>
+        <li><strong>机械臂（arm）</strong>：高精度、小范围操作，7-DoF，毫米级对齐要求高。</li>
+      </ul>
+      <p>统一用单一扩散网络建模两者会导致"精度-范围"的权衡困难。分离允许各自的损失函数和网络容量针对性优化。</p>
+
+      <h3><span class="num">2</span>形式定义</h3>
+      <p>对每个部件 \(p \in \{\text{base}, \text{arm}\}\)，独立去噪器预测噪声：</p>
+      <div class="math-display">
+        \[ \epsilon_\theta^{(p)} = \text{Denoiser}_p(\mathbf{z}_t, \mathbf{H}_t, t),\quad p \in \{\text{base}, \text{arm}\} \]
+      </div>
+      <p>训练目标为两部件去噪损失之和：</p>
+      <div class="math-display">
+        \[ \mathcal{L} = \sum_{p \in \{\text{base}, \text{arm}\}} \mathbb{E}_{t, \mathbf{z}_t}\Big[\|\epsilon - \epsilon_\theta^{(p)}(\mathbf{z}_t, \mathbf{H}_t, t)\|^2\Big] \]
+      </div>
+
+      <h3><span class="num">3</span>与 π0.5 的关系</h3>
+      <p>π0.5 已引入 per-part decomposition 的思路。EchoVLA 在此基础上的贡献是：两个 per-part 去噪器都以<strong>双记忆增强表示 \(\mathbf{H}_t\)</strong>（scene memory + episodic memory 的融合）为条件，使历史感知能同时影响底盘规划和臂操作精度。</p>
+
+      <h3><span class="num">4</span>具体实现</h3>
+      <p>每个 Denoiser 是一个 <strong>DiT（Diffusion Transformer）块</strong>序列，接收噪声动作和条件表示（\(\mathbf{H}_t\)），输出预测噪声。底盘和臂各有独立的 MLP 投影层将 \(\mathbf{H}_t\) 适配到各自的动作空间。</p>
+    </section>
+
+    <!-- ============ 7. MoMani Benchmark ============ -->
+    <section class="card" id="momani">
+      <h2>MoMani <span class="tag">基准数据集</span></h2>
+      <p class="full-name">MoMani Benchmark · Mobile Manipulation Benchmark · 移动操作基准</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>MoMani 是 EchoVLA 提出的移动操作数据集，特点是<strong>仿真自动生成（7889 episodes）+ 真机示范（1200 episodes）</strong>，通过 MLLM 引导规划和质量门控生成专家级"导航+操作"协同轨迹，是目前唯一同时支持全自动 Co-Gen 和真机数据的移动操作基准。</p>
+      </div>
+
+      <h3><span class="num">1</span>生成流水线</h3>
+      <p><strong>Stage I：在线候选生成</strong>——MLLM prompter 处理任务规格，执行 L1（Target-Aligned Departure Sampling）→ L2（Safety-Aware Multi-Detour Navigation）→ L3（Continuous Nav-Manip Stitching）。候选必须通过硬质量门：零碰撞、位置偏差 &lt;0.05m、角度偏差 &lt;5°、100% 任务成功。</p>
+      <p><strong>Stage II：离线选择与审核</strong>——对候选池按路径长度、步骤数、规划代价做字典序排名，选出 Top-K 专家级轨迹集，最终经场景-相机审核确保训练就绪。</p>
+
+      <h3><span class="num">2</span>数据组成</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>子集</th><th>规模</th><th>任务</th></tr></thead>
+          <tbody>
+            <tr><td>仿真（RoboCasa）</td><td>7889 episodes</td><td>PnPC2S(10.8%), PnPS2C(10.7%), TOS(10.7%), TOF(10.7%), Nav-only(57.0%)</td></tr>
+            <tr><td>真机（TidyBot++）</td><td>1200 episodes</td><td>OR, CM, OD, PCIS(各20.8%)，EnP, RK(各8.3%)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>与现有基准的区别</h3>
+      <p>MoMani 是唯一同时满足：(1) 支持 Co-Gen 自动生成导航+操作协同轨迹，(2) 同时提供仿真和真机数据，(3) 基于全向移动平台（TidyBot++）的基准。RoboCasa 仅有仿真，RoboTwin 2.0 不含导航，HomeRobot 无自动生成。</p>
+
+      <h3><span class="num">4</span>局限</h3>
+      <div class="callout note">
+        <div class="callout-head">⚠ 注意</div>
+        <p>MoMani 目前<strong>未公开发布</strong>（截至 2026-06 检查），代码和数据集均不可获取，限制了外部复现和比较。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ TOC ============ -->
+  <aside class="toc">
+    <div class="toc-title">概念目录（7）</div>
+    <ul>
+      <li><a href="#declarative-memory">Declarative Memory</a></li>
+      <li><a href="#scene-memory">Scene Memory</a></li>
+      <li><a href="#episodic-memory">Episodic Memory</a></li>
+      <li><a href="#long-horizon-mobile-manipulation">Long-Horizon Mobile Manipulation</a></li>
+      <li><a href="#vla">VLA</a></li>
+      <li><a href="#per-part-diffusion">Per-Part Diffusion</a></li>
+      <li><a href="#momani">MoMani</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <div class="back-link"><a href="./summary.html">← 返回综述</a></div>
+  </aside>
+</div>
+
+<footer>
+  EchoVLA 概念注解 · arXiv:2511.18112 · 生成于 2026-06
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "title": "π0: A Vision-Language-Action Flow Model for General Robot Control",
+  "title_cn": "π0：面向通用机器人控制的视觉-语言-动作流模型",
+  "field": "vla",
+  "venue": "arXiv",
+  "date": "2024",
+  "one_liner": "把 VLM 预训练的语义知识与 flow matching 的连续动作建模焊进同一 transformer，用「动作专家」独立权重块实现灵巧操作 VLA 的基础范式。",
+  "framework": "idea-first",
+  "idea": "用独立权重的动作专家把 flow matching 头嫁接进 VLM transformer——语义理解（VLM backbone）和高频连续动作生成（action expert + flow matching）在同一次 forward pass 内同时实现，而非两个模型串联。",
+  "logic_chain": [
+    "精细灵巧操作需要高频连续动作分布——autoregressive token 化 VLA 不支持 action chunking，在灵巧任务上直接失败",
+    "完全放弃 VLM 则失去语义理解和语言指令跟随能力，泛化和任务理解受限",
+    "关键设计：动作/状态 token 路由给独立 300M 参数的 action expert，用 flow matching loss 监督，VLM backbone 权重不被动作梯度污染",
+    "预训练（多样低质 10k hr）→ 后训练（高质量任务专属），类比 LLM pretrain/post-train 分离：预训练给恢复能力，后训练给执行精度",
+    "VLM 的语言跟随能力使高层 VLM 策略的子任务分解收益可以被低层 π0 利用"
+  ],
+  "method_skeleton": [
+    "动作专家（Action Expert）+ 分离权重：动作/状态 token 走独立 300M 参数块，图像/语言 token 走 3B VLM backbone，块状因果注意力遮罩隔离梯度",
+    "Flow Matching 建模连续动作分布：线性-高斯最优传输路径，10 步 Euler 积分从噪声生成 H=50 步 action chunk，控制频率 50 Hz",
+    "预训练 + 后训练两段式配方：7 机器人 + OXE 约 10k hr 预训练获宽泛基础，任务专属高质量数据后训练精炼执行策略"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "强相关——π0 是 π0.5 的基础模型，action expert + flow matching + 两段训练是当前影响力最大的 VLA 架构范式之一，直接可借鉴",
+    "track_B_legged": "不相关——本文仅涉及上肢灵巧操作，不含 locomotion；论文明确指出扩展到 legged locomotion 是未来工作"
+  },
+  "validation": "预训练后直接 prompting 大幅超越 OpenVLA 和 Octo；后训练可完成 5–20 分钟长程灵巧任务（洗衣折叠、装箱）——其他方法无法解决这些任务",
+  "core_points": [
+    "autoregressive token 化 VLA 无法表达高频连续灵巧动作分布，是与 diffusion/flow policy 差距的根本原因",
+    "动作专家（独立 300M 参数块）+ 块状因果注意力遮罩，让 flow matching 的动作训练信号不污染 VLM 语义表征",
+    "Flow matching 以线性最优传输路径建模动作分布，10 步 Euler 积分即可实时生成 50 步 action chunk",
+    "预训练（多样低质）给模型错误恢复能力，后训练（高质量专属）给执行精度——两种数据互补非替代",
+    "VLM 预训练带来的语言跟随能力是高层策略调度收益传递到低层执行器的关键",
+    "预训练 π0（即使仅 160k 步）在 out-of-box 任务上远超 OpenVLA 和 Octo",
+    "据作者所知是端到端学习策略中时间最长的灵巧任务（5–20 分钟）的首次展示",
+    "10k hr 自采数据 + 7 机器人构型 + 68 任务，是当时最大的机器人操作预训练规模",
+    "能否扩展到 legged locomotion 仍是未来工作，论文明确指出这一局限"
+  ],
+  "effects": [
+    "Out-of-box：全量 π0 在 shirt folding、bussing easy 等任务得分 0.85–1.0，OpenVLA/Octo 接近 0",
+    "语言跟随率：π0 显著优于无 VLM 初始化的 π0-small（约 2× 提升）",
+    "后训练复杂任务：fine-tuned π0 在 laundry folding、box building 等任务达 0.65–0.85，scratch 版本约 0.2–0.35"
+  ],
+  "open_source": "code+weights",
+  "rating": "Breakthrough",
+  "summary": "summary.html",
+  "open_source_detail": "openpi 开源, Apache-2.0(π0 base/FAST-DROID/ALOHA变体)",
+  "open_source_checked": "2026-06-02"
+}

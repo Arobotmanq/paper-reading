@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stubborn 综述 · 统一动作跟踪与摔倒恢复</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  /* ============================================================
+     语义色锁定：红=问题/风险/未开源 · 琥珀=洞察/部分/保留 · 靛紫=方法/链接
+     绿=结果/正向/开源 · 灰=局限/次要。--brand 仅 hero 点缀。
+     ============================================================ */
+  :root {
+    --brand: #6366f1;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --c-problem: #dc2626; --c-insight: #d97706; --c-method: #6366f1; --c-result: #16a34a; --c-limit: #64748b;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #312e81 100%); color: #fff; padding: 3em 1.5em 3.4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 480px; height: 480px; background: radial-gradient(circle, color-mix(in srgb, var(--brand) 30%, transparent), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(255,255,255,0.08); color: #c7d2fe; border: 1px solid rgba(255,255,255,0.25); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 12px var(--brand); }
+  .hero h1 { font-size: clamp(1.7em, 4vw + 1em, 2.8em); font-weight: 800; line-height: 1.18; margin: 0.5em 0 0.3em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.1em; color: #e2e8f0; max-width: 720px; margin: 0 0 1.3em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.1em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rating { background: rgba(202, 138, 4, 0.22); border-color: rgba(250, 204, 21, 0.5); color: #fde68a; font-weight: 700; }
+  .pill.rating a { color: inherit; }
+
+  /* ---------- KPI ---------- */
+  .kpi-strip { max-width: 1020px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { display: block; color: inherit; text-decoration: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  a.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi .status { margin: 0.45em 0; font-size: 0.95em; }
+  .kpi.green .value { color: var(--success); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1020px; margin: 2.6em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: minmax(0, 720px) 230px; gap: 2.5em; justify-content: center; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc ul.toc-claims { margin: 0.3em 0 0.3em 0.5em; padding-left: 0.7em; border-left: 1px dashed var(--border); font-size: 0.9em; }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.8em 2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 0.65em; flex: 0 0 30px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.95em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+  section.card[id], .claim[id] { scroll-margin-top: 1.2em; }
+
+  /* ---------- ① 30 秒分诊条 ---------- */
+  .snap { padding: 1.2em 1.6em; }
+  .snap-row { display: flex; gap: 1em; padding: 0.45em 0; border-bottom: 1px dashed var(--border); align-items: baseline; }
+  .snap-row:last-child { border-bottom: 0; }
+  .snap-k { flex: 0 0 3.2em; text-align: center; font-size: 0.78em; font-weight: 700; border-radius: 6px; padding: 0.15em 0; }
+  .snap-k.kp { background: var(--danger-bg); color: var(--c-problem); }
+  .snap-k.km { background: #eef2ff; color: var(--c-method); }
+  .snap-k.kr { background: var(--success-bg); color: var(--c-result); }
+  .snap-k.kh { background: var(--gold-bg); color: var(--gold); }
+  .snap-row > div { color: var(--text-soft); }
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.18em 0.7em; border-radius: 999px; font-weight: 700; font-size: 0.85em; background: var(--gold-bg); color: #92400e; border: 1px solid #f59e0b; }
+
+  /* ---------- ② 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--accent); }
+  .gist-block { margin: 1.1em 0; }
+  .gb-label { font-size: 0.82em; font-weight: 700; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.12em; font-weight: 600; color: var(--text); background: #eef2ff; border-radius: var(--radius); padding: 0.9em 1.1em; line-height: 1.7; }
+  ol.chain { counter-reset: ch; list-style: none; padding-left: 0; }
+  ol.chain li { counter-increment: ch; position: relative; padding-left: 2.2em; margin: 0.55em 0; }
+  ol.chain li::before { content: counter(ch); position: absolute; left: 0; top: 0.15em; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--code-bg); border: 1px solid var(--border-strong); color: var(--accent-dark); font-size: 0.8em; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pipeline-line { font-size: 0.98em; background: var(--code-bg); border-radius: 8px; padding: 0.6em 1em; color: var(--text); }
+  ul.rel-list { padding-left: 1.2em; }
+  ul.rel-list b { color: var(--text); }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2em 0 1.2em; color: var(--muted); font-size: 0.88em; font-weight: 600; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- ③ 深读层：CLAIM ---------- */
+  .claim-group { display: flex; align-items: center; gap: 0.7em; margin: 1.8em 0 0.2em; font-size: 0.8em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .claim-group::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--k, var(--accent)); border-radius: var(--radius); padding: 1.05em 1.3em; margin: 1.1em 0; background: var(--card); }
+  .claim.k-problem { --k: var(--c-problem); } .claim.k-insight { --k: var(--c-insight); }
+  .claim.k-method  { --k: var(--c-method); }  .claim.k-result  { --k: var(--c-result); }
+  .claim.k-limit   { --k: var(--c-limit); }
+  .claim-head { display: flex; align-items: baseline; gap: 0.55em; flex-wrap: wrap; }
+  .claim-head .cn { font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 700; color: var(--k, var(--accent)); }
+  .kicker { font-size: 0.7em; font-weight: 700; padding: 0.1em 0.6em; border-radius: 999px; background: color-mix(in srgb, var(--k, var(--accent)) 12%, #fff); color: var(--k, var(--accent)); flex: 0 0 auto; }
+  .claim-title { font-size: 1.08em; font-weight: 700; color: var(--text); margin: 0; line-height: 1.5; }
+  .claim-body { font-weight: 400; color: var(--text-soft); margin: 0.4em 0 0; line-height: 1.7; }
+  .claim-how { margin-top: 0.5em; font-size: 0.88em; color: var(--muted); padding-left: 0.7em; border-left: 2px solid var(--border); }
+  .claim.key { border-left-color: var(--gold); }
+  .claim.key .cn::after { content: " ★"; color: var(--gold); }
+
+  .evidence { margin-top: 0.75em; }
+  .evidence + .evidence { padding-top: 0.75em; border-top: 1px dashed var(--border); }
+  .ev-gloss { font-size: 0.95em; color: var(--text); background: #fafaf9; border-radius: 6px; padding: 0.35em 0.7em; margin: 0.4em 0; display: flex; gap: 0.6em; }
+  .ev-tag { flex: 0 0 auto; font-size: 0.72em; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 0 0.45em; height: fit-content; margin-top: 0.35em; background: var(--card); }
+  details.ev-fold { margin: 0.45em 0 0; }
+  details.ev-fold > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 0.5em; list-style: none; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.18em 0.7em; }
+  details.ev-fold > summary::-webkit-details-marker { display: none; }
+  details.ev-fold > summary .ev-hint { color: var(--muted); font-weight: 400; }
+  details.ev-fold[open] > summary { margin-bottom: 0.45em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "Source Serif 4", Georgia, "Noto Serif SC", serif; font-style: italic; font-size: 0.97em; line-height: 1.6; color: #1e293b; }
+  .ev-quote::before { content: "“"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "”"; color: var(--muted); font-weight: 700; }
+  .ev-quote mark { background: #fef3c7; color: inherit; font-style: normal; padding: 0 0.1em; border-radius: 3px; }
+  .ev-row { display: flex; gap: 0.6em; margin: 0.4em 0; }
+  .ev-trans { font-size: 0.95em; color: var(--text-soft); }
+  #ev-toggle-all { float: right; font: 600 0.78em "JetBrains Mono", monospace; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.3em 0.8em; cursor: pointer; }
+  #ev-toggle-all:hover { border-color: var(--accent); }
+
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.45em; margin: 0.55em 0; }
+  .stat { font: 600 0.82em "JetBrains Mono", monospace; padding: 0.18em 0.7em; border-radius: 999px; border: 1px solid var(--border); background: var(--code-bg); color: var(--text-soft); }
+  .stat.win { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+  .stat.dim { opacity: 0.65; }
+
+  /* ---------- 术语 ---------- */
+  .term, .note-link { position: relative; cursor: help; }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; cursor: pointer; }
+  .term { border-bottom: 1px dotted var(--muted); }
+  .term[data-gloss]:hover::after, .term[data-gloss]:focus::after,
+  .note-link[data-gloss]:hover::after {
+    content: attr(data-gloss); position: absolute; left: 0; bottom: 1.7em; z-index: 20;
+    width: max-content; max-width: min(46ch, 80vw); background: #0f172a; color: #e2e8f0;
+    font-size: 0.78em; font-weight: 400; font-style: normal; line-height: 1.5;
+    padding: 0.5em 0.8em; border-radius: 8px; box-shadow: var(--shadow-lg);
+  }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.1em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.1em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: #f8fafc; }
+  th { text-align: left; padding: 0.7em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65em 1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.loc { font-family: "JetBrains Mono", monospace; font-size: 0.82em; color: var(--muted); white-space: nowrap; }
+  tr.winner { background: var(--success-bg); }
+  tr.winner td { font-weight: 700; color: var(--success); }
+  tr.winner td:first-child::before { content: "★ "; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.2em 0 0.5em; text-align: center; }
+  figure a { border: none !important; }
+  figure img { max-width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); cursor: zoom-in; }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER / PRINT ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+  @media print {
+    .hero { background: #fff; color: #000; padding: 1em 0; }
+    .hero h1 { background: none; -webkit-text-fill-color: initial; color: #000; }
+    .hero .subtitle, .pill { color: #333; }
+    .kpi-strip { margin-top: 1em; }
+    .toc, #ev-toggle-all { display: none; }
+    section.card { box-shadow: none; }
+    .claim, .evidence, figure { break-inside: avoid; }
+    details.ev-fold { open: true; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>SUSTech ACT/AISLab · Humanoid RL</span>
+    <h1>Stubborn<br>动作跟踪与摔倒恢复，一个策略搞定</h1>
+    <p class="subtitle">把"跟踪失败"当成进入跌倒态的入口：一枚概率硬币替换硬终止，让单一 RL 策略自发学会恢复。</p>
+    <div class="meta-pills">
+      <span class="pill rating"><a href="#verdict">⚖ Valuable</a></span>
+      <span class="pill">📄 RL / Humanoid Control</span>
+      <span class="pill">📅 2026</span>
+      <span class="pill">🏢 南方科技大学</span>
+      <span class="pill">🔗 <a href="https://aislab-sustech.github.io/Stubborn/">Project</a></span>
+      <span class="pill">📄 arXiv:2606.12814</span>
+      <span class="pill">⏱ 速记 ~90s · 全文 ~7min</span>
+    </div>
+  </div>
+</header>
+
+<!-- KPI -->
+<div class="kpi-strip">
+  <a class="kpi green" href="#c7"><div class="label">强扰动恢复成功率</div><div class="value">100<span class="unit">%</span></div><div class="desc">5 m/s 扰动 · 去掉 PT 仅 77.5–85% ↗结果7</div></a>
+  <a class="kpi purple" href="#c6"><div class="label">MPBPE 位置误差</div><div class="value">48.85<span class="unit">mm</span></div><div class="desc">5 法中最优 vs From-scratch 62.68 ↗结果6</div></a>
+  <a class="kpi blue" href="#c6"><div class="label">MPJVE 关节速度误差</div><div class="value">624<span class="unit">↓</span></div><div class="desc">vs From-scratch 887.87（−30%）↗结果6</div></a>
+  <div class="kpi"><div class="label">开源</div><div class="status"><span class="os-tag os-no">未开源</span></div><div class="desc">代码 "Coming Soon"，仅真机演示视频</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ ① 30 秒分诊条 ============ -->
+    <section class="card snap" id="snap">
+      <div class="snap-row"><span class="snap-k kp">痛点</span><div>人形的「动作跟踪」与「摔倒恢复」长期被当两件事——要多阶段训练、专门恢复奖励、单独恢复策略，复杂又割裂；而且跟踪误差一超阈值就硬终止 episode，策略根本没机会学爬起来。</div></div>
+      <div class="snap-row"><span class="snap-k km">做法</span><div>一个 RL 策略统一：把跟踪失败当成进入跌倒态流形的天然入口，用 <a href="./notes.html#probabilistic-termination" class="note-link" tabindex="0" data-gloss="超误差阈值后每步只以概率 pterm 终止 episode，而非立刻判负">Bernoulli 概率(软)终止</a> 给恢复留探索窗，再用误差驱动采样啃难片段。无专门恢复奖励、单阶段。</div></div>
+      <div class="snap-row"><span class="snap-k kr">结果</span><div>5 m/s 强扰动下恢复成功率 100%（消融掉概率终止仅 77.5–85%）；LAFAN1 全集跟踪误差全面优于 4 个 SOTA baseline；真机 29-DoF Unitree G1 完成空翻 / 特技 / 摔倒恢复。</div></div>
+      <div class="snap-row"><span class="snap-k kh">读法</span><div><span class="badge">Valuable</span> 做人形 WBC / tracking RL → 精读 <a href="#c4">方法4（概率终止）</a> + Fig.2 恢复消融；只想了解思路 → 速记层即止。⚡ 最短精读路径：Fig.1（架构）→ §3.1（PT 推导）→ Table 2（恢复消融）。</div></div>
+    </section>
+
+    <!-- ============ ② 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">⚡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲思想、逻辑、方法；效果只作验证。要核对原文再进下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">🧭 背景 · 为什么重要（不熟此子方向先读我）</div>
+        <p>RL 做人形高动态 <span class="term" tabindex="0" data-gloss="让机器人关节实时复现参考 mocap 动作轨迹">motion tracking</span>（跳舞、武术、空翻）已经相当成熟，但在<strong>强外部扰动下既要保住跟踪精度、又要从跌倒中爬起来</strong>仍是难题。主流把<span class="term" tabindex="0" data-gloss="从跌倒/失衡态自主恢复到站立并继续跟踪">fall recovery</span>当成独立任务来解：多阶段训练、专门设计恢复奖励、单独训一个恢复控制器（HoST / HumanUP / HiFAR）。更糟的是，几乎所有方法一旦跟踪误差超阈值就<strong>硬终止 episode</strong>——策略连"摔倒后该怎么动"都没机会探索。本文要把这两件事焊进一个策略、一个训练阶段。</p>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">别把"摔了"当游戏结束，而当"附加关卡"。跟踪失败本身就是通往跌倒态流形的天然入口；训练时不立刻判负，而是<strong>掷一枚概率硬币</strong>决定是否终止——同一个策略在追踪动作的同时就自发学会了爬起来。一套奖励、一个策略、一个阶段。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么成立</div>
+        <ol class="chain">
+          <li>立论：从精确跟踪到跌倒是一段<strong>连续过渡</strong>，跟踪失败正是进入"跌倒态流形"的天然门口——应当利用，而非用硬终止回避。</li>
+          <li>把硬终止换成 Bernoulli <strong>软终止</strong>：误差超阈值后每步只以概率 \(p_{term}\) 终止，给恢复留出约 200 步（4 s）的探索窗。</li>
+          <li>\(p_{term}\) 不拍脑袋：由物理恢复时间反推 \(E[T]=1/p_{term}=f_{ctrl}\cdot t_{rec}\Rightarrow0.005\)；这样 &gt;99% 的不稳定 episode 仍会在步数上限前终止，避免截断造成的 <a href="./notes.html#td-truncation-bias" class="note-link" tabindex="0" data-gloss="Temporal Difference：RL 用相邻时刻价值差更新价值估计；截断会让这个估计有偏">TD</a> 价值估计偏差。</li>
+          <li>软终止后"是否终止"不再代表片段难度，于是改用<strong>在线跟踪误差</strong> \(\bar e\) 直接驱动采样权重，把概率质量压向高误差/难片段。</li>
+          <li>验证：5 m/s 扰动恢复 100%（消融掉 PT 掉到 77.5–85%）；LAFAN1 跟踪误差优于 4 个 SOTA；真机 G1 完成空翻/特技/摔倒恢复。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 管线一句话 + 三个设计决策</div>
+        <p class="pipeline-line">Mocap 重定向参考动作 → yaw-aligned 表示 + 本体感知观测 → 非对称 Actor-Critic（Critic 用特权信息）→ Bernoulli 概率终止 + 误差驱动采样 → 单一"跟踪+恢复"策略 → Unitree G1 部署</p>
+        <ul>
+          <li><b>① <a href="./notes.html#yaw-aligned-representation" class="note-link" tabindex="0" data-gloss="把观测旋到只保留朝向无关分量、去掉全局平移与 yaw 漂移的坐标表示">yaw-aligned 表示</a></b>：去掉全局漂移与朝向、保留重力相关的 pitch/roll → 扰动后不做无谓的全局纠偏。</li>
+          <li><b>② <span class="term" tabindex="0" data-gloss="Critic 看仿真特权信息、Actor 只用本体感知的不对称 RL 训练架构">非对称 Actor-Critic</span></b>：Critic 用仿真特权信息估价值，Actor 只用本体感知 → 可直接真机部署。</li>
+          <li><b>③ Bernoulli 概率终止 + 误差驱动采样</b>：前者造恢复探索窗，后者把训练算力压到难片段。</li>
+        </ul>
+        <figure>
+          <a href="./images/figure_1_overview.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_overview.png" alt="Figure 1: Overview of Stubborn" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 1 (p.2)：</strong>Stubborn 总览——yaw-aligned 表示 + 非对称 Actor-Critic + Bernoulli 概率终止 + 误差驱动自适应采样，单策略训练后直接部署到真机 G1。<strong>看点：</strong>右下角 "Probabilistic Termination" 与 "Error-Based Adaptive Sampling" 两块，是相对 BeyondMimic 式硬终止管线的两处改动。</figcaption>
+        </figure>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p>「跟踪+恢复统一进一个策略」成立：强扰动恢复 100%、跟踪误差全面领先。注意跟踪精度相对 From-scratch RL 主要赢在位置与速度（MPBPE / MPJVE），关节角误差 MPJPE 仅微降。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>设置</th><th class="num">Stubborn</th><th class="num">最佳 baseline</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr class="winner"><td>恢复成功率 @5 m/s（0.25 m）</td><td class="num">100%</td><td class="num">w/o PT 85.0%</td><td class="loc">p.6 · Tab.2</td></tr>
+              <tr><td>MPBPE 位置误差 ↓ (mm)</td><td class="num">48.85</td><td class="num">From-scratch 62.68</td><td class="loc">p.6 · Tab.1</td></tr>
+              <tr><td>MPJVE 关节速度误差 ↓</td><td class="num">624.03</td><td class="num">From-scratch 887.87</td><td class="loc">p.6 · Tab.1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🗺 放进你的知识图谱（已读库定位）</div>
+        <ul class="rel-list">
+          <li><b>同类 / 互补</b>：<a href="../GRAIL-Generating-Humanoid-Loco-Manipulation-from-3D-Assets-and-Video-Priors/summary.html">GRAIL</a> 同样在 Unitree G1 上做 motion tracking RL（SONIC 底座），但它解决"训练数据从哪来"；Stubborn 解决"怎么把跟踪+恢复塞进一个策略、一个阶段"。</li>
+          <li><b>对立路线</b>：<a href="../WholeBodyVLA-Unified-Latent-VLA-Loco-Manipulation/summary.html">WholeBodyVLA</a> 的 LMO 控制器走两阶段 curriculum；Stubborn 明确主张去掉多阶段/单独恢复策略，单策略统一。</li>
+          <li><b>上下游</b>：<a href="../LeVERB-Humanoid-Whole-Body-Latent-VL-Instruction/summary.html">LeVERB</a> 的下层 WBC 正是这类 tracking 控制器，Stubborn 可作其更抗扰、自带恢复的底座。</li>
+        
+          <li><b>底层 ↔ 基座</b>：<a href="../Psi0-Open-Foundation-Humanoid-Loco-Manipulation/summary.html">Ψ0</a> 这类通用 loco-manip 基座要落到真机，底下正需要 Stubborn 这种自带抗扰恢复的 tracking 控制器兜底。</li>
+          <li><b>远亲 · RL 对照</b>：<a href="../pi-star-0.6-VLA-Learns-From-Experience/summary.html">π*0.6</a> 在 VLA 操作层从真机经验学；Stubborn 在底层把"硬终止换成概率终止"让现有 tracking 顺带学会恢复——同走 RL，但层级与机制不同（关联较弱，作对照）。</li>
+        </ul>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🎯 与你项目的相关性</div>
+        <p><b>Track B（足式 / 人形 locomotion）强命中</b>：人形高动态 tracking RL + fall recovery 统一框架，非对称 Actor-Critic + yaw-aligned 表示 + IsaacLab + 域随机化 + 真机 G1 sim2real，全套 Track B 关键词。<b>可直接借用</b>：§3.1 的 Bernoulli 概率(软)终止——用一枚概率硬币替换硬终止，几乎零成本地提升强扰动下的恢复鲁棒性（77.5/85%→100%）；§3.2 误差驱动采样啃难片段。<b>落地门槛</b>：代码未开源（Coming Soon）需自行复现；\(p_{term}\) 要按自家控制频率/恢复时间重标定。<b>Track A（移动操作 VLA）不命中</b>：无 VLA、无语言、无操作。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ ③ 深读层 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据 <button id="ev-toggle-all" type="button">展开全部证据</button></h2>
+      <p class="lead">每条 = 分型论点（常驻）+ 解读（常驻）+ 折叠的逐字原文/译文（📍真实页码，Ctrl-F 锚点）。8 观点 · 14 证据。</p>
+
+      <h3 class="claim-group" id="g-problem">问题与洞察</h3>
+
+      <div class="claim k-problem" id="c1">
+        <div class="claim-head"><span class="cn">1</span><span class="kicker">问题</span><h3 class="claim-title">跟踪与恢复被拆成两套</h3></div>
+        <p class="claim-body">主流把动作跟踪与摔倒恢复当不同任务：要多阶段训练、专门恢复奖励、单独恢复策略；且严重失败后立刻硬终止 episode，恢复行为根本无从探索。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这两点（任务割裂 + 硬终止）就是 Stubborn 要消灭的复杂度来源——也是它"streamlined / unified"卖点的对照系。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">most existing works <mark>treat motion tracking and fall recovery as different tasks</mark> and require multi-stage training with <mark>specialized recovery rewards and/or separate recovery policies</mark>. Moreover, existing reinforcement learning-based methods often <mark>terminate training episodes immediately</mark> after severe tracking failures, <mark>limiting recovery-oriented exploration</mark> in unstable or fallen states.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">多数现有工作把动作跟踪与摔倒恢复当作不同任务，需要带专门恢复奖励和/或单独恢复策略的多阶段训练。此外，现有 RL 方法常在严重跟踪失败后立刻终止训练 episode，限制了在不稳定/跌倒态下的面向恢复的探索。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>更尖锐的版本：业界把两者视为"梯度冲突的竞争目标"，所以才不得不解耦——本文恰恰否定这个前提。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §2 Related Work <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">existing works often treat motion tracking and fall recovery as <mark>competing objectives with conflicting gradients</mark>. To decouple these tasks, the community seeks solutions using multi-stage training and separate recovery policies with recovery-specific rewards.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">现有工作常把动作跟踪与摔倒恢复视为梯度冲突的竞争目标。为解耦这两个任务，社区转向多阶段训练 + 带专门恢复奖励的单独恢复策略。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight key" id="c2">
+        <div class="claim-head"><span class="cn">2</span><span class="kicker">洞察</span><h3 class="claim-title">跟踪失败 = 通往跌倒流形的入口</h3></div>
+        <p class="claim-body">全文的支点：从精确跟踪到跌倒是一段连续过渡，跟踪失败正是进入"跌倒态流形"的天然门口；利用这些过渡而非回避，单一策略就能同时学会高保真跟踪、抗扰与恢复。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>so-what：这句话把"恢复"从一个需要额外奖励/策略的新任务，重新定义成"跟踪在失败区的自然延伸"——后面所有机制都是为兑现它服务。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §2 Related Work <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">We argue that <mark>tracking failures actually provide a natural gateway to the fall state manifold</mark>. By <mark>harnessing these natural transitions rather than avoiding them</mark>, one might achieve high-fidelity motion tracking, robustness to strong perturbations, and recovery from unstable states with a <mark>unified training framework and policy</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">我们认为跟踪失败实际上提供了通往跌倒态流形的天然入口。通过利用这些自然过渡而非回避它们，便有可能用统一的训练框架与策略，同时实现高保真动作跟踪、强扰动鲁棒性，以及从不稳定态的恢复。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-method">方法</h3>
+
+      <div class="claim k-method" id="c3">
+        <div class="claim-head"><span class="cn">3</span><span class="kicker">方法</span><h3 class="claim-title">底座：非对称 AC + yaw-aligned</h3></div>
+        <p class="claim-body">两个"现成但必要"的底座：非对称 Actor-Critic 让 Critic 吃特权仿真信息、Actor 只用本体感知（便于真机部署）；yaw-aligned 表示去掉全局漂移与朝向、保留重力 pitch/roll。</p>
+        <div class="claim-how">yaw-aligned 推导见 Appendix §6.1（把 body 位姿旋到去 yaw 的对齐帧，root 位姿仍留在世界帧）；非对称 AC 沿用 Radosavovic 等 [17]。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这层不是本文创新点，但 yaw-aligned 是"扰动后不做无谓全局纠偏"的前提——对恢复鲁棒性是隐性贡献。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2–3 · §1 Introduction <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Stubborn adopts an <mark>asymmetric Actor-Critic architecture</mark> [17] with yaw-aligned tracking representation, where the <mark>value network uses privileged simulation information</mark>, while the <mark>policy network relies only on proprioceptive observations</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">Stubborn 采用带 yaw-aligned 跟踪表示的非对称 Actor-Critic 架构，其中价值网络使用特权仿真信息，而策略网络仅依赖本体感知观测。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>yaw-aligned 的收益一句话：误差只反映局部全身协调，不被全局平移/yaw 漂移污染，省掉扰动后的过度纠偏。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.11 · Appendix §6.1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">enabling the policy to <mark>reduce sensitivity to global drift</mark> while <mark>preserving gravity-related pitch and roll information</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">使策略降低对全局漂移的敏感度，同时保留与重力相关的 pitch 和 roll 信息。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method key" id="c4">
+        <div class="claim-head"><span class="cn">4</span><span class="kicker">方法</span><h3 class="claim-title">Bernoulli 概率(软)终止</h3></div>
+        <p class="claim-body">核心机制：误差超阈值后不确定性终止——每步只以概率 \(p_{term}\) 终止，否则继续，给摔倒后的恢复留出一段可探索的时间窗。</p>
+        <div class="claim-how">参数：\(p_{term}=0.005\)、\(\theta_{pos}=0.25\,\mathrm{m}\)、\(\theta_{quat}=\pi/2\)；由 \(E[T]=1/p_{term}=f_{ctrl}\cdot t_{rec}=50\,\mathrm{Hz}\times4\,\mathrm{s}=200\) 步反推得到。窗太窄退化成硬终止，太宽则学不动。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>so-what：对 Track B 工程师，这是一个几乎零成本的可迁移 trick——把 env 的硬终止条件换成"以小概率终止"，就能让现有 tracking 策略顺带学恢复。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §3.1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">when the tracking error exceeds a predefined threshold, the environment <mark>does not terminate the episode deterministically</mark>; instead, it <mark>triggers a termination with a user-specified probability</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">当跟踪误差超过预定阈值时，环境不再确定性地终止 episode；而是以一个用户指定的概率触发终止。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>关键设计纪律：软终止不是放任不管——\(p_{term}\) 锚在物理恢复时间上，保证 &gt;99% 不稳定 episode 仍在步限前终止，避免 time-limit 截断扭曲 TD 价值估计。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The parameter pterm, derived from physical recovery constraints, ensures that <mark>the vast majority (&gt; 99%) of unstable episodes terminate probabilistically</mark> before reaching the step limit. This substantially mitigates the <mark>TD distortion caused by truncation</mark> and promotes the stability of long-horizon optimization.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">参数 pterm 源自物理恢复约束，确保绝大多数（&gt;99%）不稳定 episode 会在到达步数上限之前以概率方式终止。这显著缓解了截断带来的 TD 扭曲，并提升长时程优化的稳定性。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method" id="c5">
+        <div class="claim-head"><span class="cn">5</span><span class="kicker">方法</span><h3 class="claim-title"><a href="./notes.html#error-driven-adaptive-sampling" class="note-link" data-gloss="按在线跟踪误差动态调整从参考轨迹哪一帧起始训练的概率，难片段多练">误差驱动自适应采样（AdpS）</a></h3></div>
+        <p class="claim-body">软终止带来一个副作用：终止不再可靠地代表片段难度。于是改用在线跟踪误差 \(\bar e\) 直接驱动采样权重，把更多概率质量分配给高误差片段。</p>
+        <div class="claim-how">成功阈值 \(\theta_{success}=0.06\)；权重增减步长 \(\Delta w_i=0.10,\ \Delta w_d=0.05\)，按 \(\bar e\) 与是否到达 \(T_{max}\) 分三种更新（局部衰减 \(\Phi_{att}\) / 局部重分布 \(\Phi_{dist}\)），再归一化为下一次起始帧的采样分布。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>逻辑闭环：硬终止时可拿"是否终止"当难度代理做 hard-sample mining（如 BeyondMimic）；软终止打破了这个代理，所以必须换成直接测误差。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">under the PT mechanism described in Section 3.1, segments exceeding the error threshold are not terminated immediately ... As a result, <mark>episode termination is no longer a reliable proxy for segment difficulty</mark> ... we propose a probabilistic termination and tracking-error-driven adaptive sampling strategy.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">在 §3.1 的 PT 机制下，超过误差阈值的片段不会立即终止……因此 episode 终止不再是片段难度的可靠代理……我们提出概率终止 + 跟踪误差驱动的自适应采样策略。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>效果取向：把采样质量压向高误差区，等价于"长时程高动态动作里，难片段练得更频繁"。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.5 · §3.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">more probability mass is assigned to <mark>high-error regions</mark>, encouraging training to <mark>focus on difficult motion segments</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">更多概率质量被分配到高误差区域，促使训练聚焦于困难的运动片段。</div></div>
+          </details>
+        </div>
+        <figure>
+          <a href="./images/figure_3_adps_ablation.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_3_adps_ablation.png" alt="Figure 3: AdpS ablation error curves" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 3 (p.8)：</strong>AdpS 消融——训练过程中关节位置 / 速度 / 加速度误差曲线 + 末期箱线图（AdpS vs w/o AdpS）。<strong>看点：</strong>差距集中在中后期，且幅度很小（注意 y 轴量程很窄，如 MPJPE 仅 0.12–0.13 区间）——这正是把它列入局限的依据。</figcaption>
+        </figure>
+      </div>
+
+      <h3 class="claim-group" id="g-result">结果与边界</h3>
+
+      <div class="claim k-result" id="c6">
+        <div class="claim-head"><span class="cn">6</span><span class="kicker">结果</span><h3 class="claim-title">LAFAN1 全集跟踪误差领先</h3></div>
+        <p class="claim-body">在完整 LAFAN1 上四项误差综合最优：位置 MPBPE 与关节速度 MPJVE 大幅领先，关节角 MPJPE 微降，平滑度 ∆acc 与最优的 BFM-Zero 持平。</p>
+        <div class="stat-row">
+          <span class="stat win">MPBPE 48.85（最优）</span>
+          <span class="stat dim">From-scratch 62.68</span>
+          <span class="stat win">MPJVE 624.03（最优）</span>
+          <span class="stat dim">From-scratch 887.87</span>
+          <span class="stat">MPJPE 113.38 ≈ 115.43</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方法</th><th class="num">MPBPE↓</th><th class="num">MPJPE↓</th><th class="num">MPJVE↓</th><th class="num">∆acc↓</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr class="winner"><td>Stubborn (Ours)</td><td class="num">48.85</td><td class="num">113.38</td><td class="num">624.03</td><td class="num">17.09</td><td class="loc">p.6 · Tab.1</td></tr>
+              <tr><td>From-scratch RL [13]</td><td class="num">62.68</td><td class="num">115.43</td><td class="num">887.87</td><td class="num">27.75</td><td class="loc">p.6</td></tr>
+              <tr><td>HoloMotion [18]</td><td class="num">162.92</td><td class="num">150.65</td><td class="num">758.56</td><td class="num">19.47</td><td class="loc">p.6</td></tr>
+              <tr><td>BFM-Zero [20]</td><td class="num">214.09</td><td class="num">299.36</td><td class="num">1100.88</td><td class="num">17.07</td><td class="loc">p.6</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>关键对照是 From-scratch RL（= BeyondMimic 同框架的多动作 RL），同底座下 Stubborn 主要把位置和速度误差压下来；MPJPE 仅 115.43→113.38，跟踪精度增量其实有限。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.6 · §4.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Compared with From-scratch RL, <mark>MPBPE decreases from 62.68 to 48.85</mark>, MPJPE decreases from 115.43 to 113.38, and <mark>MPJVE decreases from 887.87 to 624.03</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">与 From-scratch RL 相比，MPBPE 从 62.68 降到 48.85，MPJPE 从 115.43 降到 113.38，MPJVE 从 887.87 降到 624.03。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-result key" id="c7">
+        <div class="claim-head"><span class="cn">7</span><span class="kicker">结果</span><h3 class="claim-title">PT 把恢复 77.5/85% 拉到 100%</h3></div>
+        <p class="claim-body">最有说服力的消融：5 m/s 强扰动下，带概率终止的 Stubborn 在 0.15 m / 0.25 m 两档阈值都达 100% 恢复成功，去掉 PT 则跌到 77.5% / 85.0%；真机 G1 上跑通空翻、特技与摔倒恢复。</p>
+        <div class="stat-row">
+          <span class="stat win">PT 0.15 m → 100%</span>
+          <span class="stat dim">w/o PT → 77.5%</span>
+          <span class="stat win">PT 0.25 m → 100%</span>
+          <span class="stat dim">w/o PT → 85.0%</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是支撑"PT 是核心贡献"的承重证据。注意是受控消融（其余设置不变），方向性强；但样本量/试次数未在正文给出，且无方差。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.7 · §4.3 · Tab.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Under both thresholds, Stubborn with PT achieves a <mark>recovery success rate of 100%</mark>, while <mark>w/o PT achieves 77.5% and 85.0%</mark>, respectively. These results indicate that PT improves recovery success under strong perturbations.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">两档阈值下，带 PT 的 Stubborn 都达到 100% 恢复成功率，而不带 PT 分别为 77.5% 和 85.0%。结果表明 PT 提升了强扰动下的恢复成功率。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>真机层面的兑现：同一策略既精确跟踪高动态动作，又能从跌倒爬起来——这是论文标题 "Stubborn"（倔强不倒）的来源。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.8 · Fig.4 caption <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Stubborn can <mark>recover from falls and precisely tracks diverse dynamic motions</mark>, including flips and acrobatic maneuvers.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">Stubborn 能从跌倒中恢复，并精确跟踪多样的动态动作，包括空翻与特技动作。</div></div>
+          </details>
+        </div>
+        <figure>
+          <a href="./images/figure_2_pt_ablation.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_pt_ablation.png" alt="Figure 2: PT ablation recovery success and steps" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 2 (p.7)：</strong>PT 消融——训练过程中的恢复成功率与平均恢复步数曲线 + 末期箱线图（Ours vs w/o PT，阈值 0.15/0.25 m）。<strong>看点：</strong>Ours 收敛更快、波动更小，尤其 0.15 m 严苛阈值下 w/o PT 抖动明显；箱线图右侧 Ours 中位成功率更高、恢复步数更少。</figcaption>
+        </figure>
+        <figure>
+          <a href="./images/figure_4_real_world.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_4_real_world.png" alt="Figure 4: real-world deployment on Unitree G1" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 4 (p.8)：</strong>29-DoF Unitree G1 真机：Flip（空翻）/ Acrobatics（特技）/ Fall Recovery（摔倒恢复）三类序列。<strong>看点：</strong>第三行——机器人被打倒后用同一策略自主起身并恢复跟踪。</figcaption>
+        </figure>
+      </div>
+
+      <div class="claim k-limit" id="c8">
+        <div class="claim-head"><span class="cn">8</span><span class="kicker">局限</span><h3 class="claim-title">AdpS 增益边际 + 评测偏弱</h3></div>
+        <p class="claim-body">自适应采样的收益非常小（MPJPE 120.7→119.4、∆acc 14.50→14.42，约 1%）；Table 1/2 全部报告 ±0.000 标准差、试次数与种子数未明，统计强度有限；恢复"成功"基于自定义阈值；严重跌倒后的恢复仍不够敏捷平滑（作者列为 future work）。本文为 arXiv 预印本，未经同行评审。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>AdpS 这条消融的绝对增益小到接近噪声——它更像"为兼容软终止而必须补的一块"，而非独立性能引擎；真正承重的是 PT。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.7 · §4.3 · Tab.3 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">introducing AdpS reduces MPJPE, MPJVE, and ∆acc from <mark>120.7, 548.5, and 14.50</mark> to <mark>119.4, 541.5, and 14.42</mark>, respectively, indicating improved tracking performance in terms of joint position, joint velocity, and acceleration.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">引入 AdpS 使 MPJPE、MPJVE、∆acc 分别从 120.7、548.5、14.50 降到 119.4、541.5、14.42，表明在关节位置、速度和加速度上的跟踪性能有所提升。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>作者自陈的边界：严重跌倒后的恢复动作还不够 agile/smooth，且尚未扩展到复杂地形——意味着当前结果偏平地/标准摔倒场景。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.9 · §5 Conclusion <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Future work will focus on <mark>improving the agility and smoothness of recovery motions after severe falls</mark>, as well as <mark>extending the framework to more challenging terrains</mark> and highly dynamic humanoid behaviors.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">未来工作将聚焦于提升严重跌倒后恢复动作的敏捷性与平滑性，以及将框架扩展到更具挑战性的地形和更高动态的人形行为。</div></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06）</h2>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未开放</span> 项目页标注 "Coming Soon"，无 GitHub 仓库</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未开放</span> 未提供 checkpoint</dd>
+        <dt>演示</dt><dd><span class="os-tag os-part">部分</span> 项目页提供真机演示视频 <a href="https://aislab-sustech.github.io/Stubborn/">aislab-sustech.github.io/Stubborn</a></dd>
+        <dt>数据</dt><dd>训练用公开 mocap：<span class="term" tabindex="0" data-gloss="Robust Motion In-betweening 的高质量人体 mocap 数据集">LAFAN1</span> [37] + <span class="term" tabindex="0" data-gloss="Archive of Motion Capture as Surface Shapes，大型人体 mocap 聚合数据集">AMASS</span> [38]（本身公开，非本文产出）</dd>
+      </dl>
+      <p class="lead" style="margin-top:0.8em">2026-06-16 核查：WebFetch 项目页 + WebSearch 均未发现已发布代码/权重或 GitHub 仓库，故记 <code>none</code>。</p>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>"跟踪失败=跌倒流形入口"是一个干净且可操作的重定义；由此导出的 Bernoulli 概率(软)终止是一个<strong>几乎零成本、可直接迁移</strong>的 trick——把 env 硬终止换成小概率终止，让现有 tracking 策略顺带学恢复，且 \(p_{term}\) 有物理时间标定不靠玄学。受控消融（77.5/85%→100%）方向性清晰，真机 G1 跑通空翻/恢复。对 Track B 工程师有直接借用价值。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>跟踪精度相对同底座 From-scratch RL 增量有限（MPJPE 仅 −2）；AdpS 消融增益接近噪声（见<a href="#c8">局限8</a>）；所有表格报告 ±0.000 std、试次/种子数不明，统计可信度弱；恢复"成功"用自定义阈值、扰动场景偏标准化；代码未开源、未经同行评审。</p></div>
+      <p><strong>评级：</strong><span class="badge">Valuable</span> &nbsp;非 Breakthrough（重度建立在 BeyondMimic / yaw-aligned 表示 / 非对称 AC 之上，跟踪增量有限），但"软终止统一跟踪+恢复"的洞察与机制干净、可迁移，对足式 RL 工程实践有实用杠杆。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#snap">⏱ 30 秒速读</a></li>
+      <li><a href="#gist">⚡ 速记层</a></li>
+      <li><a href="#core">◆ 核心观点</a>
+        <ul class="toc-claims">
+          <li><a href="#c1">1 问题 · 跟踪与恢复被拆两套</a></li>
+          <li><a href="#c2">2 洞察 · 失败=跌倒入口 ★</a></li>
+          <li><a href="#c3">3 方法 · 非对称AC+yaw-aligned</a></li>
+          <li><a href="#c4">4 方法 · Bernoulli 概率终止 ★</a></li>
+          <li><a href="#c5">5 方法 · 误差驱动采样</a></li>
+          <li><a href="#c6">6 结果 · LAFAN1 误差领先</a></li>
+          <li><a href="#c7">7 结果 · 恢复 →100% ★</a></li>
+          <li><a href="#c8">8 局限 · AdpS边际+评测弱</a></li>
+        </ul>
+      </li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 三层阅读架构（30s 分诊 / 90s 速记 / 按需深读）· Stubborn (arXiv:2606.12814)</footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('ev-toggle-all');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.dataset.open !== '1';
+      btn.dataset.open = open ? '1' : '0';
+      document.querySelectorAll('details.ev-fold').forEach(function (d) { d.open = open; });
+      btn.textContent = open ? '收起全部证据' : '展开全部证据';
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var links = [].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) {
+            a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id);
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('section.card[id], .claim[id]').forEach(function (t) { spy.observe(t); });
+  }
+})();
+</script>
+
+</body>
+</html>

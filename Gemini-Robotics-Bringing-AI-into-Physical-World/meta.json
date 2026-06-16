@@ -1,0 +1,46 @@
+{
+  "title": "Gemini Robotics: Bringing AI into the Physical World",
+  "title_cn": "Gemini Robotics：将 AI 带入物理世界",
+  "field": "vla",
+  "venue": "arXiv (tech report)",
+  "date": "2025",
+  "one_liner": "把 Gemini 2.0 的 frontier 世界知识与具身推理能力（Gemini Robotics-ER）接到 VLA 动作模型上，实现强泛化 + 灵巧操作 + 快速适配新任务/新本体",
+  "framework": "idea-first",
+  "idea": "用 frontier VLM（Gemini 2.0）的具身推理能力作为基础，分两步引入物理世界：先强化具身推理（ER）用于零/少样本感知与规划，再蒸馏为 VLA backbone + 本地 action decoder 实现端到端低延迟控制",
+  "logic_chain": [
+    "通用机器人需要具身推理能力（3D感知、affordance、轨迹预测），这本质上是 VLM 能力的延伸",
+    "Gemini 2.0 已原生具备这些能力；Gemini Robotics-ER 进一步强化，使零样本机器人控制成为可能（53% vs 27%）",
+    "纯 VLM 控制存在精度和延迟瓶颈，需要端到端 VLA 直接输出动作",
+    "云端 backbone + 本地 decoder 架构：保留 VLM 泛化能力的同时实现 50Hz 实时控制",
+    "Generalist 预训练是专项化的必要基础——直接训练 specialist 则全部 0%"
+  ],
+  "method_skeleton": [
+    "Gemini Robotics-ER：Gemini 2.0 Flash 的具身推理增强版，ERQA/SUN-RGBD/pointing benchmarks SOTA",
+    "Gemini Robotics VLA：云端蒸馏 backbone（<160ms）+ 本地 action decoder（50Hz），从数千小时 ALOHA 2 遥操作数据训练",
+    "三级能力阶梯：Generalist（开箱即用）→ Specialist（fine-tune 极端灵巧）→ New Embodiment（Apollo 人形 / bi-arm Franka）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "强相关——Gemini Robotics 是目前最完整的 frontier VLM 接 VLA 路线报告，架构（云端+本地 decoder）、embodiment 适配（人形 Apollo）、快速适配（≤100 demos）直接相关；但完全闭源",
+    "track_B_legged": "不相关——本文只涉及操作（manipulation），不涉及 locomotion 或足式控制"
+  },
+  "validation": "20个灵巧任务显著超过π0 re-implement；lunch-box 100%成功；7/8任务≤100 demos达70%+；新语言指令下基线崩溃但 Gemini Robotics 非零；Apollo 人形适配实验",
+  "core_points": [
+    "Gemini 2.0 已原生具备具身推理（ER）能力；Gemini Robotics-ER 强化后使零样本机器人控制提升近 2 倍",
+    "云端 backbone + 本地 decoder：端到端延迟 ~250ms，50Hz 控制频率，同时保留 VLM 泛化能力",
+    "VLA 在 20 个灵巧任务上开箱即用优于所有 baseline，包括 π0 re-implement",
+    "专项化消融：从头训练 Gemini Robotics specialist 全部 0%——generalist 预训练的物理常识表征不可跳过",
+    "推理增强变体（ER chain-of-thought 作为中间步骤）在 OOD 语义/空间推理任务中大幅提升成功率",
+    "本体适配：泛化能力可在 fine-tune 后跨本体迁移（ALOHA 2 → Apollo 人形 / bi-arm Franka）"
+  ],
+  "effects": [
+    "零样本控制：Gemini Robotics-ER 53% vs Gemini 2.0 Flash 27%（ALOHA 2 仿真 7 任务）",
+    "专项化长流程任务：lunch-box packing 100%，origami fox 45%，spelling game 83%（baseline 全部 0%）",
+    "快速适配：7/8 任务在 ≤100 次示范内达 70%+ 成功率",
+    "3D detection SUN-RGBD AP@15：Gemini Robotics-ER 48.3，超过所有专家模型"
+  ],
+  "open_source": "none",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "闭源; On-Device 仅限合作伙伴; ER 1.6 仅API(2026-04)",
+  "open_source_checked": "2026-06-02"
+}

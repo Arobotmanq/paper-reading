@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoCo-InEKF 综述</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%);
+    color: #fff;
+    padding: 4.5em 1.5em 4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -150px; right: -150px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -200px; left: -100px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5em;
+    background: rgba(118, 185, 0, 0.18);
+    color: var(--nv-green);
+    border: 1px solid rgba(118, 185, 0, 0.4);
+    padding: 0.35em 0.9em; border-radius: 999px;
+    font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 {
+    font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em;
+    backdrop-filter: blur(8px);
+  }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+
+  .kpi-strip {
+    max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em;
+    position: relative; z-index: 2;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em;
+  }
+  .kpi {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.1em 1.2em; box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  .layout {
+    max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em;
+    display: grid; grid-template-columns: 1fr; gap: 2em;
+  }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc {
+    display: none; position: sticky; top: 1.5em; align-self: start;
+    font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em); overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block;
+    border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link {
+    text-decoration: none;
+    color: var(--accent-dark) !important;
+    border-bottom: 1px dashed var(--accent-dark) !important;
+  }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm);
+  }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 1em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--nv-green), var(--accent));
+    color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px;
+  }
+  section.card h3 { font-size: 1.2em; font-weight: 700; margin: 1.6em 0 0.5em; color: var(--text); }
+  section.card h4 { font-size: 1em; font-weight: 700; color: var(--muted); margin: 1.3em 0 0.4em; text-transform: uppercase; letter-spacing: 0.05em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  .kv { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.5em 1em; }
+  .kv dt { color: var(--muted); font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; padding-top: 0.15em; }
+  .kv dd { margin: 0; }
+
+  .callout {
+    border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0;
+    border-left: 4px solid; background: var(--info-bg); border-color: var(--info);
+  }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.95em; }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th { text-align: left; padding: 0.85em 1.1em; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.75em 1.1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr { transition: background 0.15s; }
+  tbody tr:hover { background: #f8fafc; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.winner { background: linear-gradient(90deg, rgba(118, 185, 0, 0.1), rgba(118, 185, 0, 0.04)); }
+  tr.winner td { font-weight: 700; color: var(--nv-green-dark); }
+  tr.winner:hover { background: linear-gradient(90deg, rgba(118, 185, 0, 0.16), rgba(118, 185, 0, 0.06)); }
+  tr.winner td:first-child::before { content: "★ "; color: var(--nv-green); }
+
+  figure { margin: 1.5em 0; text-align: center; }
+  figure img {
+    max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow);
+    border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.4em;
+    padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em;
+    background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3);
+  }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Disney Research · State Estimation</span>
+    <h1>CoCo-InEKF<br>动态接触场景下的学习接触协方差状态估计</h1>
+    <p class="subtitle">
+      一个可微 Invariant EKF：用一个 240K 参数 MLP 端到端预测每个接触候选点的<strong>连续速度协方差</strong>，
+      取代传统的二值接触状态。无需 ground-truth 接触标签，在 Lima 双足机器人上把舞蹈动作线速度 ATE 从 0.121 m/s 降到 0.046 m/s
+      （−62%），并在实机 600 Hz 控制环内实时运行。
+    </p>
+    <div class="meta-pills">
+      <span class="pill">📄 Empirical / Systems</span>
+      <span class="pill">📅 RSS 2026 (Camera-Ready)</span>
+      <span class="pill">🏢 Disney Research · ETH Zurich</span>
+      <span class="pill">🤖 Lima Bipedal Robot (0.84 m, 16.2 kg, 20 DoF)</span>
+      <span class="pill">🔗 <a href="https://la.disneyresearch.com/publication/coco-inekf-state-estimation-with-learned-contact-covariances-in-dynamic-contact-rich-scenarios/">Disney Research</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">Dancing Lin-Vel ATE</div>
+    <div class="value">0.046<span class="unit">m/s RMSE</span></div>
+    <div class="desc">vs Hybrid Baseline 0.121 (−62%)</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">NEES Core 一致性</div>
+    <div class="value">52.1<span class="unit">%</span></div>
+    <div class="desc">vs 基线 18.2–37.7%（仅 IDEA: 真值 contacts 也仅 37.7%）</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">实机舞蹈成功率</div>
+    <div class="value">95 / 100<span class="unit">%</span></div>
+    <div class="desc">训练舞步 95，旋转 100，月球漫步 100</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">NN 推理延迟</div>
+    <div class="value">0.14<span class="unit">ms</span></div>
+    <div class="desc">+0.42ms full SE，适配 600 Hz 控制环</div>
+  </div>
+  <div class="kpi">
+    <div class="label">模型规模</div>
+    <div class="value">240<span class="unit">K params</span></div>
+    <div class="desc">SET-large 4.77M 的 1/20</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <section class="card" id="problem">
+      <h2><span class="icon">①</span>研究问题</h2>
+
+      <h3>要解决的具体 gap</h3>
+      <p>双足/四足机器人本体感觉状态估计（不依赖相机/LiDAR）通常依赖 <strong><a href="./notes.html#inekf" class="note-link">Invariant EKF</a> + Leg Odometry</strong> 范式（Bloesch 2012, Hartley 2020）。整套体系的可靠性根植于<strong>"接触点何时静止"</strong>这一离散判断：</p>
+      <ul>
+        <li><strong>二值接触状态</strong>（in-contact / not-in-contact）由力阈值、运动学/动力学融合等启发式给出；</li>
+        <li>滑动检测靠手工阈值（速度阈、Mahalanobis 阈），slip 时通常把协方差<strong>放大 10×</strong>之类手动膨胀。</li>
+      </ul>
+      <p>这在动态、富接触场景（舞蹈、剧烈地面交互、部分接触、方向性滑移）下会持续误判：</p>
+      <ol>
+        <li>"部分接触"（如脚掌只有一部分受力）会被强行归类，违反静止假设；</li>
+        <li>"方向性滑移"（沿某方向滑、沿另一方向静）无法用单一布尔/标量协方差表达；</li>
+        <li>启发式失败会让滤波器估计发散（论文 Table III: 启发式 InEKF 线速度 ATE 2.675 m/s）。</li>
+      </ol>
+
+      <h3>关键假设</h3>
+      <ul>
+        <li>所有接触候选点的位置可以在滤波器状态中<strong>常驻</strong>（不再动态增删），代价是把"非接触"建模成<strong>高协方差</strong>的接触。</li>
+        <li>"接触条件"不是布尔属性，而是一个<strong>3×3 协方差矩阵</strong>，可以同时表达"两个方向稳、一个方向滑"。</li>
+        <li>一个浅 MLP（240K 参数）+ <a href="./notes.html#bptt" class="note-link">BPTT</a> 端到端就足以学到这个协方差预测，无需 ground-truth 接触标签。</li>
+        <li>训练只需在<strong>仿真中 rollout</strong>，real-world 直接零迁移（仅在仿真中训练 → real-world 评估）。</li>
+      </ul>
+
+      <h3>与最近相关工作的对比定位</h3>
+      <ul>
+        <li><strong>Lin et al. 2022 (Hybrid Baseline, CoRL)</strong> — 同样在 InEKF 上叠神经网络，但网络<strong>分类二值接触</strong>，仍需 ground-truth contact 标签做监督。CoCo-InEKF 直接预测<strong>连续协方差</strong>，仅用 state-error loss，绕开标签需求。</li>
+        <li><strong>Kim et al. 2025 (Adaptive InEKF, IROS)</strong> — 自适应调节接触协方差，但仍是<strong>手工设计的调节策略</strong>。CoCo-InEKF 用 MLP 学整个映射。</li>
+        <li><strong>Yu et al. 2024 (SET, IROS)</strong> — 纯 Transformer 端到端状态估计器，不带物理先验。论文以 SET-small/large 作为<strong>纯数据驱动基线</strong>，证明：纯数据驱动在 OOD 鲁棒性与算力上仍输给"物理 + 学习"混合架构。</li>
+        <li><strong>Hartley et al. 2020 (Contact-Aided InEKF, IJRR)</strong> — CoCo-InEKF 的<strong>骨架</strong>。区别：所有 contact 点持续保留在状态中以实现可微，而非按接触事件动态增删。</li>
+      </ul>
+
+      <figure>
+        <img src="./images/figure_1_overview.png" alt="Figure 1: CoCo-InEKF Overview">
+        <figcaption><strong>Figure 1：CoCo-InEKF 总览。</strong>给定一组预定义的接触候选点和 IMU + 关节编码器本体感觉数据，<strong>Learned Contact Module</strong>（蓝色，紫色椭球示意协方差）输出每个接触点的速度协方差，注入标准的 Invariant EKF 形成状态估计。</figcaption>
+      </figure>
+    </section>
+
+    <section class="card" id="insight">
+      <h2><span class="icon">②</span>核心洞察</h2>
+      <div class="callout insight">
+        <div class="callout-head">💡 Key Insight</div>
+        <p><strong>不再把"接触"建模成布尔状态，而是建模成一个 3×3 速度噪声协方差。</strong>这样"在地面静止 / 沿 x 方向滑动 / 完全不在地面" 都可以用同一组参数化（一个 SPD 矩阵）连续表达，并且这个映射可以从一个小 MLP 端到端学出来——只用<strong>下游状态误差</strong>作为监督信号，不需要任何接触事件标签。</p>
+        <p>第二个洞察：把所有接触候选点<strong>永久保留</strong>在状态向量中（而非按事件动态增删），整个 InEKF 就变成了一个静态可微计算图，BPTT 自然可用，又保留了 InEKF 的 Lie-group 不变性与可观性。</p>
+      </div>
+    </section>
+
+    <section class="card" id="method">
+      <h2><span class="icon">③</span>技术方法</h2>
+
+      <h3>整体框架</h3>
+      <p>状态向量（标准 Contact-Aided InEKF）：</p>
+      <div class="math-display">
+        \[ \mathbf{x} := \left({}^{W}\mathbf{R}_{B},\, {}^{W}\mathbf{v}_{B},\, {}^{W}\mathbf{p}_{B},\, {}^{W}\mathbf{p}_{C_1},\dots,{}^{W}\mathbf{p}_{C_N},\, {}^{B}\mathbf{b}_{\boldsymbol{\omega}},\, {}^{B}\mathbf{b}_{\mathbf{a}}\right) \]
+      </div>
+      <p>包括 base 姿态/速度/位置、N 个接触候选点位置（在世界系）以及 IMU 偏置。<strong>关键修改</strong>：不再事件驱动地添加/删除接触点，所有 N 个候选点持续存在；过程噪声中的接触点速度协方差由神经模块预测。</p>
+
+      <figure>
+        <img src="./images/algorithm_1_coco_inekf.png" alt="Algorithm 1: CoCo-InEKF">
+        <figcaption><strong>Algorithm 1：</strong>每个时步先用 ContactNet 预测协方差 \({}^{B}\boldsymbol{\Sigma}_{C_i}\)，再做 InEKF 的预测/校正。所有步骤可微（无离散增删 → 计算图常驻）。</figcaption>
+      </figure>
+
+      <h4>预测方程（关键的修改在 Eq. 5）</h4>
+      <div class="math-display">
+        \[ {}^{W}\dot{\mathbf{p}}_{C_i} = -{}^{W}\mathbf{R}_{B}\, {}^{B}\mathbf{w}_{C_i}, \quad {}^{B}\mathbf{w}_{C_i} \sim \mathcal{N}(\mathbf{0}_{3\times 1},\, {}^{B}\boldsymbol{\Sigma}_{C_i}) \]
+      </div>
+      <p>当 \({}^{B}\boldsymbol{\Sigma}_{C_i}\) 很小时，等价于"接触点保持静止" → 强约束；当某方向上协方差大时，沿该方向放行 → 允许滑移；全部很大 → 等价于"不在接触"。</p>
+
+      <h4>观测方程（Leg Odometry，标准做法）</h4>
+      <div class="math-display">
+        \[ \mathbf{h}_{C_i}(\mathbf{q}) = {}^{W}\mathbf{R}_{B}^{\top}\!\left({}^{W}\mathbf{p}_{C_i} - {}^{W}\mathbf{p}_{B}\right) + {}^{B}\mathbf{J}_{C_i}(\mathbf{q})\mathbf{w}_{\mathbf{q}} \]
+      </div>
+
+      <h3>核心组件：Learned Contact Module</h3>
+      <p>一个轻量 MLP（240K 参数），输入是长度 \(H=20\) 的本体感觉历史：</p>
+      <div class="math-display">
+        \[ \mathbf{o} := \left({}^{B}\boldsymbol{\omega},\, {}^{B}\mathbf{a},\, \mathbf{q},\, \dot{\mathbf{q}},\, \boldsymbol{\tau},\, {}^{B}\mathbf{p}_{B\to C_i},\, {}^{B}\mathbf{v}_{B\to C_i}\right) \]
+      </div>
+      <p>包含 IMU 角速度/加速度、关节角/速度、力矩、相对接触点位置/速度——<strong>故意不喂 InEKF 内部状态</strong>，避免学习器与滤波器形成复杂反馈回路。</p>
+      <p>输出为下三角矩阵 \(\mathbf{L}\) 的 6 个元素，协方差由 \({}^{B}\boldsymbol{\Sigma}_{C_i} = \mathbf{L}\mathbf{L}^{\top}\) 给出，<strong>天然 symmetric 且 positive-semidefinite</strong>（Cholesky 因子化技巧）。</p>
+
+      <h3>训练 Pipeline (BPTT)</h3>
+      <figure>
+        <img src="./images/figure_2_training_setup.png" alt="Figure 2: Training Setup">
+        <figcaption><strong>Figure 2：</strong>训练流程。每个 iteration 在 \(E=1280\) 个并行环境里用一个预训练策略 rollout，收集 \(L=128\) 步的 (observation, ground-truth state) 数据；ContactNet → InEKF 一路 rollout，红色箭头表示梯度沿时间反传到 ContactNet 参数。</figcaption>
+      </figure>
+
+      <h4>损失函数（仅监督 body-frame 线速度）</h4>
+      <div class="math-display">
+        \[ \mathcal{L}(\mathbf{x},\hat{\mathbf{x}}) = \left\| {}^{W}\mathbf{R}_{B}^{\top}\,{}^{W}\mathbf{v}_{B} - {}^{W}\hat{\mathbf{R}}_{B}^{\top}\,{}^{W}\hat{\mathbf{v}}_{B} \right\|_{2}^{2} \]
+      </div>
+      <ul>
+        <li>只用 body-frame 速度——下游控制策略消费的量，<strong>且不受 InEKF 全局位置/yaw 漂移影响</strong>。</li>
+        <li>无需 ground-truth 接触标签——这是相对 Lin 2022 的最大解放。</li>
+        <li>每个 episode 开头把 InEKF 重置为真值；后续 InEKF 自由漂移 → loss 是 rollout 的累计误差。</li>
+        <li>作者实验过"每步都强制重置 InEKF 到真值（force-teacher）"，反而<strong>训练性能下降</strong>。</li>
+      </ul>
+
+      <h3>自动接触候选点选择</h3>
+      <p>避免对每个新机器人都手工挑接触点：用 <strong>farthest point sampling</strong>，从每个 rigid body 上的网格表面采 \(10N\) 个点，迭代选出 N 个相距最远的点（自动覆盖手脚等末端）。后续实验证明：自动选点与手工选点性能持平甚至更优。</p>
+    </section>
+
+    <section class="card" id="results">
+      <h2><span class="icon">④</span>实验结果</h2>
+
+      <h3>实验平台与训练设置</h3>
+      <ul>
+        <li><strong>机器人</strong>：Lima 双足，0.84 m、16.2 kg、20 DoF，Intel i7 4-core @1.7 GHz 板载，600 Hz 控制环。</li>
+        <li><strong>场景</strong>：两个——<em>Dancing motions</em>（仅脚部接触，VMP 策略追踪 Reallusion 数据集 81 条 5.6–36.1s 动作）与 <em>Ground motions</em>（全身接触，stylized falling）。</li>
+        <li><strong>训练</strong>：单张 RTX 4090，5 天上限或 100k 迭代；E=1280 并行环境，H=20，L=128。</li>
+        <li><strong>评测</strong>：每个 test set 100 条 20 s 序列；指标 ATE（RMSE/MAE/MED/STD）+ NEES。</li>
+      </ul>
+
+      <h3>仿真基准：Dancing Motions</h3>
+      <figure>
+        <img src="./images/table_3_dancing_ATE.png" alt="Table III: Dancing ATE">
+        <figcaption><strong>Table III：</strong>仿真舞蹈动作上的 ATE。CoCo-InEKF 在线速度上以 RMSE 0.046 大幅领先（次优 Hybrid Baseline+ 0.121）。位置/姿态略输给 Hybrid Baseline+，作者归因于损失只监督速度。</figcaption>
+      </figure>
+
+      <div class="callout success">
+        <div class="callout-head">📊 关键数字（dancing）</div>
+        <ul>
+          <li>线速度 RMSE: <strong>0.046</strong>（vs Hybrid Baseline+ 0.121，−62%）</li>
+          <li>启发式 InEKF：2.675 m/s（发散）→ 学习接触检测从根本上挽救了滤波器</li>
+          <li>SET-large（4.77M 参数）：0.286——纯数据驱动 + 大模型仍远落后</li>
+        </ul>
+      </div>
+
+      <h3>仿真基准：Ground Motions（全身接触）</h3>
+      <figure>
+        <img src="./images/table_4_ground_ATE.png" alt="Table IV: Ground motions ATE">
+        <figcaption><strong>Table IV：</strong>全身接触场景。CoCo-InEKF 线速度 RMSE 0.099 与 SET-large 0.096 持平，但 SET-large 是 4.77M 参数、3.06 ms 推理；CoCo-InEKF 只用 240K + 0.42 ms。</figcaption>
+      </figure>
+
+      <h3>滤波器一致性（NEES）</h3>
+      <figure>
+        <img src="./images/figure_6_NEES_consistency.png" alt="Figure 6: NEES Consistency">
+        <figcaption><strong>Figure 6：</strong>100 条 dance 序列的 NEES（log 坐标）。基线（heuristic、Hybrid+）大部分时间在 95% 区间之外、低于下界 → <strong>过保守 (under-confident)</strong>。CoCo-InEKF 的 NEES 集中在期望 (绿色) 附近，<strong>分布与 \(\chi^2\) 理论值吻合</strong>。</figcaption>
+      </figure>
+      <figure>
+        <img src="./images/table_10_NEES_eval.png" alt="Table X: NEES consistency">
+        <figcaption><strong>Table X：</strong>NEES 落在 95% 区间内的时步比例。CoCo-InEKF 的 Core 52.1% 不仅超所有学习/启发式基线，甚至<strong>胜过有 ground-truth 接触的 InEKF (37.7%)</strong>——这说明"加大不确定度的接触建模"比"理想布尔接触"在概率意义下更诚实。</figcaption>
+      </figure>
+
+      <h3>接触协方差的可解释性</h3>
+      <figure>
+        <img src="./images/figure_3_contact_covariance.png" alt="Figure 3: Contact Covariance">
+        <figcaption><strong>Figure 3：</strong>正向行走中 right toe/heel 的协方差总 std 与速度大小。可见：脚一离地（ground-truth contact bar 消失）协方差立刻上升 → 与物理一致；左右 dashed line 间的"部分接触"瞬间，两脚协方差出现差异（toe 与 heel 受力分布不同）；协方差椭球的<strong>方向性</strong>与脚跟/脚尖位移方向吻合。<em>注意：作者并未显式监督这些特征，它们是端到端从 body-vel loss 中自发涌现的。</em></figcaption>
+      </figure>
+
+      <h3>消融研究</h3>
+      <figure>
+        <img src="./images/table_5_arch_ablation.png" alt="Table V: Architecture ablation">
+        <figcaption><strong>Table V：</strong>把 Lin 2022 Hybrid Baseline（2.47M 参数，CNN）替换成 MLP + 去 slip 类 + 减小隐层后得到 Hybrid Baseline+（240K，提速 5×）；CoCo-InEKF 用同样大小但换损失 → RMSE 从 0.121 直降到 0.046。<strong>"从布尔分类换成连续协方差 + state-error loss"是收益主要来源，而非更大模型。</strong></figcaption>
+      </figure>
+
+      <h4>历史长度 / BPTT 长度 / 接触点数</h4>
+      <ul>
+        <li><strong>H (history)</strong>: 20 优于 150——更长历史反而过拟合且推理慢 5×。</li>
+        <li><strong>L (BPTT)</strong>: 128 optimal；64 学不到长视野；256 受梯度消失/爆炸影响。</li>
+        <li><strong>N (contact points)</strong>: 4→10→18 单调提升精度（0.134→0.099→0.069），代价是推理时间从 0.42 ms 升到 2.01 ms。</li>
+      </ul>
+
+      <h4>自动 vs 手工接触点</h4>
+      <p>Table IX：自动选点与手工持平，dancing 0.056（自动范围 0.052–0.057），ground 0.092–0.104（自动）vs 0.099（手工）。<strong>对新机器人零工程量部署。</strong></p>
+
+      <h3>实机评估（Real-World）</h3>
+      <figure>
+        <img src="./images/table_11_realworld_ATE.png" alt="Table XI: Real-world ATE">
+        <figcaption><strong>Table XI：</strong>20 条 MoCap 真值的 messy ground motion 序列（10 分钟）。CoCo-InEKF 在线速度 RMSE 0.0805 大幅领先；位置 0.1665 同样最优。SET 模型即便 large 0.0974 也输给 CoCo，且 SET-large 在真机上跑不动（标 *）。</figcaption>
+      </figure>
+
+      <figure>
+        <img src="./images/table_12_dance_success.png" alt="Table XII: Dance success rate">
+        <figcaption><strong>Table XII：</strong>13 段实机舞蹈控制环 in-the-loop 测试。CoCo-InEKF 在训练集舞步上成功率 95（5 次 × 13 段 = 65 次试验），未见的 Pirouette（10×）和 Moonwalk（10×）均 100%；启发式 InEKF 仅 60% 旋转、Hybrid Baseline 50% 旋转——动态动作下基线接触错判导致摔倒。MoCap-based 估计器是上限 (90, 100)，CoCo-InEKF 实际超过了 MoCap 的训练舞步成功率。</figcaption>
+      </figure>
+
+      <h3>Analysis（解读）</h3>
+      <ul>
+        <li><strong>"连续协方差"是关键变量</strong>：架构 ablation 显示，仅在网络架构上动手 (Hybrid → Hybrid+) 只能拿到 5× 加速而 ATE 几乎不变（0.123→0.121）；换成 CoCo-InEKF 的协方差 + state-error loss 才一举把 ATE 降到 0.046。证明<strong>不是模型容量、而是"建模选择"决定上限</strong>。</li>
+        <li><strong>"无 ground-truth contact 标签"在工程上极其重要</strong>：Lin 2022 训练时需要在仿真里专门生成 binary contact 标签，并依赖手工阈值的伪标签；CoCo-InEKF 直接用 state-error loss，让"哪里是接触"自然涌现。</li>
+        <li><strong>纯数据驱动 (SET) 输给"物理 + 学习"</strong>：SET-large 在仿真 ground motions 上线速度 RMSE 0.096 与 CoCo-InEKF 0.099 接近，但实机 0.0974 vs 0.0805，且 20× 参数、7× 推理时间、跑不进 600 Hz 控制环。物理先验在 OOD 鲁棒性 + 算力效率上仍有不可替代价值。</li>
+        <li><strong>NEES 比 ATE 更能区分滤波器质量</strong>：基线在 ATE 上"还能看"，NEES 上才暴露 under-confident 问题（覆盖率仅 18%）。CoCo-InEKF 的 52.1% 显示出真正的概率诚实性。</li>
+      </ul>
+    </section>
+
+    <section class="card" id="critique">
+      <h2><span class="icon">⑤</span>批判性分析</h2>
+
+      <div class="callout success">
+        <div class="callout-head">✅ Strengths</div>
+        <ul>
+          <li><strong>建模上的认识论升级</strong>：把"接触 = 布尔状态"换成"接触 = 速度协方差"，这是一个真正的概念跃迁，不只是工程改良。</li>
+          <li><strong>训练自由度高</strong>：仅 state-error loss，免去 GT 接触标签和滑移类别人工设计——可被几乎所有腿足机器人项目直接复用。</li>
+          <li><strong>实时性能</strong>：240K 参数 / 0.42 ms 端到端推理，能上 1.7 GHz Intel i7 跑 600 Hz 控制环。这是 robotics 系统层面非常可贵的工程指标。</li>
+          <li><strong>NEES 一致性领先</strong>：超过用 ground-truth contacts 的 InEKF 本身（52.1% vs 37.7%），说明"宽松的概率建模"比"理想布尔接触"在统计意义上更好。</li>
+          <li><strong>仿真→实机零迁移</strong>：训练只在仿真，测试直接上实机舞步与 MoCap，sim-to-real gap 实际表现是<strong>误差比仿真还小</strong>（作者归因于实机动作不如随机化的仿真极端、IMU 偏置可能更小）。</li>
+          <li><strong>自动接触点选择 + Lima 实际舞蹈应用</strong>：来自迪士尼角色机器人项目，paper 工程契合实际部署需求。</li>
+        </ul>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-head">⚠️ Limitations — 作者自陈</div>
+        <ul>
+          <li>损失只惩罚 body-frame 线速度，position/orientation ATE 上略输 Hybrid Baseline+（作者认为加 position/orientation 损失项是 trivial 改进）。</li>
+          <li>训练全部在仿真完成，仅评估了 sim-to-real；未训练在真机数据上（未来工作）。</li>
+          <li>BPTT 长度 ≥ 256 时性能开始下降——可能是梯度问题或训练迭代数不够。</li>
+          <li>未与基于外感（LiDAR/Vision）的状态估计融合，仅本体感觉。</li>
+        </ul>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-head">🔍 Limitations — 我的观察</div>
+        <ol>
+          <li><strong>仅评估一个机器人 (Lima 双足)</strong>。论文反复强调"diverse robot morphologies"，但实验全是 Lima。四足、轮腿、人形（其他平台）的 contact 几何与动力学差异极大，未跨平台验证就声称通用性，结论强度有限。</li>
+          <li><strong>没有给出训练策略的细节</strong>：dancing 用 VMP[34]、ground motions 用 stylized falling[35]，但<strong>策略本身的鲁棒性会与 contact 检测耦合</strong>。如果换成更激进的强化学习策略，CoCo-InEKF 是否仍稳？未答。</li>
+          <li><strong>NEES 仅在 dancing 数据上做</strong>。ground motions、real-world 都没给 NEES 一致性数据——可能因为 ground motions 上 NEES 更糟而未报。</li>
+          <li><strong>"接触协方差"训练损失里没有任何先验项</strong>。完全靠 body-vel 残差倒推协方差，理论上欠定：很多协方差组合都能产生相同的 body-vel 估计（特别在长时序里）。Figure 3 的物理对齐是涌现的、不是被保证的。换不同的 motion distribution 是否还能 emerge 出物理可解释的协方差？没回答。</li>
+          <li><strong>无代码 / 数据开源声明</strong>。只在 Disney Research 站点提供 PDF，未提及代码、训练数据集（VMP 控制器与训练 motions）；reproducibility 受限。</li>
+          <li><strong>对 IMU 偏置的处理依赖 force-init 真值</strong>：每个 episode 开头把 InEKF 重置为真值。实机部署时如何 cold-start？需要一个 warm-up 流程，论文未讨论。</li>
+          <li><strong>真实机舞蹈测试样本不对称</strong>：训练舞步 5 × 13 = 65 次（成功率 95→61.75 次），unseen 仅 10 次试验，置信区间宽。</li>
+          <li><strong>计算可解释性的协方差椭球与 ground-truth 接触没做定量对齐</strong>：只展示了一段 forward walking 的时序图（Figure 3），看起来对齐但没量化"协方差与真实摩擦/接触状态的 correlation"。</li>
+        </ol>
+      </div>
+
+      <h3>Reproducibility Assessment</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>维度</th><th>状态</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>代码与权重</td><td><span class="badge" style="background:var(--danger-bg);color:var(--danger);border-color:var(--danger)">✗ 未开放</span></td><td>论文未提及 GitHub repo / model weights</td></tr>
+            <tr><td>数据</td><td><span class="badge" style="background:var(--warning-bg);color:var(--warning);border-color:var(--warning)">⚠ 部分</span></td><td>引用 Reallusion 商业舞蹈数据集；VMP 策略来自合作者已发表工作</td></tr>
+            <tr><td>算力</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);border-color:var(--success)">✓ 普及</span></td><td>单张 RTX 4090，5 天即可训练；硬件门槛低</td></tr>
+            <tr><td>方法细节</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);border-color:var(--success)">✓ 充分</span></td><td>Algorithm 1 + 完整 InEKF 方程 + MLP I/O 全部给出，可独立复现</td></tr>
+            <tr><td>消融</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);border-color:var(--success)">✓ 完备</span></td><td>架构、H、L、N、自动选点都有 ablation</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="summary">
+      <h2><span class="icon">⑥</span>总评（Andrew Ng 三视角）</h2>
+
+      <h3>Authors' Conclusion</h3>
+      <p>CoCo-InEKF 用一个可微 InEKF + 学习接触协方差模块，端到端通过 BPTT 训练，避免了 binary contact 标签，处理了部分接触/方向性滑移等复杂状态。在 Lima 双足机器人上推动了 accuracy-efficiency 帕累托前沿，能跑在 600 Hz 板载控制环内；自动接触候选选择支持新机器人零工程量部署。未来希望在真机数据上联合训练，并融合 LiDAR/Vision 做 global drift correction。</p>
+
+      <h3>Personal Assessment</h3>
+      <ul>
+        <li><strong>核心贡献清晰扎实</strong>：把建模重心从"分类接触事件"转到"预测过程噪声协方差"，这一步本身就让 state-error loss 成为可能。后续的 BPTT 训练、Cholesky 因子化、自动选点都顺理成章。</li>
+        <li><strong>架构 ablation (Table V) 是最有说服力的实验</strong>：单变量地从 Hybrid Baseline → Hybrid+ → CoCo-InEKF，只有最后一步（连续协方差 + state-error loss）带来质变。这种"切片实验"在大模型论文里越来越少见，难得。</li>
+        <li><strong>限于单一机器人 + 闭源</strong>，是这篇文章下限的两个关键风险。如果作者后续开源代码并在 ANYmal/HumanoidX 之类社区平台复现成绩，这篇论文会成为继 Lin 2022、Hartley 2020 之后的<strong>新事实标准</strong>。</li>
+        <li><strong>更广视角</strong>：这是"differentiable physics filter + learned residuals"思路在 legged state estimation 的最新落点，与 Manipulation 领域的 differentiable filters (α-MDF, KalmanNet) 形成呼应——证明"keep the prior, learn the noise"在多个 robotics subfield 都有效。</li>
+      </ul>
+
+      <h3>Overall Evaluation</h3>
+      <ul class="kv">
+        <dt>Core idea</dt>
+        <dd>把 contact-aided InEKF 改造成 differentiable filter（所有 contact points 常驻状态），用 MLP 端到端预测 per-contact 速度协方差 (Cholesky 参数化)，仅靠 body-velocity state-error loss + BPTT 训练。</dd>
+        <dt>Main highlight</dt>
+        <dd>用 240K 参数、0.42 ms 推理 → 比启发式 InEKF 提升 58×、比 Hybrid Baseline 提升 2.6×（dancing 线速度 ATE），NEES 一致性超过用 GT 接触的 InEKF，实机舞蹈成功率 95–100%。</dd>
+        <dt>Rating</dt>
+        <dd><span class="badge important">Important</span> &nbsp; 不算 Breakthrough（differentiable filter + learned noise 已是成熟思路），但作为 legged state estimation 在 contact-rich dynamic motions 上的<strong>新事实基线</strong>，对 humanoid/quadruped 实际部署有极高直接价值。</dd>
+      </ul>
+
+      <h3>Future Directions</h3>
+      <ol>
+        <li>在真机数据上联合训练（半监督——MoCap 提供部分状态 + 大量 unlabeled real rollout）。</li>
+        <li>融合外感传感器（LiDAR、视觉惯性）做 global drift correction，把这套 contact prior 接入 SLAM 框架。</li>
+        <li>跨多个机器人形态（四足、轮腿、人形）验证 generalization，开源 model zoo。</li>
+        <li>在协方差预测里引入显式物理先验（如摩擦锥、地面法向）作为正则化，减弱"涌现"的不确定性。</li>
+        <li>探索是否能学到"协方差代表的 contact mode classifier"作为副产品，提升可解释性。</li>
+        <li>把同一思路移植到 manipulation（grasp contact estimation）：物理 prior + learned noise 也许同样能击败纯端到端方案。</li>
+      </ol>
+    </section>
+
+    <section class="card" id="verify">
+      <h2><span class="icon">⑦</span>理解自检</h2>
+
+      <h3>作者想达成什么？</h3>
+      <p>在动态、富接触场景（舞蹈、剧烈摔倒、复杂地面交互）下，让 InEKF-based 状态估计器不再因为 binary contact 启发式而失败，又不放弃 InEKF 的不变性/可观性优势，并能在 600 Hz 板载控制环里实时运行。</p>
+
+      <h3>方法的关键要素？</h3>
+      <ol>
+        <li>把所有接触候选点常驻状态 → 整个 InEKF 变成静态可微计算图。</li>
+        <li>用 MLP 预测每个接触点的 3×3 速度协方差（Cholesky 参数化 \({}^{B}\boldsymbol{\Sigma}_{C_i} = \mathbf{L}\mathbf{L}^{\top}\)）替代 binary contact。</li>
+        <li>仅用 body-frame 线速度 L2 loss 通过 BPTT 端到端训练，无需 ground-truth contact 标签。</li>
+        <li>Farthest point sampling 自动选接触候选点，支持零工程量适配新机器人。</li>
+      </ol>
+
+      <h3>我能用什么？</h3>
+      <ul>
+        <li><strong>"Differentiable filter + learned residual / noise"思路</strong>可以推广到任何带有强先验的 robotics 子领域（SLAM、grasping contact、manipulation 等）。</li>
+        <li><strong>Cholesky 参数化输出 SPD 协方差矩阵</strong>是个很实用的技巧——任何需要输出有效协方差的神经网络都适用。</li>
+        <li><strong>State-error loss 替代分类标签</strong>：当 GT labels 难获取但下游 state 可监督时，这种"绕开标签"的训练范式高效且省事。</li>
+        <li><strong>训练 + 模型大小都极小</strong>：240K 参数、单张 4090、5 天——这种规模的 legged perception 项目可在实验室轻松复制。</li>
+      </ul>
+
+      <h3>值得继续读的引文</h3>
+      <ul>
+        <li><strong>Hartley et al. 2020</strong> (IJRR) — Contact-Aided InEKF 原始论文，本方法骨架</li>
+        <li><strong>Lin et al. 2022</strong> (CoRL) — Hybrid Baseline，本论文最直接对照</li>
+        <li><strong>Bloesch et al. 2012</strong> (RSS) — leg odometry + IMU EKF 的奠基</li>
+        <li><strong>Haarnoja et al. 2016</strong> (NIPS) — Backprop KF，differentiable filter 思想起源</li>
+        <li><strong>Lee et al. 2025</strong> (IROS) — InEKF + neural compensator，思路最接近的并行工作</li>
+        <li><strong>Yu et al. 2024</strong> (IROS) — SET Transformer 状态估计器，纯数据驱动对照基线</li>
+        <li><strong>Zhang &amp; Scaramuzza 2018</strong> (IROS) — ATE/RMSE 等量化轨迹评估的方法论参考</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#problem">① 研究问题</a></li>
+      <li><a href="#insight">② 核心洞察</a></li>
+      <li><a href="#method">③ 技术方法</a></li>
+      <li><a href="#results">④ 实验结果</a></li>
+      <li><a href="#critique">⑤ 批判性分析</a></li>
+      <li><a href="#summary">⑥ 总评</a></li>
+      <li><a href="#verify">⑦ 理解自检</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link">
+      <li><a href="./notes.html">📝 概念解读 →</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Paper Summary · CoCo-InEKF (RSS 2026, Disney Research) · 阅读笔记
+</footer>
+
+</body>
+</html>

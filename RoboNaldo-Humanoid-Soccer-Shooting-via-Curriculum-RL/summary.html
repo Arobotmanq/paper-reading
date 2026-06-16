@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoboNaldo 综述</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  /* ============================================================
+     语义色锁定（不要加新颜色）：
+       红    = 问题 / 风险 / 未开源
+       琥珀  = 洞察 / 部分开源 / 保留意见
+       靛紫  = 方法 / 结构 / 链接 (--accent)
+       绿    = 结果 / 正向 / 开源 (--success, 全站唯一绿)
+       灰    = 局限 / 次要
+     --brand 仅用于 hero 点缀，每篇可改，默认 = accent。
+     ============================================================ */
+  :root {
+    --brand: #22c55e;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --c-problem: #dc2626; --c-insight: #d97706; --c-method: #6366f1; --c-result: #16a34a; --c-limit: #64748b;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO（轻量：subtitle 一句话 ≤40 字，方法综述下沉到速记层） ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #14532d 55%, #166534 100%); color: #fff; padding: 3em 1.5em 3.4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 480px; height: 480px; background: radial-gradient(circle, color-mix(in srgb, var(--brand) 30%, transparent), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(255,255,255,0.08); color: #bbf7d0; border: 1px solid rgba(255,255,255,0.25); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 12px var(--brand); }
+  .hero h1 { font-size: clamp(1.7em, 4vw + 1em, 2.8em); font-weight: 800; line-height: 1.18; margin: 0.5em 0 0.3em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.1em; color: #e2e8f0; max-width: 720px; margin: 0 0 1.3em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.1em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #86efac; text-decoration: none; }
+  .pill a:hover { color: #bbf7d0; }
+  .pill.rating { background: rgba(202, 138, 4, 0.22); border-color: rgba(250, 204, 21, 0.5); color: #fde68a; font-weight: 700; }
+  .pill.rating a { color: inherit; }
+
+  /* ---------- KPI（数字卡必须带对照锚 + 链到证据 claim；状态事实用状态卡，不伪装成数字） ---------- */
+  .kpi-strip { max-width: 1020px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { display: block; color: inherit; text-decoration: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  a.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi .status { margin: 0.45em 0; font-size: 0.95em; }
+  .kpi.green .value { color: var(--success); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT（正文列 ≤720px ≈ 42 个中文字行长） ---------- */
+  .layout { max-width: 1020px; margin: 2.6em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: minmax(0, 720px) 230px; gap: 2.5em; justify-content: center; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc ul.toc-claims { margin: 0.3em 0 0.3em 0.5em; padding-left: 0.7em; border-left: 1px dashed var(--border); font-size: 0.9em; }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.8em 2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 0.65em; flex: 0 0 30px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.95em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+  section.card[id], .claim[id] { scroll-margin-top: 1.2em; }
+
+  /* ---------- ① 30 秒分诊条（hero 之下第一卡：痛点/做法/结果/读法） ---------- */
+  .snap { padding: 1.2em 1.6em; }
+  .snap-row { display: flex; gap: 1em; padding: 0.45em 0; border-bottom: 1px dashed var(--border); align-items: baseline; }
+  .snap-row:last-child { border-bottom: 0; }
+  .snap-k { flex: 0 0 3.2em; text-align: center; font-size: 0.78em; font-weight: 700; border-radius: 6px; padding: 0.15em 0; }
+  .snap-k.kp { background: var(--danger-bg); color: var(--c-problem); }
+  .snap-k.km { background: #eef2ff; color: var(--c-method); }
+  .snap-k.kr { background: var(--success-bg); color: var(--c-result); }
+  .snap-k.kh { background: var(--gold-bg); color: var(--gold); }
+  .snap-row > div { color: var(--text-soft); }
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.18em 0.7em; border-radius: 999px; font-weight: 700; font-size: 0.85em; background: var(--gold-bg); color: #92400e; border: 1px solid #f59e0b; }
+
+  /* ---------- ② 速记层（90 秒读完就走的一层） ---------- */
+  .gist-card { border-left: 5px solid var(--accent); }
+  .gist-block { margin: 1.1em 0; }
+  .gb-label { font-size: 0.82em; font-weight: 700; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.12em; font-weight: 600; color: var(--text); background: #eef2ff; border-radius: var(--radius); padding: 0.9em 1.1em; line-height: 1.7; }
+  ol.chain { counter-reset: ch; list-style: none; padding-left: 0; }
+  ol.chain li { counter-increment: ch; position: relative; padding-left: 2.2em; margin: 0.55em 0; }
+  ol.chain li::before { content: counter(ch); position: absolute; left: 0; top: 0.15em; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--code-bg); border: 1px solid var(--border-strong); color: var(--accent-dark); font-size: 0.8em; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pipeline-line { font-size: 0.98em; background: var(--code-bg); border-radius: 8px; padding: 0.6em 1em; color: var(--text); }
+  ul.rel-list { padding-left: 1.2em; }
+  ul.rel-list b { color: var(--text); }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2em 0 1.2em; color: var(--muted); font-size: 0.88em; font-weight: 600; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- ③ 深读层：CLAIM（分型 + 短标题 + 细节收纳 + 折叠证据） ---------- */
+  .claim-group { display: flex; align-items: center; gap: 0.7em; margin: 1.8em 0 0.2em; font-size: 0.8em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .claim-group::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--k, var(--accent)); border-radius: var(--radius); padding: 1.05em 1.3em; margin: 1.1em 0; background: var(--card); }
+  .claim.k-problem { --k: var(--c-problem); } .claim.k-insight { --k: var(--c-insight); }
+  .claim.k-method  { --k: var(--c-method); }  .claim.k-result  { --k: var(--c-result); }
+  .claim.k-limit   { --k: var(--c-limit); }
+  .claim-head { display: flex; align-items: baseline; gap: 0.55em; flex-wrap: wrap; }
+  .claim-head .cn { font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 700; color: var(--k, var(--accent)); }
+  .kicker { font-size: 0.7em; font-weight: 700; padding: 0.1em 0.6em; border-radius: 999px; background: color-mix(in srgb, var(--k, var(--accent)) 12%, #fff); color: var(--k, var(--accent)); flex: 0 0 auto; }
+  .claim-title { font-size: 1.08em; font-weight: 700; color: var(--text); margin: 0; line-height: 1.5; }
+  .claim-body { font-weight: 400; color: var(--text-soft); margin: 0.4em 0 0; line-height: 1.7; }
+  .claim-how { margin-top: 0.5em; font-size: 0.88em; color: var(--muted); padding-left: 0.7em; border-left: 2px solid var(--border); }
+  .claim.key { border-left-color: var(--gold); }
+  .claim.key .cn::after { content: " ★"; color: var(--gold); }
+
+  /* evidence：解读常驻，引文+译文折叠（Ctrl-F 在 Chromium 会自动展开命中的 details；
+     或先点「展开全部证据」再 Ctrl-F） */
+  .evidence { margin-top: 0.75em; }
+  .evidence + .evidence { padding-top: 0.75em; border-top: 1px dashed var(--border); }
+  .ev-gloss { font-size: 0.95em; color: var(--text); background: #fafaf9; border-radius: 6px; padding: 0.35em 0.7em; margin: 0.4em 0; display: flex; gap: 0.6em; }
+  .ev-tag { flex: 0 0 auto; font-size: 0.72em; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 0 0.45em; height: fit-content; margin-top: 0.35em; background: var(--card); }
+  details.ev-fold { margin: 0.45em 0 0; }
+  details.ev-fold > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 0.5em; list-style: none; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.18em 0.7em; }
+  details.ev-fold > summary::-webkit-details-marker { display: none; }
+  details.ev-fold > summary .ev-hint { color: var(--muted); font-weight: 400; }
+  details.ev-fold[open] > summary { margin-bottom: 0.45em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "Source Serif 4", Georgia, "Noto Serif SC", serif; font-style: italic; font-size: 0.97em; line-height: 1.6; color: #1e293b; }
+  .ev-quote::before { content: "“"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "”"; color: var(--muted); font-weight: 700; }
+  .ev-quote mark { background: #fef3c7; color: inherit; font-style: normal; padding: 0 0.1em; border-radius: 3px; }
+  .ev-row { display: flex; gap: 0.6em; margin: 0.4em 0; }
+  .ev-trans { font-size: 0.95em; color: var(--text-soft); }
+  #ev-toggle-all { float: right; font: 600 0.78em "JetBrains Mono", monospace; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.3em 0.8em; cursor: pointer; }
+  #ev-toggle-all:hover { border-color: var(--accent); }
+
+  /* 数字行（≥3 个对比数字禁止写成长句，用 stat-chip 或 mini-table） */
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.45em; margin: 0.55em 0; }
+  .stat { font: 600 0.82em "JetBrains Mono", monospace; padding: 0.18em 0.7em; border-radius: 999px; border: 1px solid var(--border); background: var(--code-bg); color: var(--text-soft); }
+  .stat.win { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+  .stat.dim { opacity: 0.65; }
+
+  /* ---------- 术语：行内兜底释义（概念卡建立前用 .term；建立后升级为 note-link，可双带 data-gloss） ---------- */
+  .term, .note-link { position: relative; cursor: help; }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; cursor: pointer; }
+  .term { border-bottom: 1px dotted var(--muted); }
+  .term[data-gloss]:hover::after, .term[data-gloss]:focus::after,
+  .note-link[data-gloss]:hover::after {
+    content: attr(data-gloss); position: absolute; left: 0; bottom: 1.7em; z-index: 20;
+    width: max-content; max-width: min(46ch, 80vw); background: #0f172a; color: #e2e8f0;
+    font-size: 0.78em; font-weight: 400; font-style: normal; line-height: 1.5;
+    padding: 0.5em 0.8em; border-radius: 8px; box-shadow: var(--shadow-lg);
+  }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.1em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+
+  /* ---------- TABLE（mini 对照表：本文行 tr.winner，末列 📍 页码） ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.1em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: #f8fafc; }
+  th { text-align: left; padding: 0.7em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65em 1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.loc { font-family: "JetBrains Mono", monospace; font-size: 0.82em; color: var(--muted); white-space: nowrap; }
+  tr.winner { background: var(--success-bg); }
+  tr.winner td { font-weight: 700; color: var(--success); }
+  tr.winner td:first-child::before { content: "★ "; }
+
+  /* ---------- FIGURE（必须可点开原图；caption = 内容 + 看点） ---------- */
+  figure { margin: 1.2em 0 0.5em; text-align: center; }
+  figure a { border: none !important; }
+  figure img { max-width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); cursor: zoom-in; }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER / PRINT ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+  @media print {
+    .hero { background: #fff; color: #000; padding: 1em 0; }
+    .hero h1 { background: none; -webkit-text-fill-color: initial; color: #000; }
+    .hero .subtitle, .pill { color: #333; }
+    .kpi-strip { margin-top: 1em; }
+    .toc, #ev-toggle-all { display: none; }
+    section.card { box-shadow: none; }
+    .claim, .evidence, figure { break-inside: avoid; }
+    details.ev-fold { open: true; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>HKU · CUHK · Archon Robotics · Athletic Humanoid</span>
+    <h1>RoboNaldo<br>真草地上的人形大力射门</h1>
+    <p class="subtitle">用三阶段「动作引导课程 RL」，把固定参考的稳定与 task 奖励的精准焊到一起。</p>
+    <div class="meta-pills">
+      <span class="pill rating"><a href="#verdict">⚖ Valuable</a></span>
+      <span class="pill">📄 Empirical / Robot Learning</span>
+      <span class="pill">📅 2026 · arXiv 2606.11092v3</span>
+      <span class="pill">🤖 Unitree G1（29 DOF）</span>
+      <span class="pill">🔗 <a href="https://opendrivelab.com/RoboNaldo">Project</a></span>
+      <span class="pill">⏱ 速记 ~90s · 全文 ~6min</span>
+    </div>
+  </div>
+</header>
+
+<!-- KPI: 数字卡带对照锚并链到证据 claim; 状态事实用状态卡 -->
+<div class="kpi-strip">
+  <a class="kpi green" href="#c8"><div class="label">真机 free-kick 误差</div><div class="value">0.73<span class="unit">m</span></div><div class="desc">3m 外 · 124/136 有效（91.2% 触球）↗结果8</div></a>
+  <a class="kpi purple" href="#c8"><div class="label">峰值球速</div><div class="value">13.10<span class="unit">m/s</span></div><div class="desc">47.2 km/h · 职业 59–71% ↗结果8</div></a>
+  <a class="kpi blue" href="#c7"><div class="label">仿真 vs PAiD</div><div class="value">0.5×<span class="unit">err</span></div><div class="desc">误差 0.5× · 球速 2.96× ↗结果7</div></a>
+  <div class="kpi"><div class="label">开源（2026-06 核查）</div><div class="status"><span class="os-tag os-no">代码未上线</span></div><div class="desc">项目页有 GitHub 链接但仓库 404</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ ① 30 秒分诊条 ============ -->
+    <section class="card snap" id="snap">
+      <div class="snap-row"><span class="snap-k kp">痛点</span><div>人形射门要同时稳、准、力大，但接触只有 sub-10ms：motion tracking 参考固定难换球位/时机，纯 task RL 又探索不出有效踢击。</div></div>
+      <div class="snap-row"><span class="snap-k km">做法</span><div>三阶段 <a href="./notes.html#motion-guided-curriculum" class="note-link" data-gloss="按每种学习信号能可靠提供什么分三阶段：奖励权重从跟踪渐移到 task（跟踪↓、task↑），单一 low-level 策略顺序训练">motion-guided curriculum</a>：用一条人类踢球参考当脚手架，逐步把奖励权重从「跟踪」移向「射门 task」（跟踪↓、task↑）。</div></div>
+      <div class="snap-row"><span class="snap-k kr">结果</span><div>真草地 Unitree G1 全 onboard：free-kick 0.73m / moving-ball 0.86m 误差（3m），球速 13.10 m/s；仿真误差 0.5×、球速 2.96× 优于 PAiD。</div></div>
+      <div class="snap-row"><span class="snap-k kh">读法</span><div><span class="badge">Valuable</span> 做人形 locomotion/WBC RL → 精读 <a href="#c4">方法4</a> 课程 + <a href="#c6">方法6</a> 稳定/力量三件套；只想了解路线 → 速记层即止。⚡ 最短精读路径：Fig.2（课程）→ Table 2（消融）→ §3.2–3.3。</div></div>
+    </section>
+
+    <!-- ============ ② 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">⚡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲思想、逻辑、方法；效果只作验证。要核对原文再进下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">🧭 背景 · 为什么重要（不熟此子方向先读我）</div>
+        <p>足球射门是「运动型人形交互」的一个浓缩 benchmark：要单腿支撑稳住、要把球踢得又准又快，而踢击是一次 <strong>sub-10ms 的高冲量碰撞</strong>，跟搬运/推门这种「持续接触」任务完全不同。现有人形踢球系统要么用 <span class="term" tabindex="0" data-gloss="让策略 RL 模仿一段参考动作轨迹，继承稳定的全身协调，但被固定参考束缚">motion tracking RL</span> 拿到稳定但只会复读固定参考，要么用 <span class="term" tabindex="0" data-gloss="只给 task 奖励（球进不进/距目标多远），让 RL 从零探索，信号稀疏难学">task-reward RL</span> 却探索不出有效踢击。本文要同时拿下稳定、精准、力量、泛化。</p>
+        <figure>
+          <a href="./images/figure_1_teaser.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_teaser.png" alt="Figure 1: Unitree G1 penalty kick on grass" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 1 (p.1)：</strong>Unitree G1 在真实草地踢出一记定向点球的 ghost 叠帧时序。<strong>看点：</strong>支撑腿单脚承重 + 摆腿击球 + 手臂反向配平——这是一次全身协调的高冲量接触，不是上肢孤立动作。</figcaption>
+        </figure>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">把一条人类踢球动作当「驾校教练」：先让它手把手教会全身怎么稳着踢（Stage 1 纯跟踪），再慢慢松开方向盘、把奖励交给「球该进哪」（Stage 2/3 task↑），最后只在「靠近球、该起脚」这两个时刻按需放权——按每种学习信号能可靠提供什么来排课程。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么成立</div>
+        <ol class="chain">
+          <li>诊断：tracking 给稳定但参考固定、不能选新接触点/方向/时机；task RL 给目标但从零探索不出平衡+摆腿+接触+瞄准。两者各缺一角。</li>
+          <li>对策：不二选一，而是按「每个信号能可靠提供什么」分三阶段，奖励权重从跟踪渐移到 task（wtask 0→0.8→1.0）。</li>
+          <li>Stage 1 先用单条踢球参考学会稳定踢的全身协调（无球无 task 奖励）。</li>
+          <li>Stage 2 加球+目标+射门奖励并随机球位，逼策略「适配」而非「复读」踢击（接触点/方向/速度都随采样变）。</li>
+          <li>Stage 3 把动球射门拆成「locomotion 命令 + kick 触发」接口，让难点回到「走近 + 选起脚时机」，并近球时<a href="./notes.html#proximity-based-tracking-relaxation" class="note-link" data-gloss="Stage 3 用距离调制因子 g(d) 按项放松跟踪：脚速 µ=0.05 几乎放空、躯干姿态 µ=0.6 保平衡，只在 task 与跟踪冲突处放手">按项放松跟踪</a>（脚速几乎放空、躯干姿态只松一点保平衡）。</li>
+          <li>验证：仿真误差 0.5×/球速 2.96× 优于 PAiD；真草地 onboard 拿下 0.73/0.86m 误差与 13.10 m/s 球速。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 管线一句话 + 三个设计决策</div>
+        <p class="pipeline-line">本体感知 + 球/目标状态 + 参考线索 → 单个 low-level 策略（PPO，3 阶段顺序训练）→ 50Hz 关节位置指令；Stage 3 由高层 planner 发 locomotion 命令 + kick 触发</p>
+        <ul>
+          <li><b>① 三阶段课程</b>：Tracking → Shooting Adaptation → Task Generalization，每阶段从上一阶段 checkpoint 热启动；跟踪权重↓、task 权重↑。</li>
+          <li><b>② 模块化高层接口</b>：locomotion 命令 + kick-trigger 信号把动球射门变成「接近控制 + 接触时机决策」；训练用启发式 planner，部署可换人/神经高层而不重训 low-level。</li>
+          <li><b>③ 为高冲量接触定制奖励</b>：<a href="./notes.html#instant-interaction-reward" class="note-link" data-gloss="对接近-冲击-接触后球态全生命周期分别给奖，避免 sub-10ms 接触窗口奖励塌缩">Instant Interaction Reward</a> + <a href="./notes.html#densified-shooting-reward" class="note-link" data-gloss="弹道外推球态到球门线，每个击后步给预测落点误差奖励，密集化稀疏的长程落点信号（不改评测指标）">弹道外推的密集落点奖励</a> + 近球 proximity 放松 + 击后稳定相。</li>
+        </ul>
+        <figure>
+          <a href="./images/figure_2_curriculum.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_curriculum.png" alt="Figure 2: RoboNaldo three-stage motion-guided curriculum" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 2 (p.4)：</strong>单条 low-level 策略顺序跨三阶段训练；底部为 Stage 3 自适应参考与触发（ball far→locomotion，ball near→kick，击后→stabilization）。<strong>看点：</strong>中间「Tracking↓ / Task↑」那条渐变箭头——课程的本质就是这条权重迁移；右侧是 free-kick / moving-ball 两类代表输出。</figcaption>
+        </figure>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p>仿真里 Stage 2 free-kick 比 PAiD 误差减半、球速近 3 倍；Stage 3 把同一策略推广到动球。真机草地全 onboard 复现高精度高球速。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>设置</th><th class="num">RoboNaldo</th><th class="num">PAiD [4]</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr class="winner"><td>仿真 free-kick 误差</td><td class="num">0.899 m</td><td class="num">1.850 m</td><td class="loc">p.6 · Tab.2</td></tr>
+              <tr class="winner"><td>仿真 free-kick 峰值球速</td><td class="num">14.79 m/s</td><td class="num">4.99 m/s</td><td class="loc">p.6 · Tab.2</td></tr>
+              <tr><td>仿真动球 1m 成功率</td><td class="num">63.3%</td><td class="num">9.3%</td><td class="loc">p.6 · Tab.2</td></tr>
+              <tr><td>真机 free-kick 误差 / 球速</td><td class="num">0.73 m / 13.10 m/s</td><td class="num">—</td><td class="loc">p.6–8 · Tab.3</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🗺 放进你的知识图谱（已读库定位）</div>
+        <ul class="rel-list">
+          <li><b>同底座 · 互补</b>：<a href="../GRAIL-Generating-Humanoid-Loco-Manipulation-from-3D-Assets-and-Video-Priors/summary.html">GRAIL</a> 同样在 G1 上用 motion-tracking RL 做 loco-manip，但靠 3D 资产+视频批量造参考；RoboNaldo 只用一条参考，靠课程把策略推过「复读」边界——参考数量与适配方式正好互补。</li>
+          <li><b>同构接口 · 不同载荷</b>：<a href="../WholeBodyVLA-Unified-Latent-VLA-Loco-Manipulation/summary.html">WholeBodyVLA 的 LMO</a> 也是「离散高层指令 + 两阶段 curriculum 驱动 low-level RL」；RoboNaldo 的高层是 locomotion 命令 + kick 触发，载荷换成高冲量接触，且明确做「接口可换控制器」。</li>
+          <li><b>分层范式 · 上层不同</b>：<a href="../LeVERB-Humanoid-Whole-Body-Latent-VL-Instruction/summary.html">LeVERB</a> 用 latent 指令接 RL 全身控制器；RoboNaldo 同样是高层指令 → low-level WBC，但上层是规则 planner、任务是 athletic 接触。</li>
+          <li><b>奖励路线之争</b>：本文用 Instant Interaction Reward 取代 HDMI 的「位置×力」乘积奖励——后者对持续接触有效，但在 sub-10ms 踢击窗口会塌缩。</li>
+        
+          <li><b>通才 ↔ 专才</b>：<a href="../Psi0-Open-Foundation-Humanoid-Loco-Manipulation/summary.html">Ψ0</a> 走"一个基座覆盖通用 loco-manip"；RoboNaldo 反向——把单一高冲量 athletic 技能用课程 RL 压到极限，是通才基座之外的"专精技能"参照。</li>
+          <li><b>RL 精修路线对照</b>：<a href="../pi-star-0.6-VLA-Learns-From-Experience/summary.html">π*0.6</a> 用真机经验做 RL 自我改进；RoboNaldo 用仿真课程把跟踪策略推过固定参考的边界——同是"让策略超过初始行为"，一个靠真机经验、一个靠课程整形。</li>
+        </ul>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🎯 与你项目的相关性</div>
+        <p><b>Track B（足式 / WBC / RL / sim2real）强命中</b>：整篇是 G1 全身高冲量接触控制的 RL + 真机 sim2real。可直接借鉴：① motion-guided curriculum 这套「跟踪→task 权重迁移」配方，用于任何「需要稳定先验 + task 适配」的全身技能；② proximity-based tracking relaxation（近球时按项放松跟踪，脚速 µ=0.05、躯干姿态 µ=0.6）——一个兼顾稳定与力量/自由度的实用 trick；③ 高冲量接触的奖励整形（加性分组防塌缩 + 弹道外推密集化）；④ 大量 sim2real 落地细节（joint-index 重映射、10 步 warmup、域随机化、LiDAR/IR 反光球感知）。<b>Track A（移动操作 VLA）弱相关</b>：无 VLA/语言，仅「高层接口可换控制器」一句留了接 VLA 的口子。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ ③ 深读层：核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据 <button id="ev-toggle-all" type="button">展开全部证据</button></h2>
+      <p class="lead">每条 = 分型论点（常驻）+ 解读（常驻）+ 折叠的逐字原文/译文（📍真实页码，Ctrl-F 锚点）。9 观点 · 12 证据。</p>
+
+      <h3 class="claim-group" id="g-problem">问题与洞察</h3>
+
+      <div class="claim k-problem" id="c1">
+        <div class="claim-head"><span class="cn">1</span><span class="kicker">问题</span><h3 class="claim-title">射门 = 稳 + 准 + 力的高冲量难题</h3></div>
+        <p class="claim-body">射门要单腿稳住、毫秒级脚-球接触、还要把球踢准踢快；接触只持续几毫秒，且击球的脚同时还在承重平衡——和搬/推这种持续接触任务本质不同。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这定义了任务的硬核：奖励信号极稀疏（接触窗口短）、且稳定与发力在同一条腿上耦合，是后面所有奖励/课程设计的根因。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Unlike sustained-contact tasks such as lifting or pushing, shooting relies on a <mark>brief, high-impulse collision</mark> generated by an end-effector that simultaneously <mark>contributes to whole-body support and balance</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">与举起/推动这类持续接触任务不同，射门依赖一次由末端执行器产生的短暂、高冲量碰撞，而这个末端同时还要参与全身支撑与平衡。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-problem" id="c2">
+        <div class="claim-head"><span class="cn">2</span><span class="kicker">问题</span><h3 class="claim-title">两条 RL 路线各缺一角</h3></div>
+        <p class="claim-body">motion tracking 给了稳定但参考固定，换不了接触点/方向/起脚时机；task-reward RL 知道球该去哪，却从零探索不出平衡+摆腿+接触+瞄准。</p>
+        <div class="claim-how">旁证：PAiD 的方向余弦指标 >90% 时，5m 外落点误差仍达 2.4m——余弦类指标分辨不出亚米级精度差异。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是全文的问题诊断，也是「为什么需要课程而非单一信号」的直接动机——课程就是为弥合这两端而设。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Motion tracking-driven reinforcement learning (RL) provides stability in whole-body movement coordination, but <mark>a fixed reference makes it hard to adapt to varied ball positions and strike timings</mark>; in contrast, <mark>task reward-driven RL struggles to explore</mark> and discover valid kicks from scratch.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">动作跟踪驱动的 RL 提供了全身协调的稳定性，但固定参考使其难以适配不同球位与起脚时机；相反，任务奖励驱动的 RL 又难以探索、从零发现有效踢击。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Motion priors make the robot stable enough to kick, but <mark>a fixed reference cannot choose a new contact point, aim direction, or strike time</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">动作先验让机器人稳到足以踢球，但固定参考无法选择新的接触点、瞄准方向或起脚时刻。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight key" id="c3">
+        <div class="claim-head"><span class="cn">3</span><span class="kicker">洞察</span><h3 class="claim-title">按信号能力排课程：单参考做脚手架</h3></div>
+        <p class="claim-body">核心思想是「按每种学习信号能可靠提供什么来分阶段」：一条人类踢球参考当脚手架，随训练逐步把优化目标从跟踪移向射门表现。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这就是 motion-guided curriculum 的灵魂——不是「tracking vs task」二选一，而是让 tracking 先供稳定、task 后供精准，权重平滑交接。对任何「需稳定先验 + 任务适配」的全身技能都可复用。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">a three-stage <mark>motion-guided curriculum RL</mark> framework for high-impulse humanoid interaction. <mark>A single human-kick reference is used as a scaffold and progressively shifts optimization towards shooting performance</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">一个面向高冲量人形交互的三阶段动作引导课程 RL 框架。用单条人类踢球参考作为脚手架，随训练逐步把优化目标移向射门表现。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The key idea is to <mark>stage the problem according to what each learning signal can reliably provide</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">关键思想是：按每种学习信号能可靠提供什么，来对问题分阶段。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-method">方法</h3>
+
+      <div class="claim k-method key" id="c4">
+        <div class="claim-head"><span class="cn">4</span><span class="kicker">方法</span><h3 class="claim-title">三阶段：跟踪 → 适配 → 泛化</h3></div>
+        <p class="claim-body">Stage 1 纯跟踪学稳定踢；Stage 2 加球/目标/射门奖励并随机球位，逼策略适配而非复读；Stage 3 用 locomotion 命令 + kick 触发把动球射门变成可学的接近+时机问题。</p>
+        <div class="claim-how">顺序训练、逐阶段热启动；权重表 wtask 0→0.8→1.0、wreg 0→0.2→0.25、wmotion 1.0→1.0→(1.0 loco / 0.1 kick)。Stage 1 参考是人类视频经 GVHMR+GMR 重定向的侧脚弓踢，跟踪沿用 BeyondMimic。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>Stage 2 的「适配而非复读」是课程能超过纯 tracking 的关键一跃——接触点/方向/速度都随采样球位变化，策略被迫学会泛化踢法。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.2 Stage 2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The policy must therefore <mark>adapt the demonstrated kick rather than simply replay it</mark>: the approach, contact point, strike direction, and impact speed all depend on the sampled ball and target.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">因此策略必须适配所示范的踢击而非简单复读：接近、接触点、击球方向与冲击速度都取决于采样到的球与目标。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>Stage 3 设立的根因：真实传球速度下有效接触只占几个控制步，而参考动作还在按名义摆腿相走——时机必须被显式建模，所以引入触发。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.2 Stage 3 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">At realistic pass speeds, <mark>useful foot–ball contact occurs within only a few control steps</mark>, while the motion reference still imposes a nominal swing phase.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">在真实传球速度下，有效的脚-球接触只发生在寥寥几个控制步内，而运动参考仍施加一个名义上的摆腿相位。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method" id="c5">
+        <div class="claim-head"><span class="cn">5</span><span class="kicker">方法</span><h3 class="claim-title">模块化高层接口：可换控制器</h3></div>
+        <p class="claim-body">locomotion 命令 + kick-trigger 信号构成高层 planner 与 low-level 策略之间的模块接口；训练用规则 planner，部署可换成另一个高层控制器（人/神经策略）而不重训 low-level。</p>
+        <div class="claim-how">规则 planner：球远走近、球近且可踢且踢相未起时触发起脚（dmin&lt;rthr ∧ zb&lt;hmax ∧ φ&lt;φkick），运动时钟 snap 到 φkick，击后保持稳定相 Tstab 步。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是与 LeVERB / WholeBodyVLA-LMO 同构的「高层指令 → low-level WBC」设计，但本文显式论证接口可替换——未来接 VLA 或人类操作的口子就留在这里。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.5 · §3.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The rule-based planner used during training can therefore be <mark>replaced at deployment by another high-level controller without retraining the low-level policy</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">因此训练时使用的规则 planner，在部署时可被另一个高层控制器替换，而无需重新训练 low-level 策略。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method key" id="c6">
+        <div class="claim-head"><span class="cn">6</span><span class="kicker">方法</span><h3 class="claim-title">兼顾稳定与力量的三件套</h3></div>
+        <p class="claim-body">为「既要踢得稳又要踢得猛」，本文用三招：① Instant Interaction Reward 对接触全生命周期分别给奖防塌缩；② 近球时按项放松跟踪（脚速几乎放空、躯干姿态只松一点保平衡）；③ 击后稳定相，惩罚那些「踢得分高但踢完就摔」的不稳冲击。</p>
+        <div class="claim-how">Instant Interaction Reward r=(Rcontact+Rgoal)(Rvel+Rforce)/4，加性分组防止短接触窗口奖励塌缩；proximity 放松因子 g(d)，feet vel µ=0.05、body ori µ=0.6；密集落点奖励用弹道外推球态到球门线。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>HDMI 的「位置×力」乘积奖励对持续接触有效，但踢球接触仅 3–5 个物理步（200Hz）就塌缩——这是本文换用全生命周期奖励的直接理由。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.5 · §3.3 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">HDMI [14] uses a position–force product, which is effective for sustained contact but <mark>collapses for soccer shooting: meaningful foot–ball contact lasts only 3–5 physics steps at 200 Hz</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">HDMI 使用位置-力乘积，对持续接触有效，但对足球射门会塌缩：有意义的脚-球接触在 200Hz 下仅持续 3–5 个物理步。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>proximity 放松是「兼顾稳定与力量/自由度」的核心 trick：只在 task 与跟踪真正冲突的项上放手（脚怎么摆几乎放空），其它项仍保留参考压力——而非粗暴地全局清零某个跟踪权重。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.13 · §B <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote"><mark>Feet linear velocity is suppressed to µ=0.05</mark>, giving the policy near-total freedom in ankle placement during contact; <mark>body orientation is only reduced to µ=0.6, preserving balance during the lean</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">脚部线速度跟踪被压到 µ=0.05，给策略在接触时对踝部摆位近乎完全的自由；而身体姿态只降到 µ=0.6，以在倾身时保持平衡。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">a post-kick stabilization reference is held for Tstab steps before resetting the clock, <mark>discouraging unstable impacts that score high shot rewards but fail immediately after the kick</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">击球后保持稳定相参考 Tstab 步再复位时钟，以抑制那些「射门奖励高但踢完立刻失败」的不稳冲击。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-result">结果与边界</h3>
+
+      <div class="claim k-result key" id="c7">
+        <div class="claim-head"><span class="cn">7</span><span class="kicker">结果</span><h3 class="claim-title">仿真：误差 0.5×、球速 2.96× 优于 PAiD</h3></div>
+        <p class="claim-body">Stage 2 free-kick 5m 外平均误差 0.899m、65.5% 落在 1m 内、球速 14.79 m/s——误差 0.5×、球速 2.96× 优于前作；Stage 3 把高球速带到动球射门（1m 成功率 63.3%）。消融显示每个阶段、自适应采样与稳定相都不可省。</p>
+        <div class="stat-row">
+          <span class="stat win">free-kick 误差 0.899 m</span>
+          <span class="stat win">球速 14.79 m/s</span>
+          <span class="stat">PAiD 1.850 m / 4.99 m/s</span>
+          <span class="stat dim">动球 1m 成功率 63.3%</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>「0.5× 误差、2.96× 球速」是本文最承重的对照数字；Stage 3 在保住球速的同时把能力扩到动球，证明课程不是过拟合单一球况。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Stage 2 free-kicks achieve 0.899 m average error from 5 m, 65.5% of the shot within 1 m error, and 14.79 m/s ball speed, <mark>giving 0.5× the error and 2.96× the speed of previous work</mark>; Stage 3 preserves high-power moving-ball shooting with <mark>63.3% shots within 1 m error</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">Stage 2 自由球在 5m 外达到 0.899m 平均误差、65.5% 落在 1m 内、14.79 m/s 球速，即误差为前作的 0.5×、球速为 2.96×；Stage 3 保住高功率动球射门，63.3% 的射门落在 1m 误差内。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>消融把每个组件钉到具体失效模式：去掉自适应采样/稳定相，存活率从 98.8% 崩到 32.8%/24.4%；用 HDMI 式稀疏奖励，free-kick 成功率从 28.8% 跌到 2.5%。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.6 · §4 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Removing adaptive sampling or stablization phase severely disrupts the robustness and stability ... <mark>whose alive rate drops from 98.8% to 32.8% and 24.4%</mark> ... Replacing our instant interaction reward with HDMI-style sparser ones drops contact accuracy performance, with <mark>free-kick success from 28.8% to 2.5%</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">移除自适应采样或稳定相会严重破坏完成射门的鲁棒性与稳定性，存活率分别从 98.8% 跌到 32.8% 和 24.4%；用 HDMI 式更稀疏的奖励替换我们的即时交互奖励，会拉低接触精度，free-kick 成功率从 28.8% 降到 2.5%。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-result" id="c8">
+        <div class="claim-head"><span class="cn">8</span><span class="kicker">结果</span><h3 class="claim-title">真草地全 onboard：0.73m、13.10 m/s</h3></div>
+        <p class="claim-body">Unitree G1 全程 onboard（无 mocap/外部估计），LiDAR+IR 感知反光球。free-kick 136 试 124 有效（91.2% 触球、全存活），0.73m 平均误差、7.42 m/s 球速；动球 27 试 20 有效，0.86m 误差。峰值球速 13.10 m/s 达职业 59–71%。</p>
+        <div class="stat-row">
+          <span class="stat win">free-kick 0.73 m</span>
+          <span class="stat">触球 91.2% · 1m 内 80.6%</span>
+          <span class="stat">moving 0.86 m · 触球 74.1%</span>
+          <span class="stat win">峰值 13.10 m/s（职业 59–71%）</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>注意区分两类计数：触球率/存活率按全部 ntotal，精度按有效发射 nvalid——动球瓶颈在「能不能干净起脚」（触球 74%），一旦起脚干净精度并不差。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.6 · §5.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Out of 136 recorded free-kick attempts, <mark>the robot launches 124 valid shots, corresponding to 91.2% contact</mark>, and remains alive in all trials. Conditioned on valid launches, <mark>31.5% and 80.6% of shots land within 0.5 m and 1.0 m</mark> of the target, respectively, with a mean radial error of 0.73 m and a mean ball speed of 7.42 m/s.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">在 136 次记录的自由球尝试中，机器人打出 124 次有效射门（对应 91.2% 触球率），且全部试次保持站立。以有效发射为条件，31.5% 与 80.6% 的射门分别落在目标 0.5m 与 1.0m 内，平均径向误差 0.73m、平均球速 7.42 m/s。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <details class="ev-fold">
+            <summary>📍 p.8 · §5.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Compared to professional soccer players, RoboNaldo reaches <mark>13.10 m/s peak ball speed, 59–71% of reported professional open-play shot velocities</mark> [7], indicating high-impulse contact rather than conservative low-velocity strikes.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">与职业球员相比，RoboNaldo 达到 13.10 m/s 峰值球速，相当于报告的职业运动战射门速度的 59–71%，表明是高冲量接触而非保守的低速踢击。</div></div>
+          </details>
+        </div>
+        <figure>
+          <a href="./images/figure_4_results.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_4_results.png" alt="Figure 4: real-robot shooting overview" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 4 (p.7)：</strong>真机射门总览。A 正门视角落点散布；B free-kick 轨迹；C 左/中/右分区成功率与球速；D 动球轨迹。<strong>看点：</strong>面板 C——center 最准（35.4% @0.5m），左侧球速更大、右脚自然偏置；off-center 1m 成功率仍接近。</figcaption>
+        </figure>
+        <figure>
+          <a href="./images/figure_3_perception.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_3_perception.png" alt="Figure 3: real-world perception stack" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 3 (p.7)：</strong>onboard 感知栈。头戴 MID-360 LiDAR 近场跟反光球，胸前 D435 IR 补远场，常速 Kalman 融合并变换到 pelvis 系；目标用同一相机的 AprilTag 定位。<strong>看点：</strong>全靠「反光亮度」keying 而非 RGB 外观检测——避开 HSV/YOLO 在光照与运动模糊下的失效。</figcaption>
+        </figure>
+        <figure>
+          <a href="./images/figure_5_showcase.png" target="_blank" title="点击看原图">
+            <img src="./images/figure_5_showcase.png" alt="Figure 5: real-robot shooting showcase" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 5 (p.8)：</strong>真机展示。(a) 户外 free-kick、(b) 动球一脚射门时序；(c)–(f) 四次 free-kick（上接触帧/下落点），落点误差 31.5/38.7/45.3/35.9 cm。<strong>看点：</strong>(b) one-touch——人传球后单脚直接射，是 Stage 3 触发接口的真机体现。</figcaption>
+        </figure>
+      </div>
+
+      <div class="claim k-limit" id="c9">
+        <div class="claim-head"><span class="cn">9</span><span class="kicker">局限</span><h3 class="claim-title">单参考 + 手工触发 + 反光球</h3></div>
+        <p class="claim-body">目前只靠一条参考踢球动作和一个手工设计的高层触发策略来做阶段切换与起脚时机，难扩展到需要多技能与自主决策的复杂场景；动球的主要退化来自起脚触发的 sim-to-real gap 与不完美的人类传球。感知也绑死反光球。</p>
+        <div class="claim-how">作者列出的下一步：多技能动作先验、可学习高层（技能选择/切换/时机）、主动 egocentric 视觉感知自然球。消融均为仿真，真机无方差/置信区间（附录 F 列为待补诊断）。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>对足式工程师，最该警惕的是「手工触发 + 单参考」这两处——直接限制了向真实对抗/多技能比赛的迁移，也是 sim2real 退化的集中点。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.8 · §6 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">RoboNaldo currently <mark>relies on a single reference kick motion and a handcrafted high-level trigger policy</mark> for stage transitions and kick timing. This limits its ability to handle richer soccer scenarios that require <mark>multiple skills and autonomous decision making</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">RoboNaldo 目前依赖单条参考踢球动作和一个手工设计的高层触发策略来做阶段切换与起脚时机，这限制了它处理需要多技能与自主决策的更丰富足球场景的能力。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <details class="ev-fold">
+            <summary>📍 p.7 · §5.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">the main degradation in the moving-ball setting comes from the <mark>sim-to-real gap of kick-timing trigger and imperfect incoming passes</mark> from human.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">动球设置下的主要退化来自起脚时机触发的 sim-to-real gap 以及来自人类的不完美传球。</div></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态（必须实时联网核查，标注核查日期） ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06）</h2>
+      <dl class="os-grid">
+        <dt>项目页</dt><dd><span class="os-tag os-yes">在线</span> <a href="https://opendrivelab.com/RoboNaldo">opendrivelab.com/RoboNaldo</a>（含演示视频）</dd>
+        <dt>代码</dt><dd><span class="os-tag os-no">未上线</span> 项目页指向 <code>github.com/opendrivelab/RoboNaldo</code>，但该仓库当前返回 404；论文正文称 joint-index 重映射「列在 released code」，即代码已承诺但尚未公开</dd>
+        <dt>权重 / 数据</dt><dd><span class="os-tag os-no">未提供</span> 无 checkpoint / 数据集发布说明；无 license</dd>
+      </dl>
+      <div class="callout warn"><div class="callout-head">⚠ 核查结论</div><p>截至 2026-06-16：仅项目页 + arXiv + 视频可得；GitHub 仓库 404，代码/权重均不可下载。归类 <strong>none</strong>（承诺开源但尚未兑现）。后续应重查仓库是否上线。</p></div>
+      <div class="evidence">
+        <details class="ev-fold">
+          <summary>📍 p.1 / p.15 <span class="ev-hint">— 查逐字证据</span></summary>
+          <blockquote class="ev-quote">Project page: https://opendrivelab.com/RoboNaldo. ... Getting this permutation wrong silently produces a plausible-looking but non-functional policy, so we list it explicitly in <mark>the released code</mark>.</blockquote>
+          <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">项目页地址；并称把 joint-index 排列显式列在「已发布的代码」中——但核查时该仓库尚不可访问。</div></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>把「tracking 稳定 vs task 精准」这一长期两难，用一套清晰的权重迁移课程兼顾，并在真草地全 onboard 复现出高精度+高球速（首个同时拿下点级精度/球速/动球/室外的人形射门系统）。proximity-based tracking relaxation、高冲量接触奖励整形、密集落点弹道外推、joint-index 重映射等都是可直接搬走的工程招法。消融把每个组件钉到具体失效模式。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>高层触发是手工规则、只用单条参考动作，限制向多技能/对抗场景迁移（见<a href="#c9">局限9</a>）；消融全在仿真、真机无方差/置信区间；动球真机样本仅 27 试；代码承诺但仓库 404、非同行评审。</p></div>
+      <p><strong>评级：</strong><span class="badge">Valuable</span> &nbsp;聚焦单一 athletic 任务、重度建立在 motion-tracking RL + 课程学习之上，故非 Important/Breakthrough；但机制干净、真机执行扎实、对足式 WBC 工程师有直接可复用的方法与落地细节。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#snap">⏱ 30 秒速读</a></li>
+      <li><a href="#gist">⚡ 速记层</a></li>
+      <li><a href="#core">◆ 核心观点</a>
+        <ul class="toc-claims">
+          <li><a href="#c1">1 问题 · 高冲量难题</a></li>
+          <li><a href="#c2">2 问题 · 两路线各缺一角</a></li>
+          <li><a href="#c3">3 洞察 · 单参考排课程 ★</a></li>
+          <li><a href="#c4">4 方法 · 三阶段课程 ★</a></li>
+          <li><a href="#c5">5 方法 · 可换高层接口</a></li>
+          <li><a href="#c6">6 方法 · 稳定/力量三件套 ★</a></li>
+          <li><a href="#c7">7 结果 · 仿真 0.5×/2.96× ★</a></li>
+          <li><a href="#c8">8 结果 · 真草地 onboard</a></li>
+          <li><a href="#c9">9 局限 · 单参考/手工触发</a></li>
+        </ul>
+      </li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 三层阅读架构（30s 分诊 / 90s 速记 / 按需深读）· 阅读笔记</footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('ev-toggle-all');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.dataset.open !== '1';
+      btn.dataset.open = open ? '1' : '0';
+      document.querySelectorAll('details.ev-fold').forEach(function (d) { d.open = open; });
+      btn.textContent = open ? '收起全部证据' : '展开全部证据';
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var links = [].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) {
+            a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id);
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('section.card[id], .claim[id]').forEach(function (t) { spy.observe(t); });
+  }
+})();
+</script>
+
+</body>
+</html>

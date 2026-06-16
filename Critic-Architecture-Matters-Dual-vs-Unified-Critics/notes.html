@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critic Architecture Matters 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO (variant: 紫蓝调) ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / MATH ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>Critic Architecture Matters 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      围绕本文核心议题——多目标人形 RL 里 critic 该「合」还是「分」——展开的四个关键概念。每个给出定义、在本文的具体用法、与相邻做法的区别，以及出处来源。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回综述</a>
+      <span class="pill">📚 当前 4 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2606.11891" style="color: #93c5fd; text-decoration: none;">arXiv:2606.11891</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ DUAL vs UNIFIED CRITIC ============ -->
+    <section class="card" id="dual-vs-unified-critic">
+      <h2>Dual vs Unified Critic <span class="tag">Critic Architecture</span></h2>
+      <p class="full-name">双 critic vs 单 critic · 分离价值函数 vs 合并价值函数</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>多目标 RL 里价值网络（critic）的两种接法：<strong>unified critic</strong> 把所有目标的观测拼成一条长向量，估一个「合并价值」；<strong>dual critic</strong> 给每个目标配一个独立 critic，各看各的 <strong>disjoint reward</strong>、互不串味。本文的全部卖点就建立在这一个旋钮的对照上——只换 critic 架构，dual 比 unified 到达快 3.5×。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>在 actor-critic 类 RL（如 PPO）里，critic 是估状态价值 \(V(s)\) 的网络，给 actor 提供优势（advantage）信号、决定每个动作该被「鼓励」还是「抑制」。当一个策略要同时优化多个目标（这里是 locomotion + reaching）时，critic 有两种搭法：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Unified Critic（单）</th><th>Dual Critic（双）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>输入</td><td>所有目标的观测<strong>拼接</strong>（本文 109-dim）</td><td>每支只看本目标的观测（loco 57-dim / arm 52-dim）</td></tr>
+            <tr><td>估的价值</td><td>所有 reward 合并后的<strong>单一标量价值</strong></td><td>每个目标<strong>各一个</strong>价值函数</td></tr>
+            <tr><td>奖励信号</td><td>混在一起，梯度互相耦合</td><td><strong>disjoint reward</strong>，梯度按目标隔离</td></tr>
+            <tr><td>风险</td><td>强目标（loco）主导价值地形，压制弱目标（arm）</td><td>互不干扰，但需各自调参、参数更多</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>本文把这两种架构当作<strong>唯一受控变量</strong>，在同一台 Unitree G1（23 active DoF）、同一套 13 级 curriculum、同一份 PPO 超参（lr 3e-4 cosine，γ=0.99，λ=0.95，clip 0.2，4096 并行环境）下对照。两个 actor（πloco / πarm）始终独立，区别只在 critic：</p>
+      <ul>
+        <li><strong>Unified（S6u）</strong>：单个 \(V_\text{unified}\) 吃 109-dim 拼接观测，估 locomotion + manipulation 的合并价值。</li>
+        <li><strong>Dual（S6s）</strong>：\(V_\text{loco}\) 只看速度跟踪+平衡，\(V_\text{arm}\) 只看够取距离+位移——论文原话：<em>"The two critics receive disjoint reward signals."</em></li>
+      </ul>
+      <p>机制证据落在一个可测量的物理量上：unified 下 arm 动作幅度均值仅 <strong>1.22</strong>，约为 dual（2.54 / 3.04）的一半。作者解释——<em>"the unified critic's value landscape partially suppresses arm actions—the arm moves, but with less commitment"</em>：locomotion 奖励在早期训练就压过 arm，合并价值把够取动作「打了折」。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <ul>
+        <li><strong>vs 前人做法</strong>：HOVER、ULC、Deep Whole-Body Control 等人形 RL 工作各自<strong>默认选一种</strong> critic 架构、从不对照（<em>"rarely discussed ... without comparing alternatives"</em>）；本文的增量贡献正是把这个被默认掉的选择拎出来当变量测。</li>
+        <li><strong>vs reward engineering</strong>：本文证明架构这个旋钮比奖励工程更值钱——在 dual 上再叠 5 个 anti-gaming 奖励（S7）反而没有额外增益（60.9% vs 65.2%）。<em>"once the architectural bottleneck is resolved, additional reward engineering ... is unnecessary."</em></li>
+        <li><strong>注意混淆变量</strong>：S6u（12-DoF arm 动作）与 S6s（5-DoF）同时差了 critic 架构和动作维度，作者承认这是混淆；其辩护是 5-DoF 是 12-DoF 的严格子集，故 critic 架构是「最可能的解释变量」。所以「快 3.5×」应读作方向性结论而非纯 critic 架构的净效应。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>「unified vs dual critic」这组对照术语<strong>由本文（Yardımcı 2026, arXiv:2606.11891）提出并系统对照</strong>，是其核心命题。其思想根源是<strong>多目标 / 多 critic RL</strong>这条更广的脉络：multi-objective RL 把 reward 写成向量、每个分量一个价值函数；multi-head / multi-critic 架构（多见于 multi-agent 与 multi-task 设定）通过「各目标各自一个 critic」来减小目标间干扰。本文把这套思路落到单智能体人形 loco-manipulation 上做了控制变量验证；底层算法是 <strong>PPO（Schulman et al. 2017）</strong>。</p>
+      </div>
+    </section>
+
+    <!-- ============ FROZEN-BRANCH TRANSFER ============ -->
+    <section class="card" id="frozen-branch-transfer">
+      <h2>Frozen-Branch Transfer <span class="tag">Transfer Trick</span></h2>
+      <p class="full-name">冻结分支迁移 · 冻结已学分支、只新训新分支</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>训练顺序到了某一阶段时，把<strong>已经学好的 locomotion 分支整个冻结</strong>（参数不再更新），只<strong>重新初始化并训练 arm 分支</strong>。等于把走路当成稳固的「地基」、只在上面盖够取这层楼，避免新目标的梯度回头破坏旧技能。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>「frozen-branch transfer」是把多分支策略里某一支的权重<strong>冻结（freeze / stop-gradient）</strong>、另一支<strong>从头训（freshly initialized）</strong>的迁移技巧。冻结的那支只做前向推断、不接收梯度；新训的那支独享学习信号。它依赖 dual actor-critic 这种「分支天然解耦」的结构才好实施——梯度本就不跨分支流动。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>本文的训练是<strong>分阶段顺序</strong>进行的：Stage 1–3 只训 locomotion，Stage 6 两支联合训 loco-manipulation。到了 <strong>Stage 7</strong>（即叠加 anti-gaming 的 S7 变体），作者采用 frozen-branch transfer——论文原话：<em>"This variant uses the dual-critic architecture with a frozen locomotion branch and freshly initialized arm policy."</em></p>
+      <p>对应 Figure 1 右下角标注的 <code>FROZEN(Stage 7)</code> / <code>FRESH(Stage 7)</code>：locomotion 分支冻结，arm 策略推倒重训。验证时还做了 <em>bit-exact weight matching</em> 来确认被冻结的共享 locomotion 参数确实没动。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <ul>
+        <li><strong>vs 联合训练（Stage 6）</strong>：Stage 6 两支一起更新；Stage 7 只动 arm。前者图省事，后者用「冻地基」换取迁移时不破坏已学的走路。</li>
+        <li><strong>vs 通用迁移学习的「冻结主干」</strong>：和 CV/NLP 里「冻结预训练 backbone、只训 task head」一脉相承（都是 stop-gradient + 部分微调），区别在于这里冻结的是一条<strong>功能完整的控制分支</strong>（locomotion 控制器），而非特征提取器。</li>
+        <li><strong>与防遗忘的关系</strong>：frozen-branch transfer 是 dual-critic「梯度隔离」的一个极端实例——把隔离推到底（梯度=0），因而天然抗 <a href="#catastrophic-forgetting">catastrophic forgetting</a>。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>「frozen-branch transfer」这个具体说法是<strong>本文（Yardımcı 2026）作为其 Dual Actor-Critic 框架的组成部分提出</strong>的（贡献(1)即列为 "a Dual Actor-Critic framework with frozen-branch transfer"）。其底层手法——<strong>冻结一部分权重、只微调另一部分</strong>——是迁移学习/参数冻结的通用经典做法，并非本文独创；本文的具体化在于把它用于「冻 locomotion、新训 arm」的分支级迁移。未溯及单一首创出处。</p>
+      </div>
+    </section>
+
+    <!-- ============ VALIDATED REACH / ANTI-GAMING ============ -->
+    <section class="card" id="validated-reach">
+      <h2>Validated Reach / Anti-Gaming <span class="tag">Eval &amp; Reward</span></h2>
+      <p class="full-name">有效到达校验 · 三条件防刷分</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>只判「末端离目标够近」太容易被策略钻空子刷分。<strong>validated reach</strong> 要同时满足三条件才算一次有效到达：<strong>位置接近 + 真的发生了位移 + 在时限内</strong>。它既是评测指标（validated reach rate / time-to-reach / throughput），也是 anti-gaming 奖励工程的核心校验。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>开发中作者发现：<strong>基于距离的 proximity reward + 自动重采样目标</strong>会让策略「累积虚假的到达计数」（spurious reach counts）——比如目标恰好刷到末端附近就白捡一次到达。validated reach 用一个三条件合取式把这种刷分挡掉：</p>
+      <div class="math-display">
+        \[ \text{valid} = \big(\lVert p_{ee}-p_t \rVert < \epsilon_{pos}\big) \;\wedge\; \big(\lVert p_{ee}-p^{0}_{ee} \rVert > d_{disp}\big) \;\wedge\; \big(t < t_{max}\big) \]
+      </div>
+      <ul>
+        <li><strong>位置接近</strong>：末端 \(p_{ee}\) 与目标 \(p_t\) 距离 &lt; 阈值 \(\epsilon_{pos}\)；</li>
+        <li><strong>发生位移</strong>：末端相对起始位 \(p^{0}_{ee}\) 移动距离 &gt; \(d_{disp}\)——逼策略「真的伸手去够」而非原地等目标飘过来；</li>
+        <li><strong>在时限内</strong>：用时 \(t < t_{max}\)。</li>
+      </ul>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>validated reach 在本文承担<strong>双重角色</strong>：</p>
+      <ul>
+        <li><strong>作评测指标</strong>：standardized benchmark 用 <em>validated reach rate</em>（站立 65.2% vs 53.8%）、<em>time-to-reach</em>、<em>throughput（validated / 1K steps）</em> 来对照三种策略。作者强调，正是这些标准化指标才暴露出 3.5× 差距——而 reward 值、curriculum 进度、reach 计数这类标准训练指标完全看不出来。</li>
+        <li><strong>作 anti-gaming 机制 + 晋级门槛</strong>：式(1) 的三条件校验是 S7 五个 anti-gaming 机制之一；validated reach rate 还被用作 curriculum 的<strong>晋级门槛</strong>（<em>"Advancement requires sustained validated reach rate above a threshold."</em>）。</li>
+      </ul>
+      <p>关键结论：一旦 dual 架构解决了瓶颈，<strong>再叠这些 anti-gaming 奖励并无额外增益</strong>（S7 60.9% ≤ S6s 65.2%）——架构 &gt; reward 工程。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <ul>
+        <li><strong>vs position-only rate</strong>：本文同时报了「只看位置接近」的 position-only rate（站立 72.7%）和「三条件」的 validated rate（65.2%）——两者之差正是被「位移+时限」筛掉的虚假到达，量化了刷分空间有多大。</li>
+        <li><strong>vs 一般 reward hacking 讨论</strong>：reward hacking 文献（Amodei 2016；Skalse 2022；Pan 2022）通常把刷分归因于 reward 设计、并从 reward 侧修补；本文的立场是——validated reach 这类 anti-gaming 奖励是「治标」，真正的瓶颈在 critic 架构，架构对了就不需要它。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>「validated reach」的三条件校验式(式1)与这套 anti-gaming 机制<strong>由本文（Yardımcı 2026）提出</strong>（§III.C）。它所应对的更大问题——<strong>reward hacking / reward gaming</strong>——有成熟文献谱系：Amodei et al. 2016《Concrete Problems in AI Safety》、Skalse et al. 2022《Defining and Characterizing Reward Hacking》(NeurIPS)、Pan et al. 2022《The Effects of Reward Misspecification》(ICLR)。本文的具体校验式是针对「proximity reward + 目标重采样」这一特定刷分模式的工程对策。</p>
+      </div>
+    </section>
+
+    <!-- ============ CATASTROPHIC FORGETTING ============ -->
+    <section class="card" id="catastrophic-forgetting">
+      <h2>Catastrophic Forgetting <span class="tag">Continual Learning</span></h2>
+      <p class="full-name">灾难性遗忘 · 学新技能时覆盖掉旧技能</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>神经网络在<strong>顺序学新任务</strong>时，会因为参数被新梯度改写而<strong>突然、剧烈地忘掉先前学会的东西</strong>。在「先 IL 学会 manipulation、再用 RL 微调」的混合流程里，新来的 locomotion 梯度可能覆盖 IL 学到的 arm 行为——本文主张 <a href="#dual-vs-unified-critic">dual critic</a> 通过隔离梯度来防它。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>catastrophic forgetting（又称 catastrophic interference）是连续/增量学习里的经典难题：当一个网络在<strong>新数据分布</strong>上继续训练时，会迅速丢失对<strong>旧任务</strong>的能力——哪怕只在新数据上训一点点也可能「灾难性」地遗忘。根因在于：让网络得以泛化的<strong>共享分布式表征</strong>，恰恰使新任务的梯度会改写承载旧知识的同一批权重。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>本文<strong>不直接训 IL+RL</strong>，而是把它作为一个<strong>工程类比假说</strong>提出：在「先用人类演示/teleop 学 manipulation，再用 RL 微调」的混合管线里，如果用 unified critic，那条<strong>原本不在 IL 目标里的 locomotion 奖励信号</strong>会压制已学的 arm 行为——正与本文在 S6u 观测到的 arm 动作幅度被压制（1.22 vs 2.54）同构。作者据此提出——<em>"A dual-critic architecture naturally isolates the RL fine-tuning signal to the relevant branch, preserving the imitation-learned behavior in other branches. This architectural choice may be critical for preventing catastrophic forgetting of IL-acquired skills during RL refinement."</em></p>
+      <div class="callout danger">
+        <div class="callout-head">⚠ 读法提醒</div>
+        <p>这条是<strong>类比，不是实测</strong>。论文未真正跑 IL+RL 流程，只是把「多目标 critic 互相干扰」结构性地映射到「RL 微调遗忘 IL 技能」。作者把验证它列为 future work。当「假说来源」读，别当已验证结论。</p>
+      </div>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <ul>
+        <li><strong>vs 本文的「目标干扰」</strong>：在本文受控实验里，现象其实是<strong>同时</strong>训两目标时强目标压制弱目标（objective interference）；catastrophic forgetting 强调的是<strong>顺序</strong>训练时新任务覆盖旧任务。本文论证二者「structurally analogous」，把 dual critic 的梯度隔离同时当作两者的解药。</li>
+        <li><strong>vs 常见防遗忘手段</strong>：连续学习里防遗忘的经典做法有 EWC（弹性权重固化）、rehearsal/replay、参数隔离等；本文给出的是<strong>架构级隔离</strong>（dual critic 让分支梯度互不串味），并以 <a href="#frozen-branch-transfer">frozen-branch transfer</a> 作为其极端版本（直接冻结=零梯度）。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>catastrophic forgetting / catastrophic interference 由 <strong>McCloskey &amp; Cohen (1989)</strong> 在 connectionist 网络中首次提出并命名（他们发现顺序训练会让简单网络剧烈遗忘，远超人类的遗忘程度，故称「catastrophic」）；Ratcliff (1990) 同期亦有论证。本文在 RL 微调 IL 策略的语境下引用它，对应参考文献 [16] Haldar et al.（FISH, RSS 2023）与 [17] Luo et al.（SERL, ICRA 2024）所代表的 IL+RL 谱系。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#dual-vs-unified-critic">Dual vs Unified Critic — 双/单 critic</a></li>
+      <li><a href="#frozen-branch-transfer">Frozen-Branch Transfer — 冻结分支迁移</a></li>
+      <li><a href="#validated-reach">Validated Reach / Anti-Gaming — 有效到达校验</a></li>
+      <li><a href="#catastrophic-forgetting">Catastrophic Forgetting — 灾难性遗忘</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · Critic Architecture Matters (arXiv:2606.11891) · 配套笔记
+</footer>
+
+</body>
+</html>

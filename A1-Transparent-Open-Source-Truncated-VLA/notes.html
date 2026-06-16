@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A1 VLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>A1 VLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、需要一定背景才能理解的关键概念。每个概念给出定义、原理、在 A1 中的具体用法，以及与相关工作的比较。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 A1 综述</a>
+      <span class="pill">📚 当前 7 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2604.05672" style="color: #93c5fd; text-decoration: none;">arXiv:2604.05672</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">Vision-Language-Action</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 把感知（视觉）、理解（语言）、控制（动作）统一进一个端到端可训练模型。通常以大型 VLM 为骨干，接上一个动作解码头，直接输出机器人的连续电机指令。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>VLA 是一类机器人策略模型，以<strong>视觉观察（RGB 图像）+ 语言指令</strong>为输入，直接输出<strong>连续动作向量</strong>（末端执行器位姿、关节角、底盘速度等）。其核心思路是把 Transformer 在多模态预训练上的泛化能力"嫁接"到机器人控制上。</p>
+
+      <h3><span class="num">2</span>典型结构</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>组件</th><th>作用</th><th>A1 中的选择</th></tr></thead>
+          <tbody>
+            <tr><td><strong>视觉编码器</strong></td><td>将 RGB 帧压缩为 token</td><td>CLIP（含在 Molmo 内）</td></tr>
+            <tr><td><strong>语言骨干 (VLM)</strong></td><td>跨模态理解与意图推理</td><td>Molmo-7B (Qwen2-7B + CLIP)</td></tr>
+            <tr><td><strong>动作头</strong></td><td>从 VLM 隐状态解码连续动作</td><td>Flow Matching (Qwen3-400M) 或 MLP</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>在 A1 中的用法</h3>
+      <p>A1 是标准 VLA 框架，但做了两项关键改动：① 训练时对<strong>每一层</strong>的隐状态都接 action head 并监督，而不仅是最后一层；② 推理时动态决定在哪一层退出，而非固定跑完全部层。这两点合起来是论文的核心贡献。</p>
+
+      <h3><span class="num">4</span>对比 / 出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 VLA 谱系</div>
+        <p>最早大规模 VLA 包括 RT-2（Google, 2023）、OpenVLA（2024）、π0（Physical Intelligence, 2024）。A1 定位于"效率导向"分支，与 DeeR-VLA、SmolVLA、EfficientVLA 同类，但技术路线不同（A1 单共享头 vs. DeeR-VLA 多独立头）。</p>
+      </div>
+
+      <h3><span class="num">5</span>类比</h3>
+      <p>想象语言翻译：VLM 是理解原文的翻译官大脑，action head 是把"想法"落实为"手写汉字"的手。VLA 就是把大脑和手连在一起，直接从"看到场景 + 听到指令"到"执行动作"，中间不再有规则系统或单独的规划器。</p>
+    </section>
+
+    <!-- ============ Truncated VLA Architecture ============ -->
+    <section class="card" id="truncated-vla">
+      <h2>Truncated VLA <span class="tag">Architecture</span></h2>
+      <p class="full-name">截断式 VLA 架构 · 中间层 action 监督 + 动态退出</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>"截断"指的是在推理时不必跑完 VLM 的全部 L 层——只要中间某层的 action 预测已经稳定，就在那里退出，舍弃后面的计算。为了使这一点可行，训练时必须对每层的 action 都进行监督。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心思想</h3>
+      <p>标准 VLA 训练：只监督最后一层的 action loss。A1 的改动：随机采样层 i ∼ U(0, L)，对第 i 层隐状态预测的 action 计算 loss。等价于"多退出点的知识蒸馏自己蒸自己"。</p>
+
+      <div class="math-display">
+        \[ \mathcal{L} = \sum_{i \in E} \mathcal{L}^{(i)}(\theta), \quad \text{其中} \quad E = \{i_1, i_2, \ldots, i_K\} \subseteq \{1, \ldots, L\} \]
+      </div>
+
+      <h3><span class="num">2</span>与 DeeR-VLA 的关键区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>A1</th><th>DeeR-VLA</th></tr></thead>
+          <tbody>
+            <tr><td>Action head</td><td><strong>单个共享头</strong>，挂在任意层</td><td>每个退出层一个独立头</td></tr>
+            <tr><td>参数量</td><td>节省（共享参数）</td><td>较多（多个头）</td></tr>
+            <tr><td>退出层兼容性</td><td>理论上任意层均可</td><td>预设的固定几个退出点</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>类比</h3>
+      <p>相当于接力赛：运动员（VLM 层）一棒接一棒往前跑，裁判员（action 一致性检测）站在赛道旁，只要速度/方向已经足够稳定就鸣枪结束——不必等所有棒次都跑完。但每个运动员都必须事先练过"被中途叫停时怎么把棒传下去"（即每层都要被训练能产出合理 action）。</p>
+
+      <h3><span class="num">4</span>具象例子</h3>
+      <p>在 LIBERO-Long 的"打开灶台，把摩卡壶放上去"任务里，A1 实测：机械臂简单移动帧在第 3 层就退出（共 28 层），而关键的"开灶"帧要到第 17 层、"抓锅"帧要到第 25 层才退出。这说明模型自动把算力集中在关键动作上。</p>
+    </section>
+
+    <!-- ============ Early Exit ============ -->
+    <section class="card" id="early-exit">
+      <h2>Early Exit <span class="tag">Adaptive Inference</span></h2>
+      <p class="full-name">动态提前退出 · 自适应推理终止</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在推理时，逐层计算 action，并和上一层的 action 作差比较。差值小于阈值 η_i 则认为"action 已稳定"，立即停止、返回当前 action，跳过后续所有层的计算。</p>
+      </div>
+
+      <h3><span class="num">1</span>触发机制</h3>
+      <div class="math-display">
+        \[ \Delta_t^i = d\!\left(A_t^{(i)},\, A_t^{(i-1)}\right) < \eta_i \;\Rightarrow\; \text{Early Exit at layer } i \]
+      </div>
+      <p>差异度量 d(·,·) 可选余弦相似度、L2 距离或均值绝对偏差（MAD）。</p>
+
+      <h3><span class="num">2</span>阈值 η_i 如何设定</h3>
+      <p>不是手调的。用训练集跑一遍前向，收集每层的实际差异值分布，根据目标"退出预算"c 的指数分布 p_k ∝ ρ^k 自动设定各层分位数阈值。<strong>c 越小 → 退出越早 → 节省越多计算</strong>，但精度也有代价。</p>
+
+      <h3><span class="num">3</span>本文实验结果</h3>
+      <ul>
+        <li>c=1.0：省 15.6% 算力，精度不降（甚至提升——多层监督的正则化效果）</li>
+        <li>c=0.7：省 39.1%，精度降 0.3%</li>
+        <li>c=0.4：省 58.5%，精度降 2.3%</li>
+        <li>c=0.1：省 76.6%，精度降 1.7%</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 Early Exit 的来源</div>
+        <p>早期 exit 在 NLP 中已有大量研究（BranchyNet 2016、DeeBERT 2020 等）。A1 引用 DeeR-VLA（2024）将这一思路引入 VLA 领域，并在其基础上做了关键改动（共享单头 + 与 Inter-Layer Truncated FM 联动）。</p>
+      </div>
+
+      <h3><span class="num">5</span>类比</h3>
+      <p>就像坐地铁：你要去某站，但在中途某站已经觉得"方向对了，这就是目的地了"——立刻下车，不再等终点站。终点站通常更准，但多坐几站的时间浪费不值得。</p>
+    </section>
+
+    <!-- ============ Inter-Layer Truncated Flow Matching ============ -->
+    <section class="card" id="iltfm">
+      <h2>ILTFM <span class="tag">Inter-Layer Truncated FM</span></h2>
+      <p class="full-name">Inter-Layer Truncated Flow Matching · 层间截断流匹配</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在 early-exit 推理中，每层都要执行 flow matching 去噪——如果每层都从随机噪声跑 10 步，反而比不退出还慢。ILTFM 的解法：每层只跑 δ=2 步，并把上一层的去噪结果作为下一层的初始条件（热启动），整个 episode 的去噪进度在层间累积传递。</p>
+      </div>
+
+      <h3><span class="num">1</span>问题根源</h3>
+      <p>设 FM 每次去噪需要 δ=10 步，VLM 有 28 层，early-exit 在第 k 层退出：需要跑 k×10 步去噪（比无 early-exit 的 10 步还多）。这让 A1-FM 在 c=1.0 时延迟反而从 1.15s 增至 4.44s（Table 3 数据）。</p>
+
+      <h3><span class="num">2</span>解决方案</h3>
+      <div class="math-display">
+        \[ A_t^{0(i+1)} = A_t^{1(i)} \]
+      </div>
+      <p>即：第 i 层去噪结束后得到的 \(A_t^{1(i)}\)，直接作为第 i+1 层去噪的起点 \(A_t^{0(i+1)}\)，而不是从随机噪声 \(\mathcal{N}(0, I)\) 重新开始。同时将每层去噪步数压缩到 δ=2。</p>
+
+      <div class="pre-label"><span>ILTFM 伪代码</span></div>
+<pre><code># 标准 FM（每次从噪声重启）:
+for each layer i until exit:
+    A = random_noise()
+    for step in range(10):  # 10步去噪
+        A = denoise(A, layer_i_features)
+    if consistent(A, A_prev): break
+
+# ILTFM（层间热启动，每层仅2步）:
+A = random_noise()
+for each layer i until exit:
+    for step in range(2):  # 仅2步！
+        A = denoise(A, layer_i_features)
+    if consistent(A, A_prev): break
+    # A 直接传给下一层，不重置！</code></pre>
+
+      <h3><span class="num">3</span>效果</h3>
+      <p>在 LIBERO 上：episode 推理时延从 <strong>40.9s → 27.5s（去掉热启动）→ 10.5s（加热启动）</strong>。更惊喜的是，热启动还把成功率从 95.4% 提升到了 96.4%——热启动提供了更好的去噪初始化。</p>
+
+      <h3><span class="num">4</span>直觉类比</h3>
+      <p>就像数学考试做草稿：标准做法是每道题都从空白纸开始草稿；ILTFM 的做法是把上一道题的草稿直接带到下一道——如果题型相关，这个"接力草稿"让你快得多，而不是重新乱写一通。</p>
+    </section>
+
+    <!-- ============ Flow Matching ============ -->
+    <section class="card" id="flow-matching">
+      <h2>Flow Matching <span class="tag">Action Head</span></h2>
+      <p class="full-name">Flow Matching · 流匹配生成模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Flow matching 是一种生成式动作解码方法：训练时学习一个"向量场"，推理时从随机噪声出发，沿该向量场积分几步得到最终动作。比传统扩散模型（DDPM）更简洁，通常 10–20 步就够，可表示多峰分布。</p>
+      </div>
+
+      <h3><span class="num">1</span>训练目标</h3>
+      <div class="math-display">
+        \[ \mathcal{L}_\tau(\theta) = \mathbb{E}\left[\left\| v_\theta(A_t^\tau, o_t) - u(A_t^\tau | A_t) \right\|^2\right] \]
+      </div>
+      <p>其中 \(A_t^\tau = \tau A_t + (1-\tau)\epsilon\)（noisy action），\(u(A_t^\tau|A_t) = \epsilon - A_t\) 是目标向量场，\(\tau\) 从 beta 分布采样（强调低 τ，即更嘈杂的端）。</p>
+
+      <h3><span class="num">2</span>推理：Euler 积分</h3>
+      <div class="math-display">
+        \[ A_t^{\tau+\delta} = A_t^\tau + \delta \cdot v_\theta(A_t^\tau, o_t), \quad A_t^0 \sim \mathcal{N}(0, I) \]
+      </div>
+      <p>从随机噪声 A⁰ 出发，按步长 δ 积分多步，最终在 τ=1 时得到预测 action。</p>
+
+      <h3><span class="num">3</span>在 A1 中的实现</h3>
+      <p>A1 用约 400M 参数的 <strong>Qwen3</strong> 作为 FM action expert，通过 <strong>KV-conditioned self-attention</strong>（把 VLM 骨干的 prefix 输出注入为 past K/V）与骨干连接——这样 action expert 可以在不修改 VLM 的情况下独立缩放。</p>
+
+      <h3><span class="num">4</span>与 ILTFM 的关系</h3>
+      <p>ILTFM 是 Flow Matching 在 early-exit 场景下的适配：通过层间热启动，把本来需要的 10 步去噪压缩到 2 步，同时不显著损失最终精度。这是 A1 论文中最有新意的技术创新点。</p>
+
+      <h3><span class="num">5</span>对比 MLP head</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Flow Matching (A1-FM)</th><th>MLP (A1-MLP)</th></tr></thead>
+          <tbody>
+            <tr><td>表达能力</td><td>多峰分布，细粒度连续动作</td><td>单峰拟合，适合简单精确任务</td></tr>
+            <tr><td>推理成本</td><td>高（多步去噪），需 ILTFM</td><td>低（单次前向）</td></tr>
+            <tr><td>噪声抑制</td><td>一般</td><td>L1 loss 天然抑制噪声</td></tr>
+            <tr><td>层间 action 相似度</td><td>高（利于早退出）</td><td>较低（阈值更难统一）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ Action Head ============ -->
+    <section class="card" id="action-head">
+      <h2>Action Head <span class="tag">Policy Decoder</span></h2>
+      <p class="full-name">动作解码头 · 从 VLM 隐状态到连续电机指令</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Action head 是 VLA 中负责把 VLM 的"理解结果"转化为机器人可执行动作序列的模块。A1 提供两种实现：FM action expert（精细、多峰）和 MLP head（快速、低噪）。两者共享同一套骨干表示，通过不同接口连接。</p>
+      </div>
+
+      <h3><span class="num">1</span>FM Action Expert</h3>
+      <p>采用约 400M 参数的 Qwen3 解码器。通过 <strong>KV-conditioned self-attention</strong> 接入骨干：骨干产生的 prefix context 被注入为 K/V，action token 在 suffix 位置同时 attend 骨干 prefix 和 action 自身。输出为预测动作块 \(A_t = [a_t, a_{t+1}, \ldots, a_{t+H}] \in \mathbb{R}^{H \times D}\)（action chunk，H 步预测，D 维）。</p>
+
+      <h3><span class="num">2</span>MLP Head</h3>
+      <p>在输入 token 序列中插入额外的"动作 query token" S，从这些 token 对应的隐状态直接通过 MLP 回归连续动作：</p>
+      <div class="math-display">
+        \[ H_t = f_\phi([o_t, \ell, S])_S, \quad \hat{A}_t = g_\psi(H_t), \quad \mathcal{L}_{MLP} = \mathbb{E}\|\hat{A}_t - A_t\|_1 \]
+      </div>
+      <p>用 L1 loss 而非 L2，抑制异常值，适合抓取等需要精确但稳定的任务。</p>
+
+      <h3><span class="num">3</span>共享头设计的重要性</h3>
+      <p>A1 在所有退出层共享同一个 action head 参数（FM 或 MLP）。这与 DeeR-VLA 的"每个退出层独立一个小 head"形成对比。A1 的设计：① 参数量更少；② 训练更简洁；③ 但对 head 的泛化能力要求更高（需要在不同深度的特征质量上都能工作）。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>骨干 VLM 是"眼睛+大脑"，action head 是"手"。KV-conditioned attention 就像手通过神经网络读取大脑发出的指令——手并不直接"看"场景，而是接收大脑预先消化好的指令。</p>
+    </section>
+
+    <!-- ============ Open-Source Transparency Stack ============ -->
+    <section class="card" id="open-source-stack">
+      <h2>Open-Source Stack <span class="tag">Transparency</span></h2>
+      <p class="full-name">全透明开源栈 · 训练代码 + 数据管线 + 中间 checkpoint + 评估协议</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>A1 声称发布"完整训练栈"使社区可以端到端复现——这在 VLA 领域是相对罕见的（多数系统代码开源但数据/checkpoint 不公开）。但截至论文发表时，仍有关键组件尚在"承诺"状态而非实际发布。</p>
+      </div>
+
+      <h3><span class="num">1</span>承诺发布的内容（PDF 原文）</h3>
+      <ul>
+        <li><strong>模型权重</strong>（包括预训练 checkpoint + 各任务微调版）</li>
+        <li><strong>训练/推理代码</strong></li>
+        <li><strong>数据处理脚本/清单</strong></li>
+        <li><strong>评估协议</strong></li>
+      </ul>
+
+      <h3><span class="num">2</span>实际发布状态（截至 2026-06）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>组件</th><th>状态</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td>代码（训练/推理/评估）</td><td>✅ 已发布</td><td>github.com/ATeam-Research/A1，98% Python</td></tr>
+            <tr><td>HuggingFace Checkpoint</td><td>⚠️ 已发布但无正式 Release</td><td>含 LIBERO/VLABench/RoboChallenge 微调版</td></tr>
+            <tr><td>6个公开数据集</td><td>✅ 本来公开</td><td>DROID、AgiBot、RoboCOIN 等外部来源</td></tr>
+            <tr><td>自采 15,951 条轨迹</td><td>❓ 未独立发布</td><td>承诺数据处理脚本/清单，数据本身待确认</td></tr>
+            <tr><td>License</td><td>❌ 未声明</td><td>README 无 license 字段，arXiv CC-BY 不覆盖代码</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>与同类的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>系统</th><th>代码</th><th>权重</th><th>训练数据</th><th>License</th></tr></thead>
+          <tbody>
+            <tr><td>π0.5 (openpi)</td><td>✅ Apache-2.0</td><td>✅ 3 ckpt</td><td>❌ 自采未公开</td><td>✅ Apache-2.0</td></tr>
+            <tr><td>OpenVLA</td><td>✅ MIT</td><td>✅</td><td>✅ OXE</td><td>✅ MIT</td></tr>
+            <tr><td><strong>A1</strong></td><td>✅（有）</td><td>⚠️（无 Release）</td><td>⚠️（脚本承诺）</td><td>❌（未声明）</td></tr>
+            <tr><td>RDT-1B</td><td>✅</td><td>✅</td><td>⚠️ 部分</td><td>✅ MIT</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>对"Fully Transparent"的理解</h3>
+      <div class="callout success">
+        <div class="callout-head">✅ A1 的透明度确实高于多数竞争者</div>
+        <p>论文把 §、数据来源、超参数、消融设置都公开得很详细；code repo 文档质量较好；使用的均为可公开数据（自采数据也说明了来源平台）。但"Fully Transparent"目前更准确的描述是"意图和文档层面的透明度高，实际制品层面尚未完全兑现"。</p>
+      </div>
+    </section>
+
+    <!-- ============ Molmo VLM Backbone ============ -->
+    <section class="card" id="molmo">
+      <h2>Molmo <span class="tag">VLM Backbone</span></h2>
+      <p class="full-name">Molmo · A1 使用的视觉语言模型骨干（来自 Allen AI）</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Molmo 是 Allen Institute for AI (Ai2) 于 2024 年发布的开源多模态大模型，基于 CLIP 视觉编码器 + Qwen2-7B 语言模型。A1 选择 Molmo 的原因是它在视觉-语义理解和"可供性先验（affordance priors）"上有较强表现，且完全开源。</p>
+      </div>
+
+      <h3><span class="num">1</span>结构</h3>
+      <ul>
+        <li><strong>视觉编码器</strong>：CLIP / SigLIP（多视图支持）</li>
+        <li><strong>语言骨干</strong>：Qwen2-7B（28 层 Transformer），总推理 GFLOPs = 11,074（序列长 352）</li>
+        <li><strong>CLIP</strong> 占 2,013 GFLOPs，每个 LLM 层占 323.6 GFLOPs</li>
+      </ul>
+
+      <h3><span class="num">2</span>为什么选 Molmo（而非 PaliGemma/LLaVA 等）</h3>
+      <p>论文说 Molmo"从大规模多模态预训练中学到了强视觉语义理解以及隐式可供性先验（implicit affordance priors）"。这意味着 Molmo 的 token 表示天然包含"哪里可以抓握"、"物体的功能部件"等对操作有用的空间语义——无需额外的 affordance 标注。</p>
+
+      <h3><span class="num">3</span>训练时的处理</h3>
+      <p>A1 训练时<strong>冻结 ViT backbone</strong>（CLIP 部分），只训练 VLM（Qwen2-7B 部分）和 action head。VLM 使用学习率 5×10⁻⁵，action head 用更高的 5×10⁻⁴，前 1000 步仅训练 VLM 骨干冻结状态下做 warm-up。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>Molmo 像一个已经看过大量"人类如何使用各种物品"视频的助手——他知道"杯子的把手是用来抓的"、"抽屉是从正面拉的"。A1 在此基础上再教他"当你看到这个场景、听到这个指令时，你的手应该做什么动作"。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表（7）</div>
+    <ul>
+      <li><a href="#vla">VLA — Vision-Language-Action</a></li>
+      <li><a href="#truncated-vla">Truncated VLA Architecture</a></li>
+      <li><a href="#early-exit">Early Exit — 动态退出</a></li>
+      <li><a href="#iltfm">ILTFM — 层间截断 FM</a></li>
+      <li><a href="#flow-matching">Flow Matching — 流匹配</a></li>
+      <li><a href="#action-head">Action Head — 动作解码头</a></li>
+      <li><a href="#open-source-stack">Open-Source Transparency Stack</a></li>
+      <li><a href="#molmo">Molmo — VLM Backbone</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · A1 (arXiv:2604.05672) · SYSU/MBZUAI · 配套笔记 · 8 概念
+</footer>
+
+</body>
+</html>

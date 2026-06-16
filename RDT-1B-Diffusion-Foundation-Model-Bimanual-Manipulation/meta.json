@@ -1,0 +1,49 @@
+{
+  "title": "RDT-1B: a Diffusion Foundation Model for Bimanual Manipulation",
+  "title_cn": "RDT-1B：双臂操作扩散基础模型",
+  "field": "vla",
+  "venue": "ICLR 2025",
+  "date": "2025",
+  "one_liner": "用扩散 Transformer + 物理可解释统一动作空间，在 1M+ 多机器人数据上预训练出最大扩散型双臂操作 VLA（1.2B），实现零样本/少样本泛化到未见物体、场景和技能。",
+  "framework": "idea-first",
+  "idea": "双臂操作的多模态动作分布问题用扩散模型解决，数据稀缺问题用「物理可解释统一动作空间 + 跨机器人预训练」解决——把 46 个数据集共 1M+ 单臂轨迹的物理先验迁移给双臂，数据量扩大三个量级。",
+  "logic_chain": [
+    "双臂操作的动作空间多峰，均值回归产生不可行动作 → 用扩散模型建模完整分布",
+    "双臂数据 < 10K 轨迹，远不够训练基础模型 → 迁移多机器人预训练数据",
+    "异构机器人动作直接拼接导致负迁移 → 设计按物理含义对齐的 128 维统一动作空间",
+    "机器人物理量非线性/高频/数值不稳定，原始 DiT 不适用 → QKNorm + MLP Decoder + 交替条件注入",
+    "1.2B 参数扩散 Transformer 预训 + 6K+ 双臂微调 → 零样本/1-5shot 泛化"
+  ],
+  "method_skeleton": [
+    "扩散 Transformer (DiT) 骨干，加 QKNorm/RMSNorm/MLP Decoder/交替条件注入三项改进",
+    "物理可解释统一动作空间（128维，按物理量对齐，保持物理单位，不做归一化）",
+    "多机器人预训练（46数据集/1M轨迹/21TB）+ 自采双臂微调（300+任务/6K+轨迹）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "高度相关 — 统一动作空间和跨机器人预训练范式对人形/移动操作 VLA 有直接参考价值；1-shot 学新技能的结果对实际部署重要",
+    "track_B_legged": "不相关 — 专注操作，不涉及 locomotion 或足式控制"
+  },
+  "validation": "7 个真机双臂任务全面超越 ACT/OpenVLA/Octo，整体提升 56%；预训练带来 +33.4% 绝对提升；1-shot Fold Shorts 达 68%，5-shot Handover 达 40%（baselines 均为 0%）",
+  "core_points": [
+    "双臂操作双重挑战：多模态动作分布 + 数据稀缺（< 10K 轨迹）",
+    "扩散 Transformer 建模连续多峰分布，避免均值回归的不可行动作",
+    "DiT 三项关键修改：QKNorm+RMSNorm（训练稳定）、MLP Decoder（非线性建模）、ACI（文本跟随）",
+    "128 维物理可解释统一动作空间：按物理含义对齐异构机器人，保持物理单位，不归一化",
+    "预训练数据 46 个数据集 / 1M+ 轨迹 / 21TB，迄今最大扩散型机器人预训练集",
+    "自采 6K+ 双臂微调数据：300+ 任务、100+ 物体、15+ 场景",
+    "DPM-Solver++ 将推理从 100 步加速到 5 步，实现 6 Hz 实时控制（RTX 4090）",
+    "消融证实：扩散建模/大规模/预训练三者缺一不可；scratch 训练未见物体成功率为 0%"
+  ],
+  "effects": [
+    "整体超越 ACT/OpenVLA/Octo 共 56% 成功率提升（7 任务平均）",
+    "预训练带来 +33.4% 绝对提升（68.2% vs 34.8%）",
+    "1-shot Fold Shorts：RDT 68% vs 所有 baselines 0%",
+    "5-shot Handover：RDT 40% vs 所有 baselines 0%",
+    "推理速度：5 步去噪 / 6 Hz chunk / 381 Hz 动作频率（板载 RTX 4090）"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "代码+权重+微调数据全开源, MIT(rdt-1b/rdt-170m)",
+  "open_source_checked": "2026-06-02"
+}

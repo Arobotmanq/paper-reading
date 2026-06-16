@@ -1,0 +1,46 @@
+{
+  "title": "A Pragmatic VLA Foundation Model",
+  "title_cn": "LingBot-VLA：实用型 VLA 基础模型",
+  "field": "vla",
+  "venue": "arXiv preprint",
+  "date": "2026",
+  "one_liner": "用 20,000 小时真实双臂操作数据 + FSDP2 高效训练框架，首次系统实证 VLA scaling law（数据量越大成功率持续上升），并在 GM-100 基准超越 π0.5/GR00T N1.6，全开源（代码/权重/数据）。",
+  "framework": "idea-first",
+  "idea": "VLA 领域缺乏对「真实数据规模→性能」关系的系统实证，且现有训练框架效率不足。LingBot-VLA 同时解决两个问题：采集 20k 小时 9 本体双臂数据 + 搭建 FSDP2+FlexAttention+torch.compile 高吞吐 codebase，再用 GM-100 大规模真机基准验证 scaling 结论并开源所有资产。",
+  "logic_chain": [
+    "VLA 社区没有「真实数据规模如何影响真实机器人成功率」的系统实证，这是一个空白。",
+    "填补该空白需要大规模数据采集 + 高效训练基础设施——两者缺一不可。",
+    "解法：采集 20,000 小时 9 种双臂本体遥操数据，同时用 FSDP2/FlexAttention/torch.compile 打造高吞吐训练 codebase。",
+    "MoT 架构（Qwen2.5-VL + action expert，共享 self-attention）+ Flow Matching 动作生成 + 可选深度蒸馏，在 GM-100 上以 22,500 trials 验证。",
+    "实证结论：3k→20k 小时 SR 单调上升且未饱和，VLA 确实 scalable；同时全开源复现路径。"
+  ],
+  "method_skeleton": [
+    "MoT 架构：Qwen2.5-VL（understanding expert）+ action expert，共享 self-attention 逐层耦合，独立 FFN 避免跨模态干扰",
+    "Flow Matching 连续动作生成：线性概率路径，训练预测速度场，推理 10 步 ODE 积分生成 50 步双臂动作 chunk",
+    "FSDP2+FlexAttention+torch.compile 训练效率三件套：action expert 独立 shard group 减通信，稀疏注意力优化，算子融合，8 GPU 261 samp/s"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "中等相关——MoT 架构和 scaling 实证直接可借鉴；但仅覆盖固定底盘双臂，无移动操作数据，泛化结论需谨慎",
+    "track_B_legged": "不相关——本文不涉及足式控制、locomotion 任何内容"
+  },
+  "validation": "GM-100 真机评测（3 平台 × 100 任务 × 22,500 trials）：LingBot w/depth 平均 SR 17.30% vs π0.5 13.02%（+4.28%）；RoboTwin 2.0 随机化场景 86.68% vs 76.76%（+9.92%）；仅 80 条 post-training demos 超过 π0.5 的 130 条",
+  "core_points": [
+    "首个系统性 VLA scaling 实证：3k→20k 小时 SR 持续上升，未见饱和，说明双臂操作 VLA 是 data-scalable 的",
+    "MoT 架构（Qwen2.5-VL + action expert 共享 self-attention）让高层语义在每一 transformer 层都能指导动作生成",
+    "FSDP2 为 action expert 建独立 shard group，配合 FlexAttention 稀疏注意力，8 GPU 吞吐 261 samp/s，256 GPU 近线性扩展",
+    "深度蒸馏：用 LingBot-Depth 的深度 token 对齐 VLM 可学习 query，注入空间几何先验，w/depth 版本持续优于 w/o depth",
+    "GM-100 大规模基准：100 任务 × 3 平台 × 22,500 trials，同一硬件单元顺序评测所有模型消除硬件差异",
+    "全开源（Apache-2.0）：代码/权重（HuggingFace+ModelScope）/GM-100 基准数据同步发布，1.4k GitHub stars"
+  ],
+  "effects": [
+    "GM-100 平均 SR：LingBot w/depth 17.30% vs π0.5 13.02%，+4.28%（3 平台均值）",
+    "RoboTwin 2.0 随机化场景：88.56% vs 76.76%（w/depth vs π0.5），+9.92%",
+    "数据效率：仅 80 条 post-training demos 超过 π0.5 的 130 条演示",
+    "训练吞吐：8 GPU 261 samp/s，256 GPU 7,356 samp/s（接近线性扩展），比 OpenPI 快 1.5–2.8×",
+    "Scaling law：预训练数据从 3k→20k 小时，平均 SR 约从 18% 升至 39%，PR 从约 30% 升至 59%"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html",
+  "open_source_detail": "LingBot-VLA: 代码 Apache-2.0(Robbyant/lingbot-vla)+权重(HF lingbot-vla-4b)+GM-100基准开放; 20000h预训练数据未公开"
+}

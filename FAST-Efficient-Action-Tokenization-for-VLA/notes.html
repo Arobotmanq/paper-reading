@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAST 配套笔记 · 核心概念详解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.analogy {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.07), rgba(14, 165, 233, 0.02));
+    border-color: var(--info);
+  }
+  .callout.analogy .callout-head { color: var(--info); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>FAST 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      FAST 论文里反复出现的关键技术术语。每个概念给出定义、原理、在本文中的具体用法，以及彼此的关系与对比。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 FAST 综述</a>
+      <span class="pill">📚 当前 8 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2501.09747" style="color: #93c5fd; text-decoration: none;">arXiv:2501.09747</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ Action Tokenization ============ -->
+    <section class="card" id="action-tokenization">
+      <h2>Action Tokenization <span class="tag">Core Problem</span></h2>
+      <p class="full-name">动作 Tokenization · 把连续机器人动作映射为离散 token 序列的过程</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>自回归 Transformer 只能预测离散 token，但机器人动作是连续的关节角、末端速度等。Action tokenization 是这两者之间的桥梁——它的质量直接决定了 VLA 能不能学会高频灵巧任务。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>给定一段 action chunk（H 步连续动作，每步 D 维），tokenization 的目标是定义一个映射：</p>
+      <div class="math-display">
+        \[ T_a: a_{1:H} \to [T_1, T_2, \ldots, T_n], \quad T_i \in \mathcal{V} \]
+      </div>
+      <p>其中 \(|\mathcal{V}|\) 是词表大小（常用 256 或 1024），\(n\) 是 token 数量（可变长，类似文本 tokenization）。</p>
+
+      <h3><span class="num">2</span>为什么 tokenization 是关键瓶颈</h3>
+      <p>自回归 VLA 的训练目标是最大化 next-token prediction 的对数似然。<strong>学习信号正比于每个 token 相对于前序 token 的边际信息量</strong>。如果相邻 token 几乎一样（高频平滑动作），边际信息趋近于零 → 模型陷入"复制上一个 token"的局部最优。</p>
+
+      <h3><span class="num">3</span>Naive Binning（先前主流做法）</h3>
+      <p>对每个 action 维度独立分桶（通常 256 个 bin），逐时间步 tokenize：</p>
+      <div class="math-display">
+        \[ T_{a_{1:H}} = [T_{1,1}, \ldots, T_{1,D}, \ldots, T_{H,1}, \ldots, T_{H,D}] \]
+      </div>
+      <ul>
+        <li>50Hz、14 维动作 → 700 tokens/秒，且相邻 token 几乎完全相同</li>
+        <li>RT-2、OpenVLA 均用此方案，在低频任务（BridgeV2 5Hz）还能用，高频任务（DROID 15Hz、T-shirt 50Hz）完全失效</li>
+      </ul>
+
+      <h3><span class="num">4</span>FAST 的改进</h3>
+      <p>先用 <a href="#dct">DCT</a> 把时间相关性转化为频域稀疏性，再用 <a href="#bpe">BPE</a> 去除冗余，使每个 token 都携带真正新颖的信息。见 <a href="#fast-tokenizer">FAST Tokenizer</a> 词条。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>Naive binning 最早用于 RT-1（2022）、RT-2（2023），被 OpenVLA（2024）继承。FAST 是 2025 年 1 月提出的改进方案，已成为 π0.5/openpi 生态的默认选择。</p>
+      </div>
+    </section>
+
+    <!-- ============ DCT ============ -->
+    <section class="card" id="dct">
+      <h2>DCT <span class="tag">Discrete Cosine Transform</span></h2>
+      <p class="full-name">离散余弦变换 · FAST 的核心压缩算法</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>DCT 是 JPEG 图像压缩的底层算法——把空间像素转成频率系数，平滑区域只需几个低频系数就能表示。FAST 把相同思路用于时间序列：<strong>把高度相关的连续动作时序转换为稀疏的频率系数</strong>，让多余的高频零系数可以被直接丢掉。</p>
+      </div>
+
+      <h3><span class="num">1</span>数学定义</h3>
+      <p>对长度 H 的一维信号 \(x = [x_0, x_1, \ldots, x_{H-1}]\)，Type-II DCT 定义为：</p>
+      <div class="math-display">
+        \[ C_k = \sum_{n=0}^{H-1} x_n \cos\!\left[\frac{\pi}{H}\left(n + \frac{1}{2}\right)k\right], \quad k = 0, 1, \ldots, H-1 \]
+      </div>
+      <ul>
+        <li>\(C_0\)：直流分量（均值）</li>
+        <li>\(C_1, C_2, \ldots\)：越来越高频的振荡分量</li>
+        <li>平滑信号（如机器人关节角轨迹）：能量集中在低频，\(C_k \approx 0\) for large \(k\)</li>
+      </ul>
+
+      <div class="callout analogy">
+        <div class="callout-head">🎵 类比：音乐的频谱</div>
+        <p>就像音乐可以用 wav（时域）或 mp3（频域）存储，平滑的钢琴曲 mp3 极小但 wav 极大。机器人抓取动作就是"钢琴曲"——用频域表示，几个系数就够了。</p>
+      </div>
+
+      <h3><span class="num">2</span>在 FAST 中的用法</h3>
+      <p>对 D 维 action chunk，每个维度 \(i\) 独立做 DCT：</p>
+      <div class="pre-label"><span>FAST DCT Step</span><span>伪代码</span></div>
+<pre><code>for i in range(D):          # 每个 action 维度独立处理
+    C[i] = DCT(a[i, 1:H])  # 得到 H 个频率系数
+    C_q[i] = round(γ · C[i])  # 量化，γ=10；大部分高频为 0</code></pre>
+
+      <ul>
+        <li>结果：D×H 稀疏矩阵，多数元素为 0，少数低频系数非零</li>
+        <li>量化尺度 γ=10 是全局超参，不需要数据集特定调优</li>
+        <li>逆变换 IDCT 用于解码 → 重建连续动作</li>
+      </ul>
+
+      <h3><span class="num">3</span>为什么选 DCT 而不是 FFT 或学习压缩</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方法</th><th>优点</th><th>缺点</th></tr></thead>
+          <tbody>
+            <tr><td><strong>DCT（FAST 选择）</strong></td><td>纯分析方法，无需训练；超参少且不敏感；可逆；实现极简</td><td>非自适应（但实验显示够用）</td></tr>
+            <tr><td>FFT（复数变换）</td><td>标准信号处理</td><td>输出复数，tokenization 不方便</td></tr>
+            <tr><td>VQ-VAE / FSQ（学习压缩）</td><td>自适应，可能更优</td><td>需要单独训练；超参敏感；实验显示 FAST 性能更好</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>DCT 由 Ahmed, Natarajan, Rao 1974 年提出，后被 JPEG（1992）采用为图像压缩标准。FAST 是第一个将 DCT 用于机器人 action tokenization 的工作。</p>
+      </div>
+    </section>
+
+    <!-- ============ BPE ============ -->
+    <section class="card" id="bpe">
+      <h2>BPE <span class="tag">Byte Pair Encoding</span></h2>
+      <p class="full-name">字节对编码 · FAST 的无损压缩组件</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>BPE 是 GPT、LLaMA 等 LLM 的文本 tokenizer 核心算法：<strong>把频繁出现的符号对合并成一个新符号</strong>，反复迭代直到达到目标词表大小。FAST 用 BPE 来"消化"DCT 后的稀疏整数序列，把大量 0 和常见系数组合合并，实现无损压缩。</p>
+      </div>
+
+      <h3><span class="num">1</span>BPE 训练过程</h3>
+      <div class="pre-label"><span>BPE 训练算法</span><span>伪代码</span></div>
+<pre><code>初始词表 = {所有出现的整数值}
+训练数据 = DCT 量化后的所有序列（展平为 1D 整数序列）
+
+while len(词表) &lt; 目标大小:
+    找到相邻符号对 (a, b) 出现频率最高者
+    将 (a, b) 合并为新符号 c，更新词表和训练数据
+
+输出：BPE 词表 Φ（合并规则字典）</code></pre>
+
+      <h3><span class="num">2</span>在 FAST 中的具体作用</h3>
+      <p>DCT 量化后的序列大量包含：</p>
+      <ul>
+        <li><strong>大量 0</strong>：高频系数量化后归零 → BPE 把连续的 "0, 0, 0, ..." 合并成一个 token</li>
+        <li><strong>常见低频系数组合</strong>：不同维度的低频系数经常以相似的模式出现 → BPE 把高频组合直接映射为单个 token</li>
+      </ul>
+      <p>最终效果：50Hz 双臂 T-shirt folding 从 700 个 naive tokens → 53 个 FAST tokens（<strong>13.2× 压缩</strong>）。</p>
+
+      <h3><span class="num">3</span>与语言模型 BPE 的异同</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>语言 BPE（GPT 等）</th><th>FAST 中的 BPE</th></tr></thead>
+          <tbody>
+            <tr><td>输入序列</td><td>字符/字节序列</td><td>DCT 量化后的整数序列</td></tr>
+            <tr><td>训练数据</td><td>大规模文本语料</td><td>机器人 action 轨迹（FAST+：1M 轨迹）</td></tr>
+            <tr><td>词表大小</td><td>~50k（GPT-2）~128k（GPT-4）</td><td>1024（可接入 VLM 原有词表）</td></tr>
+            <tr><td>目的</td><td>减少序列长度、表示罕见词</td><td>消除零值、合并常见系数组合</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>为什么 BPE 不可缺</h3>
+      <p>FAST 消融实验（§VI-D）显示：去掉 BPE、只保留 DCT，策略性能明显下降——不仅因为大量 0-token 稀释学习信号，还因为序列变长（数百个 token）导致自回归推理极慢。BPE 是 FAST 的效率保障。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>BPE 最初是数据压缩算法（Philip Gage, 1994）。Sennrich et al. 2016 将其引入 NLP 文本 tokenization，后被 OpenAI GPT 系列广泛采用（tiktoken）。FAST 是将 BPE 用于机器人 action 序列压缩的首次尝试。</p>
+      </div>
+    </section>
+
+    <!-- ============ FAST Tokenizer ============ -->
+    <section class="card" id="fast-tokenizer">
+      <h2>FAST / FAST+ <span class="tag">The Tokenizer</span></h2>
+      <p class="full-name">Frequency-space Action Sequence Tokenization · 频域动作序列 Tokenization</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p><strong>FAST</strong> = DCT + BPE 的完整 action tokenization 算法（针对单个数据集训练 BPE 词表）。<strong>FAST+</strong> = 在 100 万条真实机器人轨迹上预训练的通用版，可黑盒插用于任意新 robot/任务，三行 HuggingFace 代码调用。</p>
+      </div>
+
+      <h3><span class="num">1</span>完整算法流程</h3>
+      <div class="pre-label"><span>FAST Tokenizer（Algorithm 1）</span><span>伪代码</span></div>
+<pre><code>输入: action chunk a[1:H]（H步，D维），超参 γ=10
+
+1. 归一化: 将每个维度映射到 [-1, 1]（用 1st/99th 分位数）
+2. DCT: 对每个维度 i 独立计算 DCT 系数 C[i] = DCT(a[i, 1:H])
+3. 量化: C_q[i][j] = round(γ · C[i][j])   # 大部分高频系数变 0
+4. 列优先展平: [C_q[1][1], C_q[2][1], ..., C_q[D][1],   # 所有维度最低频
+                C_q[1][2], C_q[2][2], ..., C_q[D][2],   # 所有维度次低频
+                ...]
+5. BPE 压缩: tokens = BPE(展平序列, 词表 Φ)
+返回: token 序列 tokens（约 30 个/臂，与频率无关）
+
+解码(反向): tokens → BPE解码 → 整形为矩阵 → IDCT → 连续动作</code></pre>
+
+      <h3><span class="num">2</span>关键设计决策：列优先展平</h3>
+      <p>展平方式有两种选择：</p>
+      <ul>
+        <li><strong>列优先（FAST 选择）</strong>：低频分量优先——先预测所有维度的低频（整体运动方向），再预测高频（细节调整）</li>
+        <li><strong>行优先</strong>：完整预测第一个维度的所有频率，再预测第二个维度</li>
+      </ul>
+      <p>实验表明列优先更稳定——类比语言模型先确定句子主题再填细节的认知顺序。</p>
+
+      <h3><span class="num">3</span>FAST vs FAST+</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>FAST</th><th>FAST+</th></tr></thead>
+          <tbody>
+            <tr><td>BPE 词表训练数据</td><td>目标数据集（需要几分钟重新训练）</td><td>1M 跨 embodiment 轨迹（预训练好）</td></tr>
+            <tr><td>使用门槛</td><td>需要访问目标数据集</td><td>三行代码，开箱即用</td></tr>
+            <tr><td>性能</td><td>数据集专属最优</td><td>与 FAST 持平（实验验证）</td></tr>
+            <tr><td>发布形式</td><td>openpi 中的训练代码</td><td>HuggingFace: physical-intelligence/fast</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>与 VLM 词表的集成</h3>
+      <p>FAST token 被<strong>直接插入 VLM 原有词表</strong>——用最少使用的 token slot 替换为 action token（与 OpenVLA 相同策略）。这意味着不需要修改 Transformer 架构，任何自回归 VLM 都可以直接使用 FAST。</p>
+    </section>
+
+    <!-- ============ Action Chunking ============ -->
+    <section class="card" id="action-chunking">
+      <h2>Action Chunking <span class="tag">Temporal Abstraction</span></h2>
+      <p class="full-name">动作块预测 · 一次预测多步连续动作而非单步</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>策略不预测单个时间步的动作，而是一次预测未来 H 步（1 秒）的完整动作序列。这减少了复合误差、提高了时间一致性，但也让 tokenization 更具挑战性——一个 chunk 里相邻动作高度相关。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么用 Action Chunking</h3>
+      <ul>
+        <li><strong>减少复合误差</strong>：单步预测的误差会在执行时累积；chunk 预测提前规划整段动作，误差不传播。</li>
+        <li><strong>时间一致性</strong>：一次输出连贯的动作序列，避免帧间抖动。</li>
+        <li><strong>支持高频控制</strong>：模型以较低频率（如 1Hz）预测 chunk，实际以高频率（50Hz）执行，解耦推理频率与控制频率。</li>
+      </ul>
+
+      <h3><span class="num">2</span>在 FAST 中的关系</h3>
+      <p>FAST 的输入就是 1 秒的 action chunk。Action chunking 带来的时间相关性（相邻步动作几乎相同）<strong>正是 naive tokenization 失败的根本原因</strong>，也是 DCT 压缩能大幅减少 token 数的根本原因——平滑的 chunk 在频域只需少数低频系数。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>ACT（Chi et al. 2023, Diffusion Policy）将 action chunking 推广到机器人学习。FAST 论文中 H（chunk 长度）取 1 秒，即在各数据集控制频率下的对应步数（15-50 步）。</p>
+      </div>
+    </section>
+
+    <!-- ============ Autoregressive vs Flow-Matching ============ -->
+    <section class="card" id="ar-vs-flow">
+      <h2>自回归 vs Flow Matching <span class="tag">VLA Decoding</span></h2>
+      <p class="full-name">两大 VLA action 解码范式的权衡对比</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>自回归（AR）VLA 把 action 当作离散 token 顺序生成，像写文字一样；Flow matching（扩散）VLA 把 action 当作从噪声去噪的连续向量。两者性能相近，AR 训练快 5× 但推理慢 7.5×，语言跟随更好；扩散推理快但训练慢、语言跟随略差。</p>
+      </div>
+
+      <h3><span class="num">1</span>详细对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>维度</th><th>自回归（AR）+ FAST</th><th>Flow Matching（扩散）</th></tr></thead>
+          <tbody>
+            <tr><td>训练范式</td><td>Next-token prediction（离散 CE loss）</td><td>Flow matching / diffusion（MSE loss on noise）</td></tr>
+            <tr><td>Action 表示</td><td>离散 token 序列（~30-60 个）</td><td>连续向量（经 300M action expert 预测）</td></tr>
+            <tr><td>推理时间</td><td>~750ms/chunk（4090 GPU）</td><td>~100ms/chunk（10 步去噪）</td></tr>
+            <tr><td>训练速度</td><td><strong>5× 更快</strong></td><td>基准（需要更多 GPU hours）</td></tr>
+            <tr><td>语言跟随</td><td>更好（DROID 实验证明）</td><td>略差（扩散模型有时忽略语言指令）</td></tr>
+            <tr><td>大数据收敛</td><td>更快（Table Bussing 3× fewer steps）</td><td>需要更多步骤</td></tr>
+            <tr><td>适合场景</td><td>训练成本敏感 / 语言跟随要求高 / 静态操作</td><td>推理实时性要求高 / 动态任务</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>π0 的混合策略（π0.5 预训练）</h3>
+      <p>π0.5 预训练阶段用 FAST 离散 token（充分利用 VLM 预训练语言能力），后训练阶段加入 flow matching action expert（提高推理速度和连续精度）——兼取两者之长。这也解释了为什么 FAST 是 π0.5 的重要基础。</p>
+
+      <div class="callout note">
+        <div class="callout-head">💡 对你项目的启示</div>
+        <p>如果训练 VLA 的 GPU 时间是主要约束 → 选 AR + FAST。如果推理实时性（50Hz 闭环）是硬约束 → 选 flow matching，或等 FAST 的推理加速工作。π0.5 的混合方案可能是未来的最佳实践。</p>
+      </div>
+    </section>
+
+    <!-- ============ VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">Vision-Language-Action</span></h2>
+      <p class="full-name">视觉-语言-动作模型 · FAST 的应用目标</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA = 在 VLM（视觉-语言预训练模型）上追加机器人动作预测能力的端到端策略模型。给一张图片 + 一条语言指令 → 直接输出机器人要执行的动作序列。FAST 解决的是"动作如何表示为 VLM 能处理的 token"这个核心问题。</p>
+      </div>
+
+      <h3><span class="num">1</span>架构结构</h3>
+      <pre><code>[图像帧] → 视觉编码器（如 SigLIP）→ 视觉 token
+[语言指令] → 语言 token
+[历史动作/状态] → 动作/状态 token
+
+全部拼接 → Transformer（如 PaliGemma、Gemma）→ 预测下一个 token
+
+如果是 AR VLA：输出 action token 序列 → FAST 解码 → 连续动作
+如果是 diffusion VLA：输出触发 action expert → 扩散去噪 → 连续动作</code></pre>
+
+      <h3><span class="num">2</span>FAST 在 VLA 中的位置</h3>
+      <p>FAST 处于 VLA 的"输入/输出接口"位置：训练时把连续 action chunk 编码为 token 加入训练序列；推理时把模型输出的 token 解码回连续动作。它对 Transformer 架构本身<strong>无任何修改要求</strong>，可即插即用于任何自回归 VLM。</p>
+
+      <h3><span class="num">3</span>主要 VLA 家族（截至 2025-01）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>模型</th><th>机构</th><th>Action 表示</th><th>特点</th></tr></thead>
+          <tbody>
+            <tr><td>RT-2 / OpenVLA</td><td>Google / UC Berkeley</td><td>Naive binning token</td><td>低频任务 OK，高频失效</td></tr>
+            <tr><td>π0</td><td>Physical Intelligence</td><td>Flow matching action expert</td><td>高频灵巧任务 SOTA，推理快</td></tr>
+            <tr><td><strong>π0-FAST</strong></td><td>Physical Intelligence</td><td><strong>FAST token（本文）</strong></td><td>训练 5× 快，性能持平 π0</td></tr>
+            <tr><td>GR00T N1</td><td>NVIDIA</td><td>Flow matching</td><td>人形机器人通用策略</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ Universal Tokenizer ============ -->
+    <section class="card" id="universal-tokenizer">
+      <h2>Universal Tokenizer <span class="tag">Cross-Embodiment</span></h2>
+      <p class="full-name">通用 Tokenizer · 跨 embodiment / 数据集的预训练 tokenizer</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>FAST 的 BPE 词表理论上需要对每个新数据集重新训练（几分钟，但有额外摩擦）。FAST+ 通过在大规模跨 embodiment 数据集上预训练一次 BPE 词表，使其可以直接用于任意新机器人/任务——就像 LLM 的 tokenizer 无需对新文档重新训练一样。</p>
+      </div>
+
+      <h3><span class="num">1</span>FAST+ 训练数据</h3>
+      <p>约 100 万条 1 秒 action chunks，覆盖：</p>
+      <ul>
+        <li>单臂（UR5 等）、双臂（ARX、Trossen）、移动操作机器人</li>
+        <li>关节控制（joint）和末端执行器控制（end-effector）两种 action space</li>
+        <li>5Hz（BridgeV2）到 50Hz（T-shirt folding）多种控制频率</li>
+        <li>包含 BRIDGE v2、DROID、OXE 等公开数据集 + Physical Intelligence 自采数据</li>
+      </ul>
+
+      <h3><span class="num">2</span>泛化性能</h3>
+      <p>在 <strong>完全未出现在 tokenizer 训练集</strong>的新数据集上（包括 NYU 灵巧手、UMI、人形机器人 HumanoidPlus、甚至 Waymo 导航数据），FAST+ 相比 naive tokenization 仍有 2× 以上压缩率，且策略训练性能与数据集专属 FAST 持平（Figure 6, 8）。</p>
+
+      <h3><span class="num">3</span>使用方法（三行代码）</h3>
+      <div class="pre-label"><span>HuggingFace AutoProcessor</span><span>Python</span></div>
+<pre><code>from transformers import AutoProcessor
+
+tokenizer = AutoProcessor.from_pretrained(
+    "physical-intelligence/fast",
+    trust_remote_code=True
+)
+
+# 编码（推荐先归一化到 [-1, 1]）
+tokens = tokenizer(action_chunk)  # action_chunk: np.ndarray [H, D]
+
+# 也可在自己的数据集上快速训练新词表：
+new_tokenizer = tokenizer.fit(action_dataset)</code></pre>
+
+      <div class="callout note">
+        <div class="callout-head">💡 实践建议</div>
+        <p>直接使用 <code>physical-intelligence/fast</code> 作为默认 tokenizer；只有当你的 action space 极其特殊（如高频 >50Hz 全身人形控制）且有大量数据时，才值得 <code>tokenizer.fit()</code> 训练数据集专属版本。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#action-tokenization">Action Tokenization — 核心问题</a></li>
+      <li><a href="#dct">DCT — 离散余弦变换</a></li>
+      <li><a href="#bpe">BPE — 字节对编码</a></li>
+      <li><a href="#fast-tokenizer">FAST / FAST+ — tokenizer 本体</a></li>
+      <li><a href="#action-chunking">Action Chunking — 动作块预测</a></li>
+      <li><a href="#ar-vs-flow">自回归 vs Flow Matching</a></li>
+      <li><a href="#vla">VLA — 视觉-语言-动作模型</a></li>
+      <li><a href="#universal-tokenizer">Universal Tokenizer — 跨 embodiment</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · FAST (arXiv:2501.09747) · 配套笔记
+</footer>
+
+</body>
+</html>

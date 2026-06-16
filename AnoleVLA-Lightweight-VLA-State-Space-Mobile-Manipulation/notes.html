@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AnoleVLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .back-link a { color: var(--nv-green-dark); font-weight: 600; }
+  .toc .back-link a:hover { border-left-color: var(--nv-green-dark); }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>AnoleVLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要背景知识才好理解的关键概念。每个概念给出定义、原理、在 AnoleVLA 中的具体用法，以及与相关概念的对比。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 AnoleVLA 综述</a>
+      <span class="pill">📚 当前 8 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2603.15046" style="color: #93c5fd; text-decoration: none;">arXiv:2603.15046</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ SSM ============ -->
+    <section class="card" id="ssm">
+      <h2>SSM <span class="tag">State Space Model</span></h2>
+      <p class="full-name">State Space Model · 状态空间模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>SSM 是一类用<strong>隐状态递推</strong>来建模序列的框架：每一步只更新一个固定维度的状态向量，时间复杂度 O(L)，与 Transformer O(L²) 自注意力形成鲜明对比。Deep SSM 是把多层 SSM block 堆叠成神经网络的做法。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念与定义</h3>
+      <p>连续时间的经典状态空间方程：</p>
+      <div class="math-display">
+        \[
+          h'(t) = A\,h(t) + B\,x(t), \quad y(t) = C\,h(t) + D\,x(t)
+        \]
+      </div>
+      <p>其中 \(h(t)\) 是隐状态，\(x(t)\) 是输入，\(y(t)\) 是输出，矩阵 A/B/C/D 是参数。离散化后可以写成递推形式，适合在序列上做神经网络训练。</p>
+
+      <h3><span class="num">2</span>S4 → Mamba 的演化</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>版本</th><th>关键创新</th><th>复杂度</th></tr></thead>
+          <tbody>
+            <tr><td><strong>S4</strong> (Gu et al. 2022)</td><td>结构化参数化（对角 + 低秩）处理长程依赖；支持并行卷积训练</td><td>O(L log L) 训练 / O(L) 推理</td></tr>
+            <tr><td><strong>Mamba</strong> (Gu &amp; Dao 2024)</td><td><strong>输入依赖选择机制</strong>：A/B/C 矩阵从输入动态生成，可选择性传播或遗忘</td><td>O(L) 训练（硬件感知）+ O(L) 推理</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>在 AnoleVLA 里干什么</h3>
+      <p>AnoleVLA 用 Mamba-370M 作为 VLA 的 backbone，替代原有 Transformer LM。多模态 token 序列（本体感知 + 视觉 + 语言）以 O(L) 复杂度处理，实现推理速度 3× 加速和更低 VRAM 占用。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>S4: Gu et al., "Efficiently Modeling Long Sequences with Structured State Spaces", ICLR 2022. Mamba: Gu &amp; Dao, "Mamba: Linear-Time Sequence Modeling with Selective State Spaces", CoLM 2024.</p>
+      </div>
+    </section>
+
+    <!-- ============ Mamba ============ -->
+    <section class="card" id="mamba">
+      <h2>Mamba <span class="tag">Selective SSM</span></h2>
+      <p class="full-name">Mamba · 选择性状态空间模型 (Selective Deep SSM)</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Mamba 在 SSM 基础上引入<strong>输入依赖的选择机制</strong>：A/B/C 矩阵不再是固定参数，而是从当前 token 动态生成——模型可以"决定"保留哪些信息、遗忘哪些。这使它在语言/视觉序列上接近 Transformer 效果，同时保持线性复杂度。</p>
+      </div>
+
+      <h3><span class="num">1</span>选择机制</h3>
+      <p>AnoleVLA 中每个 Mamba block 的核心更新（论文 Eq. 3）：</p>
+      <div class="math-display">
+        \[
+          z_{n,i} = A_{n,i}\,z_{n,i-1} + B_{n,i}\,h_{n-1,i}, \quad \tilde{h}_{n,i} = C_{n,i}\,z_{n,i}
+        \]
+      </div>
+      <p>关键：\(A_{n,i}, B_{n,i}, C_{n,i}\) 是<strong>输入依赖</strong>的（每个 token 位置 i 都生成不同的矩阵），而非全局固定。这让模型可以根据当前输入动态调节信息流。</p>
+
+      <h3><span class="num">2</span>与 Transformer 的核心对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Transformer Self-Attention</th><th>Mamba Selective SSM</th></tr></thead>
+          <tbody>
+            <tr><td>复杂度</td><td>O(L²) — 每对 token 都要算注意力</td><td>O(L) — 只维护固定维度隐状态</td></tr>
+            <tr><td>上下文访问</td><td>全局（任意两点可直接关联）</td><td>因果递归（只能看历史；未来不可见）</td></tr>
+            <tr><td>推理模式</td><td>并行全序列，无增量状态</td><td>可增量推理（每步只更新隐状态）</td></tr>
+            <tr><td>token 顺序影响</td><td>位置编码补偿，顺序不影响注意力本质</td><td><strong>顺序决定信息流</strong>（因果性），需精心设计 token 排列</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>在 AnoleVLA 里的设计含义</h3>
+      <p>由于 Mamba 因果性，本体感知 token 被故意排在序列最前——确保机器人状态先被编入隐状态，之后视觉和语言信息才叠加进来。这是针对 Mamba 特性的专门设计，Transformer VLA 则无需此考虑。</p>
+
+      <h3><span class="num">4</span>已知局限（结合本文失败分析）</h3>
+      <p>位置识别错误（50% 失败来源）可能与 Mamba 缺乏全局注意力有关：Transformer 可以直接用注意力关联「指令中的物体名称」和「图像中的物体位置」，而 Mamba 只能通过因果递归间接传播这种对应关系。</p>
+    </section>
+
+    <!-- ============ VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">Vision-Language-Action</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 是把预训练视觉-语言模型 (VLM) 在机器人演示数据上微调得到的策略模型：输入图像 + 语言指令，输出机器人动作。核心优势是借用 VLM 的语义理解能力实现<strong>语言条件化操作</strong>。</p>
+      </div>
+
+      <h3><span class="num">1</span>典型架构流程</h3>
+      <div class="pre-label"><span>VLA Pipeline</span><span>伪结构</span></div>
+<pre><code>视觉编码器 (e.g. SigLIP, CLIP-ViT)
+    → 视觉 token
+语言编码器 / Tokenizer
+    → 语言 token
+本体感知状态
+    → 状态 token
+
+所有 token 拼接 → Backbone (Transformer 或 Mamba)
+    → 上下文化表征
+
+Action Head (离散 token / 连续投影 / diffusion)
+    → 动作轨迹</code></pre>
+
+      <h3><span class="num">2</span>主要流派</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方法</th><th>Backbone 规模</th><th>Action 表示</th><th>典型代表</th></tr></thead>
+          <tbody>
+            <tr><td>大规模 VLA</td><td>7B+</td><td>离散化 token / flow matching</td><td>OpenVLA (7B), π0.5 (3B), RT-2</td></tr>
+            <tr><td>轻量 VLA</td><td>&lt;1B</td><td>离散 token 或连续投影</td><td>SmolVLA (0.45B), TinyVLA (0.42B), <strong>AnoleVLA (0.47B)</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>在 AnoleVLA 里的位置</h3>
+      <p>AnoleVLA 属于轻量 VLA 流派，核心差异在于用 Mamba 替代 Transformer backbone，并直接输出连续动作（无离散化步骤）。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>RT-2 (Brohan et al. 2023) 和 OpenVLA (Kim et al. 2024) 是 VLA 的奠基性工作；π0/π0.5 (Black et al. 2025) 引入 flow matching action head。</p>
+      </div>
+    </section>
+
+    <!-- ============ Action Chunking ============ -->
+    <section class="card" id="action-head">
+      <h2>Action Head <span class="tag">Action Chunking</span></h2>
+      <p class="full-name">Action Head / Action Chunking · 动作头 / 动作分块</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Action Head 是 VLA backbone 之后把隐状态映射到机器人动作的模块。AnoleVLA 用最简单的<strong>线性投影</strong>一次性预测 H=50 步的动作序列（action chunk），无需离散化或迭代去噪。</p>
+      </div>
+
+      <h3><span class="num">1</span>三种主要 Action Head 类型</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>原理</th><th>推理开销</th><th>典型代表</th></tr></thead>
+          <tbody>
+            <tr><td><strong>离散 token</strong></td><td>动作 bin 化成词表 token，自回归解码</td><td>高（自回归步数 × 动作维度）</td><td>OpenVLA, RT-2</td></tr>
+            <tr><td><strong>Flow Matching / Diffusion</strong></td><td>迭代去噪生成连续动作</td><td>中（需 N 步去噪，如 10步）</td><td>π0, π0.5</td></tr>
+            <tr><td><strong>线性投影（AnoleVLA）</strong></td><td>末尾 token 隐状态 → 线性层 → H 步 chunk</td><td>最低（单次前向）</td><td>AnoleVLA, ACT</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>Action Chunking 的意义</h3>
+      <p>一次性预测 H 步而非逐步预测：① 降低推理频率，每 H 步才调用一次模型；② 更好地捕捉连续动作间的时序依赖（而非 Markov 单步输出）。AnoleVLA 设 H=50 步，采样率 10 Hz → 每 5 秒出一个 chunk。</p>
+
+      <h3><span class="num">3</span>在 AnoleVLA 里为什么线性头足够</h3>
+      <p>Mamba 递归隐状态本身是对全序列信息的「压缩摘要」——末尾 token 的隐状态 \(h_{K,L}\) 已经聚合了所有本体感知、视觉和语言信息。因此线性层就能直接读出动作，不需要额外复杂度。</p>
+    </section>
+
+    <!-- ============ Two-Stage Training ============ -->
+    <section class="card" id="two-stage">
+      <h2>两阶段训练 <span class="tag">Velocity + Acceleration Loss</span></h2>
+      <p class="full-name">Two-Stage Training with Acceleration Loss · 速度 + 加速度两阶段训练</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>先训练 200k 步只用速度 loss（学轨迹形状），再训练 200k 步加入加速度 loss（约束速度变化率，使轨迹平滑）。消融证明加速度阶段带来 +4.73 pts 成功率提升，在接触密集任务（开抽屉）上尤为显著。</p>
+      </div>
+
+      <h3><span class="num">1</span>数学定义</h3>
+      <p>每个动作 \(y^{(\tau)}\) 是末端执行器的位姿增量（即速度）。连续动作间的差分即加速度：\(\Delta y^{(\tau)} := y^{(\tau)} - y^{(\tau-1)}\)。</p>
+      <p><strong>第一阶段（速度 loss）：</strong></p>
+      <div class="math-display">
+        \[ \mathcal{L}_\text{vel} = \frac{1}{H} \sum_{\tau=1}^{H} \left\| y^{(\tau)} - \hat{y}^{(\tau)} \right\|_1 \]
+      </div>
+      <p><strong>第二阶段（速度 + 加速度 loss）：</strong></p>
+      <div class="math-display">
+        \[ \mathcal{L}_\text{total} = \mathcal{L}_\text{vel} + \lambda_\text{acc} \cdot \frac{1}{H-1} \sum_{\tau=2}^{H} \left\| \Delta y^{(\tau)} - \Delta \hat{y}^{(\tau)} \right\|_1 \]
+      </div>
+
+      <h3><span class="num">2</span>为什么分阶段</h3>
+      <p>直接从头加入加速度 loss 会让训练前期梯度方向混乱（模型还未学会基本速度匹配）。先稳定速度 loss 再引入加速度约束，相当于「先学走路，再学走得优雅」——是课程学习 (curriculum learning) 思想的简洁实践。</p>
+
+      <h3><span class="num">3</span>物理意义</h3>
+      <p>真实机器人的关节有加速度/力矩限制；轨迹加速度不连续会导致抖动（jerk），引起接触任务失败。加速度 loss 本质上是在训练时就引入物理约束。类比：运动控制里的 jerk 最小化轨迹规划。</p>
+    </section>
+
+    <!-- ============ Mobile Manipulation ============ -->
+    <section class="card" id="mobile-manipulation">
+      <h2>Mobile Manipulation <span class="tag">移动操作</span></h2>
+      <p class="full-name">Mobile Manipulation · 移动操作 / 移动机器人操作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Mobile manipulation = 机器人<strong>底盘移动</strong> + <strong>机械臂操作</strong>同时进行，是服务机器人的核心能力。相比固定臂（table-top），移动操作难在视角持续变化、环境动态、以及底盘-臂的协调控制。</p>
+      </div>
+
+      <h3><span class="num">1</span>与 Table-Top 操作的关键差异</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Table-Top (固定臂)</th><th>Mobile Manipulation (移动臂)</th></tr></thead>
+          <tbody>
+            <tr><td>视角</td><td>固定外部摄像头 + 固定 wrist 摄像头</td><td>随底盘/头部运动<strong>持续变化</strong></td></tr>
+            <tr><td>工作空间</td><td>有限桌面</td><td>整个家庭/建筑环境</td></tr>
+            <tr><td>自由度</td><td>6 DoF 臂</td><td>底盘 3 DoF + 臂 6 DoF + 头 2 DoF（如 HSR = 11 DoF）</td></tr>
+            <tr><td>数据难度</td><td>易收集，视角稳定</td><td>难收集，需遥操作</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>AnoleVLA 的平台</h3>
+      <p>Toyota Human Support Robot (HSR)：11 DoF，移动底座 3 DoF + 机械臂 6 DoF + 头部 2 DoF，配有头部摄像头、末端执行器摄像头和外部摄像头，自 2017 年起是 RoboCup@Home 标准平台。</p>
+
+      <h3><span class="num">3</span>为什么 π0.5 在此场景失败</h3>
+      <p>π0.5 的预训练数据主要是固定视角桌面操作，与移动操作的持续变化视角存在严重 domain gap，加上每任务仅 50 episode 难以微调 3B 模型。轻量 AnoleVLA 训练样本效率更高，在小数据集下反而胜出。</p>
+    </section>
+
+    <!-- ============ Selective Scan ============ -->
+    <section class="card" id="selective-scan">
+      <h2>Selective Scan <span class="tag">选择性扫描</span></h2>
+      <p class="full-name">Selective Scan / Hardware-Aware Algorithm · 选择性扫描 / 硬件感知算法</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Selective Scan 是 Mamba 实现 O(L) 并行训练的关键算法：在 GPU 上通过<strong>并行前缀扫描</strong>高效计算递归，同时配合 Flash Attention 风格的分块 IO 优化。没有它，Mamba 虽然理论 O(L) 但实际训练会很慢。</p>
+      </div>
+
+      <h3><span class="num">1</span>问题所在</h3>
+      <p>Mamba 的递归 \(z_i = A_i z_{i-1} + B_i x_i\) 理论上可以并行扫描，但因为 \(A_i\) 是输入依赖的（每步不同），无法像固定 A 的 SSM 那样直接做卷积加速。Mamba 论文提出了硬件感知的并行扫描：</p>
+      <ul>
+        <li><strong>分块处理</strong>：把长序列切成块，块间串行、块内并行。</li>
+        <li><strong>内存优化</strong>：用重计算 (recomputation) 代替存储中间激活，类似 Flash Attention。</li>
+      </ul>
+
+      <h3><span class="num">2</span>推理时的优势</h3>
+      <p>推理时无需并行扫描——每一步只需更新一次隐状态（真正的 O(1) per step），比 Transformer 的 KV cache 机制（O(L) per step）更省内存，对长序列实时推理尤为友好。</p>
+
+      <h3><span class="num">3</span>在 AnoleVLA 的体现</h3>
+      <p>AnoleVLA 推理速度 216 ms/chunk（10 Hz 控制），比 SmolVLA (309 ms) 和 π0.5 (578 ms) 更快，部分来源于 Mamba 更高效的推理时隐状态更新机制。</p>
+    </section>
+
+    <!-- ============ Meta-World ============ -->
+    <section class="card" id="meta-world">
+      <h2>Meta-World <span class="tag">仿真 Benchmark</span></h2>
+      <p class="full-name">Meta-World · 多任务机器人操作仿真基准</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Meta-World 是一个包含 50 个多样化桌面操作任务的仿真 benchmark（Sawyer 机械臂），从简单的推物体到开关抽屉，分 Easy/Medium/Hard/Very Hard 四个难度。广泛用于 VLA 的标准化评测。</p>
+      </div>
+
+      <h3><span class="num">1</span>基准细节</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>属性</th><th>值</th></tr></thead>
+          <tbody>
+            <tr><td>任务数</td><td>50 个，覆盖拾放、推拉、旋转、工具使用等</td></tr>
+            <tr><td>机器人</td><td>Sawyer 机械臂（6 DoF + 连续 gripper）</td></tr>
+            <tr><td>动作空间</td><td>\(d_a = 4\)（3D 末端执行器位置 + 1D gripper）</td></tr>
+            <tr><td>数据集</td><td>2500 episode（AnoleVLA 用 2000 训练 / 500 验证）</td></tr>
+            <tr><td>平均序列长</td><td>81.9 帧 @ 80 Hz</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>作为评测工具的意义与局限</h3>
+      <div class="callout success">
+        <div class="callout-head">✅ 优点</div>
+        <p>标准化任务定义 + 可复现仿真环境，便于跨工作公平对比；任务多样性和难度梯度设计合理。SmolVLA 和 TinyVLA 的结果直接引自原文，说明 benchmark 有广泛采用。</p>
+      </div>
+      <div class="callout note">
+        <div class="callout-head">⚠️ 局限</div>
+        <p>固定视角桌面操作，与真实移动操作有 domain gap。论文中 π0.5 在 Meta-World 也训练了（43.80%），说明 benchmark 可以用有限数据训练但不代表真实泛化能力。</p>
+      </div>
+
+      <h3><span class="num">3</span>在 AnoleVLA 里</h3>
+      <p>AnoleVLA 在 Meta-World 取得 67.85% 平均成功率，超越 SmolVLA (57.33%) 和 π0.5 (43.80%)。Very Hard 任务 70.00% 尤其突出（SmolVLA 60%），体现了 Mamba 处理复杂动作序列的能力。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#ssm">SSM — State Space Model</a></li>
+      <li><a href="#mamba">Mamba — Selective SSM</a></li>
+      <li><a href="#vla">VLA — Vision-Language-Action</a></li>
+      <li><a href="#action-head">Action Head / Chunking</a></li>
+      <li><a href="#two-stage">两阶段训练（加速度 Loss）</a></li>
+      <li><a href="#mobile-manipulation">Mobile Manipulation</a></li>
+      <li><a href="#selective-scan">Selective Scan</a></li>
+      <li><a href="#meta-world">Meta-World Benchmark</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · AnoleVLA (arXiv:2603.15046) · 配套笔记
+</footer>
+
+</body>
+</html>

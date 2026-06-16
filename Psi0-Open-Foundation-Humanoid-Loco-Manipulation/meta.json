@@ -1,0 +1,45 @@
+{
+  "title": "Psi0: An Open Foundation Model Towards Universal Humanoid Loco-Manipulation",
+  "title_cn": "Ψ0：面向通用人形移动操作的开放基础模型",
+  "field": "vla",
+  "venue": "RSS 2026",
+  "date": "2026",
+  "one_liner": "解耦 VLM egocentric 预训练与 flow action expert，用 10 倍更少数据超越所有人形 loco-manip 基线 40% 以上",
+  "framework": "idea-first",
+  "idea": "不靠端到端混合 co-training，而是将 VLM 预训练（学操作语义/视觉表征，来自 egocentric 人手视频）与 flow-based action expert post-training（学关节空间精确控制，来自高质量人形数据）彻底解耦，两阶段各自最优，大幅提升数据效率",
+  "logic_chain": [
+    "人形 loco-manip 遥操作数据代价极高，难以规模化",
+    "人类 egocentric 视频是廉价替代品，但人机动作分布根本不同，单模型端到端 co-train 天然次优",
+    "洞察：VLM 预训练只需学任务语义和视觉表征，不需要关节精度——单步 FAST 离散 token 预测即可",
+    "关节空间精确控制交给独立 MM-DiT flow action expert，仅 post-train 于高质量人形数据",
+    "最终只需 80 条 task-specific 轨迹 fine-tune，即可在 8 个长程 loco-manip 任务上显著超越所有基线"
+  ],
+  "method_skeleton": [
+    "Egocentric Video VLM Pretraining：EgoDex（~829h）+ Humanoid Everyday（31h），Qwen3-VL-2B，next-step 单步 FAST token 预测，64×A100×10天",
+    "Flow-Based MM-DiT Action Expert：~500M 参数，关节空间 flow matching，joint attention 双向融合 VL 与 action 特征，冻结 VLM backbone post-train",
+    "Training-Time Real-Time Chunking（RTC）：随机遮掩前 d 步模拟推理延迟，使模型学会生成与已承诺 chunk 连贯的动作序列，30Hz 平滑全身控制"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中：egocentric 预训练 + 解耦 flow expert 是 2026 年数据效率最高的人形 VLA 范式",
+    "track_B_legged": "相关：全身控制解耦架构（VLA+RL controller）和 RTC 推理延迟处理对足式 loco-manip 开发有直接参考价值"
+  },
+  "validation": "8 个真实长程 loco-manip 任务（每个 >2000 步@30Hz，3-5 子步骤），10 次 rollout/任务，Ψ0 平均整体成功率超 GR00T N1.6（第二名）至少 40%，所有基线大多数任务成功率 0%",
+  "core_points": [
+    "端到端 co-train 人类与人形数据因分布根本不同而次优，解耦才是正确范式",
+    "egocentric 人手视频预训练 VLM 可有效迁移操作语义和视觉表征到机器人任务",
+    "关键数据配方：高质量 egocentric 预训练 + domain-specific 人形 post-training，优于 10 倍数量的噪声/异构数据",
+    "MM-DiT 的 joint attention 比 naive DiT 的 FiLM 提供更强的 VL-Action 融合",
+    "Training-time RTC 解决大模型推理延迟导致的控制抖动，无需 test-time gradient guidance",
+    "三系统解耦架构（VLM + MM-DiT action expert + AMO RL controller）实现 43-DoF 全身控制",
+    "仅 80 条演示轨迹即可 fine-tune 新任务，极高数据效率"
+  ],
+  "effects": [
+    "整体成功率超 GR00T N1.6 至少 40%（8 个长程 loco-manip 任务）",
+    "仅需约 800h 人类视频 + 30h 真实机器人数据，数据量为对比基线的 1/10",
+    "每个新任务 fine-tuning 仅需 80 条遥操作轨迹"
+  ],
+  "open_source": "code+weights+data",
+  "open_source_detail": "Apache-2.0；代码 physical-superintelligence-lab/Psi0（GitHub，2600+ stars）；模型权重 USC-PSI-Lab/psi-model（HuggingFace）；数据集 USC-PSI-Lab/psi-data（9个真实任务+仿真任务）；包含遥操作、训练、部署全流程",
+  "rating": "Important",
+  "summary": "summary.html"
+}

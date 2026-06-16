@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ψ0 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO (variant: 紫蓝调) ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>Ψ0 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要一定背景知识才好理解的关键概念。每个概念都给出定义、原理、在 Ψ0 中的具体用法，以及彼此之间的关系。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 Ψ0 综述</a>
+      <span class="pill">📚 当前 5 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2603.12263" style="color: #93c5fd; text-decoration: none;">arXiv:2603.12263</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ humanoid loco-manipulation ============ -->
+    <section class="card" id="loco-manipulation">
+      <h2>Humanoid Loco-Manipulation <span class="tag">Core Task</span></h2>
+      <p class="full-name">人形机器人移动操作 · 边走边操作</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>让人形机器人在<strong>移动过程中同时完成灵巧操作</strong>——不是「原地抓取」，而是「走到咖啡机前取杯子、再走到水槽旁放置」这类需要全身协调的长程任务。难点在于：行走扰动 + 操作精度 + 长时序规划必须同时成立。</p>
+      </div>
+
+      <h3><span class="num">1</span>与纯操作 / 纯行走的区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>任务类型</th><th>特点</th><th>主要挑战</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>纯操作（Tabletop Manipulation）</td><td>固定底座，手臂抓取放置</td><td>手眼协调、灵巧度</td></tr>
+            <tr><td>纯行走（Locomotion）</td><td>移动但不操作</td><td>平衡稳定、地形适应</td></tr>
+            <tr><td><strong>Loco-Manipulation</strong></td><td>移动 + 同时操作</td><td>两者同时 + 长时序规划 + 全身协调（43 DoF）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Ψ0 评测的 8 个任务大多数 &gt;2000 步@30Hz（约 67 秒以上），每个任务含 3-5 个子步骤，包括行走、躯干旋转、下蹲、抓取、倒水、推拉等动作的组合。</p>
+
+      <h3><span class="num">2</span>为什么难</h3>
+      <ul>
+        <li><strong>数据瓶颈</strong>：遥操作采集代价极高——需要操作员控制 43 个自由度，同时维持行走稳定性。</li>
+        <li><strong>长时序</strong>：任何子步骤失败都会导致后续无法继续；误差随时间累积。</li>
+        <li><strong>全身协调</strong>：上肢操作扰动下肢稳定，下肢运动影响上肢末端位置精度。</li>
+        <li><strong>模型延迟</strong>：2.5B 参数模型单次推理约 160ms，对 30Hz 实时控制是巨大挑战。</li>
+      </ul>
+
+      <h3><span class="num">3</span>在 Ψ0 里怎么解决</h3>
+      <p>Ψ0 将全身控制<strong>垂直解耦</strong>为三层：</p>
+      <ol>
+        <li><strong>System-2（VLM）</strong>：理解任务语义，提取视觉特征。</li>
+        <li><strong>System-1（Action Expert）</strong>：预测上体 28 DoF + 下体高层指令（速度/偏航）的 action chunk。</li>
+        <li><strong>System-0（RL Controller）</strong>：AMO 控制器把高层下肢指令映射为 15 DoF 腿部关节角——隔离了行走稳定性问题，上层无需学底层步态控制。</li>
+      </ol>
+    </section>
+
+    <!-- ============ egocentric-pretraining ============ -->
+    <section class="card" id="egocentric-pretraining">
+      <h2>Egocentric Video Pretraining <span class="tag">Data Strategy</span></h2>
+      <p class="full-name">以自我为中心的视频预训练 · 第一视角操作视频</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>用人手第一视角视频预训练 VLM，让模型学会「看到手和物体时理解操作语义」——避开了昂贵的机器人遥操作数据采集，同时通过解耦避开了人机动作分布不同的陷阱。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心洞察：为什么 egocentric 而不是第三视角？</h3>
+      <p>机器人的头部摄像头恰好是<strong>自我为中心视角</strong>——观察自己的手和前方物体。人类的第一视角操作视频（如 EgoDex）与机器人推理时的视角高度对齐，视觉域差距远小于第三视角监控视频。</p>
+
+      <h3><span class="num">2</span>Ψ0 使用的数据集</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>数据集</th><th>来源</th><th>规模</th><th>用途</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>EgoDex</strong></td><td>人手 egocentric 视频（多种日常操作任务）</td><td>~829h（~900M 帧）</td><td>VLM Stage 1 预训练主力</td></tr>
+            <tr><td><strong>Humanoid Everyday</strong></td><td>真实人形机器人遥操作视频（260 种任务）</td><td>~31h（~3M 帧）</td><td>Action Expert Stage 2 post-training</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>关键设计：next-step 单步预测而非 action chunking</h3>
+      <p>预训练阶段<strong>只预测单个下一步动作</strong>（而不是 action chunk），原因是：</p>
+      <ul>
+        <li>预训练目标是学「任务语义」和「视觉表征」，不需要精确预测多步；</li>
+        <li>单步预测计算量远小于多步 chunk，使得在 64 × A100 × 10 天预算内处理 ~900M 帧成为可能；</li>
+        <li>动作用 FAST tokenizer 压缩至 ~20 个离散 token，在 VLM 原生自回归框架内无缝训练。</li>
+      </ul>
+
+      <h3><span class="num">4</span>统一动作表示</h3>
+      <p>人手和机器人末端执行器用同一个 48-DoF 任务空间动作表示：\( a = \{a_l, a_r\} \)，其中每个 \( a \in \mathbb{R}^{24} \) 包含腕部 9D 姿态 + 5 根手指指尖 3D 位置。这个统一表示使人类数据和机器人数据可以在同一框架内联合训练，且 FAST tokenizer 达到 L1 重建误差 0.005（优于原始开源 tokenizer 的 0.01）。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 对比：为什么不直接 co-train？</div>
+        <p>EgoVLA、H-RDT 等前作把人类视频和机器人数据混在同一模型里端到端训练——但人类动作频率、运动模式、自由度与人形机器人根本不同，单模型必须同时拟合两个根本不同的分布，导致都学不好。Ψ0 的解法是：VLM 预训练只学语义（动作精度无要求），action expert 单独学精确关节控制（来源已是机器人数据）——两阶段各自最优。</p>
+      </div>
+    </section>
+
+    <!-- ============ flow-action-expert ============ -->
+    <section class="card" id="flow-action-expert">
+      <h2>Flow-Based Action Expert <span class="tag">Architecture</span></h2>
+      <p class="full-name">基于流匹配的动作专家 · MM-DiT 架构</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>一个 ~500M 参数的 Multimodal Diffusion Transformer (MM-DiT)，接受 VLM 提取的视觉-语言特征，通过<strong>流匹配（flow matching）</strong>直接在关节空间预测多步 action chunk——比 naive DiT 有更强的跨模态融合，比 VLM 自回归生成更快更精确。</p>
+      </div>
+
+      <h3><span class="num">1</span>Flow Matching 原理</h3>
+      <p>Flow matching 是扩散模型的一种高效变体。训练目标是学习从噪声 \(\epsilon\) 到干净动作 \(a\) 的「流场」：</p>
+      <div class="math-display">
+        \[ \mathcal{L}_{fm} = \mathbb{E}\left[\|v_\rho^{flow}(z_t, a_t^\tau, \tau) - (\epsilon - a_t)\|\right] \]
+      </div>
+      <p>其中 \( a_t^\tau = \tau a_t + (1-\tau)\epsilon \) 是在时间步 \(\tau\) 插值的带噪动作，\( z_t \) 是 VLM 提取的特征。推理时从纯噪声出发，沿流场积分若干步（约 10 步）生成动作序列。</p>
+
+      <h3><span class="num">2</span>MM-DiT vs Naive DiT</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>架构</th><th>VL-Action 融合方式</th><th>局限</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Naive DiT</strong></td><td>FiLM（Feature-wise Linear Modulation）：VL 特征单向调制 Action 特征</td><td>单向、浅层，VL→A 信息流不完整；原本为文本条件图像生成设计</td></tr>
+            <tr><td><strong>MM-DiT（Ψ0）</strong></td><td>双路调制 + Joint Global Attention：VL token 和 Action token 双向全局注意力</td><td>参数量稍大，但 VL↔A 充分双向交互，对精密关节控制更有效</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>MM-DiT 受 Stable Diffusion 3 启发：在每个 transformer block 内，action (A) 特征和 vision-language (VL) 特征各自被 flow timestep \(\tau\) 调制后，执行 joint global attention——VL 和 Action 的信息在深层互相感知，而不是 VL 单向「压制」Action。</p>
+
+      <h3><span class="num">3</span>在 Ψ0 三系统中的位置</h3>
+      <ul>
+        <li>接收：VLM（System-2）输出的隐藏特征 \( z_t = f^\text{vlm}_\theta(o_t, \ell) \)</li>
+        <li>输出：36-DoF whole-body action chunk（上体 28 DoF + 下体高层 8 DoF）</li>
+        <li>下体高层指令传给：AMO RL controller（System-0）→ 15 DoF 腿部关节角</li>
+      </ul>
+
+      <h3><span class="num">4</span>训练细节</h3>
+      <ul>
+        <li>从零训练（不继承 VLM 权重），VLM backbone 冻结。</li>
+        <li>Post-training on Humanoid Everyday：32 × A100，约 30 小时。</li>
+        <li>Task-specific fine-tuning：只需 80 条遥操作轨迹，40000 步，单节点可完成。</li>
+      </ul>
+    </section>
+
+    <!-- ============ whole-body-control ============ -->
+    <section class="card" id="whole-body-control">
+      <h2>Whole-Body Control <span class="tag">Control Architecture</span></h2>
+      <p class="full-name">全身控制 · 上下体解耦协调</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>用<strong>垂直解耦</strong>架构实现 43-DoF 全身控制——VLA 输出上体精确关节角 + 下体高层运动指令，RL controller（AMO）把高层指令转为腿部关节角。VLA 不需要学步态控制细节，RL controller 不需要理解任务语义。</p>
+      </div>
+
+      <h3><span class="num">1</span>动作空间定义</h3>
+      <p>Ψ0 的 36-DoF 动作向量 \( a \in \mathbb{R}^{36} \) 定义为：</p>
+      <div class="math-display">
+        \[ a = \{q_\text{hand}, q_\text{arm}, \text{torso}_{rpy}, h_b, v_x, v_y, v_\text{yaw}, p_\text{yaw}\} \]
+      </div>
+      <ul>
+        <li>\( q_\text{hand} \in \mathbb{R}^{14} \)：两手关节角</li>
+        <li>\( q_\text{arm} \in \mathbb{R}^{14} \)：两臂关节角</li>
+        <li>\( \text{torso}_{rpy} \in \mathbb{R}^3 \)：躯干滚转/俯仰/偏航</li>
+        <li>\( h_b \in \mathbb{R} \)：底盘高度</li>
+        <li>\( v_x, v_y \in \mathbb{R} \)：水平线速度</li>
+        <li>\( v_\text{yaw}, p_\text{yaw} \in \mathbb{R} \)：角速度和目标偏航角</li>
+      </ul>
+      <p>其中前 28 维（手和臂关节）直接发给执行器，后 8 维（躯干+底盘运动指令）发给 AMO RL controller，后者输出 15 DoF 腿部关节角 \( q_\text{lower} \in \mathbb{R}^{15} \)（3 DoF 腰部 + 12 DoF 腿部）。最终合并为 <strong>43 DoF 全身控制</strong>。</p>
+
+      <h3><span class="num">2</span>解耦的意义</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>组件</th><th>职责</th><th>训练方式</th><th>好处</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>VLA (System 1+2)</td><td>任务理解 + 上体控制 + 下体高层指令</td><td>端到端监督学习</td><td>可从视频/演示直接学习</td></tr>
+            <tr><td>AMO RL Controller (System 0)</td><td>步态稳定 + 腿部关节规划</td><td>强化学习（离线预训练）</td><td>复用成熟 RL 步态控制成果，无需重新学</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>Real-Time Chunking (RTC) 的必要性</h3>
+      <p>全身控制对延迟极敏感——2.5B 参数模型单次推理约 160ms，若每次等待推理结果再执行，机器人会「走走停停」，在行走中尤其导致严重抖动甚至摔倒。RTC 通过<strong>训练时模拟延迟</strong>（随机遮掩前 d 步并排除出 loss 计算），使模型学会预测与前一 chunk 连贯的动作序列，实现 30Hz 不间断平滑控制。见 <a href="#rtc">RTC 概念卡</a>。</p>
+    </section>
+
+    <!-- ============ sim-to-real / real-to-real ============ -->
+    <section class="card" id="rtc">
+      <h2>Real-Time Chunking (RTC) <span class="tag">Inference Trick</span></h2>
+      <p class="full-name">训练时实时动作分块 · 消除推理延迟抖动</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在<strong>训练时</strong>随机遮掉前 d 步动作并排除出 loss，模拟推理延迟场景，使 action expert 学会生成与已承诺动作块高度连贯的下一块——解决大模型推理延迟导致的控制抖动问题，无需 test-time gradient guidance。</p>
+      </div>
+
+      <h3><span class="num">1</span>问题：为什么大 VLA 会抖动？</h3>
+      <p>假设机器人以 30Hz 执行动作，而 VLA 推理需要 160ms（约 5 步）。两种天真方案都有问题：</p>
+      <ul>
+        <li><strong>等待推理</strong>：每次执行完一块就停下来等新推理结果，造成明显「走走停停」，在行走任务中导致跌倒。</li>
+        <li><strong>直接异步</strong>：推理完成后立即切换到新 action chunk，但新 chunk 的起始状态是「推理开始时的状态」，与「推理完成时机器人实际状态」不一致，产生位置跳变。</li>
+      </ul>
+
+      <h3><span class="num">2</span>RTC 的解法</h3>
+
+      <div class="pre-label"><span>Training-Time RTC</span><span>核心机制</span></div>
+<pre><code>训练时对每个 sample：
+  d ~ uniform(0, dmax)          # 随机采样延迟步数
+  去除前 d 步的扩散噪声          # 模拟"这些步已经在执行中"
+  在 loss 中遮掩这 d 步          # 不让模型从已承诺步学，只学新步
+
+推理时（INPAINTING-INFERENCE）：
+  已承诺动作 A_prev 的前 d 步 = 固定（不加噪声，不更新）
+  剩余步 = 正常 flow 去噪生成
+  结果：生成的新 chunk 与 A_prev 的末尾自然衔接</code></pre>
+
+      <h3><span class="num">3</span>效果</h3>
+      <p>从 ablation（Table I, p.8）可以看到：</p>
+      <ul>
+        <li>仅有预训练（无 RTC）：dual-arm carry 成功 3/10。</li>
+        <li>加入 RTC 后：dual-arm carry 成功 9/10。</li>
+        <li>RTC 是唯一一个对 dual-arm coordination 任务影响最显著的单一因素——因为双臂协调对抖动最敏感。</li>
+      </ul>
+
+      <h3><span class="num">4</span>与 test-time RTC 的区别</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 两种 RTC 方案</div>
+        <p>文献中存在另一种「测试时 RTC」：通过 gradient guidance 在推理时引导 flow 生成连贯动作。Ψ0 尝试后发现<strong>测试时 gradient guidance 不稳定</strong>，因此改用本文的「训练时 RTC」——直接把延迟模拟进训练目标，无需推理时额外优化步骤，更稳定且不增加推理时延。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念目录</div>
+    <ul>
+      <li><a href="#loco-manipulation">🤖 Humanoid Loco-Manipulation</a></li>
+      <li><a href="#egocentric-pretraining">📹 Egocentric Video Pretraining</a></li>
+      <li><a href="#flow-action-expert">🌊 Flow-Based Action Expert</a></li>
+      <li><a href="#whole-body-control">🦾 Whole-Body Control</a></li>
+      <li><a href="#rtc">⚡ Real-Time Chunking (RTC)</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link"><li><a href="./summary.html">← 返回综述</a></li></ul>
+  </aside>
+</div>
+
+<footer>Reading Notes · Ψ0 (arXiv:2603.12263) · USC PSI Lab · RSS 2026 · Apache-2.0</footer>
+
+</body>
+</html>

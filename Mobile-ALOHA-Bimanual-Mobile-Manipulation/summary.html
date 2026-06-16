@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobile ALOHA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Stanford · Mobile Manipulation · Imitation Learning</span>
+    <h1>Mobile ALOHA:<br>双臂移动操作</h1>
+    <p class="subtitle">让机器人干厨房、电梯、柜子这类<strong>全身协调任务</strong>，瓶颈不是算法——是<strong>缺低成本的全身遥操数据</strong>。造一套 $32k 的全身遥操硬件，再用静态双臂数据<strong>联合训练（co-training）</strong>补全运动先验，50 次演示就能学会。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 相关 · 移动操作数据/硬件基础设施 · 已深读</span>
+      <span class="pill">📅 2024-01</span>
+      <span class="pill">🏢 Stanford University</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2401.02117">arXiv:2401.02117</a></span>
+      <span class="pill">⭐ <a href="https://mobile-aloha.github.io">mobile-aloha.github.io</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">系统成本</div>
+    <div class="value">$32<span class="unit">k</span></div>
+    <div class="desc">含板载算力 + 电源，约单臂工业协作臂价格</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">Co-training 提升</div>
+    <div class="value">+90<span class="unit">%</span></div>
+    <div class="desc">最大绝对提升幅度（Press Button: 5%→100%）</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">每任务演示数</div>
+    <div class="value">50<span class="unit">次</span></div>
+    <div class="desc">仅需 20–50 次移动操作演示即可学会</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">开源状态</div>
+    <div class="value">全开</div>
+    <div class="desc">代码 + 硬件图纸 + 训练数据全部公开</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层: 思想 · 逻辑 · 方法 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">做家务的双臂移动操作任务<strong>需要全身协调</strong>（底盘+双臂同时运动），而现有遥操系统或太贵（$200k+）或不支持全身控制。核心洞察：<strong>把操作者的腰绑在机器人上</strong>，用人体自身驱动底盘——一套 $32k 的物理接口加上<strong>用静态双臂数据 co-training 补运动先验</strong>，50 次演示就能学会复杂的移动操作。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>现实家务需要<strong>底盘移动 + 双臂协调同时进行</strong>（开柜要后退、翻虾要转身），纯臂机器人做不了。</li>
+          <li>双臂移动机器人要么太贵（PR2 $200k+），要么遥操方案不支持全身同步控制（只控单臂 / 需要动捕系统）。</li>
+          <li>解法：<strong>腰带物理接缚</strong>让操作者直接用腰驱动底盘，双手同时控制两条 ALOHA 手臂——零额外设备，全身同步。</li>
+          <li>但移动数据稀少，精细操作（抓虾铲翻面、拧水龙头）单靠 50 次很难收敛。<strong>用现有静态双臂数据联合训练</strong>——这些数据里有丰富的抓取先验，即便底盘/背景/手臂朝向都不同，也能正迁移。</li>
+          <li>动作空间简单拼接（14 DoF 手臂关节 + 2 DoF 底盘速度 = 16 维），几乎不需要改 ACT / Diffusion Policy 实现，直接用。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>腰带式全身遥操硬件</strong>：操作者腰部绑定到机器人，backdrive 底盘（13N 滚动阻力，可接受），双手控制 ALOHA leader arms——无 FPV 头显、无触觉手套，$32k 搞定。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>静态 ALOHA 数据 co-training</strong>：825 条静态双臂演示（Ziploc/电池槽/螺丝刀等任务不相关数据）与移动操作数据各 50% 混采；静态数据的底盘动作用零填充（zero-pad）补齐维度，无需特殊处理。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>Action Chunking 处理硬件延迟</strong>：底盘速度控制有延迟而手臂位置控制无延迟，通过执行 chunk 中前 k-d 步手臂动作、后 k-d 步底盘动作来错位补偿，不需要修改学习算法。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">7 个任务中 co-training 使 5 个任务成功率显著提升；平均 <strong>34% 绝对提升</strong>，最高 +90%（Press Button）；以 ACT 为基础，多数任务 80%+ 成功率。Co-training 优于 Pre-training（后者因 fine-tuning 遗忘失效）。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>Wipe Wine: co-train 95% vs no co-train 50%（+45%）</li>
+            <li>Call Elevator: 95% vs 0%（+95%，Press Button 子任务 100% vs 5%）</li>
+            <li>Use Cabinet: 85% vs 85%（co-train 对该任务影响不大）</li>
+            <li>Rinse Pan: 80% vs 0%（Turn On Faucet 子任务: 80% vs 0%）</li>
+            <li>Push Chairs: 80% vs 0%（OOD 4th/5th 椅子: co-train 85/89% vs no co-train 70/0%）</li>
+            <li>Data efficiency: co-train 35 demos &gt; no co-train 50 demos（+20%）</li>
+            <li>Co-train 对不同数据比例（30%/50%/70%）均鲁棒（95%/95%/90%）</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与你项目的相关性</div>
+        <p><strong>Track A（移动操作 VLA）间接但基础性命中</strong>：Mobile ALOHA 本身不是 VLA，而是移动操作的<strong>数据采集基础设施 + co-training 方法论</strong>。π0.5 等 VLA 正是在此类平台上采集数据并验证泛化的——理解 Mobile ALOHA 是理解 VLA 移动操作数据来源的前提。co-training「用异构静态数据迁移到移动操作」的思想，在 π0.5 中被大幅扩展。<strong>Track B（足式 locomotion）不相关</strong>——本文专注轮式底盘，不涉及步态控制。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。点开原文即可最短路径核对。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：大多数模仿学习成果局限于桌面操作，缺少同时具备移动性与灵巧性的双臂全身控制能力。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">most results focus on table-top manipulation, lacking the mobility and dexterity necessary for generally useful tasks.</blockquote>
+          <div class="ev-trans">大多数结果集中于桌面操作，缺乏一般有用任务所需的移动性和灵巧性。</div>
+          <div class="ev-gloss">这句话定位了整个领域盲区——"generally useful tasks"（家务/办公）本质上要求全身协调，而现有学习结果不能满足。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 硬件方案 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 硬件方案：腰带绑定让操作者 backdrive 底盘，双手同控 ALOHA——无需 FPV 头显或触觉设备，$32k 即可全身遥操。</div>
+        <figure>
+          <img src="./images/figure_2_hardware_specs.png" alt="Figure 2: Mobile ALOHA 硬件规格图">
+          <figcaption><strong>Figure 2（p.3）：</strong>左=带遥操结构（operator 绑腰、leader arms 在前）；中=独立执行时去掉遥操结构；右=技术规格。双臂 14 DoF + 底盘 2 DoF；臂可达 65–200cm；底盘续航 12h（1620Wh）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §3</div>
+          <blockquote class="ev-quote">We found the design of tethering the operator's waist to the mobile base to be the most simple and direct solution, as shown in Figure 2 (left). The human can backdrive the wheels which have very low friction when torqued off.</blockquote>
+          <div class="ev-trans">我们发现将操作者的腰部绑定到移动底盘是最简单直接的解决方案，如图 2（左）所示。人可以后驱底盘轮子，当扭矩关闭时摩擦力非常低。</div>
+          <div class="ev-gloss">这是整个设计的核心 insight——不需要额外传感器或致动器，人体自身就是底盘的遥控器。13N 滚动阻力在普通人可接受范围内。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4 · §3</div>
+          <blockquote class="ev-quote">With design considerations above, we build Mobile ALOHA with a $32k budget, comparable to a single industrial cobot such as the Franka Emika Panda.</blockquote>
+          <div class="ev-trans">基于以上设计考量，我们以 $32k 的预算构建了 Mobile ALOHA，相当于一台单臂工业协作机器人（如 Franka Emika Panda）的价格。</div>
+          <div class="ev-gloss">$32k vs 竞品 $200k+，价格降低 6× 以上。这一成本直接决定了学术实验室的可及性。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 co-training 配方 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> Co-training 配方：用静态双臂数据与移动数据各 50% 混采，底盘动作零填充——尽管任务/形态/背景均不同，依然产生正迁移。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §4</div>
+          <blockquote class="ev-quote">Despite the differences in tasks and morphology, we observe positive transfer in nearly all mobile manipulation tasks, attaining equivalent or better performance and data efficiency than policies trained using only Mobile ALOHA data.</blockquote>
+          <div class="ev-trans">尽管任务和形态存在差异，我们在几乎所有移动操作任务上都观察到了正迁移，取得了与仅使用 Mobile ALOHA 数据训练的策略相当或更好的性能和数据效率。</div>
+          <div class="ev-gloss">「形态不同也能正迁移」是本文最重要的发现之一：静态数据的手臂朝向相对、背景是黑桌，移动数据手臂朝前、背景实时变化——但迁移仍然有效。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §4（公式）</div>
+          <blockquote class="ev-quote">Since static ALOHA datapoints have no mobile base actions, we zero-pad the action labels so actions from both datasets have the same dimension.</blockquote>
+          <div class="ev-trans">由于静态 ALOHA 数据点没有移动底盘动作，我们对动作标签进行零填充，使两个数据集的动作维度相同。</div>
+          <div class="ev-gloss">零填充是最小侵入性的实现方式——不需要特殊网络结构，也不需要修改损失函数。实现简单是这个方案最大的优势。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 具体任务展示 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 任务复杂度：7 个任务覆盖精细抓取、长距导航、力控（100N）、人机交互，均需闭环控制——开环重放成功率为零。</div>
+        <figure>
+          <img src="./images/figure_1_system_overview_tasks.png" alt="Figure 1: Mobile ALOHA 任务总览">
+          <figcaption><strong>Figure 1（p.1）：</strong>左=操作者遥操从冰箱取食物；右=6 个自主学习任务：cook shrimp（翻虾）、push chairs（推椅子）、use cabinet（存锅）、wipe wine（擦酒）、call elevator（叫电梯）、high five（击掌）。每个任务都需要底盘移动与双臂协调。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §5</div>
+          <blockquote class="ev-quote">for all tasks mentioned above, open-loop replaying a demonstration with objects restored to the same configurations will achieve zero whole-task success.</blockquote>
+          <div class="ev-trans">对于上述所有任务，将物体恢复到相同配置后进行开环重放演示，整体任务成功率为零。</div>
+          <div class="ev-gloss">这句话直接排除了「记忆重放」的trivial baseline，证明这些任务真的需要闭环感知-运动能力，不是简单的轨迹跟踪。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 co-training 主结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> 主结果：co-training 对精细操作子任务提升最大（Press Button +95%、Turn On Faucet +80%），因为静态数据提供了接触丰富的抓取先验。</div>
+        <figure>
+          <img src="./images/figure_3_cooked_tasks_detail.png" alt="Figure 3 (partial): Cook Shrimp 和 Rinse Pan 任务步骤">
+          <figcaption><strong>Figure 3（p.6）局部：</strong>Cook Shrimp 和 Rinse Pan 的分步骤演示序列。注意 Cook Shrimp 需要翻虾（精细接触）+ 跨台面移动；Rinse Pan 需要拧水龙头（4cm×0.7cm 的不锈钢旋钮，极精细）。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §6.1</div>
+          <blockquote class="ev-quote">We find co-training to be more helpful for sub-tasks where precise manipulation is the bottleneck, for example Press Button, Flip Shrimp, and Turn On Faucet. In all of these cases, compounding errors appear to be the main source of failure, either from the stochasticity of robot base velocity control or from rich contacts such as grasping of the spatula and making contact with the pan during Flip Shrimp.</blockquote>
+          <div class="ev-trans">我们发现 co-training 对精细操作是瓶颈的子任务更有帮助，例如按按钮、翻虾和开水龙头。在所有这些情况下，复合误差似乎是主要失败来源，来自底盘速度控制的随机性，或者来自丰富的接触（如翻虾时抓铲子和铲子接触锅）。</div>
+          <div class="ev-gloss">这指出了 co-training 的作用机制：静态数据里的接触丰富操作（如 battery slotting）为移动操作中的精细接触任务提供了「运动先验」，弥补了移动数据中底盘随机性导致的末端执行器误差。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 co-train vs pre-train -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> Co-training 优于 Pre-training：预训练后微调会遗忘静态数据的经验，而联合训练持续接触两类数据，避免灾难性遗忘。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.9–10 · §7</div>
+          <blockquote class="ev-quote">we compare co-training and pre-training on the static ALOHA data. For pre-training, we first train ACT on the static ALOHA data for 10K steps and then continue training with in-domain task data. We experiment with the Wipe Wine task and observe that pre-training provides no improvements over training solely on Wipe Wine data. We hypothesize that the network forgets its experience on the static ALOHA data during the fine-tuning phase.</blockquote>
+          <div class="ev-trans">我们在静态 ALOHA 数据上比较了 co-training 和 pre-training。对于 pre-training，我们先在静态 ALOHA 数据上训练 ACT 10K 步，然后用任务数据继续训练。我们在 Wipe Wine 任务上实验，观察到 pre-training 相比仅在 Wipe Wine 数据上训练没有任何改进。我们推测网络在微调阶段遗忘了在静态 ALOHA 数据上的经验。</div>
+          <div class="ev-gloss">Co-train=95% vs Pre-train=50% vs No Co-train=50%（Table 4）。Pre-training 完全没用，这个结论很重要：说明价值来自「持续混采」而非「预训练初始化」——对后续 VLA 设计有启发。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 易用性 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 易用性验证：新手用户 5 次练习后平均可达专家速度，Wipe Wine 完成时间从 46s 降至 28s（-39%），证明遥操界面学习曲线平缓。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.10 · §8</div>
+          <blockquote class="ev-quote">We notice a steep decline in completion time: on average, the time it took to perform the task went from 46s to 28s for Wipe Wine (down 39%), and from 75s to 36s for Use Cabinet (down 52%). The average participant can also to approach speed of expert demonstrations after 5 trials, demonstrating the ease of use and learning of Mobile ALOHA teleoperation.</blockquote>
+          <div class="ev-trans">我们注意到完成时间急剧下降：平均而言，Wipe Wine 任务的完成时间从 46s 降至 28s（下降 39%），Use Cabinet 从 75s 降至 36s（下降 52%）。普通参与者在 5 次试验后也能接近专家演示的速度，证明了 Mobile ALOHA 遥操的易用性和可学习性。</div>
+          <div class="ev-gloss">8 名 CS 研究生参与，4 人无遥操经验。学习曲线平缓意味着可以低成本招募数据采集员，这直接影响数据规模可扩展性——这正是 VLA 数据飞轮的关键前提。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">Mobile ALOHA 是完全开放的系统——包括软件、硬件设计与数据集。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-yes">已开源</span> <a href="https://github.com/MarkFzp/mobile-aloha">github.com/MarkFzp/mobile-aloha</a>（训练脚本 ACT/Diffusion Policy/VINN + 数据采集）</dd>
+        <dt>硬件</dt><dd><span class="os-tag os-yes">已开源</span> 3D 打印文件 + 装配教程 + BOM 清单，详见项目网站 <a href="https://mobile-aloha.github.io">mobile-aloha.github.io</a></dd>
+        <dt>数据</dt><dd><span class="os-tag os-yes">已开源</span> 7 个任务的 Mobile ALOHA 演示数据集通过 RT-X 渠道公开，静态 ALOHA 数据已在此前工作中开源</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.5 · §3</div>
+        <blockquote class="ev-quote">Beyond the off-the-shelf robots, we open-source all of the software and hardware parts with a detailed tutorial covering 3D printing, assembly, and software installation. The tutorial is on the project website.</blockquote>
+        <div class="ev-trans">除现成机器人之外，我们开源了所有软件和硬件部件，并附有覆盖 3D 打印、装配和软件安装的详细教程。教程在项目网站上。</div>
+        <div class="ev-gloss">这种「完全开放」策略让 Mobile ALOHA 成为移动操作研究的标准平台——π0.5 等大量后续工作都在此基础上或类似平台上进行。</div>
+      </div>
+    </section>
+
+    <!-- ============ 简短批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>这篇论文奠定了「低成本移动双臂操作学习」的基础设施。两个贡献都扎实：硬件上「腰带 backdrive」的 insight 极简有效（比动捕/VR 方案便宜 10×+），学习上「静态数据 co-training」的正迁移发现反直觉但有多任务/多算法佐证。这正是 π0.5 等 VLA 工作的数据采集基础——不了解这一层，就无法理解「移动操作 VLA 数据从哪里来」。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>泛化极为有限</strong>：每个任务都是单场景（同一厨房/走廊），无场景泛化评估；② <strong>Cook Shrimp 只有 20 demos + 5 trials</strong>，40% 成功率的统计置信度很低；③ <strong>底盘速度控制不稳定</strong>（180° 转弯平均 &gt;10cm 误差），导致对精细操作的需求更强；④ co-training 数据是 825 条 OOD 数据 vs 20-50 条 in-domain，这个极度不均衡比例在理论上未解释清楚，仅靠实验验证；⑤ 硬件仍有限制：固定臂高度导致低柜/烤箱/洗碗机难以够到。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge important">Important</span> &nbsp;不是算法突破，但是基础设施和 co-training 方法论的重要贡献，直接催生了后续 VLA 在移动操作上的探索。对 Track A 研究者是必读的背景工作。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · Mobile ALOHA (arXiv:2401.02117)</footer>
+
+</body>
+</html>

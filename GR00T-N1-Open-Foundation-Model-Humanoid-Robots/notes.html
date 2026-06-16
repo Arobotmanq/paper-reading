@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GR00T N1 概念解读笔记</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(118, 185, 0, 0.18);
+    color: #d9f99d;
+    border: 1px solid rgba(118, 185, 0, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #76b900;
+    box-shadow: 0 0 12px #76b900;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>GR00T N1 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要一定背景知识才好理解的关键概念。每个概念都给出定义、原理、在 GR00T N1 中的具体用法，以及彼此之间的关系与类比。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 GR00T N1 综述</a>
+      <span class="pill">📚 当前 8 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.14734" style="color: #93c5fd; text-decoration: none;">arXiv:2503.14734</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. Dual-System Architecture ============ -->
+    <section class="card" id="dual-system">
+      <h2>Dual-System <span class="tag">System 1 / 2</span></h2>
+      <p class="full-name">双系统架构 · 受 Kahneman 「快思慢想」认知理论启发</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>用<strong>两个频率不同的 Transformer 模块</strong>分别负责「慢速语义推理」（System 2，VLM，10Hz）和「高频精细执行」（System 1，DiT，120Hz），通过 cross-attention 耦合，实现推理深度与控制实时性的兼顾。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念起源</h3>
+      <p>Daniel Kahneman 在《Thinking, Fast and Slow》（2011）中提出：人类认知有两套系统——</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>系统</th><th>特点</th><th>类比</th></tr></thead>
+          <tbody>
+            <tr><td><strong>System 1</strong>（快）</td><td>自动、直觉、低耗能、高频</td><td>骑自行车、抓物体的肌肉记忆</td></tr>
+            <tr><td><strong>System 2</strong>（慢）</td><td>有意识、推理、高耗能、低频</td><td>解数学题、规划路线</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>GR00T N1 把这个框架直接映射到机器人控制：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>人类认知</th><th>GR00T N1 实现</th><th>频率</th><th>职责</th></tr></thead>
+          <tbody>
+            <tr><td>System 2（慢）</td><td>Eagle-2 VLM</td><td>10 Hz</td><td>视觉理解 + 语言推理 → 输出语义 token</td></tr>
+            <tr><td>System 1（快）</td><td>Diffusion Transformer (DiT)</td><td>120 Hz</td><td>cross-attend 语义 token，生成精细电机动作</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>为什么要频率解耦</h3>
+      <p>VLM 推理慢（需要处理图像 tokens + LLM forward pass）但语义稳定——场景语义不会每 8ms 变一次。DiT 需要高频闭环（120Hz 才能抑制抖动、响应碰触）但不需要重新理解任务。频率解耦让两者各做擅长的事：</p>
+      <ul>
+        <li>VLM 每 100ms 更新一次语义 token（条件信号）</li>
+        <li>DiT 每 8ms 重新 denoising，基于<strong>最新机器人状态</strong>生成下一个动作 chunk</li>
+        <li>两者通过 cross-attention 层异步耦合</li>
+      </ul>
+
+      <h3><span class="num">3</span>与其他双系统设计的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>系统</th><th>System 2</th><th>System 1</th><th>耦合方式</th></tr></thead>
+          <tbody>
+            <tr><td><strong>GR00T N1</strong></td><td>Eagle-2 VLM（10Hz）</td><td>DiT flow-matching（120Hz）</td><td>Cross-attention，联合训练</td></tr>
+            <tr><td><strong>π0（Physical Intelligence）</strong></td><td>PaliGemma VLM</td><td>Action expert（flow matching）</td><td>MoE 架构，联合训练</td></tr>
+            <tr><td><strong>SayCan / RT-2 风格</strong></td><td>LLM 规划</td><td>独立低层策略</td><td>接口调用，分离训练</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>GR00T N1 与 π0 都采用了端到端联合训练的双系统，区别在于 GR00T N1 用 cross-attention（类 Flamingo 风格），π0 用 MoE token 混合。</p>
+
+      <div class="callout note">
+        <div class="callout-head">🎯 关键工程细节</div>
+        <p>论文发现使用 VLM 的<strong>第 12 层（中间层）</strong>而非最后层 embedding 作为 cross-attention 的 key/value，推理更快且下游成功率更高。最后层倾向过度处理成语言分布，中间层更保留视觉-语义融合表征。</p>
+      </div>
+    </section>
+
+    <!-- ============ 2. DiT + Flow Matching ============ -->
+    <section class="card" id="dit">
+      <h2>DiT + Flow Matching <span class="tag">System 1</span></h2>
+      <p class="full-name">Diffusion Transformer + Flow Matching Action Head · 扩散 Transformer + 流匹配动作头</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>DiT 是用 Transformer 替代 U-Net 的扩散模型骨干；Flow Matching 是一种比 DDPM 更高效的「通过学习速度场来去噪」的训练方式，只需 4 步推理就能生成高质量动作 chunk。</p>
+      </div>
+
+      <h3><span class="num">1</span>Flow Matching 是什么</h3>
+      <p>经典 DDPM 学的是：给定噪声图，预测「当前噪声」（ε-prediction）。Flow matching（Lipman et al., 2022）则学的是：给定中间状态 \(A^\tau_t\)，预测从噪声到数据的<strong>速度场（velocity field）</strong>。</p>
+      <p>GR00T N1 的 flow-matching 目标：</p>
+      <div class="math-display">
+        \[\mathcal{L}_{fm}(\theta) = \mathbb{E}_\tau\left[\|V_\theta(\varphi_t, A^\tau_t, q_t) - (\epsilon - A_t)\|^2\right]\]
+      </div>
+      <ul>
+        <li>\(A^\tau_t = \tau A_t + (1-\tau)\epsilon\)：在时间步 \(\tau \in [0,1]\) 的插值动作（0=纯噪声，1=真实动作）</li>
+        <li>\(V_\theta\)：DiT 模型，预测去噪方向 \(\epsilon - A_t\)</li>
+        <li>\(\varphi_t\)：VLM 输出的语义 token</li>
+        <li>\(q_t\)：机器人状态</li>
+      </ul>
+
+      <h3><span class="num">2</span>为什么用 Flow Matching 而非 DDPM</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方法</th><th>推理步数</th><th>训练稳定性</th><th>轨迹形状</th></tr></thead>
+          <tbody>
+            <tr><td>DDPM</td><td>50~1000步</td><td>好</td><td>随机游走</td></tr>
+            <tr><td><strong>Flow Matching</strong></td><td><strong>4~10步</strong></td><td>好</td><td><strong>线性直线</strong>（效率高）</td></tr>
+            <tr><td>DDIM (加速版 DDPM)</td><td>10~50步</td><td>中</td><td>确定性路径</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Flow matching 的核心优势：噪声→数据的路径被设计为直线（conditional flow = 线性插值），所以少数积分步就能沿轨迹走完，GR00T N1 只需 K=4 步。</p>
+
+      <h3><span class="num">3</span>DiT 的结构</h3>
+      <p>DiT (Peebles & Xie, 2023) 把扩散模型的 U-Net 换成 Transformer，每个 block 包含：</p>
+      <ul>
+        <li><strong>Self-Attention</strong>：作用在动作 token \(A^\tau_t\) 和机器人状态 \(q_t\) 上（让动作内部互相关注）</li>
+        <li><strong>Cross-Attention</strong>：以 VLM tokens \(\varphi_t\) 为 key/value，让动作 token 关注语义信息</li>
+        <li><strong>Adaptive LayerNorm</strong>：用扩散时间步 \(\tau\) 调制 layernorm 参数（时间步条件化）</li>
+      </ul>
+      <p>最后经过 embodiment-specific Action Decoder MLP 输出 H=16 步的动作 chunk。</p>
+
+      <h3><span class="num">4</span>Action Chunking</h3>
+      <p>一次推理生成 H=16 步的动作序列（约 133ms @120Hz），而非逐步预测。好处：</p>
+      <ul>
+        <li>减少推理次数（16:1），降低累积误差</li>
+        <li>允许多步预测的时序一致性（比如流畅的抓握轨迹）</li>
+        <li>缺点：执行第1步时第16步已预测好，环境变化需等下一次推理才能反应</li>
+      </ul>
+    </section>
+
+    <!-- ============ 3. Eagle-2 VLM ============ -->
+    <section class="card" id="eagle2">
+      <h2>Eagle-2 VLM <span class="tag">System 2</span></h2>
+      <p class="full-name">NVIDIA Eagle-2 Vision-Language Model · NVIDIA 视觉语言模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Eagle-2 是 NVIDIA 自研的高效 VLM，基于 SmolLM2（轻量 LLM）+ SigLIP-2（视觉编码器），对 Internet 规模数据做了视觉-语言对齐预训练。GR00T N1 用它作为 System 2 推理模块，冻结语言部分，仅 fine-tune 与动作相关的部分。</p>
+      </div>
+
+      <h3><span class="num">1</span>架构组成</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>组件</th><th>具体模型</th><th>职责</th></tr></thead>
+          <tbody>
+            <tr><td>视觉编码器</td><td>SigLIP-2 (Google)</td><td>224×224 图像 → 经 pixel shuffle → 64 个图像 tokens</td></tr>
+            <tr><td>语言模型</td><td>SmolLM2 (HuggingFace)</td><td>轻量 LLM，处理文本+视觉 tokens，输出跨模态表征</td></tr>
+            <tr><td>对齐训练</td><td>NVIDIA 内部 VL 数据</td><td>遵循 Li et al. (2025) 配方进行视觉-语言任务预训练</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>在 GR00T N1 中的用法</h3>
+      <p>Eagle-2 在 GR00T-N1-2B 中占 1.34B 参数（总 2.2B 的 61%）。训练时：</p>
+      <ul>
+        <li><strong>冻结语言组件（text backbone）</strong>，防止 catastrophic forgetting</li>
+        <li>fine-tune 视觉编码器和对齐层</li>
+        <li>取第 12 层（中间层）的 embedding（形状：batch × seq_len × hidden_dim）作为 DiT 的 cross-attention key/value</li>
+      </ul>
+      <p>图像输入方式：以 VLM chat 格式输入（与 VL 预训练时一致），支持多帧图像输入（多视角相机）。</p>
+
+      <h3><span class="num">3</span>中间层 vs 最后层 embedding</h3>
+      <p>为什么用第 12 层而不是最后层？直觉：</p>
+      <ul>
+        <li>最后层受 LM Head 约束，倾向于生成「下一个词的 logits 分布」，语义已过度压缩为文本概率</li>
+        <li>中间层保留了<strong>视觉-语言融合的丰富表征</strong>，既有场景语义又保留空间信息</li>
+        <li>中间层维度更小（不需要 lm_head），推理速度快</li>
+      </ul>
+    </section>
+
+    <!-- ============ 4. Latent Action (VQ-VAE LAPA) ============ -->
+    <section class="card" id="latent-action">
+      <h2>Latent Action <span class="tag">LAPA / VQ-VAE</span></h2>
+      <p class="full-name">Latent Action Pre-training for Any Robot · 任意机器体的潜动作预训练</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>用 VQ-VAE「看两帧视频，推测帧间发生了什么动作」，把无动作视频自动标上伪动作标签，且所有 embodiment（人类、单臂、双臂、人形）共享同一 codebook，实现跨 embodiment 的动作语义统一。</p>
+      </div>
+
+      <h3><span class="num">1</span>问题背景</h3>
+      <p>训练数据金字塔的底层（人类视频）和中层（神经轨迹）都<strong>没有动作标签</strong>——视频里只有像素，没有关节角。直接用 flow-matching loss 训练需要 ground-truth action。Latent Action 的方案：</p>
+      <ol>
+        <li>训练一个 VQ-VAE：输入 \((x_t, x_{t+H})\) 帧对，输出「从 \(x_t\) 变成 \(x_{t+H}\) 所需的潜动作 \(z_t\)」</li>
+        <li>VQ-VAE 自监督训练（重建未来帧），不需要真实动作标签</li>
+        <li>训练好后，对所有无动作视频提取 pre-quantization 连续 embedding 作为伪动作标签</li>
+        <li>以这些伪标签训练策略，把「LAPA embodiment」视为一种特殊的跨 embodiment</li>
+      </ol>
+
+      <h3><span class="num">2</span>VQ-VAE 结构</h3>
+
+      <div class="pre-label"><span>Latent Action VQ-VAE 流程</span></div>
+<pre><code>Encoder(x_t, x_{t+H}) → z_e (连续 embedding)
+                            ↓ 量化到 codebook {e_1,...,e_K}
+                         z_q = e_{k*}  (量化后的离散 token)
+Decoder(x_t, z_q)       → x̂_{t+H} (重建未来帧)
+
+训练 loss：重建 loss + codebook loss + commitment loss
+
+推理时：取 z_e (pre-quantization 连续 embedding) 作为伪动作</code></pre>
+
+      <h3><span class="num">3</span>为什么所有 embodiment 共享一个 codebook</h3>
+      <p>论文 Figure 4 展示：同一个 latent action（相同 codebook slot）在人类手、单臂机器人、双臂机器人、GR-1 人形上，都对应着「右臂向左运动」这一语义。共享 codebook 强迫模型在不同 embodiment 之间找到<strong>跨域动作语义的最大公约数</strong>，是跨 embodiment 迁移的基础。</p>
+
+      <h3><span class="num">4</span>LAPA 与 IDM 的对比与互补</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>LAPA (VQ-VAE)</th><th>IDM</th></tr></thead>
+          <tbody>
+            <tr><td>输出空间</td><td>抽象潜在动作（与真实关节角无直接对应）</td><td>真实物理动作（关节角/末端速度）</td></tr>
+            <tr><td>训练监督</td><td>自监督（重建未来帧）</td><td>监督（需要带真实动作的真机轨迹）</td></tr>
+            <tr><td>跨 embodiment</td><td>天然共享 codebook，强</td><td>需每个 embodiment 单独训 IDM</td></tr>
+            <tr><td>低数据量</td><td>优（不依赖真机数据规模）</td><td>弱（标签质量差）</td></tr>
+            <tr><td>高数据量</td><td>一般</td><td>优（标签质量随规模提升）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout success">
+        <div class="callout-head">✅ GR00T N1 的实际选择</div>
+        <p>两者都用。数据金字塔底层（人类视频）用 LAPA；中层神经轨迹按数据量决定：低数据用 LAPA，高数据用 IDM（论文 §4.4 ablation 验证了这一预期）。真机 GR-1 后训练只用 IDM 动作，因为此时已有足量真机数据。</p>
+      </div>
+    </section>
+
+    <!-- ============ 5. IDM ============ -->
+    <section class="card" id="idm">
+      <h2>IDM <span class="tag">Inverse Dynamics</span></h2>
+      <p class="full-name">Inverse Dynamics Model · 逆动力学模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>IDM 是「看相邻两帧画面，反推这一步执行了什么动作」的神经网络。用真机数据（有 ground-truth action）监督训练好后，可以给神经轨迹（只有视频，无动作）打上伪标签。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方向</th><th>输入</th><th>输出</th><th>学的是</th></tr></thead>
+          <tbody>
+            <tr><td>Forward Dynamics</td><td>\((s_t, a_t)\)</td><td>\(s_{t+1}\)</td><td>"做了这个动作，下一状态是什么"</td></tr>
+            <tr><td><strong>Inverse Dynamics (IDM)</strong></td><td>\((s_t, s_{t+1})\)</td><td>\(a_t\)</td><td>"从状态 A 到状态 B，中间发生了什么动作"</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>在 GR00T N1 中的流程</h3>
+      <div class="pre-label"><span>IDM 伪标签流程</span></div>
+<pre><code>第一步：在真机数据（有真实 action）上训练 IDM：
+    loss = || IDM(x_t, x_{t+1}) - a_t ||²
+
+第二步：对神经轨迹视频每对相邻帧做推断：
+    â_t = IDM(x_t, x_{t+1})
+
+第三步：用 â_t 作为伪动作标签，训练策略模型</code></pre>
+
+      <h3><span class="num">3</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源：OpenAI VPT (2022)</div>
+        <p>Baker et al. 2022 在 7 万小时 Minecraft 视频上训练 IDM，给 YouTube 无标注游戏录像打伪标签，再用这些数据预训练 Minecraft 智能体（VPT，Video PreTraining）。GR00T N1 直接引用了这篇，思路一脉相承：把无监督视频转化为有监督训练数据。</p>
+      </div>
+    </section>
+
+    <!-- ============ 6. Neural Trajectories ============ -->
+    <section class="card" id="neural-traj">
+      <h2>Neural Trajectories <span class="tag">Data Aug</span></h2>
+      <p class="full-name">神经轨迹 · 用视频生成模型合成的机器人演示视频</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在少量真机演示上 fine-tune image-to-video 生成模型，然后用不同的语言提示生成大量「如果机器人被要求做另一件事，它会是什么样」的反事实视频——从 88h 真机数据扩增到 827h（10×）。</p>
+      </div>
+
+      <h3><span class="num">1</span>生成流程</h3>
+      <ol>
+        <li><strong>Fine-tune 视频生成模型</strong>：在 3000 条真机数据上 fine-tune open-source image-to-video 模型（如 Wan、CogVideoX 等），100 epochs</li>
+        <li><strong>对象发现 + 反事实提示</strong>：用商业 VLM 检测场景中的物体，自动生成 N 种物理可行的「pick up {A} from {B} to {C}」提示</li>
+        <li><strong>视频生成 + 过滤</strong>：生成视频后，用 VLM 作为 judge 过滤掉不符合语言指令的视频，再重新 caption</li>
+        <li><strong>动作标注</strong>：用 LAPA 或 IDM 给生成视频打伪动作标签</li>
+        <li><strong>Co-training</strong>：真机轨迹：神经轨迹 = 1:1 采样比</li>
+      </ol>
+
+      <h3><span class="num">2</span>价值与局限</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>神经轨迹</th><th>仿真轨迹（DexMimicGen）</th></tr></thead>
+          <tbody>
+            <tr><td>优点</td><td>真实外观，反事实多样性，适合视觉 OOD</td><td>有真实动作标签，大规模（78万条）</td></tr>
+            <tr><td>缺点</td><td>无法保证物理一致性（视频生成模型的限制）</td><td>sim-to-real gap，渲染与真实场景差异</td></tr>
+            <tr><td>用途</td><td>后训练 co-training，提升 OOD 泛化</td><td>预训练 + 后训练，补充真机数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">⏱ 生成成本</div>
+        <p>生成 1 秒视频需 2 分钟（L40 GPU）；全部 827h 神经轨迹共用了约 10.5 万 L40 GPU 小时（约 1.5 天，3600 个 GPU 并行）。相比之下，等效的人工遥操作需要 827 小时人力——<strong>成本比约 100x 以上</strong>。</p>
+      </div>
+    </section>
+
+    <!-- ============ 7. DexMimicGen ============ -->
+    <section class="card" id="dexmimicgen">
+      <h2>DexMimicGen <span class="tag">Sim Data</span></h2>
+      <p class="full-name">DexMimicGen · 仿真中大规模自动生成灵巧操作轨迹</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>从少量人类示范出发，将其分解为以物体为中心的子任务片段，然后自动将这些片段<strong>变换+重放</strong>到新的物体位置和场景配置，从几十条示范扩增到数万条——GR00T N1 用这种方法生成了 78 万条仿真轨迹（≈6500 小时）。</p>
+      </div>
+
+      <h3><span class="num">1</span>工作原理</h3>
+      <ol>
+        <li><strong>人类示范收集</strong>：用 Leap Motion 遥操作设备收集几十条高质量示范</li>
+        <li><strong>物体中心分割</strong>：将每条示范切分为以单一物体为中心的子任务片段（如：抓取杯子、移动杯子、放置杯子）</li>
+        <li><strong>变换+重放</strong>：将片段对齐到新物体位置，调整末端执行器与物体的相对位姿，插值中间运动</li>
+        <li><strong>执行+验证</strong>：在仿真中执行并验证成功，只保留成功的轨迹</li>
+      </ol>
+
+      <h3><span class="num">2</span>规模与效率</h3>
+      <p>GR00T N1 的实际效果：从每对（source, target）容器的少量示范出发，生成 10,000 条新示范。54 种容器组合 × 10,000 = 540,000 条预训练仿真轨迹。加上后训练数据，共生成 780,000 条轨迹（6500 小时），仅用 11 小时。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 与 MimicGen 的关系</div>
+        <p>DexMimicGen（Jiang et al., 2024）是 MimicGen（Mandlekar et al., 2023）的扩展版，主要增加了<strong>对灵巧手（dexterous hand）和双臂操作</strong>的支持。MimicGen 专注于平行夹持器（parallel-jaw gripper）的单臂任务，DexMimicGen 则支持 GR-1 人形机器人的整个手部（多指）控制。</p>
+      </div>
+    </section>
+
+    <!-- ============ 8. Cross-Embodiment ============ -->
+    <section class="card" id="cross-embodiment">
+      <h2>Cross-Embodiment <span class="tag">Transfer</span></h2>
+      <p class="full-name">跨 Embodiment 学习 · 从多种机器体数据中迁移学习</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>让一个模型同时学习来自不同「身体」（单臂、双臂、人形、人类手）的数据，利用共同的视觉-语义知识和操作技能实现迁移——GR00T N1 用 embodiment-specific encoder/decoder 统一不同 embodiment 的状态/动作维度，共享 DiT 骨干。</p>
+      </div>
+
+      <h3><span class="num">1</span>GR00T N1 支持的 embodiment</h3>
+      <ul>
+        <li><strong>真机</strong>：Fourier GR-1 人形机器人（灵巧手 + 双臂）；Open X-Embodiment 数据集中的 Franka、Bridge 等单臂机器人；AgiBot-Alpha 数据集</li>
+        <li><strong>仿真</strong>：双臂 Panda（平行夹持器）、双臂 Panda（灵巧手）、GR-1 人形</li>
+        <li><strong>人类视频</strong>：Ego4D、EPIC-KITCHENS 等，作为「LAPA embodiment」</li>
+        <li><strong>神经轨迹</strong>：视频生成模型合成的 GR-1 轨迹</li>
+      </ul>
+
+      <h3><span class="num">2</span>技术实现</h3>
+      <p>不同 embodiment 的状态/动作维度不同（如单臂 7DoF vs 人形 54DoF），GR00T N1 的解决方案：</p>
+      <ul>
+        <li><strong>Embodiment-specific MLP</strong>：每个 embodiment 有专用的 State Encoder MLP 和 Action Decoder MLP，负责将任意维度映射到共享 embedding 维度</li>
+        <li><strong>共享 DiT 骨干</strong>：所有 embodiment 共享同一套 Transformer weights</li>
+        <li><strong>Latent action 共享 codebook</strong>：所有 embodiment 的无动作视频都标注在同一 latent action 空间</li>
+      </ul>
+
+      <h3><span class="num">3</span>预训练的数据集组成</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>数据层</th><th>来源</th><th>动作类型</th></tr></thead>
+          <tbody>
+            <tr><td>底层（最大量）</td><td>Ego4D, EPIC-KITCHENS, HOI4D 等人类视频</td><td>LAPA 潜动作</td></tr>
+            <tr><td>中层（仿真）</td><td>DexMimicGen 540k + RoboCasa 多任务</td><td>真实动作</td></tr>
+            <tr><td>中层（神经）</td><td>视频生成模型合成的 GR-1 轨迹（827h）</td><td>LAPA 或 IDM 伪动作</td></tr>
+            <tr><td>顶层（真机）</td><td>GR-1 遥操作（88h）+ OXE + AgiBot</td><td>真实动作</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">🔑 迁移的本质</div>
+        <p>跨 embodiment 学习的本质是：<strong>视觉-语义知识不依赖 embodiment</strong>（「杯子」在哪儿、该怎么抓，无论是人手还是机械臂都一样），而<strong>具体运动执行依赖 embodiment</strong>（关节角范围、手指灵活度不同）。共享 backbone 学通用知识，embodiment-specific head 学具体运动。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表 (8)</div>
+    <ul>
+      <li><a href="#dual-system">Dual-System 双系统架构</a></li>
+      <li><a href="#dit">DiT + Flow Matching</a></li>
+      <li><a href="#eagle2">Eagle-2 VLM</a></li>
+      <li><a href="#latent-action">Latent Action (LAPA)</a></li>
+      <li><a href="#idm">IDM — 逆动力学模型</a></li>
+      <li><a href="#neural-traj">Neural Trajectories</a></li>
+      <li><a href="#dexmimicgen">DexMimicGen</a></li>
+      <li><a href="#cross-embodiment">Cross-Embodiment</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · GR00T N1 (arXiv:2503.14734) · NVIDIA 2025 · 配套笔记
+</footer>
+
+</body>
+</html>

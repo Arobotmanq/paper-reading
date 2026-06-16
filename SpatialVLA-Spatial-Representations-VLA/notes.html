@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpatialVLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>SpatialVLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、需要一定背景才好理解的关键概念：Ego3D Position Encoding、Adaptive Action Grids、Spatial Embedding Adaption、VLA 框架、PaliGemma 骨干、3D-aware control 思路，以及跨本体数据集。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 SpatialVLA 综述</a>
+      <span class="pill">📚 当前 7 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2501.15830" style="color: #93c5fd; text-decoration: none;">arXiv:2501.15830</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ Ego3D Position Encoding ============ -->
+    <section class="card" id="ego3d">
+      <h2>Ego3D PE <span class="tag">观测端3D注入</span></h2>
+      <p class="full-name">Egocentric 3D Position Encoding · 自我中心3D位置编码</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把相机看到的2D图像像素，通过<strong>单目深度估计 + 反投影</strong>转换为以相机为原点的3D坐标，再编码为位置嵌入加到视觉 token 上。让 VLM 的视觉 token 同时携带"这个像素在3D空间哪个位置"的信息——无需额外深度相机，无需机器人-相机外参标定。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要它</h3>
+      <p>标准 VLA（OpenVLA、RT-2 等）将 SigLIP 提取的2D视觉 token 直接送入 LLM，这些 token 只有"语义内容"（这里有一个杯子），但没有"3D位置"（这个杯子在机器人前方 40cm 处，高度 15cm）。对于需要精确空间推理的操控任务——比如"把最近的物体放到左边"——模型只能靠训练数据的统计先验"猜"，而不是真正"知道"。</p>
+
+      <h3><span class="num">2</span>技术流程</h3>
+      <div class="pre-label"><span>Ego3D PE Pipeline</span><span>伪代码</span></div>
+<pre><code>输入：RGB 图像 I (H×W×3)
+
+Step 1: ZoeDepth 估计深度图
+  D = ZoeDepth(I)          # D ∈ R^{H×W}，每像素的米制深度
+
+Step 2: 反投影到3D坐标 (自我中心坐标系)
+  p_{x,y} = π⁻¹(u, v, D(u,v); K)   # K = 相机内参矩阵
+  # 得到每个像素的3D坐标 P ∈ R^{3×H×W}
+
+Step 3: 正弦位置编码 + MLP
+  P' = MLP(γ(P))           # γ = 正弦函数，P' ∈ R^{d×H×W}
+
+Step 4: 与 SigLIP 视觉 token 相加
+  O3d = X + P'             # X = SigLIP 2D token，O3d 送入 LLM</code></pre>
+
+      <p><strong>关键：</strong>用的是<strong>相机内参</strong>（焦距、主点），而<strong>不是</strong>机器人-相机外参（机械臂基座到相机的变换）。内参通常由厂商提供或可自标定，且一旦固定几乎不变；而外参每次重新安装相机都需要重新标定，是实际部署的痛点。</p>
+
+      <h3><span class="num">3</span>在 SpatialVLA 里的具体用法</h3>
+      <p>论文关键公式（式2）：</p>
+      <div class="math-display">
+        \[ O_{3d} = X + P' = X + \text{MLP}(\gamma(P)) \]
+      </div>
+      <ul>
+        <li>\(X \in \mathbb{R}^{d \times h \times w}\)：SigLIP 视觉编码器提取的2D语义 token（保留 VLM 预训练的视觉-语言对齐）</li>
+        <li>\(P \in \mathbb{R}^{3 \times h \times w}\)：每个 patch 的自我中心3D坐标</li>
+        <li>\(\gamma(\cdot)\)：正弦函数（类似 Transformer 的位置编码，让 MLP 能处理连续3D坐标）</li>
+        <li>MLP 参数在预训练中随机初始化并优化；文本 token embedding 冻结</li>
+      </ul>
+
+      <h3><span class="num">4</span>和其它3D注入方案的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方案</th><th>硬件需求</th><th>标定需求</th><th>跨本体适用性</th><th>代表工作</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>RGB-D 相机（深度传感器）</td><td>专用深度相机</td><td>RGB-D 内外参</td><td>低（设备依赖）</td><td>多数实验室机器人</td></tr>
+            <tr><td>点云编码器</td><td>LiDAR / 深度相机</td><td>点云到机器人基座外参</td><td>低</td><td>3D-VLA, PerAct</td></tr>
+            <tr><td>3D patch（LLaVA-3D）</td><td>深度相机</td><td>内外参</td><td>中</td><td>LLaVA-3D</td></tr>
+            <tr><td><strong>Ego3D PE（本文）</strong></td><td><strong>普通 RGB 相机</strong></td><td><strong>仅内参</strong></td><td><strong>高（无需重标定）</strong></td><td>SpatialVLA</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-head">📜 局限</div>
+        <p>ZoeDepth 是单目深度估计网络，在<strong>弱纹理、反光、透明物体</strong>上深度估计误差较大；论文未分析 Ego3D PE 对深度估计质量的敏感性。另外，相机内参仍需提供（虽比外参稳定得多）。</p>
+      </div>
+    </section>
+
+    <!-- ============ Adaptive Action Grids ============ -->
+    <section class="card" id="action-grids">
+      <h2>Adaptive Action Grids <span class="tag">动作端3D离散化</span></h2>
+      <p class="full-name">自适应空间动作格子 · 按数据分布的等概率离散化</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把7维连续机器人动作（x,y,z,roll,pitch,yaw,grip）<strong>按实际数据的 Gaussian 分布"等概率"切分</strong>成离散格子，让高频动作区域格子更细——3个 token 编码一步动作，比 RT-2/OpenVLA 的7个快4倍，且精度更高。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么不用线性等间距离散化</h3>
+      <p>RT-1、RT-2、OpenVLA 都用<strong>线性 256-bin 等间距</strong>：把每个动作维度均匀切256份。问题是：机器人的实际动作分布是<strong>高度非均匀的</strong>——大多数操作动作幅度很小（精细调整），极少数幅度很大（大幅移动）。等间距意味着：</p>
+      <ul>
+        <li>大量 bin 落在"几乎从不使用"的大幅动作区域，浪费容量</li>
+        <li>小幅动作区域 bin 太少，精度不足</li>
+        <li>消融实验：SpatialVLA 自适应格子 vs 线性256-bin，Google Robot variant aggregation 高 <strong>+36.5%</strong></li>
+      </ul>
+
+      <h3><span class="num">2</span>技术流程</h3>
+      <div class="pre-label"><span>Adaptive Action Grids</span><span>构建流程</span></div>
+<pre><code>Step 1: 动作分解
+  7D 动作 a = {x, y, z, roll, pitch, yaw, grip}
+    → ΔT (平移) = 转极坐标 (ϕ, θ, r)   [方向×方向×距离]
+    → ΔR (旋转) = (roll, pitch, yaw)
+    → grip = {open=0, close=1}           [2 个离散状态]
+
+Step 2: 拟合 Gaussian 分布（在全部预训练数据上统计）
+  对 ΔT 的 (ϕ, θ, r) 和 ΔR 的 (roll, pitch, yaw)
+  分别拟合 N(μ_a, Σ_a)
+
+Step 3: 等概率切分格子
+  在每个归一化变量 [-1, 1] 上，按 1/M 等概率确定切点
+  a₂, ..., aₘ = argmin ∫ f(x)dx - 1/M  [式4]
+  → 密集区（高频动作）格子细，稀疏区格子粗
+
+Step 4: 构建 token vocabulary
+  ΔT → Mtrans 个格子 (Mϕ × Mθ × Mr)
+  ΔR → Mrot 个格子 (Mroll × Mpitch × Myaw)
+  grip → 2 个 token
+  总 V = Mtrans + Mrot + 2 = 8194
+
+Step 5: 学习 spatial token embedding
+  Ea = {Etrans, Erot, Egrip}    # 随机初始化，随模型训练
+  预测时：autoregressive 预测 3 个 token → de-tokenize 得到动作</code></pre>
+
+      <h3><span class="num">3</span>为什么是 3 个 token 而不是 7 个</h3>
+      <p>原来 RT-2/OpenVLA：每个动作维度独立离散化 → 需预测 7 个 token（x,y,z,roll,pitch,yaw,grip 各一个）。</p>
+      <p>SpatialVLA：把6个连续维度映射到三维网格查表 → 只需预测 3 个 token（ΔT 一个格子编号 + ΔR 一个格子编号 + grip 状态）。每个格子索引覆盖多维，用 embedding 来区分不同格子的语义。这使推理速度从 ~5Hz 提升到 20Hz。</p>
+
+      <h3><span class="num">4</span>和其它动作表示的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方案</th><th>token 数/步</th><th>分辨率</th><th>分布自适应</th><th>迁移能力</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>线性256-bin（RT-2/OpenVLA）</td><td>7</td><td>256 per dim</td><td>否</td><td>差（均匀切分不匹配新分布）</td></tr>
+            <tr><td>连续回归（Octo）</td><td>N/A</td><td>连续</td><td>是</td><td>中</td></tr>
+            <tr><td>Flow Matching（π0）</td><td>连续扩散</td><td>连续</td><td>是</td><td>强，但推理慢</td></tr>
+            <tr><td><strong>Adaptive Grids（本文）</strong></td><td><strong>3</strong></td><td><strong>8194 词表</strong></td><td><strong>是（Gaussian 拟合）</strong></td><td><strong>强（re-discretization）</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ Spatial Embedding Adaption ============ -->
+    <section class="card" id="spatial-adaption">
+      <h2>Spatial Embedding Adaption <span class="tag">后训练迁移</span></h2>
+      <p class="full-name">空间嵌入自适应 · 新机器人快速迁移机制</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>对新机器人数据重拟 Gaussian → 生成新的动作格子 → 用<strong>三线性插值</strong>从预训练格子 embedding 初始化新格子 embedding → LoRA 微调。让新机器人的格子"继承"预训练中学到的3D动作语义，而不是从随机初始化开始——LIBERO 上提升 <strong>+4.6~5.4%</strong>。</p>
+      </div>
+
+      <h3><span class="num">1</span>问题：直接把旧格子用于新机器人</h3>
+      <p>预训练在 OXE+RH20T 的综合动作分布上切格子。新机器人（比如 Franka）的动作分布可能完全不同——比如工作空间更小、旋转范围不同。如果直接用预训练的格子：</p>
+      <ul>
+        <li>新机器人的高频动作落在预训练格子的稀疏区 → 低精度</li>
+        <li>格子 embedding 的空间几何关系与新机器人不匹配 → 初始化差</li>
+      </ul>
+
+      <h3><span class="num">2</span>三线性插值初始化</h3>
+      <p>核心思路：新格子的中心点在预训练的3D动作空间里是"有坐标的"，因此可以用周围格子的 embedding 加权平均来初始化：</p>
+      <div class="math-display">
+        \[ e^i_{a_{\text{new}}} = \sum_{j=1}^{K} w_j \cdot e^j_a \]
+      </div>
+      <p>其中 \(w_j\) 按新格子中心点与相邻预训练格子中心点的归一化距离计算（近者权重大）。这相当于在格子空间做双线性/三线性插值，保留了预训练 embedding 中学到的"3D运动方向语义"。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📌 工程意义</div>
+        <p>这是 SpatialVLA 区别于"只是大模型 LoRA 微调"的关键创新点：通过 embedding 插值初始化，小数据（如 LIBERO 的50条示范/task）也能快速收敛，避免了大量 fine-tuning 步骤带来的遗忘风险。</p>
+      </div>
+    </section>
+
+    <!-- ============ VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">Vision-Language-Action</span></h2>
+      <p class="full-name">视觉-语言-动作模型 · 机器人通用策略的当前范式</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把预训练 VLM（视觉+语言）接上一个动作预测头，在机器人演示数据上微调，使模型能根据图像观测和语言指令直接生成机器人动作。核心假设：VLM 的视觉/语言理解能力可以"迁移"到操控任务。</p>
+      </div>
+
+      <h3><span class="num">1</span>发展脉络</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>模型</th><th>VLM 骨干</th><th>动作表示</th><th>特点</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>RT-2 (2023)</td><td>PaLI-X (55B)</td><td>线性256-bin，7 tokens</td><td>首个大规模 VLA，闭源</td></tr>
+            <tr><td>OpenVLA (2024)</td><td>Prismatic (7B)</td><td>线性256-bin，7 tokens</td><td>开源，OXE 训练</td></tr>
+            <tr><td>π0 (2024)</td><td>PaliGemma+Expert</td><td>Flow Matching 连续动作</td><td>高精度，JAX</td></tr>
+            <tr><td><strong>SpatialVLA (2025)</strong></td><td><strong>PaliGemma 2 (3.5B)</strong></td><td><strong>Adaptive Grids，3 tokens</strong></td><td><strong>3D感知，开源，快</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>通用 VLA 的核心挑战</h3>
+      <ul>
+        <li><strong>观测异构</strong>：不同机器人的相机位置、分辨率各异 → SpatialVLA 用 Ego3D PE 对齐</li>
+        <li><strong>动作异构</strong>：不同机器人的动作空间（关节/末端/速度）差异巨大 → SpatialVLA 用 Adaptive Grids 统一</li>
+        <li><strong>数据规模</strong>：单机器人数据不足 → 跨本体数据集（OXE、RH20T）</li>
+        <li><strong>推理延迟</strong>：VLM 自回归推理慢 → SpatialVLA 3 tokens/step，20Hz</li>
+      </ul>
+    </section>
+
+    <!-- ============ PaliGemma / VLM backbone ============ -->
+    <section class="card" id="paligemma">
+      <h2>PaliGemma 2 <span class="tag">VLM 骨干</span></h2>
+      <p class="full-name">Google PaliGemma 2 · SpatialVLA 的视觉-语言底座</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>PaliGemma 2 = SigLIP（视觉编码器）+ Gemma 2（语言模型）的组合。SigLIP 提取语义丰富的图像 patch token，Gemma 2 以 LLM 方式自回归生成文本和动作 token。SpatialVLA 在其上添加 Ego3D PE 和 Adaptive Action Grids，动作 token 作为新的词表类别。</p>
+      </div>
+
+      <h3><span class="num">1</span>结构</h3>
+      <ul>
+        <li><strong>SigLIP</strong>（Sigmoid 损失的 CLIP）：图像 → patch token，对 contrastive 预训练鲁棒，在机器人任务中通常比 CLIP 更稳定</li>
+        <li><strong>Gemma 2</strong>：谷歌开源 LLM，自回归 next-token prediction</li>
+        <li>SpatialVLA 共 3.5B 参数：远小于 RT-2-X 的 55B，但性能更好（空间表示设计功劳）</li>
+      </ul>
+
+      <h3><span class="num">2</span>为什么选 PaliGemma 2 而非其它 VLM</h3>
+      <p>π0（2024）也用 PaliGemma（初代），表明这个骨干在机器人任务上有良好的预训练基础。SpatialVLA 用 PaliGemma 2（改进版），并<strong>冻结文本 token embedding</strong>（保留语言理解能力），只训练 Ego3D PE 的 MLP 和 spatial action token embedding。这种"最小改动"策略在论文消融中被证明有益于指令跟随能力。</p>
+    </section>
+
+    <!-- ============ 3D-aware control ============ -->
+    <section class="card" id="3d-aware">
+      <h2>3D-aware Control <span class="tag">空间感知控制</span></h2>
+      <p class="full-name">3D空间感知控制 · 从2D视觉策略到3D空间策略的范式转移</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>让机器人策略不仅"看到"物体，还"知道"物体在3D空间哪里——使其对视角变化、光照变化、相机位姿变化更鲁棒，并能执行"放到最近的/最高的/左边的"等空间指令。SpatialVLA 是首个在 VLA 框架内同时在输入和输出两端注入3D信息的工作。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么2D策略不够</h3>
+      <p>当相机角度变化时，2D图像中的像素位置完全不同，但3D坐标（相对机器人）几乎不变。2D策略必须靠暴力数据增强"记住"各种视角，而3D感知策略天然具备视角不变性。</p>
+      <p>论文消融数据（Table IV, row #8 vs #1）：去掉 Ego3D PE 后，<strong>variant aggregation（视角/纹理/光照变化测试）下降 12.7%</strong>——这正是3D信息提供的不变性在发挥作用。</p>
+
+      <h3><span class="num">2</span>SpatialVLA vs 其他3D基础模型方案</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方案</th><th>3D信息来源</th><th>动作空间</th><th>是否端到端</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>3D-LLM</td><td>点云提取器</td><td>语言规划</td><td>否（需低层策略）</td></tr>
+            <tr><td>3D-VLA</td><td>3D场景图</td><td>离散高层动作</td><td>部分</td></tr>
+            <tr><td>LEO</td><td>2D图像 + 点云</td><td>语言/导航</td><td>否</td></tr>
+            <tr><td><strong>SpatialVLA</strong></td><td><strong>单目深度估计（无额外硬件）</strong></td><td><strong>连续6DOF+grip</strong></td><td><strong>是</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ OXE / RH20T ============ -->
+    <section class="card" id="dataset">
+      <h2>OXE + RH20T <span class="tag">跨本体数据集</span></h2>
+      <p class="full-name">Open X-Embodiment + RH20T · SpatialVLA 预训练数据</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>SpatialVLA 预训练使用 <strong>OXE（来自22种机器人/21个机构）</strong>的子集 + <strong>RH20T（20万+真实机器人轨迹）</strong>，共计 1.1M episodes，28个数据集。数据混合权重根据各子集在真实环境的测试性能调优（而非按数据量比例）。</p>
+      </div>
+
+      <h3><span class="num">1</span>Open X-Embodiment (OXE)</h3>
+      <ul>
+        <li>Google DeepMind 联合21个机构构建，覆盖 UR5、Franka、WidowX、Google Robot 等22种机器人</li>
+        <li>数据质量参差不齐：论文指出 Kuka 数据有明显右倾偏差，RH20T 数据缺清晰 prompt</li>
+        <li>论文在预训练最后1/3阶段移除 DROID 数据集（按 OpenVLA 经验），改善最终质量</li>
+      </ul>
+
+      <h3><span class="num">2</span>RH20T</h3>
+      <ul>
+        <li>来自上海 AI 实验室（本文同机构）的大规模真实机器人轨迹集</li>
+        <li>包含多类型机器人、多任务场景，与 OXE 互补</li>
+      </ul>
+
+      <h3><span class="num">3</span>数据混合比例调优</h3>
+      <p>沿用 OpenVLA 的混合策略，但<strong>根据各子集在真实环境测试性能重新调整权重</strong>——这是重要的工程细节：直接按数据量混合会让低质量/领域外数据稀释高质量数据的影响。具体权重见论文 Appendix A。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📌 对你的意义</div>
+        <p>OXE + RH20T 均已公开。如需在 SpatialVLA 基础上微调到新机器人（如人形操控臂），可参考论文的 Spatial Embedding Adaption 后训练方案：只需在新机器人的50条演示上 LoRA 微调，配合格子 re-discretization，即可快速迁移。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#ego3d">Ego3D PE — 观测端3D注入</a></li>
+      <li><a href="#action-grids">Adaptive Action Grids — 动作离散化</a></li>
+      <li><a href="#spatial-adaption">Spatial Embedding Adaption — 后训练迁移</a></li>
+      <li><a href="#vla">VLA — 视觉-语言-动作模型</a></li>
+      <li><a href="#paligemma">PaliGemma 2 — VLM 骨干</a></li>
+      <li><a href="#3d-aware">3D-aware Control — 空间感知控制</a></li>
+      <li><a href="#dataset">OXE + RH20T — 跨本体数据集</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · SpatialVLA (arXiv:2501.15830) · 配套笔记 · 7 个概念
+</footer>
+
+</body>
+</html>

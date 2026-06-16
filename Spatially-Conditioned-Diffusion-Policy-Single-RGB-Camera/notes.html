@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SCDP 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>SCDP 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要一定背景知识才好理解的关键概念——定义、原理、在 SCDP 中的具体用法，以及彼此之间的关系。每张卡可从综述对应术语直接跳转。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 SCDP 综述</a>
+      <span class="pill">📚 当前 4 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2606.14535" style="color: #93c5fd; text-decoration: none;">arXiv:2606.14535</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ SPATIAL CONDITIONING ============ -->
+    <section class="card" id="spatial-conditioning">
+      <h2>Spatial Conditioning <span class="tag">Core Idea</span></h2>
+      <p class="full-name">Spatial Conditioning on Trajectory · 轨迹空间条件（本文核心创新）</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把扩散去噪过程中那条<strong>中间末端轨迹</strong>投影回图像，沿投影出的像素锚点采样多尺度视觉特征，当作策略的"空间条件"。等于让单相机策略<strong>自己生成注意力地图</strong>——夹爪要去哪，就让网络盯哪——无需分割、VLM 或点追踪等外部感知模块。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>"空间条件（spatial conditioning）"指：不再把整张图压成一个全局 embedding 喂给策略，而是<strong>在图像上选出若干"该看的位置"，只在这些位置抽特征</strong>当条件。SCDP 的独到之处在于这些位置从哪来——它们来自<strong>当前预测的未来末端执行器（EE）轨迹</strong>：把这条 3D 轨迹投影到图像平面，落点就是"空间注意力锚点（spatial attention anchors）"。</p>
+      <p>关键在于这条轨迹是扩散去噪的<strong>中间产物</strong>：每去噪一步，动作估计变准一点，投影锚点也跟着挪动、聚焦。于是注意力不是一次性算好的静态地图，而是随去噪迭代演化、逐步收敛到接触区。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>SCDP 的"空间条件模块（Spatial Conditioning Module，§3.2）"是全文创新核心，分三步（详见 <a href="#trajectory-projection">轨迹投影</a> 卡）：① 从中间动作轨迹重建未来 EE 点轨迹 → ② 用相机外参/内参投影成 2D 像素锚点 → ③ 在 <a href="#multi-scale-fpn">多尺度特征</a> 上沿锚点做双线性采样，聚合成一个紧凑的"spatial context 向量"，再经 FiLM 注入去噪 U-Net（替换掉标准 DP 里固定的视觉观测 \(O\)）。</p>
+      <p>原文点出这套机制的灵魂是"动态"——锚点随去噪步刷新：</p>
+      <div class="callout">
+        <div class="callout-head">📄 原文（p.4 §3.2）</div>
+        <p>"the subsequent trajectory points \(P_{1:s}\) are <strong>iteratively updated throughout the denoising process</strong>. This allows the model to <strong>dynamically adjust its spatial attention</strong> to task-relevant regions."</p>
+      </div>
+      <p>消融印证了这个设计的价值：重建横长 \(s=0\)（只用一个静态末端点）时成功率 75.8%，\(s=8\) 升到 82.5%，\(s=12\) 达 83.9%——加入未来轨迹点确实提供了更丰富的任务相关上下文。在 Meta-World "Hard" 上，SCDP 单 RGB 拿 82.5%，超过用了多相机的 DP+腕相机（74.2%）。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方案</th><th>"该看哪"从哪来</th><th>依赖</th><th>SCDP 的差异</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>SKIL</strong></td><td>分割掩码 → 语义关键点</td><td>Segment Anything 等大模型 + 多阶段感知管线</td><td>SCDP 不需要分割</td></tr>
+            <tr><td><strong>OTTER</strong></td><td>VLM 找语言相关区域</td><td>视觉-语言大模型 + 语言指令</td><td>SCDP 无语言、无 VLM</td></tr>
+            <tr><td><strong>标准 DP / DP3</strong></td><td>不显式选区，压成全局 embedding</td><td>—</td><td>SCDP 显式空间选区</td></tr>
+            <tr><td><strong>SCDP（本文）</strong></td><td>扩散回路内部的中间 EE 轨迹</td><td>仅需相机外参/内参（手眼标定）</td><td>感知内化进扩散自身</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>核心分野：SKIL/OTTER 这派"任务相关视觉条件"强在语义，但靠外部预训练模型搭多阶段管线，<strong>早期感知误差会级联</strong>到下游；SCDP 把"找区域"内化进扩散循环——中间轨迹既是动作估计，又是空间查询，用同一条轨迹把"动作"和"该看哪"绑死，省掉了会级联误差的外部感知。代价：它假设<strong>任务相关区域就在末端轨迹附近</strong>，对工具使用/远端接触会失效（§6 局限）。</p>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>本文（SCDP）提出的核心机制</strong>，见 Kim et al. <em>Spatially Conditioned Diffusion Policy</em>（arXiv:2606.14535, 2026），§3.2 Spatial Conditioning Module。论文将其定位为对 Diffusion Policy 框架的"scene conditioning"新机制——用演化的动作轨迹在任务相关位置采样点特征。思想上承接"任务相关视觉条件"一脉（对照 SKIL [8]、OTTER [10]），但首次用扩散回路内部的中间轨迹本身充当空间查询。</p>
+      </div>
+    </section>
+
+    <!-- ============ DIFFUSION POLICY ============ -->
+    <section class="card" id="diffusion-policy">
+      <h2>Diffusion Policy <span class="tag">DP</span></h2>
+      <p class="full-name">Diffusion Policy · 扩散策略（本文搭建其上的基座框架）</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Diffusion Policy（DP）把"输出机器人动作"建模成一个<strong>条件扩散去噪过程</strong>：从高斯噪声出发，在去噪网络引导下迭代细化，最终生成一段未来动作序列（action chunk）。SCDP 直接搭在 DP 上，<strong>唯一替换的是条件输入</strong>——把固定视觉观测换成随去噪演化的空间上下文。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>传统模仿学习直接回归动作 \(a = \pi(o)\)，难以表达多模态行为（同一观测下有多条合理轨迹）。DP 换个思路：把策略写成<strong>条件去噪扩散概率模型（DDPM）</strong>。训练时给真动作加噪、学一个网络 \(\epsilon_\theta\) 预测噪声；推理时从纯噪声反复去噪，把它"雕"成一段动作序列。这样能稳定地表达复杂、多峰的动作分布。训练目标是标准的噪声预测 MSE：</p>
+      <div class="math-display">
+        \[ \mathcal{L} = \mathbb{E}_{k,A_0,\epsilon}\,\big\| \epsilon - \epsilon_\theta(A_k,\, c,\, k) \big\|^2,\quad A_k = \sqrt{\bar\alpha_k}\,A_0 + \sqrt{1-\bar\alpha_k}\,\epsilon,\ \ \epsilon\sim\mathcal{N}(0,I) \]
+      </div>
+      <p>其中 \(k\) 是扩散步、\(A_0\) 是真动作序列、\(c\) 是条件（通常为视觉观测）。两个标志性设计：<strong>action chunking</strong>（一次预测一整段未来动作而非单步，减少误差累积）和<strong>receding-horizon 执行</strong>（预测一段、只执行前几步、再重预测）。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>SCDP 明确"搭在 DP 框架之上"，沿用其条件扩散过程、conditional U-Net 主干、DDIM 推理（仿真 16 步 / 真机 10 步），<strong>动作头几乎原样照搬</strong>。它唯一动的地方是<strong>条件输入</strong>：</p>
+      <div class="callout">
+        <div class="callout-head">📄 原文（p.4 §3.3）</div>
+        <p>"We formulate our policy as a conditional diffusion process following the <strong>Diffusion Policy (DP) framework</strong> [3], where the denoising network is conditioned on the <strong>spatial context \(F^k\) instead of the fixed visual observation \(O\)</strong>."</p>
+      </div>
+      <p>注意 \(F^k\) 带上标 \(k\)——它每个去噪步都变（因为轨迹锚点在变），这是与原版 DP 的本质区别：原版 DP 的视觉条件 \(O\) 在整个去噪过程中<strong>固定</strong>，而 SCDP 的空间条件<strong>随去噪步演化</strong>，形成"去噪 ↔ 视觉条件"的反馈回路。SCDP 的创新点不在动作头，而在这个反馈回路。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>原版 Diffusion Policy</th><th>SCDP</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>条件输入</td><td>固定视觉观测 \(O\)（全局 embedding）</td><td>随去噪演化的空间上下文 \(F^k\)</td></tr>
+            <tr><td>条件何时算</td><td>去噪前算一次，全程不变</td><td>每个去噪步重算一次</td></tr>
+            <tr><td>视觉特征</td><td>单尺度全局特征</td><td>多尺度、沿轨迹锚点采样</td></tr>
+            <tr><td>相机配置</td><td>常配多相机（全局+腕相机）</td><td>单全局 RGB 即可</td></tr>
+            <tr><td>动作头</td><td colspan="2">两者相同：conditional U-Net + DDIM + action chunking</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>另需区分：<strong>DP3</strong>（3D Diffusion Policy）是 DP 的点云变体，把单相机点云压成全局特征；<strong>RDT-1B / π0</strong> 等用扩散/flow 做动作头的大模型也是同根思路。SCDP 与它们正交——不卷动作头、不卷规模，只换条件输入。</p>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>Chi et al. 2023</strong> — <em>"Diffusion Policy: Visuomotor Policy Learning via Action Diffusion"</em>，发表于 Robotics: Science and Systems (RSS) 2023（arXiv:2303.04137，本文参考文献 [3]）。该文首次将视觉运动策略表述为动作空间上的条件去噪扩散过程，并引入 action chunking + receding-horizon 执行，已成为模仿学习的代表性扩散基线。SCDP 的去噪网络、训练 loss、DDIM 推理均直接沿用此框架。</p>
+      </div>
+    </section>
+
+    <!-- ============ MULTI-SCALE FPN ============ -->
+    <section class="card" id="multi-scale-fpn">
+      <h2>Multi-Scale Feature <span class="tag">FPN</span></h2>
+      <p class="full-name">Multi-Scale Feature / Feature Pyramid Network 编码 · 多尺度特征金字塔</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>FPN 式多尺度特征：从 CNN（这里是 ResNet-18）各 stage 抽出从粗到细的多分辨率特征图——<strong>低分辨率层含高层语义、高分辨率层含精细细节</strong>。SCDP 用全部 5 级 \(F_1\)–\(F_5\)，对 USB 插入这种精密对齐任务至关重要（消融显示比仅用最高层语义 \(F_5\) 高出 <strong>+13.9pp</strong>）。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>深度 CNN 天然就是一个金字塔：越往深层，空间分辨率越低、通道（语义）越深。FPN 的核心观察是——<strong>不同粒度对不同任务都有用</strong>：低分辨率特征图擅长"这是什么/在哪个大区域"（语义上下文），高分辨率特征图擅长"边界/纹理/精确对齐"（精细几何）。所以与其只用最深一层，不如<strong>把多个 stage 的特征都留下来一起用</strong>。原始 FPN 还加了自顶向下通路 + 横向连接，把高层语义回灌到高分辨率层；SCDP 这里取其"多尺度金字塔"思想的简化版。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>SCDP 的"多尺度图像编码器（§3.1）"以 <strong>ResNet-18</strong> 为主干，取五个 stage 最后残差块的激活 \(C_1\)–\(C_5\)（相对输入分辨率的有效 stride 为 4/4/8/16/32），各接一个独立 \(3\times3\) 卷积把通道对齐到统一维度 \(d=64\)，得到多尺度特征图集合：</p>
+      <div class="math-display">
+        \[ F = \{F_1, \ldots, F_5\},\quad F_i \in \mathbb{R}^{d \times H_i \times W_i},\quad d = 64 \]
+      </div>
+      <p>空间条件模块沿投影锚点在<strong>每一级</strong> \(F_n\) 上做双线性采样，得到 \(f_{i,n}\)；聚合时只沿时间轴平均池化、<strong>保留多分辨率拼接</strong>，得到 spatial context \(F=[\bar f_1,\ldots,\bar f_5]\in\mathbb{R}^{5d}\)（即 \(5\times64=320\) 维）。原文强调拼接是为了不丢分辨率信息：</p>
+      <div class="callout">
+        <div class="callout-head">📄 原文（p.4 §3.2）</div>
+        <p>"we apply average pooling <strong>only along the temporal axis</strong> while preserving multi-resolution information through <strong>concatenation of the pooled feature vectors</strong>."</p>
+      </div>
+      <p>消融极有说服力：仅用最高层 \(F_5\) → 68.6%，逐步加层一路上升，<strong>用全 \(F_1\)–\(F_5\) 达 82.5%，比仅 \(F_5\) 高 13.9 个百分点</strong>；而且连基线 DP 加全尺度也涨（16.7%→48.6%）——说明多尺度对精密动作生成是<strong>普适有用</strong>的归纳偏置，不止对 SCDP。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>单尺度（仅 \(F_5\)）</th><th>多尺度 \(F_1\)–\(F_5\)（本文）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>保留信息</td><td>高层语义，丢精细细节</td><td>语义 + 细节兼得</td></tr>
+            <tr><td>精密对齐</td><td>弱（看不清接触边界）</td><td>强（高分辨率层保几何）</td></tr>
+            <tr><td>Hard 成功率</td><td>68.6%</td><td><strong>82.5%（+13.9pp）</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>与<strong>原始 FPN</strong> 的差异：FPN 设计用于<strong>目标检测</strong>，靠自顶向下通路+横向连接构建语义增强的金字塔；SCDP 借的是"多分辨率金字塔捕捉不同粒度"这一核心思想，把它当成<strong>采样源</strong>（沿轨迹锚点抽点特征），用途完全不同。与 <strong>DP3</strong> 等点云多尺度方法也不同——后者在 3D 点云上做层级，SCDP 在 2D 图像特征上做。骨干选择上，消融显示 ResNet 的局部性偏置在小数据下优于 ViT-S/16（31.7%）和 CLIP-RN50（16.9%）；ResNet-34 略高（85.0%）但为公平对比选 ResNet-18（82.5%）。</p>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>Lin et al. 2017</strong> — <em>"Feature Pyramid Networks for Object Detection"</em>，CVPR 2017（arXiv:1612.03144，本文参考文献 [33]）。FPN 利用深度卷积网络固有的多尺度金字塔层级，以极小代价构建跨尺度特征。SCDP 原文明言"<strong>Inspired by the Feature Pyramid Network (FPN) [33]</strong>"采用多尺度视觉表征，从单视角捕捉不同粒度信息（p.3 §2 Multi-Scale Visual Representations）。</p>
+      </div>
+    </section>
+
+    <!-- ============ TRAJECTORY PROJECTION ============ -->
+    <section class="card" id="trajectory-projection">
+      <h2>Trajectory Projection <span class="tag">Recon + Proj</span></h2>
+      <p class="full-name">Trajectory Reconstruction &amp; Projection · 轨迹重建与投影（空间条件模块前两步）</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>空间条件模块的前两步，负责"把动作变成图像上的锚点位置"：<strong>① 重建</strong>——把中间动作（相对位移）累加成未来 EE 的 3D 点轨迹 \(P_i=P_{i-1}+\Delta P_i\)；<strong>② 投影</strong>——用相机外参 \([R|t]\) 与内参 \(K\) 把每个 3D 点投到 2D 像素 \((u_i,v_i)\)。这两步把"该看哪"从动作空间搬到了图像空间——前提是<strong>精确手眼标定</strong>。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>这是把"未来动作"翻译成"图像注意力位置"的几何桥梁，两步：</p>
+      <p><strong>① 轨迹重建（Trajectory Reconstruction）。</strong>SCDP 把动作参数化为相对当前状态的位移。给定去噪步 \(k\) 的中间动作序列 \(A^k_t = a_{1:h}\)，取其平移位移 \(\Delta P_{1:s}\)，从当前 EE 位置 \(P_0\) 出发累加重建未来 \(s\) 步 EE 点轨迹（\(s\le h\) 为"重建横长"，本文 \(s=8\)、预测横长 \(h=16\)）：</p>
+      <div class="math-display">
+        \[ P_{0:s} = (P_0, P_1, \ldots, P_s),\qquad P_i = P_{i-1} + \Delta P_i,\quad P_i \in \mathbb{R}^3 \]
+      </div>
+      <p>\(P_0\) 由当前状态定、保持不变；\(P_{1:s}\) 在去噪过程中被反复更新（这正是注意力能"动态聚焦"的原因，见 <a href="#spatial-conditioning">Spatial Conditioning</a>）。</p>
+      <p><strong>② 轨迹投影（Trajectory Projection）。</strong>这些点在任务空间是 3D 的，要投到图像平面才能当锚点。先用外参 \([R|t]\in SE(3)\) 把机器人基座标系的点变换到相机坐标系，再用内参 \(K\) 投成 2D 像素：</p>
+      <div class="math-display">
+        \[ P^{\text{cam}}_i = R P_i + t,\qquad (u_i, v_i) \sim K\, P^{\text{cam}}_i \]
+      </div>
+      <p>得到的 \((u_i,v_i)\) 就是该点在图像上的注意力锚点位置，供后续在多尺度特征上做双线性采样。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>这两步是<strong>空间条件模块三步流水线（§3.2）的前两步</strong>（第三步是点采样，见 <a href="#multi-scale-fpn">多尺度特征</a>）。它们和图像编码器分工不同——<strong>图像编码每次推理只跑一次，而轨迹重建+投影每个去噪步都重做一次</strong>（因为中间动作在变）。原文给出累加公式与动态更新的判断：</p>
+      <div class="callout">
+        <div class="callout-head">📄 原文（p.4 §3.2）</div>
+        <p>"The future positions are reconstructed using a cumulative formulation: \(P_i = P_{i-1}+\Delta P_i\). While \(P_0\) remains constant as determined by the current state, the subsequent trajectory points \(P_{1:s}\) are iteratively updated throughout the denoising process."</p>
+      </div>
+      <p>实践细节：参考点可配置——Meta-World 用夹爪工具中心点（TCP），DexArt 用手掌点（palm point）。整套投影<strong>依赖精确的相机外参/内参</strong>，即手眼标定的质量直接决定锚点准不准。真机用 Franka + 单 Intel RealSense D435i 验证可行。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <ul>
+        <li><strong>相对位移参数化 vs 绝对位姿</strong>：用 \(\Delta P_i\) 累加而非直接预测绝对位置，使轨迹重建只需"当前位置 + 动作序列"，与 DP 的动作表示天然兼容。</li>
+        <li><strong>每步重做 vs 一次算好</strong>：与图像编码（每次推理一次）相对——这是 SCDP "注意力随去噪演化"的实现基础；若改成只投影最终去噪结果，就失去了迭代聚焦的好处。</li>
+        <li><strong>3D→2D 投影 vs 直接 2D 操作</strong>：SCDP 在 3D 任务空间重建轨迹再投回 2D，而非直接在图像上预测注意力——好处是几何一致、可利用真实相机标定；代价是<strong>必须有准确的外参 \([R|t]\) 和内参 \(K\)</strong>，标定误差会直接体现为锚点偏移（这是该方法落地的硬约束之一）。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p><strong>本文（SCDP）提出</strong>，作为空间条件模块的前两步，见 Kim et al. <em>Spatially Conditioned Diffusion Policy</em>（arXiv:2606.14535, 2026），§3.2 Trajectory Reconstruction / Trajectory Projection。其中所用的"外参 \([R|t]\in SE(3)\) + 内参 \(K\) 把 3D 点投到像素"是计算机视觉的<strong>标准针孔相机投影模型</strong>（非本文原创的几何工具）；本文的贡献在于<strong>把扩散中间动作轨迹接进这套投影、当作演化的视觉注意力锚点</strong>来用。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#spatial-conditioning">Spatial Conditioning — 轨迹空间条件</a></li>
+      <li><a href="#diffusion-policy">Diffusion Policy — 扩散策略 (DP)</a></li>
+      <li><a href="#multi-scale-fpn">Multi-Scale Feature — FPN 多尺度编码</a></li>
+      <li><a href="#trajectory-projection">Trajectory Projection — 轨迹重建与投影</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · SCDP (arXiv:2606.14535) · 配套笔记
+</footer>
+
+</body>
+</html>

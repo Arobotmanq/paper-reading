@@ -1,0 +1,46 @@
+{
+  "title": "HoMMI: Learning Whole-Body Mobile Manipulation from Human Demonstrations",
+  "title_cn": "HoMMI：从人类示范中学习全身移动操作",
+  "field": "vla",
+  "venue": "RSS 2026",
+  "date": "2026",
+  "one_liner": "给 UMI 手持夹爪加头戴 iPhone，用三个跨本体设计（3D 点云视觉、look-at 点头部动作、夹爪坐标系）将纯人类示范直接迁移到全身移动机器人，无需任何机器人遥操数据。",
+  "framework": "idea-first",
+  "idea": "移动操作需要全身协调+主动感知，现有腕部摄像头（UMI）缺全局视野，遥控机器人采数据又慢贵。解法：加头戴摄像头让人自然演示，再用专门的跨本体设计（3D视觉消外观差距+look-at点消运动学差距+夹爪坐标系统一空间表示）完全无需机器人数据实现迁移。",
+  "logic_chain": [
+    "移动操作需要全局感知+双臂协调+主动感知，腕部摄像头（UMI原版）无法覆盖",
+    "加头戴摄像头自然填补全局视野，但引入更大的视觉差距（外观/高度）和运动学差距（颈部自由度）",
+    "视觉差距解法：3D点云表示+夹爪坐标系裁掉人臂，使策略看到与本体无关的几何信息",
+    "运动学差距解法：用3D look-at点替代6-DoF头部姿态，策略只表达\"看哪里\"的语义意图",
+    "全身控制器负责将末端轨迹+look-at点转化为满足物理约束的全身关节运动，策略-控制器解耦"
+  ],
+  "method_skeleton": [
+    "HoMMI数据采集装置：3部iPhone（两腕+一头盔）+ARKit多设备协同，60Hz同步RGB+深度+6-DoF姿态，无需机器人",
+    "跨本体手眼策略：头部3D点云（DINOv3+点图位置编码+夹爪坐标系注意力池化）+ look-at点动作表示 + Diffusion Policy（DiT骨干，23D动作空间，32步horizon）",
+    "约束感知全身控制器：差分IK（Mink）+ 质心约束+自碰撞回避+名义姿态正则化，100Hz异步桥接10Hz策略与500Hz机器人控制"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "直接命中：完整的移动操作学习pipeline，跨本体手眼策略设计、look-at点动作表示和全身控制器架构均可直接借鉴",
+    "track_B_legged": "不相关：聚焦轮式底盘（RB-Y1），不涉及足式locomotion"
+  },
+  "validation": "RB-Y1双臂全身移动机器人，三个长程任务各20次rollout：Laundry 90%（vs Wrist-Only 20%）、Delivery 85%（vs Wrist-Only 15%）、Tablescape 80%（vs 所有baseline 0-55%）；未见物体90.6%、未见光照93.8%；深度噪声10mm以内无损失",
+  "core_points": [
+    "真问题：移动操作需全身协调+主动感知，现有UMI腕摄像头缺全局视野，遥控采数据又受限",
+    "数据采集：3部iPhone（两腕+一头盔）+ARKit统一坐标系，60Hz同步，完全无需机器人",
+    "视觉跨本体：头部RGB→3D点云（DINOv3+点图编码），夹爪坐标系下裁掉人臂点",
+    "运动学跨本体：6-DoF头部姿态→3D look-at点，控制器自行求解可行颈部关节角",
+    "全身控制器：差分IK+约束（质心/碰撞/直立），100Hz异步桥接三频率系统",
+    "关键反事实：朴素添加egocentric RGB（无跨本体处理）在两个任务成功率0%——证明三个设计非可选而是必要"
+  ],
+  "effects": [
+    "Laundry: 90% vs Wrist-Only 20% / RGB-Only 0% / Head-Only 0%",
+    "Delivery: 85% vs Wrist-Only 15% / RGB-Only 45% / Head-Only 5%",
+    "Tablescape: 80% vs 所有baseline 0-55%",
+    "未见物体泛化: 90.63%±12.10%；未见光照: 93.75%±10.83%",
+    "不同身高操作员（167/182cm）示范均成功迁移"
+  ],
+  "open_source": "code+data+hardware",
+  "open_source_detail": "MIT许可证；代码（训练/部署/示范处理脚本，Diffusion Policy+DiT框架）+数据（三个任务示范数据）+硬件设计（CAD文件，Google Drive外链）均已发布；无预训练权重，需自行训练。已实时确认：github.com/xxm19/hommi",
+  "rating": "Important",
+  "summary": "summary.html"
+}

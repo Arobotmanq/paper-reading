@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>π0 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.analogy {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.analogy .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code { background: none; color: inherit; padding: 0; border: 0; font-family: "JetBrains Mono", monospace; }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>π0 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要一定背景才好理解的关键概念。每个概念给出定义、原理、在 π0 中的具体用法，以及对比/出处。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 π0 综述</a>
+      <span class="pill">📚 当前 7 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2410.24164" style="color: #93c5fd; text-decoration: none;">arXiv:2410.24164</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ Flow Matching ============ -->
+    <section class="card" id="flow-matching">
+      <h2>Flow Matching <span class="tag">连续动作生成</span></h2>
+      <p class="full-name">条件流匹配 (Conditional Flow Matching) · 连续正规化流的高效训练方法</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Flow matching 是 diffusion 的「直线简化版」：不学复杂的噪声预测曲线，而是直接学一个从噪声到数据的<strong>直线速度场</strong>，让积分步数从 100+ 步减到 10 步，同时保持同等的分布建模能力。π0 用它在 10 步内从高斯噪声生成 50 步动作 chunk。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念定义</h3>
+      <p>Flow matching 是一种训练<strong>连续正规化流 (CNF)</strong> 的方法，由 Lipman et al. 2022 和 Liu 2022（Rectified Flow）独立提出。它的目标是学一个时变向量场 \(v_\theta(x^\tau, \tau)\)，使得从纯噪声 \(x^0 \sim \mathcal{N}(0, I)\) 开始，按向量场积分，最终到达数据分布 \(p_{\text{data}}\)。</p>
+
+      <p>与 DDPM/DDIM 的区别在于<strong>概率路径的选择</strong>：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>方法</th><th>概率路径</th><th>需要积分步数</th><th>训练目标</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>DDPM</strong></td><td>方差保持 SDE（弯曲路径）</td><td>100–1000 步</td><td>预测噪声 \(\epsilon\)</td></tr>
+            <tr><td><strong>Flow Matching (OT 路径)</strong></td><td>线性最优传输 \(x^\tau = \tau x^1 + (1-\tau)\epsilon\)</td><td><strong>10–50 步</strong></td><td>预测速度场 \(u = x^1 - \epsilon\)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>训练 loss：</p>
+      <div class="math-display">
+        \[ \mathcal{L}(\theta) = \mathbb{E}_{p(x^1|o), q(x^\tau|x^1)} \| v_\theta(x^\tau, o) - u(x^\tau|x^1) \|^2 \]
+      </div>
+      <p>其中 \(u(x^\tau|x^1) = x^1 - \epsilon\)（目标速度），\(q(x^\tau|x^1) = \mathcal{N}(\tau x^1, (1-\tau)^2 I)\)（noisy 中间状态）。</p>
+
+      <h3><span class="num">2</span>在 π0 里干什么</h3>
+      <p>π0 用 flow matching 建模<strong>条件动作分布</strong> \(p(A_t | o_t)\)：</p>
+      <ul>
+        <li>输入 \(o_t\)（图像 + 语言 + 关节状态）由 VLM backbone 编码成前缀</li>
+        <li>动作 chunk \(A_t = [a_t, a_{t+1}, ..., a_{t+H-1}]\)（H=50）是预测目标</li>
+        <li>训练时：对随机 \(\tau \sim \text{Beta}(\alpha, \beta)\)（强调低 \(\tau$，即更噪声的阶段），计算 \(v_\theta\) 和 \(u\) 的 MSE</li>
+        <li>推理时：从 \(A^0_t \sim \mathcal{N}(0,I)\) 出发，10 步 Euler 积分到 \(A^1_t\)——即最终动作 chunk</li>
+      </ul>
+
+      <div class="callout analogy">
+        <div class="callout-head">🎯 类比：气象预报 vs. 弹道导弹</div>
+        <p>DDPM 像用复杂气象模型预测未来天气（精确但慢）；flow matching 像直接预测弹道轨迹（假设直线，10 步精确到终点）。对于动作生成这种「目标明确」的任务，直线假设非常合理，计算代价大幅降低。</p>
+      </div>
+
+      <h3><span class="num">3</span>出处与关键引用</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p><strong>Lipman et al. 2022</strong>「Flow Matching for Generative Modeling」(arXiv:2210.02747) 提出条件流匹配框架；<strong>Liu 2022</strong>「Rectified Flow」(arXiv:2209.14577) 独立提出最优传输直线路径。π0 同时引用了两篇（文中 [28][32]）。Stable Diffusion 3 和 FLUX 等图像生成模型也采用了 flow matching。</p>
+      </div>
+    </section>
+
+    <!-- ============ Action Expert ============ -->
+    <section class="card" id="action-expert">
+      <h2>Action Expert <span class="tag">动作专家</span></h2>
+      <p class="full-name">动作专家 · π0 中处理机器人专属输入输出的独立权重块</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>动作专家是 π0 中与 VLM backbone 并存、但<strong>权重独立</strong>的第二套 transformer 权重，专门处理机器人状态和动作 token。它使 flow matching 的训练信号（含连续噪声动作）不污染 VLM 的语义表征，同时两套权重在同一次 forward pass 中共享注意力计算。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要独立权重</h3>
+      <p>直接把动作 token 加入 VLM（Transfusion 风格）的问题：</p>
+      <ul>
+        <li>Flow matching 的训练 loss 是连续 MSE，作用在「噪声动作 token」上——这些 token 在各 \(\tau\) 下包含不同程度的噪声，梯度信号与语言建模的 cross-entropy 性质完全不同。</li>
+        <li>若共享权重，动作训练会影响 VLM 的语言语义表征，损害语言跟随能力。</li>
+        <li>独立权重方案：动作 token 走自己的 Q/K/V/FFN，仅通过 <strong>cross-attention 到 VLM 输出</strong>（注意力的 key/value 来自 VLM）来获取语义上下文。</li>
+      </ul>
+
+      <h3><span class="num">2</span>架构细节</h3>
+      <p>π0 使用<strong>块状因果注意力遮罩（blockwise causal attention mask）</strong>分为 3 块：</p>
+      <pre><code>Block 1: [I¹_t, ..., Iⁿ_t, ℓ_t]   ← 图像 + 语言，VLM backbone 权重
+Block 2: [q_t]                       ← 机器人关节状态，action expert 权重
+Block 3: [a^τ_t, ..., a^τ_{t+H-1}] ← noisy action chunk，action expert 权重
+
+规则：块内全双向注意力；块间只能看之前的块（causal）
+      Block 1 不能看 Block 2/3；Block 3 可以看 Block 1/2</code></pre>
+      <p>动作 expert 块内使用<strong>全双向注意力</strong>（action token 互相看），确保 chunk 内的动作能相互协调。</p>
+
+      <h3><span class="num">3</span>大小与初始化</h3>
+      <ul>
+        <li>VLM backbone（SigLIP 400M + Gemma 2.6B）：从 PaliGemma 开源权重初始化</li>
+        <li>Action expert（300M）：<strong>从头随机初始化</strong>，靠与 VLM 共享训练来对齐</li>
+        <li>总参数：3.3B</li>
+      </ul>
+
+      <div class="callout analogy">
+        <div class="callout-head">🎯 类比：大脑皮层 + 小脑</div>
+        <p>VLM backbone 像大脑皮层（负责理解语言和场景），action expert 像小脑（负责精细运动协调）。两者通过神经连接共享信息，但各自有独立的处理回路，互不覆盖对方的「专业功能」。</p>
+      </div>
+
+      <h3><span class="num">4</span>对比：Transfusion 与 π0</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Transfusion [59]</th><th>π0 Action Expert</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>动作/图像 token 权重</td><td>与文本 token <strong>共享</strong> FFN</td><td>独立 300M 参数块</td></tr>
+            <tr><td>动作类型</td><td>连续图像 patch</td><td>连续机器人动作 chunk</td></tr>
+            <tr><td>注意力遮罩</td><td>图像内双向，语言 causal</td><td>三块分层 causal + 块内双向</td></tr>
+            <tr><td>VLM 语义影响</td><td>有（共享权重受动作梯度影响）</td><td>小（独立权重隔离梯度）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">视觉语言动作模型</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 是把 VLM（视觉语言模型）扩展到输出机器人动作的框架：把图像+语言理解能力与运动控制结合在同一模型内。核心思路是「用 Internet 预训练的语义知识去引导机器人行为」，避免从零训练。</p>
+      </div>
+
+      <h3><span class="num">1</span>概念演变</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>模型</th><th>动作表示</th><th>特点</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>RT-2</strong> (Google 2023)</td><td>离散 token（discretized actions）</td><td>首个大规模 VLA，动作变成文本 token</td></tr>
+            <tr><td><strong>OpenVLA</strong> (Kim et al. 2024)</td><td>离散 token</td><td>开源 7B VLA，基于 LLaVA；不支持 action chunking</td></tr>
+            <tr><td><strong>π0</strong> (Black et al. 2024)</td><td>连续 flow matching</td><td>动作专家 + flow matching，支持 50 Hz chunk</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>离散 vs. 连续动作表示的核心权衡</h3>
+      <p>这是 VLA 领域最核心的设计决策之一：</p>
+      <ul>
+        <li><strong>离散化（token 化）</strong>：动作离散成 256/512 个 bin → 可直接用 LLM 的 cross-entropy 训练 → 但丢失精度，且 tokenizer 逐个 token 自回归，无法 chunk</li>
+        <li><strong>连续（diffusion/flow）</strong>：直接建模连续分布 → 精细、多模态 → 需要专用 loss 和推理流程，不能直接接入标准 LLM 接口</li>
+      </ul>
+      <p>π0 选择连续方案，并通过 action expert 实现了与 VLM 的融合。</p>
+
+      <h3><span class="num">3</span>在 π0 中的用法</h3>
+      <p>π0 是一个 VLA：VLM backbone（PaliGemma）提供视觉和语言理解能力，action expert 增加机器人控制输出，整体作为一个跨本体的通用策略使用。</p>
+    </section>
+
+    <!-- ============ PaliGemma ============ -->
+    <section class="card" id="paligemma">
+      <h2>PaliGemma <span class="tag">VLM Backbone</span></h2>
+      <p class="full-name">PaliGemma · Google 开源 3B 视觉语言模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>PaliGemma 是 Google 于 2024 年开源的 3B 参数 VLM，由 SigLIP（视觉编码器，400M）+ Gemma（语言模型，2.6B）组合而成。π0 选它作 backbone 的原因：<strong>小巧（实时控制可行）+ 开源（可微调）+ 性能足够强</strong>。</p>
+      </div>
+
+      <h3><span class="num">1</span>架构组成</h3>
+      <ul>
+        <li><strong>SigLIP（Sigmoid Loss for Language-Image Pre-Training）</strong>：视觉编码器，替代 CLIP 的 softmax 对比损失，用 sigmoid 二分类损失训练，效果更稳定</li>
+        <li><strong>Gemma</strong>：Google 开源的轻量级语言模型系列（2.6B 参数版本），基于 Gemini 研究</li>
+        <li>Late fusion 架构：图像经 ViT 编码后投影为与语言 token 同维的嵌入，直接拼入 Gemma 序列</li>
+      </ul>
+
+      <h3><span class="num">2</span>π0 如何使用它</h3>
+      <p>PaliGemma 权重<strong>不冻结</strong>——π0 在 PaliGemma 上做继续训练（包括机器人数据微调），同时增加 action expert 权重。这使 VLM 的视觉语言表征能被调整以更好服务于机器人控制任务。</p>
+      <p>π0 论文明确说明选 PaliGemma 是出于便利性和大小考虑，框架兼容任何 VLM：</p>
+      <blockquote style="border-left: 3px solid var(--border-strong); padding: 0.5em 1em; color: var(--text-soft); font-style: italic;">
+        "Note that we use PaliGemma for convenience and because of its comparatively small size (which is useful for real-time control), but our framework is compatible with any base pre-trained VLM."
+      </blockquote>
+
+      <h3><span class="num">3</span>对比其他 VLM backbone</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>VLM</th><th>参数</th><th>开源</th><th>被哪个 VLA 用</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>PaLM-E</td><td>562B</td><td>否</td><td>PaLM-E (Google 2023)</td></tr>
+            <tr><td>LLaVA / Llama-2</td><td>7–13B</td><td>是</td><td>OpenVLA</td></tr>
+            <tr><td><strong>PaliGemma (SigLIP+Gemma)</strong></td><td><strong>3B</strong></td><td><strong>是</strong></td><td><strong>π0, π0.5</strong></td></tr>
+            <tr><td>SigLIP + Gemma 2B</td><td>~3B</td><td>是</td><td>π0.5 (同系)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ Action Chunking ============ -->
+    <section class="card" id="action-chunking">
+      <h2>Action Chunking <span class="tag">动作 Chunk</span></h2>
+      <p class="full-name">动作分块 · 一次预测多步动作序列</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Action chunking 是「每次推理输出未来 H 步动作序列（chunk），然后执行前几步再重新推理」的策略，而非每步推理一次。它让策略具备<strong>前瞻规划能力</strong>、减少抖动、允许复杂动作的连贯表达——对灵巧操作至关重要。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么要 chunk</h3>
+      <p>逐步推理的问题：</p>
+      <ul>
+        <li>高频控制（50 Hz）意味着每 20ms 要推理一次——VLM 的推理延迟无法达到</li>
+        <li>单步策略容易产生「compounding error」（每步小误差累积导致轨迹偏离）</li>
+        <li>复杂动作（如折叠衬衫的一连串动作）需要连贯性——逐步采样产生抖动</li>
+      </ul>
+      <p>Chunking 的解决方案：一次预测 H=50 步动作，以较低频率更新 chunk（如每 10 步更新一次），执行期间按序列播放。</p>
+
+      <h3><span class="num">2</span>π0 的具体使用</h3>
+      <ul>
+        <li>H = 50（chunk 长度），对应 1 秒动作序列（50 Hz 控制）</li>
+        <li>推理：10 步 flow matching 采样生成整个 chunk → 执行 → 到达 chunk 中段再次采样（overlap 设计）</li>
+        <li>action expert 中 chunk 内的 token 使用<strong>全双向注意力</strong>，使 chunk 内的动作可以相互协调（第 t+5 步可以参考第 t+10 步）</li>
+      </ul>
+
+      <h3><span class="num">3</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>ACT（Action Chunking with Transformers，Zhao et al. 2023）是 action chunking 在灵巧操作中的关键应用。π0 直接引用了 ACT（文中 [57]），并将 chunking 与 flow matching 结合，形成「生成高质量 chunk 分布」的能力。</p>
+      </div>
+    </section>
+
+    <!-- ============ Cross-Embodiment Training ============ -->
+    <section class="card" id="cross-embodiment">
+      <h2>Cross-Embodiment Training <span class="tag">跨本体训练</span></h2>
+      <p class="full-name">跨本体训练 · 多机器人平台混合训练</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>跨本体训练是把来自不同机器人构型（不同自由度、不同运动学）的数据混进同一个模型训练，让模型学到<strong>跨硬件泛化的操作知识</strong>——而非针对单一机器人的专属策略。</p>
+      </div>
+
+      <h3><span class="num">1</span>技术挑战</h3>
+      <p>不同机器人的动作空间维度不同（6–18 DoF）。π0 的解决方案：</p>
+      <ul>
+        <li>以最大机器人的维度（18 维，容纳双臂 + 移动底盘 + 躯干）为统一动作维度</li>
+        <li>较小维度的机器人用<strong>零填充（zero-padding）</strong>对齐</li>
+        <li>缺少的图像槽位用遮罩（mask）处理</li>
+      </ul>
+
+      <h3><span class="num">2</span>π0 的 7 个机器人平台</h3>
+      <ul>
+        <li>UR5e（单臂）、Bimanual UR5e</li>
+        <li>Franka（单臂）</li>
+        <li>Bimanual Trossen、Bimanual ARX/AgileX</li>
+        <li>Mobile Trossen/ARX（非完整运动底盘）</li>
+        <li>Mobile Fibocom（完整运动底盘）</li>
+      </ul>
+
+      <h3><span class="num">3</span>为什么有效</h3>
+      <p>共享 VLM 预训练知识：不同机器人在相似场景（桌面操作）中看到的视觉和语言模式高度重叠，VLM backbone 可以共享视觉表征。动作空间的异构性由 action expert 的条件化处理——proprioceptive state \(q_t\) 包含机器人构型信息，专家可以此区分不同本体。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>跨本体训练的大规模实践由 <strong>Open X-Embodiment (OXE，2023)</strong> 数据集推动，该数据集包含 22 个机器人平台的数据。π0 使用了 OXE 的子集（称为 OXE Magic Soup），并以自采的 7 平台高质量数据为主。</p>
+      </div>
+    </section>
+
+    <!-- ============ MoE ============ -->
+    <section class="card" id="moe">
+      <h2>MoE <span class="tag">混合专家</span></h2>
+      <p class="full-name">Mixture of Experts · 混合专家模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>MoE 是一种模型架构：用多个「专家」子网络，每次推理时让路由器只激活其中的少数几个，从而以<strong>较低计算成本实现大参数量</strong>。π0 的动作专家是一种<strong>硬路由二元 MoE</strong>——图像/文本 token 固定走 VLM backbone，动作/状态 token 固定走 action expert，不经过路由网络。</p>
+      </div>
+
+      <h3><span class="num">1</span>标准 MoE 与 π0 的类比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>标准 Sparse MoE (e.g. Switch Transformer)</th><th>π0 Action Expert</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>路由方式</td><td>可学习路由网络（top-k 门控）</td><td>硬规则：token 类型决定路径</td></tr>
+            <tr><td>专家数</td><td>8–64 个</td><td>2 个（VLM / action）</td></tr>
+            <tr><td>每次激活</td><td>top-k（通常 k=2）</td><td>每个 token 固定走一个</td></tr>
+            <tr><td>共享部分</td><td>注意力的 key/value</td><td>注意力的 key/value（从 VLM 到 action expert 的 cross-attention）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>为什么这样设计比较好</h3>
+      <p>动作 token 和语言 token 的「性质差异」非常大——语言是离散的语义单元，动作是连续噪声信号。强制共享 FFN 权重（标准 Transfusion）意味着同一组权重同时要处理两种完全不同性质的信号，容易出现梯度冲突。π0 的解法是直接分离权重，把问题从「两种任务共享参数」变成「两套参数共享上下文」。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 出处</div>
+        <p>MoE 的当代形式由 Shazeer et al. 2017（Outrageously Large Neural Networks）规范化，Switch Transformer（Fedus et al. 2022）大规模应用于语言模型。π0 在论文中明确引用了这些工作（[45][25][12][16]）来定位其设计选择。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#flow-matching">Flow Matching</a></li>
+      <li><a href="#action-expert">Action Expert</a></li>
+      <li><a href="#vla">VLA — Vision-Language-Action</a></li>
+      <li><a href="#paligemma">PaliGemma — VLM Backbone</a></li>
+      <li><a href="#action-chunking">Action Chunking</a></li>
+      <li><a href="#cross-embodiment">Cross-Embodiment Training</a></li>
+      <li><a href="#moe">MoE — Mixture of Experts</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · π0 (arXiv:2410.24164) · 配套笔记
+</footer>
+
+</body>
+</html>

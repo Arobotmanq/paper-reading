@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SG-VLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>SG-VLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要背景知识才好理解的关键概念。涵盖 VLA 框架、空间辅助监督、多视角深度输入、渐进训练、Flow Matching 动作生成等。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 SG-VLA 综述</a>
+      <span class="pill">📚 当前 8 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2603.22760" style="color: #93c5fd; text-decoration: none;">arXiv:2603.22760</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 1. VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">Vision-Language-Action</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 是一类把「看图 + 理解语言 + 输出机器人动作」端到端合并在同一个模型里的架构。用预训练 VLM（视觉-语言模型）的表征直接驱动机器人控制，无需人工设计中间表示或手写规则。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>标准 VLA 接受三类输入：</p>
+      <ul>
+        <li><strong>视觉输入</strong>：相机图像（RGB，有时 + Depth）</li>
+        <li><strong>语言指令</strong>：自然语言任务描述（"Pick up the apple"）</li>
+        <li><strong>（可选）机器人状态</strong>：关节角、末端位姿等</li>
+      </ul>
+      <p>输出<strong>机器人动作</strong>：关节角增量、末端速度、底盘速度等，可以是离散 token（autoregressive）也可以是连续向量（flow matching / diffusion）。</p>
+
+      <h3><span class="num">2</span>本文用法</h3>
+      <p>SG-VLA 以 Prismatic VLM 为骨干，接受 Head + Hand 的 RGB + Depth 四路输入，输出 13D 动作向量（底盘 3D + 躯干 1D + 臂 7D + 夹爪 2D）。与标准 VLA 的区别是：SG-VLA 在 VLM backbone 上额外挂了 5 路辅助解码器，提供空间辅助监督。</p>
+
+      <h3><span class="num">3</span>对比 · 出处</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>模型</th><th>backbone</th><th>动作输出</th><th>特点</th></tr></thead>
+          <tbody>
+            <tr><td><strong>RT-2</strong></td><td>PaLM-E</td><td>离散 token</td><td>最早大规模 VLA，web 知识迁移</td></tr>
+            <tr><td><strong>OpenVLA</strong></td><td>Prismatic 7B</td><td>离散 token</td><td>开源 VLA 基线</td></tr>
+            <tr><td><strong>π0</strong></td><td>SigLIP+Gemma</td><td>Flow Matching 连续</td><td>加 action expert，双头输出</td></tr>
+            <tr><td><strong>SG-VLA（本文）</strong></td><td>Prismatic 1.3B</td><td>离散 token / 可选 FM</td><td>辅助解码器 co-training，空间感知</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>VLA 类似于「把人的眼睛（视觉）、耳朵（语言）和手（动作）接进同一个大脑里联合训练」。传统机器人需要分开的感知模块 + 规划模块 + 控制器，VLA 将它们端到端合并。</p>
+
+      <h3><span class="num">5</span>具象例子</h3>
+      <p>输入：Head camera 拍到厨房台面，Hand camera 拍到苹果，语言指令"Pick up the apple"。VLA 直接输出：底盘前进 0.1m、臂关节角 +5°、夹爪闭合——无需任何中间规划步骤。</p>
+    </section>
+
+    <!-- ============ 2. Spatial Grounding ============ -->
+    <section class="card" id="spatial-grounding">
+      <h2>Spatial Grounding <span class="tag">辅助解码器</span></h2>
+      <p class="full-name">Spatially-Grounded Representation Learning via Auxiliary Decoders · 空间感知表征学习</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>在 VLM backbone 的 latent representation 上挂多个辅助解码器，让模型同时重建「机器人在哪、夹着什么、物体在哪、关节怎么摆、目标是什么」这些可解释的空间信号。辅助解码器<strong>只在训练时存在</strong>，推理时不增加代价，但已让 backbone 学到了更丰富的空间感知表征。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要它</h3>
+      <p>标准 VLA 的监督信号只有「动作正确」这一个目标。对于 mobile manipulation，正确的动作需要模型同时理解：</p>
+      <ul>
+        <li>全局场景布局（机器人在房间哪个位置）</li>
+        <li>目标物体的精确位姿（放哪里）</li>
+        <li>当前关节配置（怎么到达目标）</li>
+        <li>抓取状态（夹着没有）</li>
+        <li>目标物体的视觉边界（分割）</li>
+      </ul>
+      <p>如果只用动作监督，模型无法被「强迫」学习这些信息——它可能走捷径，用浅层特征猜动作。辅助解码器提供了<strong>显式的空间监督压力</strong>。</p>
+
+      <h3><span class="num">2</span>本文的 5 路解码器</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>解码器</th><th>架构</th><th>重建目标</th><th>作用</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Global Position Decoder</strong></td><td>MLP</td><td>机器人 2D 坐标 (x, y)</td><td>导航感知，对 open/close 有显著帮助</td></tr>
+            <tr><td><strong>Grasp Success Decoder</strong></td><td>MLP (二分类)</td><td>是否正在抓取物体</td><td>抓取状态感知，对 pick 提升 pick+17%</td></tr>
+            <tr><td><strong>Object Pose Decoder</strong></td><td>MLP</td><td>目标物体 3D 位置 + 四元数</td><td>精确放置所需，place 提升最大</td></tr>
+            <tr><td><strong>Joint Pose Decoder</strong></td><td>Transformer</td><td>12D 关节角配置</td><td>运动规划感知，全任务最稳定提升</td></tr>
+            <tr><td><strong>Segmentation Decoder</strong></td><td>CNN (转置卷积)</td><td>目标物体 128×128 二值掩码</td><td>精确目标定位，配合 Object Pose 效果倍增</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>损失函数</h3>
+      <div class="math-display">
+        \[\mathcal{L}_{auxiliary} = \lambda_{pos}\mathcal{L}_{pos} + \lambda_{grasp}\mathcal{L}_{grasp} + \lambda_{qpos}\mathcal{L}_{qpos} + \lambda_{obj}\mathcal{L}_{obj} + \lambda_{seg}\mathcal{L}_{seg}\]
+      </div>
+      <p>权重设置：\(\lambda_{pos}=1.0,\ \lambda_{grasp}=5.0,\ \lambda_{qpos}=1.0,\ \lambda_{obj}=1.0,\ \lambda_{seg}=1.0\)。grasp loss 权重最高（5.0），因为二分类任务训练信号相对稀疏。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>类似于训练一个会「考试」的学生：不只考最终答案（动作是否正确），还考中间步骤（机器人现在在哪、手里夹着什么、目标物体在哪）。学生为了通过所有考试，被迫学习所有这些知识——即使推理时只用到最终答案。</p>
+
+      <div class="callout note">
+        <div class="callout-head">📜 相关工作对比</div>
+        <p>SpatialVLA（arXiv:2501.15830）也关注 VLA 的空间表征，但通过改变动作表示（spatial grid action）而非辅助解码器。SG-VLA 的思路是「不改变动作格式，而是加监督信号」——两条不同路线。</p>
+      </div>
+    </section>
+
+    <!-- ============ 3. Multi-view Depth ============ -->
+    <section class="card" id="multi-view-depth">
+      <h2>Multi-view + Depth <span class="tag">输入增强</span></h2>
+      <p class="full-name">Multi-view RGB + Depth Input Enhancement · 多视角 RGB + 深度图输入增强</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>同时使用安装在头部（全局视野）和手部（近景）的 Head + Hand 相机，各提供 RGB + 归一化 Depth 图，共 4 路输入。Depth 提供显式的几何距离信息，Multi-view 提供互补的全局-局部视角。相比单视角 RGB，组合输入使成功率从 0.04 → 0.60（8×+）。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要多视角</h3>
+      <p>Mobile manipulation 的场景理解需要：</p>
+      <ul>
+        <li><strong>全局视角（Head camera）</strong>：理解房间布局、目标物体大致位置、导航障碍</li>
+        <li><strong>局部视角（Hand camera）</strong>：精确抓取点、物体纹理细节、接触检测</li>
+      </ul>
+      <p>单视角 RGB 无法同时提供这两类信息。</p>
+
+      <h3><span class="num">2</span>Depth 的归一化方式</h3>
+      <div class="math-display">
+        \[p_{obs} = 1 - \tanh\left(\frac{\text{depth value}}{1000}\right)\]
+      </div>
+      <p>这个归一化将原始深度值（毫米）映射到 (0, 1)：近处物体值接近 1，远处接近 0。tanh 提供软截断，避免远处噪声过度影响。归一化后 depth 可以像 RGB 通道一样输入 visual encoder。</p>
+
+      <h3><span class="num">3</span>消融结果</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>输入配置</th><th>平均成功率</th><th>相对提升</th></tr></thead>
+          <tbody>
+            <tr><td>Single-view RGB (OpenVLA baseline)</td><td>0.04</td><td>基线</td></tr>
+            <tr><td>+ Multi-view (Head + Hand RGB)</td><td>0.52</td><td>+1200%</td></tr>
+            <tr><td>+ Multi-view + Depth</td><td>0.60</td><td>+15% vs 上行</td></tr>
+            <tr><td>+ Multi-view + Depth + History (4 帧)</td><td>0.49</td><td>-18% 有损</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>反直觉发现</strong>：加入 4 帧历史会<strong>降低</strong>性能（0.60 → 0.49）。论文认为这是因为 ManiSkill-HAB 的 subtask 设计本质上是 reactive 的（反应式控制），不需要追踪历史轨迹。</p>
+
+      <h3><span class="num">4</span>Visual Encoder 如何处理 4 路输入</h3>
+      <p>Prismatic VLM 的 dual encoder（DINOv2 + SigLIP）分别处理每个视角的输入（将 depth 视为灰度图或额外通道），通过 projector 映射到 LLM embedding space，拼接为统一的 token 序列输入 Qwen2.5 LLM。</p>
+
+      <h3><span class="num">5</span>类比</h3>
+      <p>类似于人眼的外周视觉（全局）+ 中央凹（精细），再加上触觉（depth）。只有单眼中央凹（single-view RGB）既无周边信息又无深度感——这正是 OpenVLA 7B 只有 4% 成功率的根本原因。</p>
+    </section>
+
+    <!-- ============ 4. Prismatic VLM ============ -->
+    <section class="card" id="prismatic-vlm">
+      <h2>Prismatic VLM <span class="tag">双视觉编码器</span></h2>
+      <p class="full-name">Prismatic Vision-Language Model · 棱柱形视觉-语言模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Prismatic VLM 是 Stanford 提出的 VLM 设计框架，核心是「双编码器融合」——同时用 DINOv2（空间/结构理解强）和 SigLIP（语义/文本对齐强）处理同一张图像，将两组特征拼接后输入 LLM。SG-VLA 用 1.3B 版本（DINOv2 + SigLIP + Qwen2.5-0.5B）作为 backbone。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么用双编码器</h3>
+      <p>单一视觉编码器存在能力偏差：</p>
+      <ul>
+        <li><strong>CLIP/SigLIP</strong>：通过图文对比学习训练，语义对齐强，但空间感知（精确位置、深度关系）弱</li>
+        <li><strong>DINOv2</strong>：自监督训练，局部结构特征和空间关系强，但语义联系弱</li>
+      </ul>
+      <p>Prismatic 将两者特征<strong>拼接</strong>后输入 LLM，同时获得语义对齐和空间感知能力——这正好匹配 SG-VLA 对「空间理解 + 语义跟随」的需求。</p>
+
+      <h3><span class="num">2</span>本文用法</h3>
+      <p>SG-VLA 的 Prismatic backbone：</p>
+      <ul>
+        <li>Visual encoder: DINOv2 + SigLIP（处理每路图像输入）</li>
+        <li>Projector: 可训练的线性投影层，将视觉特征映射到 LLM embedding 维度（896D）</li>
+        <li>LLM: Qwen2.5-0.5B（中心推理组件，处理多模态 token 序列）</li>
+        <li>总参数：~1.3B（远小于 OpenVLA 的 7B）</li>
+      </ul>
+
+      <h3><span class="num">3</span>对比 OpenVLA</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>OpenVLA (原始)</th><th>SG-VLA backbone</th></tr></thead>
+          <tbody>
+            <tr><td>视觉编码器</td><td>SigLIP 单编码器</td><td>DINOv2 + SigLIP 双编码器</td></tr>
+            <tr><td>LLM</td><td>LLaMA-2 7B</td><td>Qwen2.5-0.5B</td></tr>
+            <tr><td>总参数</td><td>~7B</td><td>~1.3B</td></tr>
+            <tr><td>成功率(SetTable)</td><td>0.04</td><td>0.60 (仅输入增强)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>更小的模型配合更好的视觉编码器设计，在专项任务上碾压更大的通用基线——说明 task-specific 的感知设计远比堆参数重要。</p>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 来源</div>
+        <p><strong>Karamcheti et al. 2024 — "Prismatic VLMs: Investigating the Design Space of Visually-Conditioned Language Models"（ICML 2024）</strong>。系统探索了 VLM 的 visual encoder 设计空间，发现双编码器在多个下游任务上优于单编码器。OpenVLA 基于 Prismatic 框架，SG-VLA 也沿用并扩展了它。</p>
+      </div>
+    </section>
+
+    <!-- ============ 5. Progressive Training ============ -->
+    <section class="card" id="progressive-training">
+      <h2>Progressive Training <span class="tag">渐进式训练</span></h2>
+      <p class="full-name">Three-Stage Progressive Training Strategy · 三阶段渐进式训练策略</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>SG-VLA 用三阶段训练解决「随机初始化的辅助解码器会用噪声梯度破坏预训练 VLM」的问题。Stage 1 冻结 backbone 只训解码器 → Stage 2 全梯度联合精调 → Stage 3 冻结所有参数单独训 flow matching head。跳过这个顺序直接共训，平均成功率从 0.60 <strong>跌至 0.51</strong>。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么需要渐进训练</h3>
+      <p>核心矛盾：辅助解码器是<strong>随机初始化</strong>的，但 VLM backbone 是<strong>预训练的</strong>（已有良好的视觉-语言表征）。</p>
+      <ul>
+        <li>随机解码器输出与 GT 差距极大 → 产生大梯度</li>
+        <li>大梯度通过 backbone 反传 → 破坏 backbone 已学到的表征</li>
+        <li>结果：backbone 为了满足混乱的解码器要求，放弃了已有的好表征</li>
+      </ul>
+
+      <h3><span class="num">2</span>三阶段详细流程</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>阶段</th><th>时长</th><th>Backbone</th><th>解码器</th><th>Action Head</th><th>目的</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Stage 1</strong><br>Decoder Adaptation</td><td>3 epoch</td><td>部分训练（仅 action token 路径）</td><td>训练，Stop gradient</td><td>无</td><td>解码器学会解读 backbone 的表征</td></tr>
+            <tr><td><strong>Stage 2</strong><br>Joint Refinement</td><td>7 epoch</td><td>全梯度训练</td><td>全梯度训练</td><td>无</td><td>辅助任务指导 backbone 精调</td></tr>
+            <tr><td><strong>Stage 3</strong><br>Action Head</td><td>独立</td><td>完全冻结</td><td>完全冻结</td><td>单独训练</td><td>flow matching head 在稳定表征上收敛</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>Stage 3 为什么要单独训 Action Head</h3>
+      <p>Flow matching 的 denoising loss 在和其他 loss 同时优化时难以收敛。论文发现：即使阻止 flow matching 梯度回传到 backbone（stop gradient），denoising loss 仍然不能在并发训练中有效下降。完全冻结 backbone、只优化 action head，才能让 flow matching 正常收敛。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <p>类似于医院里「先让新实习生（解码器）跟着经验丰富的主治医（backbone）学，再让他们合作共同进步，最后才让他们独立执行专科手术（action head）」——而不是第一天就让新实习生主刀。</p>
+
+      <div class="callout success">
+        <div class="callout-head">✅ 工程启示</div>
+        <p>这是预训练模型 co-training 的通用技巧：<strong>「先让新组件适应老模型的输出，再一起精调」</strong>。适用于任何在预训练 VLM 上增加新模块的场景（如加 depth encoder、加 proprioception encoder 等）。</p>
+      </div>
+    </section>
+
+    <!-- ============ 6. Flow Matching ============ -->
+    <section class="card" id="flow-matching">
+      <h2>Flow Matching <span class="tag">连续动作生成</span></h2>
+      <p class="full-name">Flow Matching Action Expert · 流匹配动作专家</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Flow Matching 是一种生成模型，通过学习「从随机噪声到目标动作的连续变换路径」来生成高精度连续动作。比 diffusion 更快（通常 10 步去噪），比离散 token 精度更高。SG-VLA 将其作为可选 action head（100M 参数），与主 VLM backbone 分离训练（Stage 3）。</p>
+      </div>
+
+      <h3><span class="num">1</span>核心原理</h3>
+      <p>Flow Matching 学习一个向量场（vector field）\(\mathbf{v}_\theta(\mathbf{x}, t)\)，定义从噪声分布 \(p_0\) 到目标动作分布 \(p_1\) 的连续变换：</p>
+      <div class="math-display">
+        \[\frac{d\mathbf{x}}{dt} = \mathbf{v}_\theta(\mathbf{x}, t), \quad t \in [0, 1]\]
+      </div>
+      <p>推理时：从随机噪声 \(\mathbf{x}_0 \sim p_0\) 出发，用 ODE 积分器沿向量场积分 \(T\) 步（通常 T=10），得到目标动作 \(\mathbf{x}_1\)。</p>
+
+      <h3><span class="num">2</span>本文用法</h3>
+      <p>SG-VLA 的 flow matching action head：</p>
+      <ul>
+        <li>参数量：100M</li>
+        <li>输入：VLM backbone 的 frozen latent representation</li>
+        <li>输出：action chunk（8 步动作序列），执行前 2 步后重新规划</li>
+        <li>去噪步数：10 步</li>
+        <li>目标：13D 连续动作（底盘 3D + 躯干 1D + 臂 7D + 夹爪 2D）</li>
+      </ul>
+
+      <h3><span class="num">3</span>离散 token vs Flow Matching：任务类型决定优劣</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>动作类型</th><th>离散 token</th><th>Flow Matching</th><th>结果</th></tr></thead>
+          <tbody>
+            <tr><td>Pick（精细抓取）</td><td>0.13</td><td>0.27（+108%）</td><td>FM 显著更好</td></tr>
+            <tr><td>Place（精确放置）</td><td>0.70</td><td>0.80（+14%）</td><td>FM 略好</td></tr>
+            <tr><td>Open Fridge（导航+开门）</td><td>0.87</td><td>0.76（-13%）</td><td>离散 token 更好</td></tr>
+            <tr><td>Open Drawer（导航+开抽屉）</td><td>0.77</td><td>0.60（-22%）</td><td>离散 token 显著更好</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>规律</strong>：<strong>精细末端执行器控制</strong>用 FM（连续精度更高），<strong>底盘导航 + 方向性动作</strong>用离散 token（决策性更强）。</p>
+
+      <h3><span class="num">4</span>对比 Diffusion</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Diffusion Policy</th><th>Flow Matching</th></tr></thead>
+          <tbody>
+            <tr><td>训练目标</td><td>预测噪声 \(\epsilon\)</td><td>预测速度场 \(\mathbf{v}\)</td></tr>
+            <tr><td>推理步数</td><td>通常 100+</td><td>通常 10–20</td></tr>
+            <tr><td>轨迹形状</td><td>随机（SDE）</td><td>确定性 ODE，近似直线</td></tr>
+            <tr><td>速度</td><td>慢</td><td>快 10×+</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">5</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 来源</div>
+        <p><strong>Lipman et al. 2023 — "Flow Matching for Generative Modeling"（ICML 2023）</strong>。机器人控制领域的 flow matching action expert 设计来自 <strong>π0（Black et al. 2024）</strong>，SG-VLA 直接沿用 π0 的 action expert 设计，但训练策略上做了修改（Stage 3 完全隔离训练）。</p>
+      </div>
+    </section>
+
+    <!-- ============ 7. Mobile Manipulation Action Space ============ -->
+    <section class="card" id="mobile-manipulation-action">
+      <h2>13-DoF Action Space <span class="tag">移动操作动作空间</span></h2>
+      <p class="full-name">13-Dimensional Coordinated Mobile Manipulation Action Space · 13 维协调移动操作动作空间</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>SG-VLA 控制的动作空间是 13 维连续向量，同时覆盖底盘移动、躯干升降、机械臂 7 轴和夹爪。底盘运动和臂运动必须协调——走到目标附近的同时预置臂的姿态，才能高效完成操作。这远比桌面操作（通常 6-7D）复杂。</p>
+      </div>
+
+      <h3><span class="num">1</span>动作向量分解</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>子空间</th><th>符号</th><th>维度</th><th>含义</th></tr></thead>
+          <tbody>
+            <tr><td><strong>底盘</strong></td><td>\(\Delta X\)</td><td>3D</td><td>底盘位置变化（x, y）+ 朝向变化（yaw）</td></tr>
+            <tr><td><strong>躯干</strong></td><td>\(\Delta z\)</td><td>1D</td><td>躯干高度变化（用于适应不同高度的操作目标）</td></tr>
+            <tr><td><strong>机械臂</strong></td><td>\(\Delta q\)</td><td>7D</td><td>7 个关节角的增量</td></tr>
+            <tr><td><strong>夹爪</strong></td><td>\(\Delta G\)</td><td>2D</td><td>夹爪状态变化（两指各一维，用于精细控制）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>协调控制的挑战</h3>
+      <p>Mobile manipulation 的难点在于底盘和臂的<strong>协调运动</strong>：</p>
+      <ul>
+        <li>底盘移动时臂需要同时调整以保持末端稳定</li>
+        <li>接近目标时需要底盘精确对准同时臂预置合适位姿</li>
+        <li>全局导航需要底盘大幅运动，局部操作需要末端精细控制——两种模式的时间尺度和精度要求不同</li>
+      </ul>
+
+      <h3><span class="num">3</span>与桌面操作的对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>桌面操作（如 OpenVLA）</th><th>移动操作（SG-VLA）</th></tr></thead>
+          <tbody>
+            <tr><td>动作维度</td><td>6-7D（臂 + 夹爪）</td><td>13D（底盘 + 躯干 + 臂 + 夹爪）</td></tr>
+            <tr><td>观测范围</td><td>单固定视角，桌面有界</td><td>整个房间，部分可观测</td></tr>
+            <tr><td>移动能力</td><td>无</td><td>底盘全向移动</td></tr>
+            <tr><td>任务时长</td><td>通常 <30s</td><td>可达数分钟</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">4</span>具象例子</h3>
+      <p>完成「从冰箱取苹果」：① 底盘导航至冰箱前（\(\Delta X\) 变化大），② 调整躯干高度对准冰箱层（\(\Delta z\) 调整），③ 臂伸出开冰箱门（\(\Delta q\) 大幅变化），④ 底盘微调对准苹果，⑤ 臂精细抓取（\(\Delta q\) 小幅、\(\Delta G\) 闭合）。五个阶段动作风格完全不同，需要同一策略无缝切换。</p>
+    </section>
+
+    <!-- ============ 8. ManiSkill-HAB Benchmark ============ -->
+    <section class="card" id="maniskill-hab">
+      <h2>ManiSkill-HAB <span class="tag">评测基准</span></h2>
+      <p class="full-name">ManiSkill Home Assistant Benchmark · ManiSkill 家庭助理基准测试</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>ManiSkill-HAB 是 UC San Diego（本文作者之一 Arth Shukla 参与开发）发布的家务重排 benchmark，基于 Habitat 仿真环境，包含 TidyHouse / PrepareGroceries / SetTable 三类长程任务，分解为 Pick / Place / Open / Close 四类 subtask。SG-VLA 的所有实验都在这个仿真环境中进行。</p>
+      </div>
+
+      <h3><span class="num">1</span>任务组成</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>任务</th><th>Subtask</th><th>难度</th><th>特点</th></tr></thead>
+          <tbody>
+            <tr><td><strong>TidyHouse</strong></td><td>Pick, Place</td><td>中-难</td><td>不规则物体，复杂放置目标</td></tr>
+            <tr><td><strong>PrepareGroceries</strong></td><td>Pick, Place</td><td>难</td><td>精细操作，小物体，密集排列</td></tr>
+            <tr><td><strong>SetTable</strong></td><td>Pick, Place, Open, Close</td><td>易-中</td><td>覆盖所有 4 类 subtask，用于主要消融</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>数据规模</h3>
+      <ul>
+        <li>总数据：44K episodes，1.4M transitions</li>
+        <li>辅助任务数据分配：SetTable 8K/240K（用于 global pos / grasp / qpos），所有 Pick&amp;Place 40K/1.2M（用于 seg / obj pose）</li>
+        <li>评测：每个 subtask 30 episodes，平均成功率</li>
+      </ul>
+
+      <h3><span class="num">3</span>局限性</h3>
+      <div class="callout note">
+        <div class="callout-head">⚠️ 仿真 vs 真实</div>
+        <p>ManiSkill-HAB 是<strong>纯仿真</strong>环境（基于 Sapien/Habitat）。SG-VLA 的所有评测结果均在仿真中获得，没有 sim-to-real 验证。仿真中的 depth 是完美的，而真实场景的 depth sensor 存在噪声、遮挡、反光等问题——这是本文最大的局限之一。</p>
+      </div>
+
+      <h3><span class="num">4</span>出处</h3>
+      <p><strong>Shukla, Tao, Su — "ManiSkill-HAB: A Benchmark for Low-Level Manipulation in Home Rearrangement Tasks"（ICLR 2025）</strong>。注意 Arth Shukla 和 Hao Su 同时是 ManiSkill-HAB 的作者和 SG-VLA 的作者——这意味着 SG-VLA 实质上是在自己开发的 benchmark 上测试，可能存在设计上的协同优化偏差。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表（8）</div>
+    <ul>
+      <li><a href="#vla">VLA — 视觉-语言-动作模型</a></li>
+      <li><a href="#spatial-grounding">Spatial Grounding — 辅助解码器</a></li>
+      <li><a href="#multi-view-depth">Multi-view + Depth — 输入增强</a></li>
+      <li><a href="#prismatic-vlm">Prismatic VLM — 双视觉编码器</a></li>
+      <li><a href="#progressive-training">Progressive Training — 渐进式训练</a></li>
+      <li><a href="#flow-matching">Flow Matching — 连续动作生成</a></li>
+      <li><a href="#mobile-manipulation-action">13-DoF Action Space — 动作空间</a></li>
+      <li><a href="#maniskill-hab">ManiSkill-HAB — 评测基准</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · SG-VLA (arXiv:2603.22760) · 配套笔记 · 8 个概念
+</footer>
+
+</body>
+</html>

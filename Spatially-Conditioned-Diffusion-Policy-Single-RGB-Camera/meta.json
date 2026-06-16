@@ -1,0 +1,46 @@
+{
+  "title": "Spatially Conditioned Diffusion Policy: Learning Precise and Robust Manipulation with a Single RGB Camera",
+  "title_cn": "空间条件扩散策略：用单个 RGB 相机学习精密且鲁棒的操作",
+  "field": "vla",
+  "venue": "arXiv preprint (2606.14535v1)",
+  "date": "2026",
+  "one_liner": "非 VLA 模型——单任务 imitation/diffusion policy（无语言）：把扩散去噪过程中的中间末端轨迹投影回图像当视觉注意力锚点，沿轨迹采样多尺度特征反馈去噪网络，让单个全局 RGB 相机也能做 USB 插入级精密接触操作，并追平甚至超过加腕相机的多相机基线。",
+  "framework": "idea-first",
+  "idea": "未来末端执行器轨迹投影到图像上天然标出任务相关区域——把扩散去噪中不断演化的中间轨迹当视觉注意力锚点，沿锚点采样多尺度特征，无需分割/VLM/点追踪等外部感知模块即可给单相机策略空间 grounding。",
+  "logic_chain": [
+    "关键洞察：未来末端轨迹投影到图像即标出任务相关区域，夹爪要去的地方就是该看的地方。",
+    "扩散去噪本就在细化动作轨迹估计，把这个中间产物当注意力锚点，零额外感知模块、随去噪步演化。",
+    "用 FPN 式多尺度特征（ResNet 各 stage）：高分辨率保细节（对插入对齐关键）、低分辨率保语义上下文。",
+    "沿轨迹各点各尺度双线性采样，时间轴平均池化、尺度轴拼接成紧凑 spatial context，FiLM 注入去噪 U-Net。",
+    "验证：单相机追平加腕相机基线；重建横长 s 越大、尺度越全成功率单调上升，证实轨迹锚点+多尺度是有效归纳偏置。"
+  ],
+  "method_skeleton": [
+    "多尺度图像编码器：ResNet-18 五个 stage 各接 3×3 卷积对齐到 d=64，得 F1–F5 粗到细特征。",
+    "空间条件模块（核心创新）：轨迹重建（累加位移 Pi=Pi-1+ΔPi）→ 3D→2D 投影（外参 [R|t]、内参 K）→ 沿锚点双线性采样多尺度特征；每个去噪步重做一次，图像编码每次推理只做一次。",
+    "动作去噪网络：用随去噪步演化的 spatial context Fk 替换标准 Diffusion Policy 的固定观测 O，FiLM 调制条件 U-Net，DDIM 推理（仿真 16 步/真机 10 步）。"
+  ],
+  "core_points": [
+    "问题：单全局 RGB 相机做精密操作要同时捕捉精细接触细节并自己找出任务相关区域，现有方法压成全局 embedding 做不到。",
+    "洞察：末端轨迹本身就是注意力锚点——把动作和该看哪用同一条轨迹绑定，省掉会级联误差的外部感知模块（vs SKIL 分割/OTTER VLM）。",
+    "方法：空间条件模块三步（重建→投影→采样），轨迹点随去噪迭代更新使注意力动态聚焦；配 FPN 多尺度 + FiLM。",
+    "结果：仿真 Meta-World Hard 82.5%（DP3 60.3%/DP 16.7%），越难差距越大；单 RGB 追平 DP+腕相机 74.2%、DP3+深度 60.3% 且方差最低。",
+    "结果：真机 6 任务均值 73.8%（DP 50.3%），USB 完整插入 30%（其余基线全 0%），干扰/杂乱场景抗干扰明显。",
+    "局限：假设任务相关区域在末端轨迹附近——工具使用/间接交互/重遮挡可能失效；单任务、无语言、无泛化评测，是 diffusion policy 的机制改进而非通用策略。"
+  ],
+  "effects": [
+    "Meta-World Hard 82.5% vs DP3 60.3% vs DP 16.7%（p.5 Tab.1）",
+    "单 RGB 82.5%±11.5 vs DP+腕相机 74.2%±29.4 vs DP3+深度 60.3%±38.0，方差最低（p.6 Tab.3）",
+    "真机 6 任务均值 73.8% vs DP 50.3%/SKIL 43.2%/DP3 35.3%/OTTER 31.8%（p.8 Tab.4）",
+    "真机 USB 完整插入 Push 30% vs 其余基线全 0%（p.8 Tab.4）",
+    "消融：多尺度全 F1–F5 82.5% 比仅 F5 68.6% +13.9pp；重建横长 s=0→75.8%、s=8→82.5%、s=12→83.9%（p.6-7 Fig.4）"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "不命中：本文无语言、无 VLM、无移动底盘，是单臂固定基座单任务 imitation/diffusion policy（非 VLA）。可借鉴点——若你的 VLA 用 diffusion/flow 动作头，可在去噪回路里加一路'中间轨迹投影回图像采样多尺度特征'来增强空间 grounding（需相机外参已知），但这只是组件级借鉴，非同方向工作。",
+    "track_B_legged": "不命中：纯桌面单臂操作，无 locomotion / 足式控制 / RL / sim2real 内容。"
+  },
+  "open_source": "none",
+  "open_source_detail": "未发布。截至 2026-06-16 WebSearch + 查阅 arXiv:2606.14535 摘要页 + 作者 GitHub（kh11kim）：无代码、无权重、无项目主页、无数据集发布。论文 2026-06-12 上传 arXiv，尚未同行评审；基准 Meta-World/DexArt 为公开仿真环境，但 SCDP 实现与真机数据集（USB 180/Battery 90/Long-Horizon 120/其余各 50 演示）均未公开。后续可能补放，建议复查。",
+  "open_source_checked": "2026-06-16",
+  "rating": "Valuable",
+  "summary": "summary.html"
+}

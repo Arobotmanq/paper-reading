@@ -1,0 +1,48 @@
+{
+  "title": "OK-Robot: What Really Matters in Integrating Open-Knowledge Models for Robotics",
+  "title_cn": "OK-Robot：开放知识模型集成机器人——关键在哪里",
+  "field": "vla",
+  "venue": "arXiv (ICRA 2024 workshop / RA-L submission)",
+  "date": "2024",
+  "one_liner": "把 CLIP、OWL-ViT、AnyGrasp、Lang-SAM 等开放知识模型拼成无训练家庭移动抓取系统，OVMM 成功率 58.5%，是竞赛冠军的 1.8×——关键不是用哪个模型，而是怎么把它们组合好。",
+  "framework": "idea-first",
+  "idea": "开放词表移动操作难的根本原因是多模块误差乘积叠加，而非任何单个模型不足；通过精心的系统集成（VoxelMap 语义记忆 + 水平抓取启发式 + 鲁棒模块间过渡）而非重新训练，可将竞赛冠军的 33% 提升至 58.5%。",
+  "logic_chain": [
+    "VLM 识别 / 导航 / 抓取模型各自成熟，但串联后系统成功率远低于各模块乘积——NeurIPS 2023 OVMM 冠军仅 33%",
+    "原因是模块接口不匹配：VLM 导航目标可能不可达，抓取候选姿态可能被关节限位卡死，语言查询措辞差一字结果天差地别",
+    "解法是 systems-first approach：为每个模块设计正确的输入格式、输出过滤规则与鲁棒的模块间转换启发式",
+    "以抓取过滤为例：AnyGrasp 生成全场候选 + Lang-SAM 掩码过滤 + 水平倾向评分，使手眼标定误差不敏感",
+    "同样的开放模型通过正确系统工程，零样本在真实家庭达 58.5%（自然环境）/ 82.4%（整洁环境）"
+  ],
+  "method_skeleton": [
+    "VoxelMap 语义记忆：iPhone 扫描 → OWL-ViT 检测 + CLIP 嵌入 → 5cm 体素地图，语言查询用 dot product 找物体 3D 位置",
+    "语言过滤抓取：AnyGrasp 生成所有候选 → Lang-SAM 掩码过滤 → 水平抓取倾向启发式（S - θ⁴/10）选最优",
+    "鲁棒模块间过渡：三评分函数加权最优化导航终点，点云高度启发式支持容器/袋子放置，线性状态机无需闭环检测"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "非VLA系统对照基线——理解OVMM工程难点的参照，判断VLA相对系统集成增量价值。速记层足够，无需深读。",
+    "track_B_legged": "不相关——不涉及locomotion或底层控制"
+  },
+  "validation": "10个未见真实家庭171次试验，零样本58.5%；整洁环境82.4%；是NeurIPS 2023 OVMM冠军的1.8×；AnyGrasp比次优候选高近50%（相对）；另在Pittsburgh和Fremont两个更大更杂乱的家庭完成复现。",
+  "core_points": [
+    "真问题是多模块误差乘积叠加，而非单个模型不足",
+    "VoxelMap体素语义记忆：低分辨率+置信度加权CLIP嵌入，低方差鲁棒跨家庭部署",
+    "抓取过滤启发式：水平抓取倾向（θ⁴惩罚）对手眼标定误差鲁棒是跨家庭成功的关键",
+    "消融：AnyGrasp比次优高~50%，VoxelMap方差最小",
+    "杂乱程度直接影响成功率：两轮清理使导航失败4%→12%→15%，操作失败13%→16%→25%逆向提升",
+    "语言查询的'咒语'问题：措辞差异可使CLIP检索结果截然不同",
+    "商业版AnyGrasp与开源版性能差距显著，开源复现受限"
+  ],
+  "effects": [
+    "零样本成功率58.5%（10个真实家庭，171次试验）",
+    "整洁环境82.4%",
+    "是NeurIPS 2023 OVMM竞赛冠军（33%）的近1.8×",
+    "AnyGrasp比次优方案（top-down启发式）高约50%（相对幅度）",
+    "到新家10分钟内完成第一次取放任务"
+  ],
+  "open_source": "partial",
+  "rating": "Valuable",
+  "summary": "summary.html",
+  "open_source_detail": "代码开源但依赖闭源 AnyGrasp(教育许可)",
+  "open_source_checked": "2026-06-02"
+}

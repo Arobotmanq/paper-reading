@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MoManipVLA 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 3em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.valuable { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #5b21b6; border-color: #7c3aed; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Mobile Manipulation · VLA Transfer</span>
+    <h1>MoManipVLA:<br>Transferring VLA for<br>Mobile Manipulation</h1>
+    <p class="subtitle">固定基座 VLA 已有强大泛化能力，但<strong>不会驱动底盘</strong>——与其重新采集移动操作大数据从头训练，不如把 VLA 当<strong>末端器路径点生成器</strong>，加一层<strong>双层轨迹优化</strong>来联合规划底盘和机械臂，使预测路径点满足物理可行性约束。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 Track A 直接命中 · 移动操作 VLA · 已深读</span>
+      <span class="pill">📅 2025-03</span>
+      <span class="pill">🏢 BUPT / NTU / Tsinghua</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.13446">arXiv:2503.13446</a></span>
+      <span class="pill">⚠️ 项目主页链接未在 PDF 中显示</span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">OVMM 成功率提升</div>
+    <div class="value">+4.2<span class="unit">%</span></div>
+    <div class="desc">vs. SOTA UniTeam</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">Pick 成功率提升</div>
+    <div class="value">+12.4<span class="unit">%</span></div>
+    <div class="desc">OVMM benchmark</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">真实部署训练成本</div>
+    <div class="value">50<span class="unit">ep</span></div>
+    <div class="desc">仅需 50 条专家示范</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">开源状态</div>
+    <div class="value" style="font-size:1.2em; margin-top:0.3em;">部分</div>
+    <div class="desc">论文 PDF 无代码链接</div>
+  </div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">移动操作的本质难点不是"VLA 不够强"，而是<strong>固定基座 VLA 生成的路径点放到移动平台上就不可达了</strong>。解法不是重头训一个移动操作 VLA，而是把 VLA 锁定为<strong>末端器路径点预言机</strong>，再用一个<strong>双层优化（upper: 底盘位姿 → lower: 臂轨迹）</strong>使这些路径点在物理约束下变得可执行——用极低训练成本完成迁移。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+        <ol class="chain">
+          <li>移动操作需要底盘+机械臂协同的 whole-body 控制，但现有 VLA 模型全部针对<strong>固定基座</strong>设计，无法直接产生底盘动作。</li>
+          <li>直接为移动平台从头采集大规模数据训练的成本极高，泛化能力也受限——这是现有方法的瓶颈。</li>
+          <li>关键洞察：固定基座 VLA 输出的<strong>末端器路径点</strong>依然具有跨任务/环境的泛化价值，只是需要物理上"可达"。</li>
+          <li>于是把问题拆解：VLA 负责"去哪"（路径点），<a href="./notes.html#bilevel-opt" class="note-link">双层轨迹优化</a>负责"怎么去"（把底盘调到合适位置 → 再规划臂轨迹）。</li>
+          <li>双层框架把 10-DoF 联合搜索拆成 3-DoF（底盘）+ 7-DoF（臂）两步贪心，避免巨大搜索空间里陷入局部最优，同时用 <a href="./notes.html#dual-annealing" class="note-link">Dual Annealing</a> + SLSQP 精炼。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+        <div class="method-grid">
+          <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong>复用固定基座 VLA 作为路径点生成器</strong>：用 OpenVLA-7B（LoRA 微调 200 条轨迹）预测末端器 waypoint \([Δx, Δθ, ΔG]\)，不生成底盘动作。VLA 的跨任务泛化能力被完整保留。</span></div>
+          <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong>三项物理可行性目标函数</strong>：<a href="./notes.html#reachability" class="note-link">Reachability</a>（IK 迭代次数代理可达性代价）+ <a href="./notes.html#smoothness" class="note-link">Smoothness</a>（关节角差 + 底盘位移差）+ <a href="./notes.html#collision" class="note-link">Collision</a>（nvblox ESDF + 查询点采样）组合加权。</span></div>
+          <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong>双层轨迹优化</strong>：上层优化底盘位姿以扩大机械臂可行搜索空间（评估候选臂位姿的期望目标 + top-k 目标），下层在已定底盘下优选末端器轨迹——比直接联合搜索快且更不易陷入局部最优。</span></div>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p class="validation">在 OVMM benchmark 上超越最近 SOTA 4.2%（Overall SR），Pick 阶段提升 12.4%——这直接验证了「VLA 路径点迁移」的价值。真实世界仅用 50 条示范即可部署，验证了「低成本迁移」的可行性。</p>
+        <details class="numbers">
+          <summary>想看具体数字（点开）</summary>
+          <ul>
+            <li>OVMM Overall SR：MoManipVLA 49.4% vs. 前最优 KUZHUM 38.2%（+11.2 pp Partial SR）。</li>
+            <li>Pick 成功率：53.1% vs. KUZHUM 35.2%（+17.9 pp），vs. 所有基线 +12.4%。</li>
+            <li>双层 vs. 直接搜索：49.4% vs. 48.5%（+0.9%），但延迟 693ms vs. 743ms（-7%）。</li>
+            <li>真实世界：Put in Bowl 40%，Stack Block 30%，Open Drawer 10%（各测 10 次）。</li>
+            <li>消融：去掉路径点（w/o GT）整体成功率从 49.4% 暴跌至 11.3%——VLA 路径点是核心。</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-head">🎯 与项目的相关性</div>
+        <p><strong>Track A（人形/移动操作 VLA）直接命中</strong>：本文提供了一种"零成本迁移固定基座 VLA 到移动平台"的完整范式——waypoint 解耦 + 双层物理可行性优化。对做移动操作 VLA 的项目具备直接参考价值：框架设计、优化目标公式、OVMM 评测基线均可复用。Track B（足式算法）<strong>不相关</strong>，本文不涉及足式控制或 locomotion。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ 核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+      <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+      <!-- 观点1 真问题 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有 VLA 模型都专为固定基座设计，无法生成底盘与机械臂的协同动作，导致强泛化能力被锁死在固定基座场景里。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.1 · Abstract</div>
+          <blockquote class="ev-quote">recent advances in vision-language-action (VLA) models have shown impressive generalization capabilities, but these foundation models are developed for fixed-base manipulation tasks.</blockquote>
+          <div class="ev-trans">近期 VLA 模型已展现出令人印象深刻的泛化能力，但这些基础模型是为固定基座操作任务开发的。</div>
+          <div class="ev-gloss">问题定义：VLA 强泛化 ≠ 可移动操作，二者之间存在结构性鸿沟，非数据量问题。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">although VLA models show strong generalization in diverse manipulation tasks, their focus on fixed-base tasks prevents them from generating cooperative actions between the mobile base and robot arm for mobile manipulation.</blockquote>
+          <div class="ev-trans">尽管 VLA 模型在多样化操作任务中展现出强泛化能力，但其专注于固定基座任务的特性，阻止了它们为移动操作生成底盘与机械臂之间的协同动作。</div>
+          <div class="ev-gloss">明确指出问题的结构性原因：VLA 输出空间不包含底盘动作。</div>
+        </div>
+      </div>
+
+      <!-- 观点2 核心思路 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点2</span> 核心思路：不重新训练移动操作 VLA，而是把 VLA 当路径点生成器，通过物理可行性约束下的轨迹优化将路径点转化为可执行的底盘+臂协同轨迹。</div>
+        <figure>
+          <img src="./images/figure_1_overview_pipeline.png" alt="MoManipVLA 总体流水线：VLA 预测路径点 → 双层轨迹优化 → 底盘+臂动作">
+          <figcaption><strong>Figure 2（p.4）：</strong>MoManipVLA 完整流水线。左侧 VLA 模型接收 RGB 帧输出 waypoint \([Δx, Δθ, ΔG]\)；中间双层轨迹优化框架分别优化底盘轨迹（上层）和臂轨迹（下层），目标函数含可达性、平滑性和碰撞三项。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.2 · §1 Introduction</div>
+          <blockquote class="ev-quote">we propose an efficient policy transfer framework named MoManipVLA to generalize the fixed-base VLA models to mobile manipulation tasks. Unlike existing mobile manipulation methods which suffer from low generalization ability across tasks and environments, MoManipVLA efficiently transfers generalizable fix-base manipulation policy from pre-trained VLA models to mobile manipulation.</blockquote>
+          <div class="ev-trans">我们提出一个高效的策略迁移框架 MoManipVLA，将固定基座 VLA 模型泛化到移动操作任务。与现有移动操作方法在任务和环境间泛化能力低的问题不同，MoManipVLA 高效地将预训练 VLA 模型中可泛化的固定基座操作策略迁移到移动操作中。</div>
+          <div class="ev-gloss">解法的核心是"迁移"而非"重训"——沿用 VLA 的泛化能力，只额外解决底盘运动规划问题。</div>
+        </div>
+      </div>
+
+      <!-- 观点3 运动规划目标函数 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点3</span> 物理可行性的三个目标：可达性（IK 迭代次数代理）、平滑性（关节角差分）、碰撞（ESDF 查询点距离）组合加权，引导路径点在物理上可执行。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.4–5 · §3.3 Mobile Motion Planning Objectives</div>
+          <blockquote class="ev-quote">Motion planning aims to generate feasible trajectories for the mobile base and the robot arm between given the consecutive waypoints of end-effectors, which should achieve pose reachability, trajectory smoothness and safety during the entire mobile manipulation process.</blockquote>
+          <div class="ev-trans">运动规划旨在为移动底盘和机械臂生成可行轨迹，以连接给定的连续末端器路径点，并在整个移动操作过程中实现位姿可达性、轨迹平滑性和安全性。</div>
+          <div class="ev-gloss">三项目标直接对应移动操作的三大物理约束，缺一不可。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.3 eq.(3–6)</div>
+          <blockquote class="ev-quote">We acquire the overall objectives by combining the reachability, smoothness and collision costs with the hyperparameter {λi}i: O = λ1Fr + λ2Fs + λ3Fc</blockquote>
+          <div class="ev-trans">我们通过将可达性、平滑性和碰撞代价用超参数 {λi} 加权组合来获得总体目标函数：O = λ1Fr + λ2Fs + λ3Fc。</div>
+          <div class="ev-gloss">实验中 λ1=10.0, λ2=1.0, λ3=0.6，可达性权重最高——与消融结论一致（可达性影响最大）。</div>
+        </div>
+      </div>
+
+      <!-- 观点4 双层优化框架 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点4</span> 双层轨迹优化的必要性：10-DoF 联合搜索空间庞大且非凸，直接搜索易陷入局部最优；将其分解为"上层优化底盘（扩大臂的可行域）+ 下层优化臂轨迹"，贪心分解降低复杂度的同时保持求解质量。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.4 Bi-Level Trajectory Optimization</div>
+          <blockquote class="ev-quote">Directly searching the optimal solution to the objective (6) is highly complex, because the pose search space of the mobile base and the robot arm is extremely large with high DoFs. To address this problem, we propose a bi-level trajectory optimization framework to improve the efficiency of trajectory generation, where the upper level optimizes the waypoints for the base to enhance the manipulator policy space, while the lower level further optimizes the waypoints for the end-effector to follow the guidance of the pre-trained VLA models for completing manipulation tasks.</blockquote>
+          <div class="ev-trans">直接搜索目标函数 (6) 的最优解极为复杂，因为移动底盘和机械臂的位姿搜索空间在高自由度下极为庞大。为解决这一问题，我们提出双层轨迹优化框架以提升轨迹生成效率：上层优化底盘路径点以扩大机械臂策略空间，下层进一步优化末端器路径点以跟随预训练 VLA 模型的指导完成操作任务。</div>
+          <div class="ev-gloss">类比人形机器人控制中把 39-DoF 分解为 27-DoF 上肢 + 12-DoF 下肢，这里把 10-DoF 分解为 3-DoF 底盘 + 7-DoF 臂。</div>
+        </div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.5 · §3.4</div>
+          <blockquote class="ev-quote">Although the bi-level optimization framework is greedy, but mobile manipulation requires searching a 10-DoF space (7 for the arm and 3 for the base), resulting in a large search space that cannot be proven convex, where direct searching may easily lead to local optima.</blockquote>
+          <div class="ev-trans">尽管双层优化框架是贪心的，但移动操作需要搜索 10 自由度空间（机械臂 7 个，底盘 3 个），产生了无法证明凸性的巨大搜索空间，直接搜索可能容易陷入局部最优。</div>
+          <div class="ev-gloss">作者坦承框架是贪心的，但对于非凸大搜索空间，贪心分解比全局联合搜索更实用。</div>
+        </div>
+      </div>
+
+      <!-- 观点5 OVMM 主结果 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点5</span> OVMM 主结果：在所有阶段成功率上全面超越 SOTA，尤其 Pick 阶段（+12.4%）最为显著，直接验证了 VLA 路径点迁移的核心价值。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.6–7 · §4.2 Table 1</div>
+          <blockquote class="ev-quote">Our method achieves 4.2% overall success rate and 11.2% partial success rate gain, respectively. We demonstrate that our method can coordinate the motion of the robotic base and arm in order to keep the end-effector in a reasonable spatial relationship with the target object. Notably, benefiting from the generalization ability of the pre-trained VLA models, the Pick success rates of our method are 12.4% higher than the SOTA methods, which efficiently verify that the proposed approach efficiently transfers the pre-trained VLA model policies to the mobile manipulation task.</blockquote>
+          <div class="ev-trans">我们的方法分别实现了 4.2% 的整体成功率提升和 11.2% 的分阶段成功率提升。我们证明了我们的方法能够协调机器人底盘和机械臂的运动，以保持末端器与目标物体之间合理的空间关系。值得注意的是，得益于预训练 VLA 模型的泛化能力，我们方法的抓取成功率比 SOTA 方法高出 12.4%，有力验证了所提方法能够高效地将预训练 VLA 模型策略迁移到移动操作任务。</div>
+          <div class="ev-gloss">Pick 阶段最受益，因为 VLA 的抓取轨迹生成能力直接被继承；Place 阶段受限于导航精度（Table 3 显示 72% 失败来自 Orient to place）。</div>
+        </div>
+      </div>
+
+      <!-- 观点6 消融：w/o GT 暴跌，验证路径点是核心 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点6</span> 消融关键发现：去掉 VLA 路径点（改用实例分割目标位置替代）导致成功率从 49.4% 暴跌至 11.3%——这是所有消融中降幅最大的，直接证明 VLA 路径点是整个框架最不可或缺的组件。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.7 · §4.3 Table 2</div>
+          <blockquote class="ev-quote">We further leverage the groundtruth object masks as the visual input for our system to fairly evaluate our mobile manipulation policy. We also evaluate our method by utilizing vision foundation models such as Detic for object mask generation. As the objects are usually highly cluttered in the household environments, the quality of visual perception degrades significantly. Therefore, the overall success rate is far below methods using groundtruth masks.</blockquote>
+          <div class="ev-trans">我们进一步使用真值物体掩码作为系统的视觉输入，以公平评估我们的移动操作策略。我们也用 Detic 等视觉基础模型评估了使用视觉感知生成物体掩码时的表现。由于家庭环境中物体通常高度杂乱，视觉感知质量显著下降，因此整体成功率远低于使用真值掩码的方法。</div>
+          <div class="ev-gloss">w/o GT（去掉 VLA 路径点用实例分割代替）Overall SR 11.3%，揭示当前方法对感知质量的强依赖——也指出了未来工作的主要瓶颈。</div>
+        </div>
+      </div>
+
+      <!-- 观点7 真实世界低成本部署 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点7</span> 真实世界只需 50 条示范即可完成微调，实现在 hexman echo 底盘 + RM65 机械臂平台上的部署，验证了「低成本迁移」的实际可行性。</div>
+        <figure>
+          <img src="./images/figure_4_realworld_pickplace.png" alt="真实世界 Pick-and-Place 序列可视化">
+          <figcaption><strong>Figure 3（p.8）：</strong>真实世界 Pick-and-Place 任务序列。机器人先导航接近目标，底盘与臂基于 VLA 路径点协同生成轨迹：初始阶段目标在臂的工作空间内可直接执行；放置阶段底盘需移动以扩大工作空间，之后再精炼臂轨迹。</figcaption>
+        </figure>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §4.4 Real World Experiment</div>
+          <blockquote class="ev-quote">Benefiting from the generalization of the pre-trained VLA models, our approach requires only 50 samples to complete the fine-tuning and achieves 40% success rate on the mobile manipulation task.</blockquote>
+          <div class="ev-trans">得益于预训练 VLA 模型的泛化能力，我们的方法仅需 50 条样本即可完成微调，并在移动操作任务上取得 40% 的成功率。</div>
+          <div class="ev-gloss">50 条示范对工业级部署而言已属极低成本。40% 成功率在当前移动操作领域属合理水平（抽屉任务仅 10%，反映 hinge object 的物理约束复杂性）。</div>
+        </div>
+      </div>
+
+      <!-- 观点8 局限性 -->
+      <div class="claim">
+        <div class="claim-statement"><span class="cn">观点8</span> 作者自述两大局限：性能受 VLA 模型上限约束，且只能部署在运动空间高度受限的场景；同时缺乏任务规划模块，无法完成长程任务。</div>
+        <div class="evidence">
+          <div class="ev-loc">📍 p.8 · §5 Conclusion</div>
+          <blockquote class="ev-quote">The limitations of our method are two-fold. First, our proposed method is limited to the performance of the VLA models and can only be deployed in highly constrained movement space. Second, our system cannot generate effective motions for long-horizon tasks due to the lack of task planning modules.</blockquote>
+          <div class="ev-trans">我们方法的局限性有两方面。首先，我们提出的方法受限于 VLA 模型的性能，只能部署在高度受限的运动空间中。其次，由于缺乏任务规划模块，我们的系统无法为长程任务生成有效动作。</div>
+          <div class="ev-gloss">第一条意味着方法是 VLA 性能的"放大器"而非"修正器"——若 VLA 路径点本身有误，优化框架无法纠正。第二条指出了与 π0.5 等层级规划方法的差距。</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态</h2>
+      <p class="lead">论文 PDF 中项目主页链接以"here"超链接形式存在，但 PDF 文字提取无法获取 URL。以下为目前可确认的状态。</p>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-part">未确认</span> 论文提及"project homepage"，但 PDF 文本中无法提取具体 URL；请访问 <a href="https://arxiv.org/abs/2503.13446">arXiv 页面</a>查看作者主页链接</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未公开</span> 论文未提及模型权重发布计划</dd>
+        <dt>基础 VLA</dt><dd><span class="os-tag os-yes">开源</span> 使用 <a href="https://github.com/openvla/openvla">OpenVLA-7B</a>（公开可用，Apache-2.0）作为路径点生成器</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未公开</span> 200 条 OVMM pick-and-place 示范轨迹及真实世界 50 条未发布</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-loc">📍 p.1 · Abstract</div>
+        <blockquote class="ev-quote">Our project homepage can be found at here.</blockquote>
+        <div class="ev-trans">我们的项目主页可在此处找到。</div>
+        <div class="ev-gloss">原文"here"为超链接，PDF 文字层无法提取 URL。作者通讯地址为 wuzhenyu@bupt.edu.cn，可直接联系获取代码。</div>
+      </div>
+    </section>
+
+    <!-- ============ 批判 · 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success">
+        <div class="callout-head">✅ 值得读的理由</div>
+        <p>提供了一个极简而完整的"固定基座 VLA → 移动操作"迁移范式：VLA-as-waypoint-oracle + 双层物理可行性优化。逻辑清晰，公式完整（eq.3–6 + Algorithm 1），可直接复用。OVMM 基准结果扎实，消融设计合理（尤其 w/o GT 暴跌实验说服力强）。仅需 50 条示范的真实部署结论对工程实践意义大。</p>
+      </div>
+      <div class="callout danger">
+        <div class="callout-head">🔍 主要保留</div>
+        <p>① <strong>感知强依赖</strong>：w/o GT 实验（11.3%）揭示整个框架在实际视觉感知条件下成功率极低，距实用仍有差距。② <strong>真实世界评测规模小</strong>：3 个任务各测 10 次，缺乏跨环境泛化验证。③ <strong>无长程任务规划</strong>：作者自承，这直接限制了与 π0.5 等系统的对比价值。④ <strong>开源状态不明</strong>：代码链接无法从 PDF 提取，复现困难。⑤ 双层优化仍依赖 Dual Annealing 启发式搜索，延迟 ~700ms 在实时场景有限制。</p>
+      </div>
+      <p><strong>评级：</strong><span class="badge valuable">Valuable</span> &nbsp;提供了完整可复用的迁移框架与公式，但评测规模和开源状态制约了影响力。适合作为移动操作 VLA 迁移方法的参考基线。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+      <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · MoManipVLA (arXiv:2503.13446)</footer>
+
+</body>
+</html>

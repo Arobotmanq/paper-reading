@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoboNaldo 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO (variant: 绿调，呼应 summary) ---------- */
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #14532d 50%, #166534 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.35), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.2), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(34, 197, 94, 0.18);
+    color: #bbf7d0;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 12px #22c55e;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(34, 197, 94, 0.18); border-color: rgba(34, 197, 94, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(34, 197, 94, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--success);
+    font-weight: 600;
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(34, 197, 94, 0.05));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- PLACEHOLDER ---------- */
+  .placeholder {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 3em 2em;
+    text-align: center;
+    color: var(--muted);
+    background: repeating-linear-gradient(45deg, #fafafa, #fafafa 12px, #f4f4f5 12px, #f4f4f5 24px);
+  }
+  .placeholder .big { font-size: 2.4em; margin-bottom: 0.3em; }
+  .placeholder h2 { font-size: 1.3em; color: var(--text-soft); border: 0; justify-content: center; }
+  .placeholder code { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.85em; color: #be123c; border: 1px solid var(--border); }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>RoboNaldo 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      这一页沉淀 RoboNaldo「为高冲量射门定制」的四个核心机制：把跟踪稳定与 task 精准焊到一起的三阶段课程，以及让 sub-10ms 踢击窗口仍有梯度可学的三件奖励整形 trick。每个概念给出定义、在本文的具体用法、与相邻做法的区别，以及出处来源。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 RoboNaldo 综述</a>
+      <span class="pill">📚 当前 4 个概念</span>
+      <span class="pill">🔗 <a href="https://opendrivelab.com/RoboNaldo" style="color: #86efac; text-decoration: none;">Project Page</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ motion-guided curriculum ============ -->
+    <section class="card" id="motion-guided-curriculum">
+      <h2>Motion-Guided Curriculum <span class="tag">Curriculum RL</span></h2>
+      <p class="full-name">三阶段动作引导课程强化学习 · Tracking → Adaptation → Generalization</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>不在「motion tracking 给稳定」和「task reward 给精准」之间二选一，而是<strong>按每种学习信号能可靠提供什么来分阶段</strong>：一条人类踢球参考当脚手架，随训练把奖励权重从跟踪平滑迁移到 task（跟踪权重恒定、task 权重 \(w_g\) 由 0 → 0.8 → 1.0），最终焊出一个既稳又准又猛的单一 low-level 策略。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Curriculum RL 的通用思路是「先易后难、逐步加码」地组织训练任务，让策略不至于一上来就面对稀疏奖励或过大的探索空间。RoboNaldo 把这个思路用在<strong>奖励配方</strong>而非单纯的任务难度上：它把「学会一记稳定的踢球」拆成三个behavior-triggered 阶段，每阶段只问策略它当下能学会的那一部分，并用<strong>同一个 low-level 策略</strong>顺序训练（每阶段从上一阶段 checkpoint 热启动）。</p>
+      <p>论文把核心思想一句话讲透：<em>"The key idea is to stage the problem according to what each learning signal can reliably provide."</em>（按每种学习信号能可靠提供什么来对问题分阶段。）</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>三阶段沿 Fig. 2 顺序训练，权重表（Table B.2）是这套课程的骨架：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>阶段</th><th>任务</th><th>\(w_{task}\)</th><th>\(w_{reg}\)</th><th>\(w_{motion}\)</th><th>球位/球速</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Stage 1</strong> Tracking</td><td>学稳定踢球先验</td><td>0.0</td><td>0.0</td><td>1.0</td><td>无球</td></tr>
+            <tr><td><strong>Stage 2</strong> Adaptation</td><td>定位球 free-kick</td><td>0.8</td><td>0.2</td><td>1.0</td><td>球位 ±0.75 m，静止</td></tr>
+            <tr><td><strong>Stage 3</strong> Generalization</td><td>动球射门</td><td>1.0</td><td>0.25</td><td>1.0 / 0.1<sup>†</sup></td><td>球位 ±1.0 m，0–5 m/s</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.88em;"><sup>†</sup>Stage 3 的 \(w_{motion}\) 按 locomotion 相 1.0、kick 相 0.1 切换。注意：本文的「权重迁移」并非把 \(w_{motion}\) 调到 0，而是<strong>开大 task、再在近球时按项放松跟踪</strong>（见 <a href="#proximity-based-tracking-relaxation">proximity-based tracking relaxation</a>），所以跟踪在远端始终保持全压。</p>
+      <ul>
+        <li><strong>Stage 1（Tracking）</strong>：参考是一段人类视频经 GVHMR + GMR 重定向出的「侧脚弓踢」，跟踪沿用 BeyondMimic 的指数核 14-body tracking，<strong>无球、无 task 奖励</strong>，只先把全身平衡与摆腿结构学到手。</li>
+        <li><strong>Stage 2（Adaptation）</strong>：加入球、目标与射门奖励，并随机采样球位。论文强调此阶段策略必须 <em>"adapt the demonstrated kick rather than simply replay it"</em>——接触点、瞄准方向、冲击速度都随采样球况变，这是课程能<strong>超过纯 tracking「复读」边界</strong>的关键一跃。</li>
+        <li><strong>Stage 3（Generalization）</strong>：把动球射门拆成「locomotion 命令 + kick-trigger」接口，难点回到「走近 + 选起脚时机」；同时引入 proximity 放松与击后稳定相。</li>
+      </ul>
+      <div class="callout note">
+        <div class="callout-head">🔑 为什么是「按信号能力」而非「按难度」</div>
+        <p>普通 curriculum RL 是把同一套奖励下的任务从易到难铺开（如 [21] legged locomotion）。RoboNaldo 指出：对射门而言，<em>"increasing ball-position diversity before the policy can kick yields no reward signal"</em>——在策略还不会踢之前先加球位多样性，根本拿不到奖励。所以本文<strong>同时调奖励权重和任务难度</strong>，让 tracking 先供稳定、task 后供精准，两者平滑交接。</p>
+      </div>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Motion-Guided Curriculum（本文）</th><th>纯 motion tracking RL</th><th>纯 task-reward RL</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>稳定性</td><td>继承（Stage 1 先建立）</td><td>强（但只会复读）</td><td>弱（从零探索难平衡）</td></tr>
+            <tr><td>能否换接触点/方向/时机</td><td><strong>能</strong>（Stage 2/3 适配）</td><td>不能（参考固定）</td><td>能，但探索不出</td></tr>
+            <tr><td>奖励稀疏问题</td><td>跟踪先供密集梯度</td><td>—</td><td>credit-assignment 崩</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>与同底座工作相比：<a href="../GRAIL-Generating-Humanoid-Loco-Manipulation-from-3D-Assets-and-Video-Priors/summary.html">GRAIL</a> 同在 G1 上用 motion-tracking RL，但靠 3D 资产 + 视频<strong>批量造参考</strong>来覆盖多样性；RoboNaldo 反向——<strong>只用一条参考</strong>，靠课程把策略推过「复读」边界，参考数量与适配方式正好互补。与 <a href="../WholeBodyVLA-Unified-Latent-VLA-Loco-Manipulation/summary.html">WholeBodyVLA 的 LMO</a> 那种「离散高层指令 + 两阶段 curriculum 驱动 low-level RL」同构，但本文的载荷是高冲量接触，且把课程做成了「跟踪→task 权重迁移」而非纯难度爬升。</p>
+
+      <h3><span class="num">4</span>出处 · 来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>「三阶段 motion-guided curriculum」这一整套配方是<strong>本文（RoboNaldo, arXiv:2606.11092）提出</strong>。其两个思想源头有明确出处：<strong>Curriculum Learning</strong> 由 Bengio et al. 2009（ICML，参考 [19]）正式提出，RL 版综述见 Narvekar et al. 2020（JMLR，[20]）；底层的 <strong>motion tracking</strong> 范式沿用 <strong>BeyondMimic</strong>（Liao et al. 2025, arXiv:2508.08241，[24]）的指数核 14-body 跟踪。RoboNaldo 的创新在于把 curriculum 从「任务难度爬升」改造成「学习信号能力驱动的奖励权重迁移」。</p>
+      </div>
+    </section>
+
+    <!-- ============ Instant Interaction Reward ============ -->
+    <section class="card" id="instant-interaction-reward">
+      <h2>Instant Interaction Reward <span class="tag">Reward Shaping</span></h2>
+      <p class="full-name">即时交互奖励 · 对接触全生命周期分组给奖，避免短窗口塌缩</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>踢球的有意义接触在 200 Hz 下<strong>只持续 3–5 个物理步（sub-10ms）</strong>。若像 HDMI 那样用「位置×力」<strong>乘积</strong>奖励，任何一项瞬间为 0 整个奖励就塌缩、梯度消失。本文改用<strong>加性分组</strong>奖励，对接近(approach)—冲击(impact)—击后球态(post-contact)这条完整生命周期分别给奖，让短窗口里始终有梯度。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>Instant Interaction Reward 是一个<strong>把单次脚-球碰撞的全过程拆成四个加性/乘性分量、再组合</strong>的塑形奖励。形式（Eq. 1）：</p>
+      <div class="math-display">
+        \[ r_{interact} = \big(R_{contact} + R_{goal}\big)\big(R_{vel} + R_{force}\big)\,/\,4 \]
+      </div>
+      <ul>
+        <li>\(R_{contact}\)：塑造<strong>接近</strong>——脚到球的距离（减去球半径）越小越高，\(R_{contact} = \exp(-[\lVert p_{foot}-p_{ball}\rVert - r_b]_+/\sigma_f)\)。</li>
+        <li>\(R_{goal}\)：保留<strong>结果级瞄准</strong>梯度——基于历史最近球-目标距离 \(\hat d\) 的指数项。</li>
+        <li>\(R_{vel}\)：要求<strong>高冲量</strong>——球速超过 \(v_{min}\) 才给（饱和形式 \(1-\exp(-[\lVert v_{ball}\rVert - v_{min}]_+^2/10)\)）。</li>
+        <li>\(R_{force}\)：要求<strong>接触力</strong>足够——\(\min(f/f_{thresh},\,1)\)。</li>
+      </ul>
+      <p>关键在「\(R_{contact}+R_{goal}\)」与「\(R_{vel}+R_{force}\)」<strong>组内相加</strong>：单项瞬间缺失不会让整组归零，因此奖励在 3–5 步的接触窗口里不会塌缩，同时仍会惩罚「弱、慢、打偏」的踢击。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>它是 task 奖励 \(r_{task}\) 的核心一项，与「densified shot-placement reward」并列服务于「踢得稳又踢得猛」目标。论文给出直接动机：</p>
+      <div class="callout">
+        <div class="callout-head">📄 原文（p.5 §3.3）</div>
+        <p><em>"HDMI uses a position–force product, which is effective for sustained contact but collapses for soccer shooting: meaningful foot–ball contact lasts only 3–5 physics steps at 200 Hz. RoboNaldo instead rewards the full contact lifecycle–approach, impact, and post-contact ball outcome."</em></p>
+      </div>
+      <p>消融验证其不可替代：<em>"Replacing our instant interaction reward with HDMI-style sparser ones drops contact accuracy performance, with free-kick success from 28.8% to 2.5%."</em>——换成 HDMI 式稀疏奖励，free-kick 成功率从 28.8% 直接崩到 2.5%。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Instant Interaction Reward（本文）</th><th>HDMI position–force product</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>组合方式</td><td>组内<strong>加性</strong>、组间乘性</td><td>位置 × 力 <strong>纯乘积</strong></td></tr>
+            <tr><td>适合的接触</td><td>sub-10ms 高冲量瞬时接触</td><td>持续 dwell-time 接触（搬/推/抱）</td></tr>
+            <tr><td>短窗口表现</td><td>不塌缩，始终有梯度</td><td>任一因子为 0 即塌缩</td></tr>
+            <tr><td>覆盖范围</td><td>接近 + 冲击 + 击后球态全生命周期</td><td>接触瞬间的位置/力</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>本质区别是<strong>「乘积 vs 加性分组」</strong>：持续接触任务里位置和力都长期非零，乘积形式能强耦合两者；但瞬时碰撞里两者只在几毫秒内同时非零，乘积会让大部分时间步梯度为 0。本文用加性分组把「任一信号在场就给部分奖励」做成了短窗口下的稳健塑形。它与 <a href="#densified-shooting-reward">Densified Shooting Reward</a> 是配套的两件事：前者管「踢得对不对」（接触本身），后者管「踢得准不准」（落点）。</p>
+
+      <h3><span class="num">4</span>出处 · 来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p><strong>本文（RoboNaldo）提出</strong>，作为对 <strong>HDMI</strong>（Weng et al. 2025, "HDMI: Learning interactive humanoid whole-body control from human videos", arXiv:2509.16757，参考 [14]）位置-力乘积奖励的针对性替代。HDMI 及同类 contact-rich loco-manipulation 系统（ResMimic、FALCON、InterMimic 等 [14–18]）都假设 dwell-time 持续接触并跨多步累积交互奖励；RoboNaldo 指出该假设在 sub-10ms 踢击上失效，故重新设计。</p>
+      </div>
+    </section>
+
+    <!-- ============ proximity-based tracking relaxation ============ -->
+    <section class="card" id="proximity-based-tracking-relaxation">
+      <h2>Proximity-Based Tracking Relaxation <span class="tag">Stage 3</span></h2>
+      <p class="full-name">近球距离调制的跟踪放松 · 按项给跟踪权重打折，只在 task 与跟踪冲突处放手</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>近球时，「严格跟踪参考」会和「自由发力踢准」打架。本文不粗暴地全局清零某个跟踪项，而是用一个<strong>随球距连续变化的放松因子 \(g_i(d_{ball})\)</strong>：球远时跟踪全压、球近时<strong>逐项</strong>放松——脚部线速度几乎放空（\(\mu=0.05\)）给踝部摆位自由，而躯干姿态只松一点（\(\mu=0.6\)）以在倾身踢球时保住平衡。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>在 Stage 3，每个 motion-tracking 项的有效标准差额外乘上一个<strong>距离调制的放松因子</strong>（Eq. 4）：</p>
+      <div class="math-display">
+        \[ g_i(d) = \mu_i + (1-\mu_i)\cdot\mathrm{clamp}\!\left(\frac{d-d_{near}}{d_{far}-d_{near}},\,0,\,1\right),\quad d_{near}=0.35\,\text{m},\ d_{far}=1.0\,\text{m} \]
+      </div>
+      <p>含义：当球距 \(d \ge d_{far}\)（1.0 m）时 \(g_i = 1\)，跟踪<strong>全压、无放松</strong>；当 \(d \le d_{near}\)（0.35 m）时 \(g_i = \mu_i\)，放松到该项的近球底值 \(\mu_i\)；中间线性过渡。每项有自己的 \(\mu_i\)（Table B.3）：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>跟踪项</th><th>anchor pos</th><th>anchor ori</th><th>body pos</th><th>body ori</th><th>body lin vel</th><th>body ang vel</th><th>feet lin vel</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>\(\mu_i\)</td><td>0.10</td><td>0.60</td><td>0.20</td><td>0.60</td><td>0.20</td><td>0.30</td><td><strong>0.05</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.88em;">注：\(g_i\) 乘的是<strong>跟踪误差核的标准差</strong>（\(\sigma \to \sigma/g_i\)）——\(\mu_i\) 越小、容差越大，等于对该项放得越松。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>这是 RoboNaldo「兼顾稳定与力量」三件套里专门解决<strong>自由度冲突</strong>的一招。论文逐字说明了为何对不同项区别对待：</p>
+      <div class="callout">
+        <div class="callout-head">📄 原文（p.13 §B）</div>
+        <p><em>"Feet linear velocity is suppressed to µ=0.05, giving the policy near-total freedom in ankle placement during contact; body orientation is only reduced to µ=0.6, preserving balance during the lean."</em></p>
+      </div>
+      <p>消融中，去掉 Stage 3 机制（含 proximity 放松/自适应采样/稳定相）会让存活率从 98.8% 崩到 32.8%/24.4%——说明这套近球放权是真机稳定的承重件。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Proximity-Based Relaxation（本文）</th><th>全局清零某跟踪权重</th><th>固定降权</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>放松时机</td><td>仅近球（按 \(d_{ball}\) 连续调制）</td><td>始终</td><td>始终</td></tr>
+            <tr><td>放松粒度</td><td><strong>逐项</strong>（脚速放空、姿态保平衡）</td><td>整项一刀切</td><td>整项</td></tr>
+            <tr><td>接近相参考压力</td><td>保留全压</td><td>丢失</td><td>削弱</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>论文点明其与「全局清零」的本质差别：<em>"Unlike globally zeroing a tracking weight, this design retains full reference pressure during approach and relaxes only the terms where the task objective genuinely conflicts with motion tracking."</em>——只在 task 与跟踪真正冲突的项上放手（脚怎么摆几乎放空），其余项与接近全程仍保留参考压力。这正是它比单纯调小 <a href="#motion-guided-curriculum">curriculum</a> 里 \(w_{motion}\) 更精细之处：权重迁移是「全局把 task 调大」，proximity 放松是「在空间和项目两个维度上做局部、按需的让位」。</p>
+
+      <h3><span class="num">4</span>出处 · 来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p><strong>本文（RoboNaldo）提出</strong>，是其在 BeyondMimic 指数核跟踪奖励之上加的 Stage 3 专属机制，未溯及单一已有出处。思想上与「task-conditioned / phase-dependent 跟踪软约束」一脉相承，但「按球距连续调制 + 逐项 \(\mu_i\)」的具体形式是本文设计。</p>
+      </div>
+    </section>
+
+    <!-- ============ Densified Shooting Reward ============ -->
+    <section class="card" id="densified-shooting-reward">
+      <h2>Densified Shooting Reward <span class="tag">Reward Shaping</span></h2>
+      <p class="full-name">密集化射门落点奖励 · 弹道外推球态到球门线，每个击后步都给预测落点误差奖励</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>落点其实在<strong>击球瞬间就已确定</strong>，但「球-目标最近距离」奖励要等球真的飞到球门线才有信号——这中间是一大段没有梯度的延迟。本文在<strong>每个击后步</strong>都按重力把球当前速度<strong>弹道外推</strong>到球门线交点 \(\hat p\)，用预测落点误差立刻给奖，把稀疏的长程落点目标密集化。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>给定球的当前位置 \(p_b\)、速度 \(v_b\) 和目标所在的球门线 \(y\)，先解出球抵达球门线的时间 \(t^*\)，再外推落点（含重力下落，Eq. 3）：</p>
+      <div class="math-display">
+        \[ t^* = \frac{p_{t,y}-p_{b,y}}{v_{b,y}+\epsilon},\qquad \hat p = p_b + v_b\,t^* - \tfrac{1}{2}g\,(t^*)^2\,\hat z \]
+      </div>
+      <div class="math-display">
+        \[ r_{densified} = \begin{cases}\exp\!\big(-\lVert \hat p - p_t\rVert^2/\sigma^2\big) & t^* > 0\\[2pt] 0 & \text{else}\end{cases} \]
+      </div>
+      <ul>
+        <li>\(\hat p_z\) 被 clamp 到 \(\ge\) 球半径（防止预测落点穿地）。</li>
+        <li>条件 \(t^* > 0\) 只在<strong>球朝球门飞</strong>时激活奖励；一旦球真正越过球门线，奖励切换成用<strong>实际落点</strong>。</li>
+        <li>它密集化的是评估目标本身，但<em>"without changing the evaluation metric"</em>——评测仍按 episode 最小球-目标距离算，外推只用于训练时提供更早的瞄准反馈。</li>
+      </ul>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>它是 shot-placement 奖励的「dense」分支，与稀疏命中信号 \(r_{sparse} = \mathbb{1}[\hat d \le d_{threshold}]\) 配套（\(d_{threshold}\)：Stage 2 取 0.5 m、Stage 3 取 0.35 m）。论文给出动机：</p>
+      <div class="callout">
+        <div class="callout-head">📄 原文（p.12 §B）</div>
+        <p><em>"Shot placement is fully determined at the moment of impact, yet the episode-minimum ball–target distance reward yields signal only when the ball eventually reaches the goal line. To close this credit-assignment gap, at every post-contact step we ballistically extrapolate the ball's current velocity under gravity to its goal-line crossing."</em></p>
+      </div>
+      <p>在 Table B.1 里，「predicted error ball to target」项权重达 \(10 w_g\)（高于稀疏命中类项），可见密集预测信号在 task 奖励里占很重的份量。</p>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Densified Shooting Reward（本文）</th><th>episode-minimum 距离奖励</th><th>稀疏命中 \(\mathbb{1}[\hat d \le d_{thr}]\)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>信号何时到</td><td><strong>每个击后步即给</strong></td><td>球飞到球门线才给</td><td>命中才给</td></tr>
+            <tr><td>credit-assignment</td><td>把瞬时已定的落点立刻归因</td><td>长延迟、梯度稀疏</td><td>极稀疏</td></tr>
+            <tr><td>是否改变评测</td><td>否（仅训练用）</td><td>—（评测就用它）</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>与 <a href="#instant-interaction-reward">Instant Interaction Reward</a> 的分工：后者塑造「接触本身」（接近/冲击/力），前者塑造「接触<strong>结果</strong>的落点」。二者共同对治射门奖励的两层稀疏性——接触窗口短（Instant Interaction 解）+ 落点反馈延迟（Densified Shooting 解）。它本质上是把「物理仿真器里已知的弹道」当作<strong>免费的前向模型</strong>，提前把未来落点折算成当下奖励，是一种轻量的 reward-shaping/look-ahead，而非学习一个落点预测网络。</p>
+
+      <h3><span class="num">4</span>出处 · 来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p><strong>本文（RoboNaldo）提出</strong>。论文在 Related Work 把它和 Instant Interaction Reward 并列为对「sub-10ms 冲量 + 延迟球-目标反馈」的应对：<em>"RoboNaldo addresses this with an Instant Interaction Reward and a Densified Shooting Reward that extrapolates post-contact ball state."</em> 弹道外推本身是经典抛体运动学，但「在每个击后步外推到球门线、以预测误差密集化稀疏落点信号」这一奖励设计未溯及单一已有出处，属本文贡献。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表</div>
+    <ul>
+      <li><a href="#motion-guided-curriculum">Motion-Guided Curriculum — 三阶段课程</a></li>
+      <li><a href="#instant-interaction-reward">Instant Interaction Reward — 全生命周期加性奖励</a></li>
+      <li><a href="#proximity-based-tracking-relaxation">Proximity-Based Tracking Relaxation — 近球逐项放松</a></li>
+      <li><a href="#densified-shooting-reward">Densified Shooting Reward — 弹道外推密集落点</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · RoboNaldo (arXiv:2606.11092) · 配套笔记
+</footer>
+
+</body>
+</html>

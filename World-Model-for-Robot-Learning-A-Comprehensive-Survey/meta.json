@@ -1,0 +1,29 @@
+{
+  "title": "World Model for Robot Learning: A Comprehensive Survey",
+  "title_cn": "面向机器人学习的世界模型：综述",
+  "field": "vla",
+  "venue": "arXiv:2605.00080v1",
+  "date": "2026",
+  "relevance": "Track A",
+  "one_liner": "policy-centric 的机器人世界模型综述：用统一的预测-控制联合分布把 policy/IDM/passive·controllable WM 收编为同一分布的不同查询，并按『为策略 / 当模拟器 / 视频世界模型』三主线组织全领域（覆盖到 2026.3，含大量工业/最新工作）。",
+  "core_points": [
+    "动机：纯反应式 VLA 缺显式预测结构，长程/误差累积下脆弱；世界模型是从语义意图到物理可实现行为的『预测桥』。",
+    "robotics-centered 定义：只有 action-conditioned、服务下游决策的预测才算世界模型；『生成合理未来视频』不算。三能力=foresight/imagination-driven planning/data amplification。",
+    "核心思想：policy、passive WM、controllable WM、IDM 是同一个预测-控制联合分布 p(o,a|o,l) 的不同 marginal/conditional。",
+    "World Model for Policy 五范式：IDM-style 解耦 → 单骨干 → MoE/MoT → 统一 VLA → latent-space，耦合越来越紧；谁优仍是开放经验问题。",
+    "World Model as Simulator 两用途：RL 的 learned simulator + 决策期 evaluator；第二层认识到 simulator 不可靠需与策略 co-evolution。",
+    "视频世界模型瓶颈从『真不真』转向『与动作因果对齐 / 长程物理自洽 / 可执行』；四阶段：想象引擎→动作可控→结构感知→foundation。",
+    "评估观：视觉真实度既非必要也非充分；需 open-loop/closed-loop/diagnostic 三层 function-aware 评估。",
+    "开放挑战：弱动作条件导致因果错配；外加效率、多模态触觉、经典控制融合、符号结构、评估指标缺标准。"
+  ],
+  "effects": [
+    "LIBERO 标准 4-suite：Cosmos Policy / LingBot-VA ≈98.5% avg，多个范式都达 97%+，无单一架构通吃。",
+    "长程是真区分度：Goal、尤其 Long 套件掉点最明显；RoboTwin/CALVIN/SIMPLER 上基准依赖性强、难严格横比。",
+    "结论：高性能可来自多种范式，photorealistic 视频生成对有效具身控制并非必要。"
+  ],
+  "open_source": "partial",
+  "open_source_detail": "综述本体不发布模型/权重；配套 awesome-list 仓库 github.com/NTUMARS/Awesome-World-Model-for-Robotics-Policy（在线·约581★·持续维护）+ 项目页 ntumars.github.io/wm-robot-survey。",
+  "open_source_checked": "2026-06-09",
+  "rating": "Important",
+  "summary": "summary.html"
+}

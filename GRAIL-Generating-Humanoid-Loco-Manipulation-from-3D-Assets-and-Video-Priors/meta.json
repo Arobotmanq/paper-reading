@@ -1,0 +1,27 @@
+{
+  "title": "GRAIL: Generating Humanoid Loco-Manipulation from 3D Assets and Video Priors",
+  "title_cn": "GRAIL：从 3D 资产与视频先验生成人形 Loco-Manipulation 数据",
+  "field": "humanoid",
+  "venue": "arXiv preprint",
+  "date": "2026",
+  "one_liner": "倒置范式：不重建无约束视频，而是先指定 3D 场景 + 机器人比例化身，再用 VFM 在已知度量框架内生成参考交互；产出 20K+ 序列，零真机数据训练即可在 Unitree G1 上抓取 84% / 爬楼 90%。",
+  "core_points": [
+    "范式倒置：'先指定 3D 场景再用 VFM 生成视频' vs 传统'从无约束视频反推 4D 场景'",
+    "Privileged setup：物体几何/相机参数/度量尺度/环境深度/机器人比例化身在生成前均为已知量，并在重建时复用",
+    "三阶段流水线：Robot-Centric Human Video Generation → Interaction-Aware 4D HOI Reconstruction → Task-General Loco-Manipulation Tracking",
+    "选择生成人类视频而非机器人视频：VFM 对人类先验更强，且人体/手部重建工具更成熟",
+    "4D HOI 联合优化：5 项损失 (Kp + Proj + 度量 Depth + Contact + Reg)，优化残差非完整轨迹，VLM 标接触帧",
+    "互补 tracker：object-aware 适配器 (冻结 SONIC + 64 维 latent 残差 + 手部基元) + scene-aware tracker (微调 SONIC + height-map 编码器)",
+    "Sim-to-Real：tracker 蒸馏为 egocentric RGB 策略，10 Hz 推理，零真机数据"
+  ],
+  "effects": [
+    "数据规模：1,000 物体 × 1,000 地形 → 20,000+ 序列，覆盖 pick-up / 全身操作 / 坐 / 地形穿越",
+    "HOI 生成物理可执行率 88.9%（DAViD 24.0%、HOIDiff 15.8%、CHOIS 10.5%），约 4× 提升",
+    "Tracker SR 81.4%（HDMI 48.5%、ResMimic 49.2%）",
+    "真机：5 类已见物体抓取 84%、5 类未见 80%、爬楼 90%（10 trials/object）",
+    "训练规模：64× L40 GPU, 1024 envs/GPU, 30K iter, PPO in Isaac Lab"
+  ],
+  "open_source": "none",
+  "rating": "Important",
+  "summary": "summary.html"
+}

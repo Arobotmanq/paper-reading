@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgiBot World Colosseo / GO-1 综述 · 思想优先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900; --nv-green-dark: #5a8e00;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%); color: #fff; padding: 4.5em 1.5em 4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(118, 185, 0, 0.35), transparent 70%); pointer-events: none; }
+  .hero::after { content: ""; position: absolute; bottom: -200px; left: -100px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(118, 185, 0, 0.18); color: var(--nv-green); border: 1px solid rgba(118, 185, 0, 0.4); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--nv-green); box-shadow: 0 0 12px var(--nv-green); }
+  .hero h1 { font-size: 2.8em; font-weight: 800; line-height: 1.15; margin: 0.5em 0 0.3em; letter-spacing: -0.02em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.2em; color: #cbd5e1; max-width: 760px; margin: 0 0 1.6em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.2em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rel { background: rgba(118,185,0,0.2); border-color: rgba(118,185,0,0.5); color: #d9f99d; font-weight: 600; }
+
+  /* ---------- KPI (概览栏) ---------- */
+  .kpi-strip { max-width: 1100px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi.green .value { color: var(--nv-green-dark); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { max-width: 1100px; margin: 3em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: 1fr 220px; gap: 2.5em; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  .toc .notes-link a:hover { border-left-color: var(--accent-dark); }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2em 2.2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.7em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--nv-green), var(--accent)); color: #fff; border-radius: 8px; font-size: 0.7em; flex: 0 0 32px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.96em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+
+  /* ---------- GIST 速记层 ---------- */
+  .gist-card { border-left: 5px solid var(--nv-green); }
+  .gist-block { margin: 1.2em 0; }
+  .gist-block .gb-label { display: inline-flex; align-items: center; gap: 0.4em; font-size: 0.85em; font-weight: 700; letter-spacing: 0.04em; color: var(--nv-green-dark); margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.18em; font-weight: 600; line-height: 1.6; color: var(--text); background: linear-gradient(135deg, rgba(118,185,0,0.08), transparent 70%); border-radius: var(--radius); padding: 0.9em 1.1em; }
+  .gist-idea strong { color: var(--nv-green-dark); }
+  .chain { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .chain li { position: relative; padding: 0.5em 0 0.5em 2.4em; color: var(--text-soft); line-height: 1.55; }
+  .chain li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.5em; width: 1.6em; height: 1.6em; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: 700; }
+  .chain li:not(:last-child)::after { content: "↓"; position: absolute; left: 0.65em; top: 2.0em; color: var(--border-strong); font-size: 0.9em; }
+  .method-grid { display: grid; gap: 0.7em; }
+  .method-item { display: flex; gap: 0.7em; align-items: flex-start; background: var(--quote-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7em 0.9em; }
+  .method-item .mi-num { flex: 0 0 auto; font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent); }
+  .method-item .mi-body { color: var(--text-soft); }
+  .method-item .mi-body strong { color: var(--text); }
+  .validation { font-size: 0.92em; color: var(--muted); border-left: 3px solid var(--border-strong); padding: 0.3em 0 0.3em 0.9em; }
+  .validation strong { color: var(--text-soft); }
+  details.numbers { margin-top: 0.5em; font-size: 0.9em; }
+  details.numbers summary { cursor: pointer; color: var(--accent-dark); font-weight: 600; }
+  details.numbers ul { margin: 0.5em 0 0; }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2.2em 0 0.4em; color: var(--muted); font-size: 0.82em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- CLAIM + EVIDENCE (深读层) ---------- */
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.3em 0; background: linear-gradient(135deg, rgba(99,102,241,0.025), transparent 60%); }
+  .claim-statement { font-size: 1.12em; font-weight: 700; color: var(--text); line-height: 1.5; display: flex; gap: 0.5em; align-items: flex-start; }
+  .claim-statement .cn { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 0.72em; font-weight: 700; border-radius: 6px; padding: 0.05em 0.5em; flex: 0 0 auto; margin-top: 0.15em; }
+  .evidence { margin-top: 0.8em; padding-left: 0.2em; }
+  .ev-loc { display: inline-flex; align-items: center; gap: 0.4em; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.12em 0.6em; margin-bottom: 0.5em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "JetBrains Mono", "Inter", monospace; font-size: 0.9em; line-height: 1.55; color: #1e293b; user-select: all; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-trans { margin: 0.45em 0 0.2em; font-size: 0.92em; color: var(--text-soft); }
+  .ev-trans::before { content: "🀄 "; }
+  .ev-gloss { margin: 0.45em 0 0; font-size: 0.92em; color: var(--accent-dark); }
+  .ev-gloss::before { content: "💡 "; }
+  .evidence + .evidence { margin-top: 0.9em; padding-top: 0.9em; border-top: 1px dashed var(--border); }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.2em 1.4em; margin: 1.2em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.insight { background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(99, 102, 241, 0.02)); border-color: var(--accent); }
+  .callout.insight .callout-head { color: var(--accent-dark); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ---------- FIGURE ---------- */
+  figure { margin: 1.3em 0 0.5em; text-align: center; }
+  figure img { max-width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  figure img:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- BADGE / RATING ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.3em 0.8em; border-radius: 999px; font-weight: 600; font-size: 0.9em; background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(202, 138, 4, 0.3); }
+  .badge.important { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border-color: #f59e0b; }
+  .badge.breakthrough { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; border-color: #16a34a; }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>智元 AgiBot · Vision-Language-Latent-Action · 大规模操作平台</span>
+    <h1>AgiBot World Colosseo<br>+ GO-1 (Genie Operator-1)</h1>
+    <p class="subtitle">大规模数据不是终点——把<strong>百万轨迹 + 人类视频 + 网络数据</strong>通过<strong>潜在动作空间</strong>桥接进一个统一 VLM，让模型先"读懂动作语义"再"精控动作"：这就是 <strong><a href="./notes.html#villa" style="color:#93c5fd">ViLLA</a></strong> 比普通 VLA 多出来的那一步。</p>
+    <div class="meta-pills">
+      <span class="pill rel">🎯 必读 · Track A 移动/双臂操作 VLA · 已深读</span>
+      <span class="pill">📅 2025-03（v4: 2025-08）</span>
+      <span class="pill">🏢 智元 AgiBot / HKU / 上海 AI Lab</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2503.06669">arXiv:2503.06669</a></span>
+      <span class="pill">🌐 <a href="https://agibot-world.com/">agibot-world.com</a></span>
+      <span class="pill">⭐ <a href="https://github.com/OpenDriveLab/AgiBot-World">OpenDriveLab/AgiBot-World</a></span>
+      <span class="pill">🏆 IROS 2025 Best Paper Finalist · IEEE TRO 2026</span>
+    </div>
+  </div>
+</header>
+
+<!-- KPI strip -->
+<div class="kpi-strip">
+  <div class="kpi green">
+    <div class="label">数据集规模</div>
+    <div class="value">1M+<span class="unit">轨迹</span></div>
+    <div class="desc">217 任务 · 87 技能 · 106 场景 · 2976h</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">机器人数量</div>
+    <div class="value">100+<span class="unit">台</span></div>
+    <div class="desc">同构双臂人形 AgiBot G1 · 4000m² 设施</div>
+  </div>
+  <div class="kpi gold">
+    <div class="label">GO-1 vs RDT</div>
+    <div class="value">+32%<span class="unit">提升</span></div>
+    <div class="desc">Latent Planner 带来 +0.12 完成分 · AgiBot World vs OXE +30%</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">复杂任务成功率</div>
+    <div class="value">>60%<span class="unit">成功</span></div>
+    <div class="desc">实机 6 任务均值 · r=0.97 幂律扩展</div>
+  </div>
+</div>
+
+<div class="layout">
+<main class="content">
+
+<!-- ============ 速记层 ============ -->
+<section class="card gist-card" id="gist">
+  <h2><span class="icon">💡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+  <p class="lead">默认读完就走的一层——只讲<strong>思想、逻辑、方法</strong>；效果只作验证。要核对原文/钻细节再看下面的「深读层」。</p>
+
+  <div class="gist-block">
+    <div class="gb-label">💡 一句话思想</div>
+    <div class="gist-idea">现有机器人数据集<strong>规模不够、任务太短、质量难保证</strong>——光堆遥操数据不够。AgiBot World 用百台同构机器人+严格流水线造出百万级高质量轨迹，然后用 <strong><a href="./notes.html#villa" class="note-link">ViLLA</a></strong>（Vision-Language-<em>Latent</em>-Action）把这些数据和人类视频、网络数据一起"打通"：先学一个跨本体的<strong>潜在动作空间</strong>，再让 VLM 在其中做长程规划，最后 Action Expert 精控——比普通 VLA 多出「潜在动作」这一桥梁层，让网络规模的知识真正落到机器人控制上。</div>
+  </div>
+
+  <div class="gist-block">
+    <div class="gb-label">🔗 逻辑链 · 为什么这个想法成立</div>
+    <ol class="chain">
+      <li>真实世界操作任务（双臂、灵巧手、长程、多场景）<strong>没有可用的大规模高质量数据集</strong>；现有数据碎片化、任务短、缺质控。</li>
+      <li>光造数据不够：VLM 的语言/视觉理解是宝贵的通用知识，但<strong>直接把 VLM token 空间对齐机器人动作空间（如 OpenVLA）开销大且效果有限</strong>。</li>
+      <li>关键洞察：<strong>先在"潜在动作空间"预训练</strong>——用 VQ-VAE 从帧差中学出跨本体共享的离散 token，任何视频（含人类视频）都能用，无需动作标签。</li>
+      <li>VLM 主干在这个小得多的潜在空间里做规划（Latent Planner），降低适配代价，且能利用 Ego4D 等海量人类视频。</li>
+      <li>最后一级 Action Expert 用扩散目标学连续高频精控动作，与 Latent Planner 层级调制——高层规划 + 低层精控分层解耦。</li>
+    </ol>
+  </div>
+
+  <div class="gist-block">
+    <div class="gb-label">🧩 方法骨架 · 三个关键设计决策</div>
+    <div class="method-grid">
+      <div class="method-item"><span class="mi-num">①</span><span class="mi-body"><strong><a href="./notes.html#lam" class="note-link">Latent Action Model (LAM)</a>：潜在动作桥</strong> — 用 VQ-VAE 从 (I_t, I_{t+H}) 帧对中学 k=4 个离散 token，无需动作标签；任何人类/跨本体视频都可用。编码器为时空 Transformer，解码器重建 I_{t+H}。</span></div>
+      <div class="method-item"><span class="mi-num">②</span><span class="mi-body"><strong><a href="./notes.html#latent-planner" class="note-link">Latent Planner</a>：VLM 接入点</strong> — 基于 InternVL2.5-2B，24 层 Transformer，在潜在动作空间做 masked language modeling，预测 z_t；三视角图（头/左腕/右腕）+ 语言指令输入。VLM 主干冻结或轻量微调。</span></div>
+      <div class="method-item"><span class="mi-num">③</span><span class="mi-body"><strong><a href="./notes.html#action-expert" class="note-link">Action Expert</a>：扩散精控</strong> — 与 Latent Planner 同架构，用扩散目标（去噪）回归连续动作 chunk（H=30 步），由 VLM 和 Latent Planner 层级调制；三阶段训练顺序解锁（Stage 1→2→3）。</span></div>
+    </div>
+  </div>
+
+  <div class="gist-block">
+    <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+    <p class="validation">GO-1 在 6 个实机任务上<strong>均值完成分 0.78</strong>，显著优于 RDT-1B(0.46)、GO-1 w/o Latent Planner(0.66)、π0。AgiBot World 预训练比 OXE 预训练提升 <strong>+0.30（in-domain）/ +0.29（OOD）</strong>。性能与数据量呈<strong>幂律扩展关系（r=0.97）</strong>。</p>
+    <details class="numbers">
+      <summary>想看具体数字（点开）</summary>
+      <ul>
+        <li>GO-1 vs RDT-1B: Restock Bag 0.98 vs 0.84; Fold Shorts 1.00 vs 0.54; Pour Water 0.93 vs 0.83; Wipe Table 0.67 vs 0.13。</li>
+        <li>Latent Planner 消融：有 vs 无 → "Fold Shorts" 1.00 vs 0.87，"Restock Beverage" 0.66 vs 0.60。</li>
+        <li>数据质量：528 条人工验证数据 vs 482 条未验证数据 → 完成分提升 0.18。</li>
+        <li>Alpha（92k 轨迹，236h）已超过 OXE（~2000h）成功率——质量>规模。</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-head">🎯 与项目的相关性判断</div>
+    <p><strong>Track A（人形/移动操作 VLA）直接命中，必读。</strong> ViLLA 的三阶段训练（LAM→Latent Planner→Action Expert）是目前产业界最完整的"如何把 VLM 接入双臂操作"的范式——尤其 Latent Planner 层使得 VLM 可在低维潜在空间适配，而不是直接对齐高维动作 token。AgiBot World 数据集本身是当前最大规模同构实机双臂数据，开源可直接用于预训练。<br>Track B（足式算法）<strong>不相关</strong>——本文不涉及 locomotion。</p>
+  </div>
+</section>
+
+<div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+<!-- ============ 核心观点 + 证据 ============ -->
+<section class="card" id="core">
+  <h2><span class="icon">◆</span>核心观点 · 证据</h2>
+  <p class="lead">每条 = 中文论点 + 📍页/节 + 🔤逐字原文(Ctrl-F 锚点) + 🀄译文 + 💡解读。</p>
+
+  <!-- 观点1：真问题 -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点1</span> 真问题：现有数据集受限于短任务、受控实验室、质量不一——缺乏能驱动通用操作策略的大规模、高多样性、高质量数据。</div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.2 · §I Introduction</div>
+      <blockquote class="ev-quote">existing robot learning datasets remain constrained by their reliance on short-horizon tasks in highly controlled laboratory environments, failing to adequately capture the complexity and diversity inherent in real-world manipulation tasks.</blockquote>
+      <div class="ev-trans">现有机器人学习数据集仍受限于在高度受控实验室环境中的短程任务，无法充分捕捉真实世界操作任务固有的复杂性和多样性。</div>
+      <div class="ev-gloss">这是全文的动机——数据质量和多样性的鸿沟，而非单纯规模。</div>
+    </div>
+  </div>
+
+  <!-- 观点2：AgiBot World 平台 -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点2</span> 解法（数据侧）：4000 m² 五场景设施 + 100 台同构双臂机器人 + 人在回路质控，产出 1M+ 条轨迹，覆盖 217 任务、87 技能、106 场景。</div>
+    <figure>
+      <img src="./images/figure_1_platform_overview.png" alt="Figure 1: AgiBot World Colosseo 全栈平台概览">
+      <figcaption><strong>Fig. 1（p.1）：</strong>AgiBot World Colosseo 全栈平台——数据规模对比（7.7× BridgeDataV2）、五大场景、GO-1 性能柱状图（46→66→78，RDT→GO-1 w/o LP→GO-1）。</figcaption>
+    </figure>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.3 · §III AgiBot World: Platform and Data</div>
+      <blockquote class="ev-quote">The latest version contains 1,001,552 trajectories, with a total duration of 2976.4 hours, covering 217 specific tasks, 87 skills, and 106 scenes.</blockquote>
+      <div class="ev-trans">最新版本包含 1,001,552 条轨迹，总时长 2976.4 小时，涵盖 217 个具体任务、87 项技能和 106 个场景。</div>
+      <div class="ev-gloss">量级上是 BridgeDataV2 的 16 倍、DROID 的 13 倍，且全部为同构双臂人形机器人采集。</div>
+    </div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.5 · §III-C Dataset Statistics</div>
+      <blockquote class="ev-quote">A distinguishing feature of the AgiBot World dataset is its emphasis on long-horizon manipulation. As shown in Fig. 3(b), prior datasets predominantly focus on tasks involving single atomic skills, with most trajectories lasting no more than 5 seconds. In contrast, AgiBot World is built upon continuous and complete tasks composed by multiple atomic skills, like "make a coffee". Trajectories in our dataset typically span approximately 30 seconds, some of which last over 2 minutes.</blockquote>
+      <div class="ev-trans">AgiBot World 数据集的一个显著特点是其对长程操作的重视。如图 3(b) 所示，现有数据集主要聚焦于单原子技能任务，大多数轨迹不超过 5 秒。相比之下，AgiBot World 基于由多个原子技能组成的连续完整任务构建，例如"制作咖啡"。我们数据集中的轨迹通常持续约 30 秒，部分超过 2 分钟。</div>
+      <div class="ev-gloss">长程任务（30s~2min）是 AgiBot World 区别于 OXE/DROID 的核心——策略必须具备多步骤规划能力。</div>
+    </div>
+    <figure>
+      <img src="./images/figure_3_dataset_statistics.png" alt="Figure 3: 数据集统计——场景、长程任务、技能分布">
+      <figcaption><strong>Fig. 3（p.5）：</strong>(a) 五大领域场景覆盖 vs OXE（真实 vs 受控）；(b) 轨迹时长分布——AgiBot World 峰值在 30~60s，DROID/OXE 峰值在 &lt;5s；(c) 87 个技能均有 100+ 轨迹（红虚线）。</figcaption>
+    </figure>
+  </div>
+
+  <!-- 观点3：ViLLA 框架 -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点3</span> 核心创新：ViLLA（Vision-Language-<em>Latent</em>-Action）框架——在 VLA 的"语言条件动作"之前插入一个潜在动作层，让 VLM 先在低维离散空间规划，再驱动精控动作专家。</div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.5 · §IV AgiBot World: Model</div>
+      <blockquote class="ev-quote">we propose a hierarchical Vision-Language-Latent-Action (ViLLA) framework with three training stages, as depicted in Fig. 4. Compared to Vision-Language-Action (VLA) model where action is vision-language conditioned, the ViLLA model predicts latent action tokens, conditioned on the generation of subsequent robot control actions.</blockquote>
+      <div class="ev-trans">我们提出了一个具有三个训练阶段的层级 Vision-Language-Latent-Action（ViLLA）框架，如图 4 所示。与动作由视觉-语言条件化的 VLA 模型相比，ViLLA 模型预测潜在动作 token，并以此条件化后续机器人控制动作的生成。</div>
+      <div class="ev-gloss">ViLLA 与 VLA 的本质区别：VLA 直接预测动作；ViLLA 先预测"潜在动作 token"（中间桥梁），再由 Action Expert 基于此生成实际控制指令。这使得 VLM 适配代价极小且可利用无动作标签数据。</div>
+    </div>
+    <figure>
+      <img src="./images/figure_4_GO1_ViLLA_architecture.png" alt="Figure 4: GO-1 三阶段训练架构">
+      <figcaption><strong>Fig. 4（p.6）：</strong>GO-1 三阶段训练。Stage 1: LAM 在人类视频+跨本体数据上学潜在动作 token（VQ-VAE）；Stage 2: Latent Planner（InternVL2.5-2B 骨干）学习在潜在空间做规划；Stage 3: Action Expert（扩散）联合训练精控低层动作。</figcaption>
+    </figure>
+  </div>
+
+  <!-- 观点4：LAM 潜在动作模型 -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点4</span> <a href="./notes.html#lam" class="note-link">Latent Action Model (LAM)</a>：用 VQ-VAE 从视频帧对中学跨本体共享的离散潜在动作 token，无需任何动作标签，使人类视频（Ego4D）可以参与预训练。</div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.5 · §IV-A Latent Action Model</div>
+      <blockquote class="ev-quote">To broaden the data pool by incorporating internet-scale human videos lacking action labels and cross-embodiment robot data, we employ latent actions in Stage 1 to model the inverse dynamics of consecutive frames. This approach enables the transfer of real-world dynamics from heterogeneous data sources into universal manipulation knowledge.</blockquote>
+      <div class="ev-trans">为通过纳入缺乏动作标签的互联网规模人类视频和跨本体机器人数据来扩大数据池，我们在 Stage 1 中使用潜在动作对连续帧的逆动力学建模。这一方法使得来自异构数据源的真实世界动态得以转化为通用操作知识。</div>
+      <div class="ev-gloss">关键：无监督从视频学动作语义——编码器为时空 Transformer（因果时序 mask），VQ-VAE codebook 量化为 k=4 个离散 token，解码器重建下一帧。</div>
+    </div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.5 · §IV-A</div>
+      <blockquote class="ev-quote">The latent action tokens are quantized using a VQ-VAE objective, with a codebook of size |C|.</blockquote>
+      <div class="ev-trans">潜在动作 token 通过 VQ-VAE 目标量化，码本大小为 |C|。</div>
+      <div class="ev-gloss">离散化的好处：(1) 跨本体共享同一码本；(2) 可直接作为 Latent Planner 的 masked LM 预测目标；(3) 潜在空间维度远小于 OpenVLA 的离散化动作空间。</div>
+    </div>
+  </div>
+
+  <!-- 观点5：Latent Planner -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点5</span> <a href="./notes.html#latent-planner" class="note-link">Latent Planner</a>：InternVL2.5-2B 为骨干，24 层 Transformer 做 bidirectional attention，将多视角图像 + 语言指令映射到潜在动作 token 序列，实现跨本体长程规划。</div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.5-6 · §IV-B Latent Planner</div>
+      <blockquote class="ev-quote">We use InternVL2.5-2B as the VLM backbone due to its strong transfer learning capabilities. The two-billion parameter scale has proven effective for robotic tasks in our preliminary experiments, as well as in prior studies. Multiview image observations are first encoded using InternViT before being projected into the language space. The latent planner consists of 24 transformer layers, which enable layer-by-layer conditioning from the VLM backbone with full bidirectional attention.</blockquote>
+      <div class="ev-trans">我们使用 InternVL2.5-2B 作为 VLM 骨干，因为它具有强大的迁移学习能力。二十亿参数规模已在我们的前期实验以及先前研究中被证明对机器人任务有效。多视角图像观测首先经 InternViT 编码，再投影到语言空间。Latent Planner 由 24 个 Transformer 层组成，通过逐层从 VLM 骨干进行条件化，采用完全双向注意力。</div>
+      <div class="ev-gloss">与 π0 的 action expert 用 flow matching 不同，Latent Planner 用的是 masked language modeling（更接近 BERT 而非 GPT）——适合预测离散 token 序列。</div>
+    </div>
+  </div>
+
+  <!-- 观点6：Action Expert -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点6</span> <a href="./notes.html#action-expert" class="note-link">Action Expert</a>：与 Latent Planner 同架构，用扩散目标学连续动作 chunk（H=30 步），由 VLM + Latent Planner 层级调制，实现高频灵巧精控。</div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.6 · §IV-C Action Expert</div>
+      <blockquote class="ev-quote">Although the action expert shares the same architectural framework as the latent planner, their objectives diverge: the latent planner generates discretized latent action tokens through masked language modeling, while the action expert regresses low-level actions via an iterative denoising process. Both expert modules are conditioned hierarchically on preceding modules, including the action expert itself, ensuring coherent integration and information flow within the dual-expert system.</blockquote>
+      <div class="ev-trans">尽管 Action Expert 与 Latent Planner 共享相同的架构框架，但其目标有所不同：Latent Planner 通过 masked language modeling 生成离散化的潜在动作 token，而 Action Expert 通过迭代去噪过程回归低层动作。两个专家模块均以层级方式条件化于前序模块（包括 Action Expert 自身），确保双专家系统内的信息连贯整合与流通。</div>
+      <div class="ev-gloss">层级调制：VLM 骨干 → Latent Planner → Action Expert，信息逐层下传，实现"高层规划驱动低层精控"的分层架构。</div>
+    </div>
+  </div>
+
+  <!-- 观点7：数据质量 > 数据数量 -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点7</span> 数据质量显著优于数据数量：AgiBot World Alpha（236h）已超过 OXE（~2000h）；528 条人工验证数据比 482 条未验证数据高 0.18 完成分。</div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.7 · §V-B Does AgiBot World boost policy learning at scale?</div>
+      <blockquote class="ev-quote">Notably, the AgiBot World alpha dataset, despite having a significantly smaller data volume than OXE (e.g., 236h compared to ∼2000h), achieves a higher success rate, underscoring the exceptional data quality of our dataset.</blockquote>
+      <div class="ev-trans">值得注意的是，AgiBot World alpha 数据集尽管数据量远小于 OXE（例如 236h vs ∼2000h），却实现了更高的成功率，凸显了我们数据集卓越的数据质量。</div>
+      <div class="ev-gloss">这是本文最反直觉的结论之一——1/8 的数据量、更高的成功率，人在回路质控和同构采集标准的价值远超原始数据量。</div>
+    </div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.8 · §V-E How does data quality impact policy learning?</div>
+      <blockquote class="ev-quote">being larger in quantity does not necessarily translate to improved performance, while a smaller set of human-verified data yields a 0.18 boost in the completion score, underscoring the importance of high-quality data for policy learning.</blockquote>
+      <div class="ev-trans">数量更大并不一定能转化为性能提升，而经过人工验证的较小数据集使完成分提升了 0.18，强调了高质量数据对策略学习的重要性。</div>
+      <div class="ev-gloss">直接消融：质量 > 数量。对数据采集工作有指导意义——与其堆数据不如保质量。</div>
+    </div>
+  </div>
+
+  <!-- 观点8：幂律扩展 -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点8</span> GO-1 性能与预训练数据量呈幂律扩展关系（Pearson r=0.97），从 9.2k 到 1M 轨迹单调增长——具备持续改进潜力。</div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.7 · §V-D Does GO-1's ability scale with data size?</div>
+      <blockquote class="ev-quote">the policy's performance exhibits a predictable power-law scaling relationship with the number of trajectories, supported by a Pearson correlation coefficient of r = 0.97.</blockquote>
+      <div class="ev-trans">策略的性能与轨迹数量呈现可预测的幂律扩展关系，Pearson 相关系数 r = 0.97 支持这一结论。</div>
+      <div class="ev-gloss">r=0.97 的幂律拟合说明数据扩展策略是有效的——数据规模仍是瓶颈，继续采集有明确回报。</div>
+    </div>
+  </div>
+
+  <!-- 观点9：GO-1 实机评测结果 -->
+  <div class="claim">
+    <div class="claim-statement"><span class="cn">观点9</span> GO-1 在 6 实机任务上全面超越 RDT-1B 和 π0，Latent Planner 的贡献在复杂任务（Fold Shorts）和语言跟随任务（Restock Beverage）上最为显著。</div>
+    <div class="evidence">
+      <div class="ev-loc">📍 p.7 · §V-C Is GO-1 a more capable generalist policy?</div>
+      <blockquote class="ev-quote">GO-1 significantly outperforms RDT and π0, particularly in tasks such as "Pour Water", which demands robustness to object positions, and "Restock Beverage", which highlights instruction-following capabilities. The inclusion of the latent planner yields an average improvement of 0.12 task completion score.</blockquote>
+      <div class="ev-trans">GO-1 显著优于 RDT 和 π0，尤其是在"倒水"（需要对物体位置具有鲁棒性）和"补充饮料"（突出指令跟随能力）等任务上。引入 Latent Planner 带来平均 0.12 的任务完成分提升。</div>
+      <div class="ev-gloss">Latent Planner +0.12 的绝对提升（基准约 0.66）意味着约 18% 相对提升——其价值在需要长程规划和语言理解的任务上最为突出。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 开源状态 ============ -->
+<section class="card" id="opensource">
+  <h2><span class="icon">⎘</span>开源状态 · 实时核查结果（2025-09）</h2>
+  <p class="lead">以下为实时检索 GitHub/HuggingFace 所得，非依赖 PDF 中的声明。</p>
+  <dl class="os-grid">
+    <dt>数据集</dt>
+    <dd>
+      <span class="os-tag os-yes">已开源</span>
+      <strong>Alpha</strong>（92,214 轨迹，Jan 2025）+ <strong>Beta</strong>（1,003,672 轨迹，Mar 2025）
+      · <a href="https://huggingface.co/datasets/agibot-world/AgiBotWorld-Alpha">HF: AgiBotWorld-Alpha</a>
+      · <a href="https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta">HF: AgiBotWorld-Beta</a>
+      · Challenge 数据集亦开放
+    </dd>
+    <dt>模型权重</dt>
+    <dd>
+      <span class="os-tag os-yes">已开源</span>
+      <strong>GO-1</strong>（完整带 Latent Planner，Sept 19 2025）
+      + <strong>GO-1 Air</strong>（无 Latent Planner，轻量版，Sept 19 2025）
+      · <a href="https://huggingface.co/agibot-world">HuggingFace: agibot-world</a>
+    </dd>
+    <dt>代码</dt>
+    <dd>
+      <span class="os-tag os-yes">已开源</span>
+      训练/推理/微调脚本 + 数据集工具链 + 部署代码
+      · <a href="https://github.com/OpenDriveLab/AgiBot-World">github.com/OpenDriveLab/AgiBot-World</a>
+      · 含 LIBERO 微调示例、AgileX/RoboTwin 集成
+    </dd>
+    <dt>许可证</dt>
+    <dd>
+      <span class="os-tag os-part">非商用</span>
+      <strong>CC BY-NC-SA 4.0</strong>——可学术使用，商业用途需额外授权
+    </dd>
+    <dt>荣誉</dt>
+    <dd><span class="os-tag os-yes">获奖</span> IROS 2025 Best Paper Award Finalist · IEEE TRO 2026</dd>
+  </dl>
+  <div class="evidence">
+    <div class="ev-loc">📍 p.3 · §III AgiBot World: Platform and Data</div>
+    <blockquote class="ev-quote">The dataset is available under the CC BY-NC-SA 4.0 license, along with the model checkpoints and code.</blockquote>
+    <div class="ev-trans">数据集在 CC BY-NC-SA 4.0 许可证下提供，同时提供模型 checkpoint 和代码。</div>
+    <div class="ev-gloss">论文中已明确声明开源意图；实际 GO-1 权重于 2025 年 9 月正式随 GitHub 仓库发布，包含完整版（带 Latent Planner）和轻量版（GO-1 Air）。</div>
+  </div>
+</section>
+
+<!-- ============ 批判 · 评级 ============ -->
+<section class="card" id="verdict">
+  <h2><span class="icon">⚖</span>批判 · 评级</h2>
+
+  <div class="callout success">
+    <div class="callout-head">✅ 值得读的理由</div>
+    <p><strong>产业界最完整的双臂操作全栈开源生态</strong>：百万级同构数据 + 完整工具链 + 权重全部开源（CC BY-NC-SA）。ViLLA 的"潜在动作作为 VLM 适配桥"思路优雅：不直接对齐高维动作空间、不需要动作标签就能利用人类视频，且三阶段训练清晰可复现。幂律扩展 r=0.97 有说服力。数据质量 &gt; 数据数量（Alpha 236h &gt; OXE 2000h）的消融是重要实践结论。</p>
+  </div>
+
+  <div class="callout danger">
+    <div class="callout-head">🔍 主要保留</div>
+    <p>① <strong>评测规模有限</strong>：仅 6 个任务，每任务 30 次（10 seen + 20 distractor），标准为 normalized score 而非二元成功率，失败模式分析缺失。<br>
+    ② <strong>仅实机评测，无模拟环境</strong>：论文自承"目前正在开发模拟环境"——可重复评测受限，论文发布时（v1，Mar 2025）尤为明显。<br>
+    ③ <strong>Latent Planner 的 codebook 超参未充分消融</strong>：|C| 大小、k=4 token 数等关键超参未有系统性实验。<br>
+    ④ <strong>与 π0/π0.5 的对比不完整</strong>：仅在 IROS 版（v4，Jul 2025）补充了与 π0 的比较，原版无此对比。<br>
+    ⑤ <strong>LAM 的 Ego4D 使用细节模糊</strong>：具体数据比例、是否所有 Ego4D 视频都参与训练未明确说明。</p>
+  </div>
+
+  <p><strong>评级：</strong><span class="badge important">Important</span>&nbsp; ViLLA 的三阶段训练框架和 AgiBot World 数据集是双臂操作领域的重要里程碑——特别是对于希望基于真实大规模数据训练通用操作策略的团队，这是当前最值得参考的完整开源生态。但核心方法创新（潜在动作）在 LAPA 等工作中已有先例，GO-1 的贡献主要在工程集成和数据规模，而非从零开始的方法突破。</p>
+</section>
+
+</main>
+
+<aside class="toc">
+  <div class="toc-title">目录</div>
+  <ul>
+    <li><a href="#gist">💡 速记层 · 思想/逻辑/方法</a></li>
+    <li><a href="#core">◆ 深读层 · 核心观点 · 证据</a></li>
+    <li><a href="#opensource">⎘ 开源状态</a></li>
+    <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+  </ul>
+  <div class="toc-sep"></div>
+  <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+</aside>
+</div>
+
+<footer>Paper Summary · 思想优先 + 按需深读 · AgiBot World Colosseo / GO-1 (arXiv:2503.06669)</footer>
+</body>
+</html>

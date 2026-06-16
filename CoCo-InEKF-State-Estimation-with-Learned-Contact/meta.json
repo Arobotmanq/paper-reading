@@ -1,0 +1,20 @@
+{
+  "title": "CoCo-InEKF: State Estimation with Learned Contact Covariances in Dynamic, Contact-Rich Scenarios",
+  "title_cn": "动态接触场景下的学习接触协方差状态估计",
+  "field": "estimation",
+  "venue": "RSS 2026 · Disney Research / ETH Zurich",
+  "date": "2026",
+  "one_liner": "可微 Invariant EKF：用 240K 参数 MLP 端到端预测每个接触候选点的连续速度协方差，取代传统二值接触状态。",
+  "core_points": [
+    "用 240K 参数 MLP 预测每个接触点的连续速度协方差，取代传统的二值接触检测",
+    "整个 Invariant EKF 可微，端到端训练，无需 ground-truth 接触标签",
+    "在 Lima 双足机器人 600 Hz 控制环内实时运行"
+  ],
+  "effects": [
+    "舞蹈动作线速度 ATE 0.121 → 0.046 m/s（−62%）",
+    "实机 600 Hz 实时；动态/富接触场景鲁棒"
+  ],
+  "open_source": "code+weights",
+  "rating": "Important",
+  "summary": "summary.html"
+}

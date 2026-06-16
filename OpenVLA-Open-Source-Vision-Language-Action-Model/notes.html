@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenVLA 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout.success {
+    background: var(--success-bg);
+    border-color: var(--success);
+  }
+  .callout.success .callout-head { color: var(--success); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>OpenVLA 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要一定背景才好理解的关键概念：VLA 范式、Prismatic VLM、SigLIP/DINOv2 视觉编码器、Llama 2、动作离散化/分 bin、Open X-Embodiment、LoRA、量化推理。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 OpenVLA 综述</a>
+      <span class="pill">📚 当前 8 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2406.09246" style="color: #93c5fd; text-decoration: none;">arXiv:2406.09246</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ VLA ============ -->
+    <section class="card" id="vla">
+      <h2>VLA <span class="tag">Vision-Language-Action</span></h2>
+      <p class="full-name">Vision-Language-Action Model · 视觉-语言-动作模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>VLA 是把"预训练视觉-语言模型"直接 fine-tune 来<strong>输出机器人动作</strong>的端到端策略。图像+语言指令进，动作 token 出，把机器人控制建模成语言生成任务，从而直接继承 VLM 的互联网先验知识。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>VLA（Vision-Language-Action Model）是将<strong>预训练的视觉-语言模型（VLM）</strong>适配为机器人控制策略的一类方法。具体做法：把机器人的连续动作编码为离散 token，拼接到 VLM 的输出词表中，然后用机器人示范数据对整个 VLM 做监督 fine-tune，最终模型直接从图像+语言指令预测动作 token 序列。</p>
+
+      <h3><span class="num">2</span>为什么要用 VLM 做基础</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>传统策略（BC/Diffusion）</th><th>VLA</th></tr></thead>
+          <tbody>
+            <tr><td>从零初始化，泛化依赖训练数据覆盖</td><td>继承 VLM 互联网先验，天然理解"把红色杯子放到桌子左边"</td></tr>
+            <tr><td>对新物体/新指令需要重新采数据</td><td>语言接地能力来自 VLM 预训练，对未见概念有一定零样本能力</td></tr>
+            <tr><td>小模型（<1B），训练快</td><td>大模型（7B+），但可用 LoRA 高效适配</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>在 OpenVLA 里的用法</h3>
+      <p>OpenVLA 是 VLA 范式的具体实现：以 <a href="#prismatic">Prismatic-7B</a> 为 VLM 骨干，在 Open X-Embodiment 970k 示范上做 fine-tune，输出 7D 机器人动作（末端执行器的 Δx, Δy, Δz, Δroll, Δpitch, Δyaw + 夹爪开合）。整个训练就是 next-token prediction，推理就是自回归采样。</p>
+
+      <h3><span class="num">4</span>与其他范式对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>范式</th><th>代表模型</th><th>核心思路</th><th>优势</th></tr></thead>
+          <tbody>
+            <tr><td>Diffusion Policy</td><td>Chi et al. 2023</td><td>去噪扩散预测动作轨迹块</td><td>高精度、平滑轨迹、双模式分布建模</td></tr>
+            <tr><td>Transformer BC</td><td>Octo, RT-1</td><td>Transformer 序列建模动作</td><td>多任务、可扩展</td></tr>
+            <tr><td><strong>VLA</strong></td><td><strong>RT-2, OpenVLA</strong></td><td><strong>VLM fine-tune 输出动作 token</strong></td><td>互联网先验 + 语言接地 + 通用架构</td></tr>
+            <tr><td>Flow Matching VLA</td><td>π0, OpenVLA-OFT</td><td>VLM + Flow Matching 动作头</td><td>连续动作、高频控制、动作 chunking</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">5</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>VLA 这一术语由 RT-2（Brohan et al. 2023, Google）提出和普及。RT-2 把 PaLI-X（55B）直接 co-fine-tune 预测机器人动作，首次证明 VLM 的语义泛化能直接转移到机器人控制。OpenVLA 是 RT-2 路线的开源实现和延伸。</p>
+      </div>
+    </section>
+
+    <!-- ============ Prismatic VLM ============ -->
+    <section class="card" id="prismatic">
+      <h2>Prismatic VLM <span class="tag">Backbone</span></h2>
+      <p class="full-name">Prismatic-7B · 多分辨率视觉语言模型骨干</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Prismatic 是 Karamcheti et al. 2024（Stanford）训练的开源 VLM，核心创新是<strong>融合 SigLIP（语义）+ DINOv2（空间）两个视觉编码器</strong>，再接 Llama 2 7B。OpenVLA 直接用它当骨干，在机器人示范数据上 fine-tune 得到 VLA。</p>
+      </div>
+
+      <h3><span class="num">1</span>架构三件套</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>组件</th><th>参数量</th><th>作用</th></tr></thead>
+          <tbody>
+            <tr><td><a href="#siglip-dinov2">SigLIP + DINOv2</a> 视觉编码器</td><td>~600M</td><td>提取图像 patch 特征（通道维拼接）</td></tr>
+            <tr><td>MLP Projector</td><td>小（2 层）</td><td>把视觉 token 投影到语言模型的 embedding 空间</td></tr>
+            <tr><td>Llama 2 7B 语言模型</td><td>7B</td><td>序列建模，输出文字或动作 token</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>为什么选 Prismatic 而非 LLaVA/IDEFICS</h3>
+      <p>OpenVLA 在 BridgeData V2 上做了消融对比（见论文 §3.4）：</p>
+      <ul>
+        <li><strong>LLaVA vs IDEFICS-1</strong>：LLaVA 在多物体语言接地任务上高 35% 绝对成功率；</li>
+        <li><strong>Prismatic vs LLaVA</strong>：Prismatic 再高约 10%，归因于 SigLIP+DINOv2 的空间推理增益；</li>
+        <li>Prismatic 的代码库也更模块化，易于机器人任务修改。</li>
+      </ul>
+
+      <h3><span class="num">3</span>本文用法</h3>
+      <p>OpenVLA 在 Prismatic-7B 权重上继续 fine-tune，<strong>包括解冻视觉编码器</strong>（这与 VLM 训练时冻结视觉编码器的惯例不同，见 summary 观点2），用 970k 机器人示范数据训练 27 个 epoch，最终 action token accuracy 超过 95%。</p>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>Karamcheti et al. 2024 "Prismatic VLMs: Investigating the Design Space of Visually-Conditioned Language Models"（Stanford）。在 LLaVA-1.5 数据混合上预训练，约 1M 图文对。Prismatic 本身的训练代码和权重也开源（但 SigLIP/DINOv2/Llama 2 的训练数据未公开）。</p>
+      </div>
+    </section>
+
+    <!-- ============ SigLIP + DINOv2 ============ -->
+    <section class="card" id="siglip-dinov2">
+      <h2>SigLIP + DINOv2 <span class="tag">Vision Encoders</span></h2>
+      <p class="full-name">Sigmoid CLIP + Self-Distillation with No Labels v2 · 双视觉编码器融合</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>SigLIP 用图文对比学习得到高层<strong>语义</strong>特征（"这是什么"），DINOv2 用自监督学习得到低层<strong>空间/结构</strong>特征（"在哪里、什么形状"）。两者特征通道维拼接，语义+空间兼得，对精确机器人操作特别有用。</p>
+      </div>
+
+      <h3><span class="num">1</span>各自是什么</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>SigLIP（Zhai et al. 2023, Google）</th><th>DINOv2（Oquab et al. 2023, Meta）</th></tr></thead>
+          <tbody>
+            <tr><td>训练方式</td><td>有监督对比学习（图像-文本对），用 Sigmoid loss 替代 Softmax（CLIP 式）</td><td>自监督 SSL（无标签），图像与自身不同裁剪/增强的蒸馏</td></tr>
+            <tr><td>学到的特征</td><td>高层语义：与文本 token 对齐，理解"物体类别/关系/场景描述"</td><td>低层空间：密集的 patch-level 特征，对位置/纹理/形状敏感</td></tr>
+            <tr><td>适合的任务</td><td>分类、检索、语言接地</td><td>分割、深度估计、精细定位</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">2</span>在 OpenVLA 里怎么融合</h3>
+      <p>两个编码器分别处理同一张 224×224 输入图像，各自输出 patch embedding 序列，然后<strong>沿 channel 维拼接</strong>（concatenate），得到每个 patch 的融合特征。MLP projector 再把拼接特征投影到 Llama 2 的 embedding 维度。</p>
+      <p>关键：拼接而非加权平均，保留了两种特征的独立信息，让模型自己学习何时依赖语义、何时依赖空间。</p>
+
+      <h3><span class="num">3</span>为什么对机器人控制特别重要</h3>
+      <p>机器人操作需要同时回答：① "要操作什么物体"（语义，SigLIP 强）② "物体在哪里/是什么朝向"（空间，DINOv2 强）。纯 SigLIP 在空间推理上较弱；OpenVLA 用 SigLIP-only 骨干（消融，footnote 4）性能下降，证实了双编码器的价值。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 类比</div>
+        <p>SigLIP = 告诉你"这是一个红色苹果" (what)；DINOv2 = 告诉你"它在左下角、呈球形、直径约 8cm" (where + shape)。机器人要抓苹果，两个问题都要答。</p>
+      </div>
+    </section>
+
+    <!-- ============ Llama 2 ============ -->
+    <section class="card" id="llama2">
+      <h2>Llama 2 <span class="tag">LLM Backbone</span></h2>
+      <p class="full-name">Llama 2 7B · Meta 开源大语言模型</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>Llama 2 是 Meta 在 2023 年发布的开源大语言模型，7B 版本是 OpenVLA 的语言骨干。它提供了语言理解/生成能力和 <a href="#action-discretization">动作 token</a> 的自回归预测框架。OpenVLA 覆写其词表末尾 256 个 token 为动作 token。</p>
+      </div>
+
+      <h3><span class="num">1</span>在 OpenVLA 中的角色</h3>
+      <p>Llama 2 7B 接收 MLP projector 输出的视觉 token 序列 + 语言指令 token 序列，进行因果自注意力建模，最终输出动作 token（每个维度一个 token，共 7 个 token 对应 7D 动作）。</p>
+      <p>核心优势：Llama 2 具有大规模互联网语言预训练的语义理解，使 VLA 能够理解复杂语言指令（如"把红色积木放到绿色积木的左边"），而不仅仅是执行固定模板指令。</p>
+
+      <h3><span class="num">2</span>Tokenizer 改造</h3>
+      <p>Llama tokenizer 只预留 100 个特殊 token 位，不够 256 个动作 bin 用。OpenVLA 的方案：<strong>直接覆写词表中使用频率最低的末尾 256 个 token</strong>（这些词在自然语言里极少出现），赋予它们新含义（动作 bin 0-255）。简单粗暴但有效，不需要扩展词表。</p>
+
+      <h3><span class="num">3</span>训练细节</h3>
+      <ul>
+        <li>学习率：固定 2e-5（与 VLM 预训练时相同），不用 warmup；</li>
+        <li>训练 27 个 epoch，直到 action token accuracy 超过 95%；</li>
+        <li>批大小 2048，64×A100，14 天。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>Touvron et al. 2023（Meta AI）。Llama 2 在约 2 万亿 token 互联网文本上预训练，并用 RLHF 对齐。权重公开，但训练数据和代码未全部公开。OpenVLA 在 Llama 2 基础上的适配全部开源。</p>
+      </div>
+    </section>
+
+    <!-- ============ Action Discretization ============ -->
+    <section class="card" id="action-discretization">
+      <h2>动作离散化 <span class="tag">Action Binning</span></h2>
+      <p class="full-name">Action Discretization / Binning · 连续动作的 token 化</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把机器人的连续动作空间（如 Δx ∈ [-0.05, +0.05] m）切成 256 个等宽 bin，每个 bin 对应一个语言模型 token，这样机器人动作预测就变成了标准的 <strong>next-token classification 问题</strong>，可以直接用交叉熵 loss 训练。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么要离散化</h3>
+      <p>语言模型本质上是分类模型（预测下一个 token 的类别），无法直接输出实值。把连续动作离散化后：</p>
+      <ul>
+        <li>动作预测 = 词表分类，可以直接用 LLM 的 cross-entropy 训练；</li>
+        <li>可以复用整套 LLM 训练基础设施，无需设计新的动作头；</li>
+        <li>256 bins 通常足以表示机器人的有效动作精度（位置控制精度约 0.1mm-1mm 量级）。</li>
+      </ul>
+
+      <h3><span class="num">2</span>分位数档宽 vs 最小最大档宽</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>方案</th><th>档宽计算</th><th>问题</th><th>本文选择</th></tr></thead>
+          <tbody>
+            <tr><td>RT-2 方案（min-max）</td><td>均匀分 [min, max]</td><td>异常值（如演示中意外大动作）会把区间拉到很大，正常动作被压缩到少数几个 bin，有效精度低</td><td>否</td></tr>
+            <tr><td><strong>OpenVLA 方案（分位数）</strong></td><td>均匀分 [P1, P99]</td><td>忽略 1% 尾部异常值；99% 正常动作获得均匀精度</td><td><strong>是</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3><span class="num">3</span>推理时的还原</h3>
+      <p>模型输出 7 个动作 token（对应 7D 动作的每一维），每个 token 对应一个 bin 索引 \(k \in [0, 255]\)，通过 Action De-Tokenizer 还原为连续值：</p>
+      <div class="math-display">
+        \[ a = P1 + \frac{k + 0.5}{256} \times (P99 - P1) \]
+      </div>
+      <p>取每个 bin 的中点值。</p>
+
+      <h3><span class="num">4</span>主要局限</h3>
+      <div class="callout note">
+        <div class="callout-head">⚠️ 局限</div>
+        <p>① 没有动作 <strong>chunking</strong>：每步只预测当前动作，无法利用未来规划的平滑性，容易抖动；② 没有<strong>历史帧</strong>输入，无法利用运动估计；③ 推理需要逐 token 自回归，7D 动作 = 7 次 forward pass，限制了推理频率。这些都是 OpenVLA-OFT 和 π0 等后续工作改进的方向。</p>
+      </div>
+    </section>
+
+    <!-- ============ Open X-Embodiment ============ -->
+    <section class="card" id="oxe">
+      <h2>Open X-Embodiment <span class="tag">OXE Dataset</span></h2>
+      <p class="full-name">Open X-Embodiment · 开放跨形态机器人数据集</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>OXE 是 2023 年由 50+ 机构联合发布的大规模机器人操作数据集，包含 70+ 子数据集、200万+ 轨迹，跨越多种机器人形态。OpenVLA 从中筛选出 970k 高质量示范作为训练数据。</p>
+      </div>
+
+      <h3><span class="num">1</span>数据集规模与构成</h3>
+      <p>OXE 的设计目标是为机器人 foundation model 提供类似 ImageNet 的大规模训练数据：</p>
+      <ul>
+        <li>70+ 子数据集，跨越 WidowX、Franka、UR5、Google Robot 等众多机器人；</li>
+        <li>200万+ 轨迹，但质量参差不齐；</li>
+        <li>统一了数据格式（RLDS），方便大规模训练。</li>
+      </ul>
+
+      <h3><span class="num">2</span>OpenVLA 的数据处理</h3>
+      <p>不是直接用全部 OXE，而是做了数据策展：</p>
+      <ol>
+        <li><strong>筛选条件</strong>：只保留有至少一个第三人称摄像头、使用单臂末端执行器控制的操作数据集；</li>
+        <li><strong>数据混合权重</strong>：沿用 Octo 的混合权重（对多样性高的数据集上调权重，对低多样性大量重复的下调）；</li>
+        <li><strong>清洗</strong>：过滤 BridgeData V2 中的全零动作帧（数据采集故障）；</li>
+        <li>最终 970k 轨迹，来自约 7 种机器人形态。</li>
+      </ol>
+
+      <h3><span class="num">3</span>为何多形态数据重要</h3>
+      <p>多形态数据迫使模型学习"动作的语义意图"而非"特定机器人的关节运动"，从而获得对不同机器人和新场景的泛化能力——这也是为什么 OpenVLA 能开箱即用控制 WidowX 和 Google Robot 两种不同机器人。</p>
+
+      <h3><span class="num">4</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>Open X-Embodiment Collaboration（2023），来自全球 50+ 机构联合整理，以 Google DeepMind 为主导。数据全部公开在 <a href="https://robotics-transformer-x.github.io">robotics-transformer-x.github.io</a>，格式为 RLDS (TensorFlow Datasets)。</p>
+      </div>
+    </section>
+
+    <!-- ============ LoRA ============ -->
+    <section class="card" id="lora">
+      <h2>LoRA <span class="tag">PEFT</span></h2>
+      <p class="full-name">Low-Rank Adaptation · 低秩适配</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>LoRA 冻结预训练权重 \(W_0\)，在每个线性层旁边插入两个小矩阵 \(A \in \mathbb{R}^{r \times d}\) 和 \(B \in \mathbb{R}^{d \times r}\)（r 远小于 d），只训练这两个矩阵。适配量 \(\Delta W = BA\) 是低秩的。对 VLA 而言，rank=32 只需训练 1.4% 参数，却能匹配全参数微调性能。</p>
+      </div>
+
+      <h3><span class="num">1</span>数学原理</h3>
+      <p>原权重矩阵 \(W_0 \in \mathbb{R}^{d \times k}\)，LoRA 做的是：</p>
+      <div class="math-display">
+        \[ h = W_0 x + \frac{\alpha}{r} \cdot B A x \]
+      </div>
+      <p>其中 \(A\) 用随机高斯初始化，\(B\) 初始化为零（保证训练开始时 \(\Delta W = 0\)，不破坏预训练初始化）。\(\alpha\) 是缩放因子（通常等于 r）。训练时只更新 \(A, B\)，\(W_0\) 被冻结。</p>
+
+      <h3><span class="num">2</span>应用于哪些层</h3>
+      <p>OpenVLA 的 LoRA 应用于所有线性层（包括 Attention 的 Q/K/V/O 投影和 FFN 的所有线性层）。这与只适配 Attention 的原始 LoRA 论文有所不同，但对 VLA 效果更好。</p>
+
+      <h3><span class="num">3</span>在 OpenVLA 里的效果</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>策略</th><th>成功率</th><th>训练参数</th><th>显存（batch 16）</th></tr></thead>
+          <tbody>
+            <tr><td>全参数微调</td><td>69.7%</td><td>7,188M（100%）</td><td>163 GB（需 2 卡）</td></tr>
+            <tr><td><strong>LoRA rank=32</strong></td><td><strong>68.2%</strong></td><td><strong>97.6M（1.4%）</strong></td><td><strong>59.7 GB（单卡）</strong></td></tr>
+            <tr><td>LoRA rank=64</td><td>68.2%</td><td>195.2M</td><td>60.5 GB</td></tr>
+            <tr><td>只微调最后一层</td><td>30.3%</td><td>465.1M</td><td>51.4 GB</td></tr>
+            <tr><td>夹心微调</td><td>62.1%</td><td>914.2M</td><td>64.0 GB</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>rank=32 和 rank=64 效果完全一样，说明 VLA 微调所需的参数空间维度低，r=32 是推荐默认值。</p>
+
+      <h3><span class="num">4</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 类比</div>
+        <p>LoRA 就像在一张大地图（预训练权重）上贴一个小便利贴（低秩矩阵）来标注机器人任务专用信息，地图本身不动，任务完成后撕掉便利贴权重又回来了。可以同时存多个不同任务的便利贴，按需切换。</p>
+      </div>
+
+      <h3><span class="num">5</span>出处</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>Hu et al. 2021 "LoRA: Low-Rank Adaptation of Large Language Models"（Microsoft）。最初为 GPT-3 微调设计，后成为 LLM/VLM 生态的标准 PEFT 方法。OpenVLA 是首批在 VLA 上系统验证 LoRA 有效性的工作。</p>
+      </div>
+    </section>
+
+    <!-- ============ Quantization ============ -->
+    <section class="card" id="quantization">
+      <h2>量化推理 <span class="tag">int4 / int8</span></h2>
+      <p class="full-name">Model Quantization · 模型权重低精度量化</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>量化把模型权重从 bfloat16（16 位浮点）压缩为 int8（8 位整数）或 int4（4 位整数）存储，以节省 GPU 显存。对 OpenVLA 而言：<strong>int4 无损</strong>（7.0 GB，成功率 71.9%），<strong>int8 反而掉性能</strong>（推理慢到 1.2Hz 导致）——原因是量化粒度和硬件 matmul 效率的非线性关系。</p>
+      </div>
+
+      <h3><span class="num">1</span>为什么量化对 VLA 特别重要</h3>
+      <p>OpenVLA 7B 在 bfloat16 下需要 16.8 GB 显存，超出消费级 GPU（RTX 3090/4090，约 24 GB，但需要留空间给系统和 batch）的舒适区，对实验室级部署造成门槛。int4 量化把显存压到 7 GB，大多数现代消费级 GPU 都能跑。</p>
+
+      <h3><span class="num">2</span>int8 为什么反而更差</h3>
+      <p>这是 OpenVLA 一个反直觉的发现：</p>
+      <ul>
+        <li>int8 量化需要在推理时做额外的<strong>反量化操作</strong>（int8 → float16），这个操作在大多数 GPU 上比减少的内存传输更慢；</li>
+        <li>结果：int8 下 A5000 只能跑 1.2 Hz（vs bfloat16 的 ~6 Hz）；</li>
+        <li>1.2 Hz 推理频率改变了机器人控制的系统动态，导致策略失效（不是量化精度不够）。</li>
+      </ul>
+
+      <h3><span class="num">3</span>int4 为什么可以</h3>
+      <p>int4 量化减少内存传输量更大（相比 bfloat16 减 75%），且 Ada Lovelace 架构（RTX 4090, H100）有专用 int4 矩阵乘法硬件，<strong>内存带宽收益超过了量化开销</strong>，最终吞吐量接近或高于 bfloat16。</p>
+
+      <h3><span class="num">4</span>工具</h3>
+      <p>OpenVLA 使用 <strong>bitsandbytes</strong>（Dettmers et al.）做 int4/int8 量化，与 HuggingFace transformers 无缝集成，一行代码即可启用：<code>load_in_4bit=True</code>。</p>
+
+      <h3><span class="num">5</span>类比</h3>
+      <div class="callout note">
+        <div class="callout-head">🎯 类比</div>
+        <p>就像把高清照片压缩为 JPEG：4 位量化类似"高压缩但保留主要内容的 JPEG"，8 位量化类似"解压时比读原图还慢的某种格式"——收益取决于具体的编解码器效率。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">概念列表（8 个）</div>
+    <ul>
+      <li><a href="#vla">VLA — Vision-Language-Action</a></li>
+      <li><a href="#prismatic">Prismatic VLM — 骨干模型</a></li>
+      <li><a href="#siglip-dinov2">SigLIP + DINOv2 — 双视觉编码器</a></li>
+      <li><a href="#llama2">Llama 2 — LLM 骨干</a></li>
+      <li><a href="#action-discretization">动作离散化 — Action Binning</a></li>
+      <li><a href="#oxe">Open X-Embodiment — 训练数据集</a></li>
+      <li><a href="#lora">LoRA — 低秩适配</a></li>
+      <li><a href="#quantization">量化推理 — int4/int8</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="back-link">
+      <li><a href="./summary.html">← 返回综述</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer>
+  Reading Notes · OpenVLA (arXiv:2406.09246) · 配套笔记
+</footer>
+
+</body>
+</html>
