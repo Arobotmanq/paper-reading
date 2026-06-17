@@ -309,6 +309,8 @@
   .callout p { margin: 0.3em 0; color: var(--text); }
   .callout strong { color: inherit; }
   .callout p:last-child { margin-bottom: 0; }
+  .callout .src-quote { font-family: "Source Serif 4", Georgia, "Noto Serif SC", serif; font-style: italic; color: #1e293b; }
+  .callout .src-meta { color: var(--muted); font-style: normal; font-size: 0.85em; }
 
   /* ---------- TABLE ---------- */
   .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
@@ -417,11 +419,11 @@
     <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
     <h1>Frozen-Backbone Grafting<br>核心概念详解</h1>
     <p class="subtitle">
-      这页用来收纳本文里需要额外背景才好理解的概念解读。目前为空——等你在阅读 summary 时挑出想深入的术语，再按需逐个补充（每个概念给出定义、原理、在本文中的用法与彼此关系）。
+      这篇诊断论文的四个承重概念：用来隔离 encoder 这一变量的 frozen-backbone grafting、它得出的核心发现 backbone-dependent ranking、提醒结果别误读的 wrapper non-neutrality，以及让实验在本体不匹配下仍可比较的 offline action MSE。每卡给定义、在本文的具体用法、与相近做法的区别、出处来源。
     </p>
     <div class="meta-pills">
       <a class="pill back" href="./summary.html">← 返回综述</a>
-      <span class="pill">📚 当前 0 个概念</span>
+      <span class="pill">📚 当前 4 个概念</span>
       <span class="pill">🔗 <a href="https://arxiv.org/abs/2606.14153" style="color: #93c5fd; text-decoration: none;">arXiv:2606.14153</a></span>
     </div>
   </div>
@@ -430,12 +432,195 @@
 <div class="layout">
   <main class="content">
 
-    <!-- ============ PLACEHOLDER · 概念按需生长，不预填 ============ -->
-    <section class="card">
-      <div class="empty-state">
-        <div class="big">📝</div>
-        <p><strong>概念解读区还是空的。</strong></p>
-        <p>在 summary 里遇到想深入的术语（例如 frozen-backbone grafting、offline action MSE、wrapper non-neutrality、shuffled-image control、near-tie band、Spearman ρ 等），告诉我，我会在这里建对应的概念卡，并把综述里的术语升级成可点击的链接。</p>
+    <!-- ============ frozen-backbone grafting ============ -->
+    <section class="card" id="frozen-backbone-grafting">
+      <h2>frozen-backbone grafting <span class="tag">本文提出</span></h2>
+      <p class="full-name">Frozen-Backbone Grafting Diagnostic · 冻结骨干嫁接诊断</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把候选 vision encoder「嫁接」进一个已发布的 VLA、换掉它原来的 vision tower，<strong>冻结语言模型与 action expert</strong>，再走一套固定包装协议（adaptive avg pooling + LayerNorm + 单个线性 projector），<strong>只训练那一个 projector</strong>。这样测出的差异只能归因于 encoder 本身——相当于给 VLA 做"换轮胎单变量台架测试"。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>给定一个预训练好的 VLA，grafting 协议分三步：</p>
+      <ul>
+        <li><strong>(i) 冻结</strong>语言模型、action expert 与原始 vision tower（原 tower 只是从计算图里摘掉、参数留在内存里保证 checkpoint 加载路径不断）；</li>
+        <li><strong>(ii) 嫁接</strong>候选 encoder（加载预训练权重并冻结），通过一道确定性的 <code>AdaptiveAvgPool2d</code>（SmolVLA 压到 8×8=64 token，π0.5 压到 16×16=256 token）+ LayerNorm 接上；</li>
+        <li><strong>(iii) 只训 projector</strong>：一个单层线性投影层，把 encoder 输出投到 backbone hidden 维度（960 或 2048），是<strong>唯一带可训练参数</strong>的模块（0.37M–1.58M）。</li>
+      </ul>
+      <p>实现上用 monkey-patch 替换<strong>单一视觉入口</strong>（SmolVLA 的 <code>embed_image</code>、π0.5 的 <code>vision_tower.forward</code>），让下游策略代码看到与原模型完全一致的 token 数与 hidden dim，换 encoder 对策略代码完全透明。</p>
+
+      <div class="pre-label"><span>Frozen-Backbone Grafting Pipeline</span><span>结构</span></div>
+<pre><code>224×224 RGB ─► 候选 encoder（冻结，预训练权重）
+                 │  读取最终 feature map (B, C, H, W)
+                 ▼ AdaptiveAvgPool2d → 8×8=64 tok (SmolVLA) / 16×16=256 tok (π0.5)
+                 ▼ LayerNorm
+                 ▼ 单层 Linear projector ← 唯一可训练（0.37M–1.58M）
+                 │
+                 ▼
+              冻结的 LM + action expert ─► action chunk（offline MSE 评分）</code></pre>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>训练预算刻意压得很小：每格 2,000 步、lr 1e-4、AdamW、weight decay 1e-4、无 LR schedule、BF16；SmolVLA batch size 8，π0.5 用 micro-batch 2 + 4 步梯度累积凑有效 batch 8。单台 GB10 上每格 <strong>&lt;6 GPU-小时</strong>（SmolVLA 约 9 分钟、π0.5 约 5 小时）。Figure 3 证明所有 encoder 在 1,500–2,000 步前已 plateau，说明排名不是被预算卡住的。本文用它跑了 <strong>4 encoder × 2 LIBERO suite × 2 backbone × 2–3 seed = 40 格</strong>主网格，外加 native / LoRA / pooling / zero-/shuffled-image 控制，全部用 offline action MSE 评分。</p>
+      <div class="callout">
+        <div class="callout-head">📜 逐字（Abstract, p.1）</div>
+        <p class="src-quote">"the vision tower of a released VLA is replaced by a candidate encoder under a fixed protocol (adaptive average pooling, LayerNorm, and a single trainable linear projector), with the language model and action expert frozen."</p>
+      </div>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>做法</th><th>训什么</th><th>隔离的变量</th></tr></thead>
+          <tbody>
+            <tr><td><strong>frozen grafting (P1, 本文)</strong></td><td>只训线性 projector，encoder+LM+expert 全冻</td><td>纯 encoder 质量（去掉梯度流过 backbone 的 co-adaptation）</td></tr>
+            <tr><td>LoRA finetune (P2 消融)</td><td>projector + encoder 内 rank-8 LoRA</td><td>放松"encoder 冻结"，测线性可投影性是否混淆排名（4 cell 全部改善 9–22%）</td></tr>
+            <tr><td>native（不换）</td><td>原 vision tower + 原 connector / multi_modal_projector</td><td>"完全不换 encoder"的上界锚点</td></tr>
+            <tr><td>VLM4VLA 式 co-train</td><td>从头联合训练整个 VLM（LM+encoder）</td><td>训练期选型，但 encoder 质量与 backbone-encoder 协同混在一起</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>关键区别：grafting 是对<strong>已发布、冻结的 checkpoint 做事后 (post-hoc) 换装</strong>，正是继承现成 VLA 的工程师面临的真实问题；而 OpenVLA-OFT 固定 encoder 改 finetune recipe、Theia 把多 encoder 蒸馏成一个——都与"换 encoder 这一轴"正交。</p>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p><strong>本文提出</strong>（Zeng &amp; She, Tsinghua, <em>Encoder Winners Do Not Reliably Transfer Across VLA Backbone Scale</em>, arXiv:2606.14153, 2026）。术语 "frozen-backbone grafting diagnostic" 为本文首创；底层走的是标准 LeRobot finetune 路径，嫁接对象为 SmolVLA <a href="#offline-action-mse">[13]</a> 与 π0.5 [4] 的已发布 checkpoint。</p>
+      </div>
+    </section>
+
+    <!-- ============ backbone-dependent ranking ============ -->
+    <section class="card" id="backbone-dependent-ranking">
+      <h2>backbone-dependent ranking <span class="tag">核心发现</span></h2>
+      <p class="full-name">Backbone-Dependent Encoder Ranking · encoder 排名随骨干规模而变</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>本文的承重结论：在小 backbone 上选出的 <strong>top-1 vision encoder，换到大一个数量级的 backbone 上未必还是 top-1</strong>。小车上最好的轮胎，大车上未必最好——所以"别人在小 VLA 上的 encoder 结论"不能直接照搬到自家大 backbone。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>指 encoder 之间的相对排名（尤其是冠军身份）<strong>依赖于所嫁接的 VLA backbone 规模/架构</strong>，而非 encoder 的固有普适属性。注意作者措辞克制：这<strong>不是"完整 rank inversion"</strong>——跨 backbone 的 Spearman 秩相关仍为正（spatial ρ=+0.80、object ρ=+1.00），因为最差的 encoder（RepViT-M1）在两 backbone 上恒最差。可以一句话概括：<strong>池底（最差）的排序会迁移，池顶（top-1）的身份不迁移。</strong></p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>40 格主网格给出的 top-1（seed 平均 val_MSE，越低越好）：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Backbone</th><th>spatial top-1</th><th>object top-1</th></tr></thead>
+          <tbody>
+            <tr><td>SmolVLA-450M</td><td>SigLIP 0.0706</td><td>SigLIP 0.0628</td></tr>
+            <tr><td>π0.5-3.3B</td><td><strong>DINOv2-small 0.0256</strong>（领先 SigLIP 0.0267）</td><td>SigLIP 0.0215 *（近似平局）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>语义向的 <strong>SigLIP</strong> 在小 backbone 两 suite 都赢；几何向的 <strong>DINOv2-small</strong> 在大 backbone 的 spatial suite 反超。π0.5-object 是个 seed 敏感的近似平局带——三强 SigLIP 0.02149 / DINOv2 0.02166 / FastViT 0.02206 相对差 \(\lt 2.7\%\)，seed-44 即把 top-1 翻回 SigLIP。承重的推断性总结是 <strong>4 个 backbone-suite 对比里 3 个</strong>支持排名随 backbone 变（11/12 seed 级 cell 仅作描述性支持，因共享 seed 与 projector 初始化）。</p>
+      <div class="callout">
+        <div class="callout-head">📜 逐字（§4.9, p.10）</div>
+        <p class="src-quote">"the partial bottom-of-pool ordering transfers, while the small-backbone winner does not reliably select the large-backbone top tier."</p>
+      </div>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <ul>
+        <li><strong>vs 通常假设的 encoder 普适性：</strong>工程界默认"上游 VLM 里好的 encoder 拿来就好用"、或直接读 ImageNet 排行榜/参数量/延迟来选。本文 confound 分析（Table 3/4）证明<strong>没有任何单列能跨两 backbone 选出同一 top-1</strong>（π0.5-spatial 赢家 DINOv2 既不是最大也不是最慢，ImageNet 准确率甚至在 π0.5 两 suite 间符号翻转）。</li>
+        <li><strong>vs 完整 rank inversion：</strong>本文明确<strong>不</strong>主张整条排名反转——Spearman 仍正，只是 top-1 不可靠迁移、且在 π0.5-object 上对单个额外 seed 都不稳。</li>
+        <li><strong>操作含义：</strong>小 VLA 的 grafting sweep 能<strong>排除烂 encoder</strong>，但<strong>选不出</strong>大 VLA 的最优——部署前应在 target backbone 上自跑一遍便宜的 grafting sweep 来确认或推翻。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p><strong>本文提出</strong>（即论文标题 "Encoder Winners Do Not Reliably Transfer Across VLA Backbone Scale" 的核心论断，arXiv:2606.14153）。涉及的两个 encoder 各有出处：<strong>SigLIP</strong> — Zhai et al., <em>Sigmoid Loss for Language Image Pre-Training</em>, arXiv:2303.15343, 2023（语义向 ViT，sigmoid 对比目标，本文用 base/16 224，93M）；<strong>DINOv2</strong> — Oquab et al., <em>DINOv2: Learning Robust Visual Features without Supervision</em>, arXiv:2304.07193, 2023（自监督几何向 ViT，本文用 small，22M）。对照工作 VLM4VLA（Wang et al., arXiv:2405.05956, 2024）报告 encoder 排名但 co-train，混淆了 backbone 这一变量。</p>
+      </div>
+    </section>
+
+    <!-- ============ wrapper non-neutrality ============ -->
+    <section class="card" id="wrapper-non-neutrality">
+      <h2>wrapper non-neutrality <span class="tag">方法论陷阱</span></h2>
+      <p class="full-name">Grafting-Wrapper Non-Neutrality · 嫁接包装层非中性</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>grafting 的包装层（pool + LayerNorm + projector）<strong>本身就不是一个中性的透传管道</strong>：把每个 backbone <em>自己原本的</em> native vision tower 也塞进同一 wrapper，MSE 就已经被改变，而且<strong>两个 backbone 上符号相反</strong>。所以解读 grafting 结果时，必须先把 wrapper 自身的效应扣掉，否则会把"interface 假象"误读成"encoder 更强"。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p>本文设计了 <strong>native-through-interface 控制</strong>：取每个 backbone 的原生 vision tower（SmolVLA 的 SmolVLM SigLIP-base、π0.5 的 PaliGemma SigLIP-So400m），<strong>不换 encoder</strong>，只是让它走一遍与所有候选 encoder 相同的 AdaptiveAvgPool + LayerNorm + linear projector，并同样训 2,000 步。若 wrapper 中性，这个 cell 应与 native anchor 在 seed 噪声内吻合；若非中性，差值符号就揭示 wrapper 是在帮还是在伤。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>wrapper-gap（Table 8, seed 42，相对 native MSE）：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Backbone-suite</th><th>wrapper-gap</th><th>含义</th></tr></thead>
+          <tbody>
+            <tr><td>SmolVLA-spatial</td><td>+55.81%</td><td>wrapper 伤 native（MSE 变高）</td></tr>
+            <tr><td>SmolVLA-object</td><td>+45.45%</td><td>wrapper 伤 native</td></tr>
+            <tr><td>π0.5-spatial</td><td>−49.84%</td><td>wrapper 帮 native（MSE 变低）</td></tr>
+            <tr><td>π0.5-object</td><td>−51.94%</td><td>wrapper 帮 native</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>直接后果：Table 5 里"π0.5 best-grafted 比 native 低 42–43%"<strong>不能</strong>读成 encoder 更强——光是 native 过一遍 wrapper 就解释了约 −50%，是 <strong>interface 假象</strong>而非 encoder 替换的功劳。因此全文<strong>唯一干净</strong>的对比是同一 wrapper 内的 SigLIP-vs-DINOv2。作者给的机理假设：SmolVLM SigLIP 已经吐出 (B,64,960) 恰好匹配 expert，多一道 8×8 pool 纯属丢信息；π0.5 的 (B,256,2048) 更高维，wrapper 的 16×16 pool 反而像个有用的瓶颈/正则。</p>
+      <div class="callout">
+        <div class="callout-head">📜 逐字（§4.13, p.14）</div>
+        <p class="src-quote">"Routing the native vision tower through the grafting wrapper raises MSE by +55.81% on SmolVLA-spatial and +45.45% on SmolVLA-object (wrapper hurts the native path), but reduces MSE by −49.84% on π0.5-spatial and −51.94% on π0.5-object (wrapper helps the native path)."</p>
+      </div>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <ul>
+        <li><strong>vs 不控制 swap interface 的 encoder benchmark：</strong>任何"换 encoder 测一测"的工作，若不跑 native-through-interface 控制，就会把 <em>encoder 选择</em> 与 <em>interface-backbone 兼容性</em> 混为一谈——这正是本文最有价值的方法论警告。</li>
+        <li><strong>所有结论都带限定语：</strong>"conditional on the fixed grafting protocol"——本文每条 encoder 结论都挂着"在固定 grafting 协议下"这个 qualifier。</li>
+        <li><strong>建议：</strong>把 native-through-interface 控制（外加 zero-image / shuffled-image 控制）写进后续任何"在已发布 VLA 上比 encoder"的标准诊断协议。</li>
+      </ul>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p><strong>本文提出</strong>（§4.13 "Sanity controls" 与 Table 8，arXiv:2606.14153）。作者把 wrapper non-neutrality 本身列为一项<strong>方法论贡献</strong>（§5.5）：benchmark 换 encoder 而不控制 swap interface，就会混淆 encoder 选择与 interface-backbone 兼容性。</p>
+      </div>
+    </section>
+
+    <!-- ============ offline action MSE / embodiment mismatch ============ -->
+    <section class="card" id="offline-action-mse">
+      <h2>offline action MSE <span class="tag">评测协议</span></h2>
+      <p class="full-name">Offline Action MSE under Embodiment Mismatch · 离线动作 MSE / 本体不匹配下的替代评分</p>
+
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>因为已发布 checkpoint 的训练本体（SO-100, 6-DoF）和评测本体（LIBERO Franka, 7-DoF）<strong>动作空间不一致</strong>，零样本闭环成功率对 native 与 grafted 都≈0、毫无信号——于是本文<strong>放弃 closed-loop success，改用 episode-split 留出集上的动作 chunk 预测 MSE</strong> 作为主排名指标。这是"为何不用成功率、改用离线 MSE"的完整答案。</p>
+      </div>
+
+      <h3><span class="num">1</span>定义</h3>
+      <p><strong>offline action MSE</strong>：在按 episode 切分的留出验证集上，对预测的 T=50 步 action chunk 与真值逐元素求均方误差（每 suite 24,913 训练窗口 / 6,457 验证窗口）：</p>
+      <div class="math-display">
+        \[ \mathrm{val\_mse} = \frac{1}{BTD}\sum_{b,t,d}\bigl(\hat{a}_{b,t,d} - a_{b,t,d}\bigr)^2 \]
+      </div>
+      <p>其中 \(D\) 是动作维度；<code>val_mse</code> 为主排名指标，<code>val_l1</code> 作辅助检查（确认结论不是被离群值驱动）。</p>
+      <p><strong>embodiment mismatch（本体不匹配）</strong>：released SmolVLA / π0.5 的 checkpoint 训练于 SO-100 轨迹、<strong>6 自由度</strong>动作 schema；而 LIBERO 用 <strong>7 自由度</strong>的 Franka schema——动作 schema、gripper 约定、state 向量都对不上，导致零样本闭环成功率≈0。</p>
+
+      <h3><span class="num">2</span>在本文的用法</h3>
+      <p>正因为闭环被本体不匹配堵死，本文把整篇定位为"<strong>本体不匹配下的受控离线诊断</strong>"，<strong>只报 offline action MSE、绝口不提 closed-loop success</strong>。同一 (backbone, suite, encoder) cell 内唯一有意的随机源是 projector 初始化 + minibatch shuffle 的训练 seed；评估侧（action-sampling seed、loader 顺序、预处理、MSE 计算）全部固定，保证 cell 内的 encoder 差异只反映换 encoder。</p>
+      <div class="callout">
+        <div class="callout-head">📜 逐字（§5.5 Limitations, p.21）</div>
+        <p class="src-quote">"the released SmolVLA and π0.5 checkpoints were trained on SO-100 trajectories with a six-degree-of-freedom action schema, while LIBERO uses a seven-degree-of-freedom Franka schema; zero-shot closed-loop success is therefore near zero for both native and grafted variants and would provide essentially no signal."</p>
+      </div>
+
+      <h3><span class="num">3</span>对比 · 区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>offline action MSE（本文）</th><th>closed-loop success rate</th></tr></thead>
+          <tbody>
+            <tr><td>测什么</td><td>能否复现 demo 策略的动作（留出集预测误差）</td><td>真在仿真/真机里 rollout 把任务做成</td></tr>
+            <tr><td>本体不匹配下</td><td>仍给出可用信号（标准 LeRobot finetune 路径，公平）</td><td>≈0，无信号</td></tr>
+            <tr><td>强度</td><td>较弱：因 compounding error / 分布漂移 / 多模态动作歧义，<strong>不必然</strong>与闭环成功相关</td><td>具身成功的金标准、部署就绪证据</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>作者反复声明：offline MSE 是这种不匹配下"合适的代理"，但<strong>不是具身成功率的替代品</strong>，不能当部署就绪证据。与 <strong>VLA-0 的 zero-data 假设</strong>也不同——本文评测每个 encoder 前都要先训 projector 2,000 步（问的是"哪个 encoder 在受控 finetune 预算下是更好的搭档"，而非"哪个是最好的冻结特征提取器"）。唯一能把结论从离线诊断升级为部署级处方的实验，是等到有 embodiment-matched 数据后再做真闭环评测。</p>
+
+      <h3><span class="num">4</span>出处来源</h3>
+      <div class="callout note">
+        <div class="callout-head">📜 起源</div>
+        <p>MSE 指标本身是标准做法；<strong>"本体不匹配下改用 offline action MSE"这一框架与论证为本文采用/明确</strong>（§3.4 评估协议 + §5.5 局限，arXiv:2606.14153）。评测基准 <strong>LIBERO</strong> — Liu et al., <em>Benchmarking Knowledge Transfer for Lifelong Robot Learning</em>, NeurIPS 2023；训练本体 SO-100 来自 LeRobot 生态。</p>
       </div>
     </section>
 
@@ -444,7 +629,10 @@
   <aside class="toc">
     <div class="toc-title">概念列表</div>
     <ul>
-      <li style="color: var(--muted); font-style: italic;">（待添加）</li>
+      <li><a href="#frozen-backbone-grafting">frozen-backbone grafting</a></li>
+      <li><a href="#backbone-dependent-ranking">backbone-dependent ranking</a></li>
+      <li><a href="#wrapper-non-neutrality">wrapper non-neutrality</a></li>
+      <li><a href="#offline-action-mse">offline action MSE / embodiment mismatch</a></li>
     </ul>
     <div class="toc-sep"></div>
     <ul class="back-link">
