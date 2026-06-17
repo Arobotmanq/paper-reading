@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frozen-Backbone Grafting Diagnostic 综述</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  /* ============================================================
+     语义色锁定（不要加新颜色）：
+       红    = 问题 / 风险 / 未开源
+       琥珀  = 洞察 / 部分开源 / 保留意见
+       靛紫  = 方法 / 结构 / 链接 (--accent)
+       绿    = 结果 / 正向 / 开源 (--success, 全站唯一绿)
+       灰    = 局限 / 次要
+     --brand 仅用于 hero 点缀，每篇可改，默认 = accent。
+     ============================================================ */
+  :root {
+    --brand: #0891b2;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --c-problem: #dc2626; --c-insight: #d97706; --c-method: #6366f1; --c-result: #16a34a; --c-limit: #64748b;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO（轻量：subtitle 一句话 ≤40 字，方法综述下沉到速记层） ---------- */
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #312e81 100%); color: #fff; padding: 3em 1.5em 3.4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 480px; height: 480px; background: radial-gradient(circle, color-mix(in srgb, var(--brand) 30%, transparent), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(255,255,255,0.08); color: #c7d2fe; border: 1px solid rgba(255,255,255,0.25); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 12px var(--brand); }
+  .hero h1 { font-size: clamp(1.7em, 4vw + 1em, 2.8em); font-weight: 800; line-height: 1.18; margin: 0.5em 0 0.3em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.1em; color: #e2e8f0; max-width: 720px; margin: 0 0 1.3em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.1em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rating { background: rgba(202, 138, 4, 0.22); border-color: rgba(250, 204, 21, 0.5); color: #fde68a; font-weight: 700; }
+  .pill.rating a { color: inherit; }
+
+  /* ---------- KPI（数字卡必须带对照锚 + 链到证据 claim；状态事实用状态卡，不伪装成数字） ---------- */
+  .kpi-strip { max-width: 1020px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { display: block; color: inherit; text-decoration: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  a.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi .status { margin: 0.45em 0; font-size: 0.95em; }
+  .kpi.green .value { color: var(--success); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.blue .value { color: var(--info); }
+
+  /* ---------- LAYOUT（正文列 ≤720px ≈ 42 个中文字行长） ---------- */
+  .layout { max-width: 1020px; margin: 2.6em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: minmax(0, 720px) 230px; gap: 2.5em; justify-content: center; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc ul.toc-claims { margin: 0.3em 0 0.3em 0.5em; padding-left: 0.7em; border-left: 1px dashed var(--border); font-size: 0.9em; }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+
+  /* ---------- SECTIONS / CARDS ---------- */
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.8em 2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 0.65em; flex: 0 0 30px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.95em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+  section.card[id], .claim[id] { scroll-margin-top: 1.2em; }
+
+  /* ---------- ① 30 秒分诊条（hero 之下第一卡：痛点/做法/结果/读法） ---------- */
+  .snap { padding: 1.2em 1.6em; }
+  .snap-row { display: flex; gap: 1em; padding: 0.45em 0; border-bottom: 1px dashed var(--border); align-items: baseline; }
+  .snap-row:last-child { border-bottom: 0; }
+  .snap-k { flex: 0 0 3.2em; text-align: center; font-size: 0.78em; font-weight: 700; border-radius: 6px; padding: 0.15em 0; }
+  .snap-k.kp { background: var(--danger-bg); color: var(--c-problem); }
+  .snap-k.km { background: #eef2ff; color: var(--c-method); }
+  .snap-k.kr { background: var(--success-bg); color: var(--c-result); }
+  .snap-k.kh { background: var(--gold-bg); color: var(--gold); }
+  .snap-row > div { color: var(--text-soft); }
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.18em 0.7em; border-radius: 999px; font-weight: 700; font-size: 0.85em; background: var(--gold-bg); color: #92400e; border: 1px solid #f59e0b; }
+
+  /* ---------- ② 速记层（90 秒读完就走的一层） ---------- */
+  .gist-card { border-left: 5px solid var(--accent); }
+  .gist-block { margin: 1.1em 0; }
+  .gb-label { font-size: 0.82em; font-weight: 700; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.12em; font-weight: 600; color: var(--text); background: #eef2ff; border-radius: var(--radius); padding: 0.9em 1.1em; line-height: 1.7; }
+  ol.chain { counter-reset: ch; list-style: none; padding-left: 0; }
+  ol.chain li { counter-increment: ch; position: relative; padding-left: 2.2em; margin: 0.55em 0; }
+  ol.chain li::before { content: counter(ch); position: absolute; left: 0; top: 0.15em; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--code-bg); border: 1px solid var(--border-strong); color: var(--accent-dark); font-size: 0.8em; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pipeline-line { font-size: 0.98em; background: var(--code-bg); border-radius: 8px; padding: 0.6em 1em; color: var(--text); }
+  ul.rel-list { padding-left: 1.2em; }
+  ul.rel-list b { color: var(--text); }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2em 0 1.2em; color: var(--muted); font-size: 0.88em; font-weight: 600; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+
+  /* ---------- ③ 深读层：CLAIM（分型 + 短标题 + 细节收纳 + 折叠证据） ---------- */
+  .claim-group { display: flex; align-items: center; gap: 0.7em; margin: 1.8em 0 0.2em; font-size: 0.8em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .claim-group::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--k, var(--accent)); border-radius: var(--radius); padding: 1.05em 1.3em; margin: 1.1em 0; background: var(--card); }
+  .claim.k-problem { --k: var(--c-problem); } .claim.k-insight { --k: var(--c-insight); }
+  .claim.k-method  { --k: var(--c-method); }  .claim.k-result  { --k: var(--c-result); }
+  .claim.k-limit   { --k: var(--c-limit); }
+  .claim-head { display: flex; align-items: baseline; gap: 0.55em; flex-wrap: wrap; }
+  .claim-head .cn { font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 700; color: var(--k, var(--accent)); }
+  .kicker { font-size: 0.7em; font-weight: 700; padding: 0.1em 0.6em; border-radius: 999px; background: color-mix(in srgb, var(--k, var(--accent)) 12%, #fff); color: var(--k, var(--accent)); flex: 0 0 auto; }
+  .claim-title { font-size: 1.08em; font-weight: 700; color: var(--text); margin: 0; line-height: 1.5; }
+  .claim-body { font-weight: 400; color: var(--text-soft); margin: 0.4em 0 0; line-height: 1.7; }
+  .claim-how { margin-top: 0.5em; font-size: 0.88em; color: var(--muted); padding-left: 0.7em; border-left: 2px solid var(--border); }
+  .claim.key { border-left-color: var(--gold); }
+  .claim.key .cn::after { content: " ★"; color: var(--gold); }
+
+  /* evidence：解读常驻，引文+译文折叠（Ctrl-F 在 Chromium 会自动展开命中的 details；
+     或先点「展开全部证据」再 Ctrl-F） */
+  .evidence { margin-top: 0.75em; }
+  .evidence + .evidence { padding-top: 0.75em; border-top: 1px dashed var(--border); }
+  .ev-gloss { font-size: 0.95em; color: var(--text); background: #fafaf9; border-radius: 6px; padding: 0.35em 0.7em; margin: 0.4em 0; display: flex; gap: 0.6em; }
+  .ev-tag { flex: 0 0 auto; font-size: 0.72em; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 0 0.45em; height: fit-content; margin-top: 0.35em; background: var(--card); }
+  details.ev-fold { margin: 0.45em 0 0; }
+  details.ev-fold > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 0.5em; list-style: none; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.18em 0.7em; }
+  details.ev-fold > summary::-webkit-details-marker { display: none; }
+  details.ev-fold > summary .ev-hint { color: var(--muted); font-weight: 400; }
+  details.ev-fold[open] > summary { margin-bottom: 0.45em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "Source Serif 4", Georgia, "Noto Serif SC", serif; font-style: italic; font-size: 0.97em; line-height: 1.6; color: #1e293b; }
+  .ev-quote::before { content: "“"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "”"; color: var(--muted); font-weight: 700; }
+  .ev-quote mark { background: #fef3c7; color: inherit; font-style: normal; padding: 0 0.1em; border-radius: 3px; }
+  .ev-row { display: flex; gap: 0.6em; margin: 0.4em 0; }
+  .ev-trans { font-size: 0.95em; color: var(--text-soft); }
+  #ev-toggle-all { float: right; font: 600 0.78em "JetBrains Mono", monospace; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.3em 0.8em; cursor: pointer; }
+  #ev-toggle-all:hover { border-color: var(--accent); }
+
+  /* 数字行（≥3 个对比数字禁止写成长句，用 stat-chip 或 mini-table） */
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.45em; margin: 0.55em 0; }
+  .stat { font: 600 0.82em "JetBrains Mono", monospace; padding: 0.18em 0.7em; border-radius: 999px; border: 1px solid var(--border); background: var(--code-bg); color: var(--text-soft); }
+  .stat.win { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+  .stat.dim { opacity: 0.65; }
+
+  /* ---------- 术语：行内兜底释义（概念卡建立前用 .term；建立后升级为 note-link，可双带 data-gloss） ---------- */
+  .term, .note-link { position: relative; cursor: help; }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; cursor: pointer; }
+  .term { border-bottom: 1px dotted var(--muted); }
+  .term[data-gloss]:hover::after, .term[data-gloss]:focus::after,
+  .note-link[data-gloss]:hover::after {
+    content: attr(data-gloss); position: absolute; left: 0; bottom: 1.7em; z-index: 20;
+    width: max-content; max-width: min(46ch, 80vw); background: #0f172a; color: #e2e8f0;
+    font-size: 0.78em; font-weight: 400; font-style: normal; line-height: 1.5;
+    padding: 0.5em 0.8em; border-radius: 8px; box-shadow: var(--shadow-lg);
+  }
+
+  /* ---------- CALLOUTS ---------- */
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.1em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+
+  /* ---------- TABLE（mini 对照表：本文行 tr.winner，末列 📍 页码） ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.1em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: #f8fafc; }
+  th { text-align: left; padding: 0.7em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65em 1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.loc { font-family: "JetBrains Mono", monospace; font-size: 0.82em; color: var(--muted); white-space: nowrap; }
+  tr.winner { background: var(--success-bg); }
+  tr.winner td { font-weight: 700; color: var(--success); }
+  tr.winner td:first-child::before { content: "★ "; }
+
+  /* ---------- FIGURE（必须可点开原图；caption = 内容 + 看点） ---------- */
+  figure { margin: 1.2em 0 0.5em; text-align: center; }
+  figure a { border: none !important; }
+  figure img { max-width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); cursor: zoom-in; }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+
+  /* ---------- OPEN-SOURCE GRID ---------- */
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+
+  /* ---------- MATH / CODE / FOOTER / PRINT ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display { background: var(--code-bg); padding: 1em 1.5em; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+  @media print {
+    .hero { background: #fff; color: #000; padding: 1em 0; }
+    .hero h1 { background: none; -webkit-text-fill-color: initial; color: #000; }
+    .hero .subtitle, .pill { color: #333; }
+    .kpi-strip { margin-top: 1em; }
+    .toc, #ev-toggle-all { display: none; }
+    section.card { box-shadow: none; }
+    .claim, .evidence, figure { break-inside: avoid; }
+    details.ev-fold { open: true; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Tsinghua · VLA 诊断 / 分析（非新模型）</span>
+    <h1>Encoder Winners Do Not Reliably Transfer Across VLA Backbone Scale</h1>
+    <p class="subtitle">小 VLA 上选出的 vision encoder 赢家，换到大 backbone 上未必还赢——一个 frozen-grafting 诊断。</p>
+    <div class="meta-pills">
+      <span class="pill rating"><a href="#verdict">⚖ Valuable</a></span>
+      <span class="pill">📄 Diagnostic / 分析</span>
+      <span class="pill">📅 2026-06 · Preprint</span>
+      <span class="pill">🏢 Tsinghua University</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2606.14153">arXiv:2606.14153</a></span>
+      <span class="pill">⏱ 速记 ~90s · 全文 ~7min</span>
+    </div>
+  </div>
+</header>
+
+<!-- KPI: 数字卡带对照锚并链到证据 claim; 状态事实用状态卡 -->
+<div class="kpi-strip">
+  <a class="kpi purple" href="#c3"><div class="label">π0.5-spatial 最优</div><div class="value">DINOv2</div><div class="desc">0.0256 MSE；SmolVLA 两 suite 都选 SigLIP ↗结果3</div></a>
+  <a class="kpi blue" href="#c4"><div class="label">Grafting wrapper</div><div class="value">±50<span class="unit">%</span></div><div class="desc">+45–56% SmolVLA / −50–52% π0.5（符号相反）↗洞察4</div></a>
+  <a class="kpi" href="#c6"><div class="label">Vision 贡献度</div><div class="value">50–95<span class="unit">%</span></div><div class="desc">π0.5；SmolVLA 仅 13–25% ↗结果6</div></a>
+  <div class="kpi"><div class="label">开源</div><div class="status"><span class="os-tag os-part">部分 / 待核</span></div><div class="desc">论文声明放出 harness，但全网未见可用链接</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ ① 30 秒分诊条 ============ -->
+    <section class="card snap" id="snap">
+      <div class="snap-row"><span class="snap-k kp">痛点</span><div>VLA 几乎都直接继承上游 VLM 的 <span class="term" tabindex="0" data-gloss="VLA 里把图像转成 token 的视觉骨干，如 SigLIP / DINOv2">vision encoder</span>，但"在小 VLA 上验证过的 encoder 选择，换到大一个数量级的 backbone 上还成立吗"无人做受控验证。</div></div>
+      <div class="snap-row"><span class="snap-k km">做法</span><div><span class="term" tabindex="0" data-gloss="把候选 encoder『嫁接』进已发布 VLA、替换原 vision tower，冻结其余只训一个投影层">frozen-backbone grafting</span> 诊断：换掉已发布 VLA 的 vision tower，固定协议（pool+LayerNorm+单个线性 projector），冻结 language model 与 action expert，只训 projector，用 offline action MSE 评分。</div></div>
+      <div class="snap-row"><span class="snap-k kr">结果</span><div>小 backbone 赢家不可靠预测大 backbone 顶档：SmolVLA 选 SigLIP，π0.5-spatial 选 DINOv2，π0.5-object 是 seed 敏感的近似平局；而 grafting wrapper 本身非中性、两 backbone 符号相反（+45–56% vs −50–52%）。</div></div>
+      <div class="snap-row"><span class="snap-k kh">读法</span><div><span class="badge">Valuable</span> 这是<strong>诊断/分析论文，非新模型/新策略</strong>。做 VLA encoder 选型的工程师 → 当作"别照搬别人 encoder 结论"的方法论警示；想抄 grafting 协议 → 精读 §3。⚡ 最短精读路径：Fig.1（grafting 协议）→ Fig.4（ranking 跨 scale 不变）→ Table 8（wrapper 非中性 + zero/shuffled 控制）。</div></div>
+    </section>
+
+    <!-- ============ ② 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">⚡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲思想、逻辑、方法；效果只作验证。要核对原文再进下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">🧭 背景 · 为什么重要（不熟此子方向先读我）</div>
+        <p><span class="term" tabindex="0" data-gloss="vision-language-action 模型：吃图像+语言指令、输出机器人动作">VLA</span> 从 sub-billion（SmolVLA）一路 scale 到几十亿参数（π0.5、OpenVLA），但工程力气都花在语言 <span class="term" tabindex="0" data-gloss="这里指 VLA 的语言模型 + action expert 主干，可随规模 scale">backbone</span>、action expert 和数据配比上——<strong>vision encoder 几乎是从每个 VLM release 里直接继承、从不做消融</strong>（SmolVLA 继承 SmolVLM tower，π0.5 继承 PaliGemma SigLIP，OpenVLA 融合 SigLIP+DINOv2）。已有研究（VLM4VLA、OpenVLA-OFT、Theia）都在小 VLA 上比 encoder，但 encoder 总是和整个 policy 一起 co-train，排名混淆了"encoder 质量"与"backbone-encoder 协同适配"。于是拿到 π0.5 这种大 checkpoint 的工程师，<strong>手里没有任何受控证据</strong>告诉她小 VLA 的 top-1 encoder 还成不成立。</p>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">像给汽车换轮胎做"单变量台架测试"：把已发布 VLA 的 vision tower 拔掉、换上候选 encoder，其余（语言模型+动作专家）全部锁死，只拧一颗螺丝（一个线性 projector）。这样测出的差异只能归因于 encoder 本身——结果发现"小车上最好的轮胎，换到大车上未必最好"。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么成立</div>
+        <ol class="chain">
+          <li>先把问题立成可证伪的一句：小 backbone 上选出的 top-1 encoder，在更大的 released backbone 上还是 top-1 吗？</li>
+          <li>设计受控诊断：固定 grafting 协议（<span class="term" tabindex="0" data-gloss="自适应平均池化：把任意尺寸特征图压到固定 token 数（SmolVLA 8×8=64，π0.5 16×16=256）">adaptive average pooling</span>+LayerNorm+单层 <span class="term" tabindex="0" data-gloss="把 encoder 输出投影到 backbone hidden 维度的单层线性层，0.37–1.58M 参数">projector</span>），冻结 LM 与 action expert，只训 projector，隔离 encoder 这一个变量。</li>
+          <li>跑 4 encoder × 2 LIBERO suite × 2 backbone × 2–3 seed = 40 格主网格，全部用 <span class="term" tabindex="0" data-gloss="离线动作 MSE：在留出验证集上预测动作 chunk 与真值的均方误差">offline action MSE</span> 评分（closed-loop 因本体不匹配归零）。</li>
+          <li>观察排名：SmolVLA 两 suite 都选 SigLIP；π0.5-spatial 翻成 DINOv2-small；π0.5-object 是近似平局。4 个 backbone-suite 里 3 个支持"排名随 backbone 变"；但 Spearman 仍正——因为最差的 encoder（RepViT）恒最差，<strong>池底迁移、池顶不迁移</strong>。</li>
+          <li>再加 native-through-interface 控制，发现 grafting wrapper 本身就非中性、且两 backbone 符号相反——所以"换 encoder 的增益"有一大块其实是 wrapper 假象，不是 encoder 优劣。</li>
+          <li>结论：encoder 排名不能跨 backbone scale 照搬；部署到新 backbone 前，先跑一遍便宜的 grafting sweep（每格 &lt;6 GPU-小时）来确认或推翻。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 管线一句话 + 三个设计决策</div>
+        <p class="pipeline-line">224×224 图像 → 候选 encoder（冻结）→ AdaptiveAvgPool + LayerNorm → 单个可训练 linear projector → 冻结的 LM + action expert → action chunk（用 offline MSE 评分）</p>
+        <ul>
+          <li><b>① monkey-patch 单一视觉入口</b>：替换 vision tower，下游 LM/action expert 看到与原模型完全相同的 token 数与 hidden dim（SmolVLA 64×960，π0.5 256×2048），换 encoder 对 policy 代码完全透明。</li>
+          <li><b>② 只训 projector（0.37–1.58M）</b>：encoder、LM、action expert 全冻结——保证任何 gap 归因于 encoder 本身，而非梯度流过 backbone 的 co-adaptation。</li>
+          <li><b>③ 只报 offline action MSE</b>：released checkpoint 训练于 SO-100，LIBERO 是 Franka 本体，动作空间不匹配 → closed-loop 成功率≈0，故退而用 episode-split 的 val MSE 作受控诊断。</li>
+        </ul>
+        <figure>
+          <a href="./images/figure_1_grafting_architecture.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_grafting_architecture.webp" alt="Figure 1: frozen-backbone grafting architecture" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 1 (p.6)：</strong>frozen-backbone grafting 管线——LM、action expert、原 vision tower 全冻结（灰），候选 encoder 冻结（蓝），只有 linear projector 可训练（橙）。<strong>看点：</strong>上下两行 SmolVLA(64×960) 与 π0.5(256×2048) 的 token 数/维度不同，是后面 wrapper 非中性符号相反的伏笔。</figcaption>
+        </figure>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（这是诊断论文，"效果"= 发现是否稳健）</div>
+        <p>核心验证：每个 (backbone, suite) 格的 top-1 encoder 列出来，<strong>spatial suite 上 top-1 从 SigLIP 翻成 DINOv2</strong>——小 backbone 的赢家选不出大 backbone 的赢家。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Backbone</th><th>spatial top-1</th><th>object top-1</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr><td>SmolVLA-450M</td><td>SigLIP 0.0706</td><td>SigLIP 0.0628</td><td class="loc">p.8 · Tab.1</td></tr>
+              <tr class="winner"><td>π0.5-3.3B</td><td>DINOv2 0.0256</td><td>SigLIP 0.0215*</td><td class="loc">p.8 · Tab.1</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:0.85em;color:var(--muted);margin-top:-0.3em">*π0.5-object 是近似平局带（SigLIP 0.02149 / DINOv2 0.02166 / FastViT 0.02206，相对差 &lt;2.7%），top-1 身份不稳，seed-44 即翻转。跨 backbone Spearman ρ 仍为正（spatial +0.80 / object +1.00），因为最差的 RepViT 恒最差。</p>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🗺 放进你的知识图谱（已读库定位）</div>
+        <ul class="rel-list">
+          <li><b>本文 backbone 之一</b>：<a href="../pi05-Vision-Language-Action-Model-Open-World-Generalization/summary.html">π0.5</a> 被当作"大 backbone"做 grafting；其基础是 <a href="../pi0-Vision-Language-Action-Flow-Model/summary.html">π0</a> 的 flow-matching VLA。本文不改 π0.5，只换它的 vision tower。</li>
+          <li><b>质疑的对象</b>：<a href="../OpenVLA-Open-Source-Vision-Language-Action-Model/summary.html">OpenVLA</a> 是"直接继承/融合上游 VLM encoder（SigLIP+DINOv2）"的代表；本文正是质疑这种"照搬 encoder"假设的可迁移性（harness 也设计为可扩展到 OpenVLA）。</li>
+          <li><b>空间表征呼应</b>：<a href="../SpatialVLA-Spatial-Representations-VLA/summary.html">SpatialVLA</a> 主张给 VLA 注入空间视觉表征——与本文"几何向的 DINOv2 在 spatial suite 占优"形成对话（但本文 shuffled-image 控制提示 π0.5-spatial 可能在用低频统计而非真空间结构）。</li>
+          <li><b>可扩展性视角</b>：<a href="../X-VLA-Soft-Prompted-Scalable-Cross-Embodiment-VLA/summary.html">X-VLA</a> 用 soft-prompt 做跨本体可扩展适配；与本文互补——一个研究"怎么适配"，一个研究"换 encoder 后排名稳不稳"。视觉 grounding 路线还可参 <a href="../SG-VLA-Spatially-Grounded-VLA-Mobile-Manipulation/summary.html">SG-VLA</a> / <a href="../Spatially-Conditioned-Diffusion-Policy-Single-RGB-Camera/summary.html">Spatially-Conditioned Diffusion Policy</a>。</li>
+        </ul>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🎯 与你项目的相关性</div>
+        <p><b>Track A（移动操作 VLA）中等相关</b>：是 VLA 架构选型的方法论警示——别把别人在小 VLA 上的 encoder 结论照搬到自家大 backbone；frozen-backbone grafting 可作低成本的 target-backbone 诊断（换 encoder 前先 sweep 一遍）。但实验全在 LIBERO 桌面 sim、offline MSE、SO-100/Franka 本体不匹配，<strong>非移动/人形真机，落地需自建 embodiment-matched 数据 + 改成 closed-loop</strong>。<b>Track B（足式 locomotion/控制）不命中</b>：无 locomotion、WBC、sim2real、状态估计任何内容。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ ③ 深读层：核心观点 + 证据 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据 <button id="ev-toggle-all" type="button">展开全部证据</button></h2>
+      <p class="lead">每条 = 分型论点（常驻）+ 解读（常驻）+ 折叠的逐字原文/译文（📍真实页码，Ctrl-F 锚点）。7 观点 · 15 证据。</p>
+
+      <h3 class="claim-group" id="g-problem">问题</h3>
+
+      <div class="claim k-problem" id="c1">
+        <div class="claim-head"><span class="cn">1</span><span class="kicker">问题</span><h3 class="claim-title">encoder 选择能否跨 scale 迁移</h3></div>
+        <p class="claim-body">VLA 普遍直接继承上游 VLM 的 vision encoder、从不消融；但在小 VLA 上验证过的选择，scale 一个数量级后还成立吗？没人做过受控验证，而选错代价不小。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是全文唯一要回答的问题，也是后续 40 格实验的评估口径——一个被工程界默认、却从未被受控检验的假设。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Vision-language-action (VLA) policies <mark>typically inherit their vision encoder</mark> from upstream VLM releases, but it is unclear whether an encoder choice <mark>validated on a small VLA</mark> transfers to a <mark>larger backbone</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">VLA 策略通常直接从上游 VLM release 继承其 vision encoder，但一个在小 VLA 上验证过的 encoder 选择，是否能迁移到更大的 backbone 上，并不清楚。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>把"选错"的代价说清楚：浪费预训练算力 + 污染下游微调曲线——所以值得花一次便宜的诊断把它问清楚。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · §1 Introduction <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Whether the encoder choice validated on a small VLA backbone remains the right choice once the language and action stack is scaled by an order of magnitude is an <mark>open empirical question</mark>, and the cost of answering it sloppily is considerable: a <mark>wrong encoder pick wastes pretraining compute</mark> and pollutes downstream finetune curves.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">当语言与动作栈被放大一个数量级后，在小 VLA backbone 上验证的 encoder 选择是否仍是对的，是一个开放的实证问题；而草率回答它的代价相当可观：选错 encoder 会浪费预训练算力，并污染下游微调曲线。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-method">方法</h3>
+
+      <div class="claim k-method" id="c2">
+        <div class="claim-head"><span class="cn">2</span><span class="kicker">方法</span><h3 class="claim-title">frozen-backbone grafting 协议</h3></div>
+        <p class="claim-body">换掉已发布 VLA 的 vision tower，接一个候选 encoder，走固定协议（pool + LayerNorm + 单层线性 projector），冻结 LM 与 action expert，只训 projector——把 encoder 这一个变量从 backbone 协同里隔离出来。</p>
+        <div class="claim-how">实现：monkey-patch 单一视觉入口；只训 0.37–1.58M projector，2,000 步，lr 1e-4，AdamW，BF16；每格 &lt;6 GPU-小时（SmolVLA ~9min，π0.5 ~5h），单台 GB10。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>"只动 encoder + 一个线性层、其余全冻"是公平比较的关键——否则梯度流过语言 backbone 会把 encoder 质量和 co-adaptation 搅在一起（这正是 VLM4VLA 等前作的混淆点）。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">We introduce a <mark>frozen-backbone grafting diagnostic</mark>: the vision tower of a released VLA is replaced by a candidate encoder under a fixed protocol (adaptive average pooling, LayerNorm, and a <mark>single trainable linear projector</mark>), with the <mark>language model and action expert frozen</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">我们提出 frozen-backbone grafting 诊断：在固定协议（自适应平均池化、LayerNorm、单个可训练线性 projector）下，把已发布 VLA 的 vision tower 替换为候选 encoder，并冻结语言模型与 action expert。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>训练预算很小（只训一个线性层 2000 步），下面 Fig.3 证明 loss 在 1500–2000 步已 plateau，所以结论不是被预算卡住的。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 Introduction <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">(iii) <mark>train only the projector</mark> (0.37M–1.58M parameters depending on the encoder output dimension and the target backbone hidden size) for <mark>2,000 steps</mark> with batch size 8 (SmolVLA) or effective batch size 8 (π0.5, micro-batch 2 with gradient accumulation</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">(iii) 只训练 projector（0.37M–1.58M 参数，取决于 encoder 输出维度与目标 backbone hidden size），训 2,000 步，SmolVLA batch size 8，π0.5 有效 batch size 8（micro-batch 2 + 梯度累积）。</div></div>
+          </details>
+          <figure>
+            <a href="./images/figure_3_loss_curves.webp" target="_blank" title="点击看原图">
+              <img src="./images/figure_3_loss_curves.webp" alt="Figure 3: training loss plateaus before 2000 steps" loading="lazy">
+            </a>
+            <figcaption><strong>Figure 3 (p.17)：</strong>四个候选 encoder 的训练 loss 曲线，两 backbone × 两 suite，seed 42。<strong>看点：</strong>灰色 plateau region——所有 encoder 在 1500–2000 步前已收敛，说明 2000 步预算没有卡住排名。</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-result">结果与边界</h3>
+
+      <div class="claim k-result key" id="c3">
+        <div class="claim-head"><span class="cn">3</span><span class="kicker">结果</span><h3 class="claim-title">小 backbone 赢家不可靠迁移</h3></div>
+        <p class="claim-body">SmolVLA 两 suite 都选 SigLIP；π0.5-spatial 翻成 DINOv2-small；π0.5-object 是 seed 敏感的近似平局。4 个 backbone-suite 里 3 个支持"排名随 backbone 变"——小 backbone 的 top-1 选不出大 backbone 的顶档。</p>
+        <div class="stat-row">
+          <span class="stat win">π0.5-spatial DINOv2 0.0256</span>
+          <span class="stat">π0.5-spatial SigLIP 0.0267</span>
+          <span class="stat dim">SmolVLA-spatial SigLIP 0.0706</span>
+          <span class="stat dim">SmolVLA-spatial DINOv2 0.0734</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>注意作者措辞克制：不是"完整 rank inversion"（Spearman 仍正），只是"top-1 不可靠迁移"。语义向的 SigLIP 在小 backbone 赢，几何向的 DINOv2 在大 backbone 的 spatial suite 赢。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">the small-backbone winner <mark>does not reliably select the large-backbone top tier</mark>: SigLIP is best on SmolVLA across both suites, while on π0.5 <mark>DINOv2-small leads the spatial suite</mark> and the object suite is a <mark>seed-sensitive near-tie band</mark></blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">小 backbone 的赢家不能可靠地选出大 backbone 的顶档：SigLIP 在 SmolVLA 的两个 suite 上都最好，而在 π0.5 上 DINOv2-small 领跑 spatial suite，object suite 则是对 seed 敏感的近似平局带。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>承重的推断性总结是 3/4 个 backbone-suite 方向（不是 11/12 cell——后者因共享 seed/projector 初始化只算描述性支持）。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">three of the four backbone-suite comparisons (and 11 of 12 seed-level cells) support <mark>backbone-dependent rankings</mark></blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">四个 backbone-suite 对比里有三个（以及 12 个 seed 级单元里的 11 个）支持"排名依赖于 backbone"。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>为什么 Spearman 还是正的：最差的 RepViT 在两 backbone 上恒最差——"池底"的顺序迁移，"池顶"的 top-1 不迁移。所以小 VLA grafting 能排除烂 encoder，但选不出大 VLA 的最优。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.10 · §4.9 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">RepViT-M1 is consistently the worst of the four encoders on both backbones — i.e. the <mark>partial bottom-of-pool ordering transfers</mark>, while the small-backbone winner <mark>does not reliably select the large-backbone top tier</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">RepViT-M1 在两个 backbone 上始终是四个 encoder 里最差的——即池底的部分排序会迁移，而小 backbone 的赢家不能可靠选出大 backbone 的顶档。</div></div>
+          </details>
+        </div>
+        <figure>
+          <a href="./images/figure_4_per_cell_mse.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_4_per_cell_mse.webp" alt="Figure 4: per-cell offline action MSE grouped bars" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 4 (p.17)：</strong>40 格主网格的 per-cell offline MSE 分组柱（与 Table 1 同数据）。<strong>看点：</strong>每格 * 号标最优 encoder——SmolVLA 两图都是 SigLIP，π0.5-spatial 跳到 dinov2_small，π0.5-object 三家挤成一条平线；注意上下 backbone 的 y 轴量级不同（不可跨 backbone 比绝对值）。</figcaption>
+        </figure>
+      </div>
+
+      <div class="claim k-insight key" id="c4">
+        <div class="claim-head"><span class="cn">4</span><span class="kicker">洞察</span><h3 class="claim-title">wrapper 非中性、符号相反</h3></div>
+        <p class="claim-body">grafting 包装层（pool+LN+projector）本身不是中性的：把 <em>native</em> vision tower 也塞进同一 wrapper，SmolVLA 上 MSE 涨 +45–56%（wrapper 伤），π0.5 上反而降 −50–52%（wrapper 帮）——两 backbone 符号相反。这是个方法论陷阱。</p>
+        <div class="claim-how">含义：Table 5 里"π0.5 grafted 比 native 低 42–43%"不能读成 encoder 更强——光是 native 过 wrapper 就解释了 −50%，是 interface 假象。唯一干净的对比是同一 wrapper 内的 SigLIP-vs-DINOv2。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是对所有"换 encoder benchmark"的警告：不控制 swap interface，就会把 encoder 选择和 interface-backbone 兼容性混为一谈。所以全文每条 encoder 结论都挂着"在固定 grafting 协议下"的限定语。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.1 · Abstract <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The grafting wrapper is itself <mark>non-neutral with opposite sign across backbones</mark> (+45–56% MSE on the SmolVLA native tower, −50–52% on π0.5), so all conclusions are <mark>conditional on the fixed grafting protocol</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">grafting wrapper 本身是非中性的，且在两个 backbone 上符号相反（在 SmolVLA 的 native tower 上 +45–56% MSE，在 π0.5 上 −50–52%），因此所有结论都以这套固定 grafting 协议为条件。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>机理假设：SmolVLM SigLIP 已经吐出 (B,64,960) 恰好匹配 expert，多一道 8×8 pool 纯属"丢信息"；π0.5 的 (B,256,2048) 更高维，wrapper 的 16×16 pool 反而像个有用的瓶颈/正则。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.14 · §4.13 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Routing the native vision tower through the grafting wrapper raises MSE by +55.81% on SmolVLA-spatial and +45.45% on SmolVLA-object (<mark>wrapper hurts the native path</mark>), but reduces MSE by −49.84% on π0.5-spatial and −51.94% on π0.5-object (<mark>wrapper helps the native path</mark>).</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">把 native vision tower 走一遍 grafting wrapper，SmolVLA-spatial 的 MSE 升 +55.81%、SmolVLA-object 升 +45.45%（wrapper 伤害 native 路径），但 π0.5-spatial 降 −49.84%、π0.5-object 降 −51.94%（wrapper 帮助 native 路径）。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <figure style="margin-top:0">
+        <a href="./images/figure_2_native_vs_grafted.webp" target="_blank" title="点击看原图">
+          <img src="./images/figure_2_native_vs_grafted.webp" alt="Figure 2: native vs grafted MSE flips sign across backbones" loading="lazy">
+        </a>
+        <figcaption><strong>Figure 2 (p.12)：</strong>承接洞察4——native（灰）vs 最优 grafted（彩）的 offline MSE，两 backbone × 两 suite。<strong>看点：</strong>上排 SmolVLA grafted 比 native 高 +29.8/+32.1%，下排 π0.5 grafted 比 native 低 −41.8/−43.2%，同一套 grafting 协议两 backbone 符号相反；但 Table 8 证明 π0.5 这一头其实是 wrapper 假象，不能读成 encoder 更强。</figcaption>
+      </figure>
+
+      <div class="claim k-insight" id="c5">
+        <div class="claim-head"><span class="cn">5</span><span class="kicker">洞察</span><h3 class="claim-title">现成 metadata 列选不出 top-1</h3></div>
+        <p class="claim-body">能不能不跑实验、直接看 ImageNet 准确率/参数量/延迟这些现成列来选 encoder？不能——没有任何单列能跨两 backbone 选出同一个 top-1，ImageNet 准确率甚至在 π0.5 两 suite 间符号翻转。只能真去 graft + 训 projector + 量 MSE。</p>
+        <div class="claim-how">confound 分析（Table 3/4）：SmolVLA 上 ImageNet 准确率 ρ=+0.20（几乎无关，top-1 SigLIP 反而是池里 ImageNet 最低的）；latency/params 在 SmolVLA 与 π0.5-object 上 ρ=−1.00 但 π0.5-spatial 破到 −0.80（最优 DINOv2 既不是最大也不是最慢）。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这条把"那我查个排行榜不就行了"的捷径堵死——正是这条让 grafting harness 有存在价值。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.9 · §4.8 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">no single available metadata column identifies the same top-1 encoder across both backbones: the π0.5-spatial winner DINOv2 is neither the largest nor the slowest, and <mark>ImageNet accuracy even flips sign across the π0.5 suites</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">没有任何一个现成的 metadata 列能跨两个 backbone 选出同一个 top-1 encoder：π0.5-spatial 的赢家 DINOv2 既不是最大也不是最慢的，而 ImageNet 准确率甚至在 π0.5 的两个 suite 之间符号翻转。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>作者给出的操作性结论：选 encoder 没有捷径，必须实测离线动作预测 loss——而他们正好开源了这套 harness。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.10 · §4.8 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">A practitioner therefore <mark>cannot pick a vision encoder</mark> for a new VLA by reading off an ImageNet leaderboard or a parameter-count column — they have to <mark>actually graft, train the projector, and measure offline action-prediction loss</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">因此从业者无法靠查 ImageNet 排行榜或参数量列来为新 VLA 选 vision encoder——他们必须真正去 graft、训练 projector、测量离线动作预测 loss。</div></div>
+          </details>
+        </div>
+        <figure>
+          <a href="./images/figure_5_latency_quality.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_5_latency_quality.webp" alt="Figure 5: latency-quality scatter" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 5 (p.18)：</strong>四 encoder 在 SmolVLA（方块）与 π0.5（圆点）上的 latency–quality 散点，纵轴 1/val_MSE（越高越好）。<strong>看点：</strong>方块（SmolVLA）右上是 siglip——慢但好；圆点（π0.5）里 dinov2-s 反超——说明"延迟/质量"前沿随 backbone 移动，没有固定赢家。</figcaption>
+        </figure>
+      </div>
+
+      <div class="claim k-result" id="c6">
+        <div class="claim-head"><span class="cn">6</span><span class="kicker">结果</span><h3 class="claim-title">vision 贡献依赖 (backbone,suite) 格</h3></div>
+        <p class="claim-body">zero-image / shuffled-image 控制显示：去掉视觉流，MSE 在 SmolVLA 只涨 13–25%、在 π0.5 涨到 50–95%——视觉对大 backbone 重要得多。但 vision 用法不是单一机制：π0.5-spatial 是 shuffle-tolerant，可能在用低频图像统计而非真空间结构。</p>
+        <div class="claim-how">三种机制：SmolVLA 两 suite = 真空间-动作对应（shuffle-gap +48–51% &gt; vision-gap）；π0.5-object = 真空间但带窄（shuffle-gap +22%）；π0.5-spatial = 低频统计主导（shuffle-gap 仅 +3.9%）→ 该 cell 是主张里最弱的支撑。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>"视觉贡献随 backbone 变大"很诱人，但作者明确拒绝当 scaling law——只有两个 backbone、且架构混淆。重点是这个 zero/shuffled 双控制本身被推荐为后续 encoder 研究的标配。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.14 · §4.13 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Removing the visual stream raises offline action MSE by <mark>+12.77% on SmolVLA-spatial</mark> and +25.28% on SmolVLA-object relative to the seed-42 SigLIP-base cell, and by <mark>+50.54% on π0.5-spatial and +95.54% on π0.5-object</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">相对 seed-42 的 SigLIP-base 单元，移除视觉流使离线动作 MSE 在 SmolVLA-spatial 升 +12.77%、SmolVLA-object 升 +25.28%，在 π0.5-spatial 升 +50.54%、π0.5-object 升 +95.54%。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>shuffled-image（打乱像素位置但保留直方图）是个聪明的便宜控制：π0.5-spatial 打乱后几乎不掉，说明它的 encoder 排名可能反映的是颜色/纹理边际分布，而非细粒度空间结构。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.16 · §4.13 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">On π0.5-spatial the <mark>shuffle-gap is only +3.90%</mark> while the vision-gap is +50.54%, so π0.5 on libero_spatial <mark>loses almost nothing when the spatial structure is destroyed</mark> as long as the pixel histogram is preserved.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">在 π0.5-spatial 上 shuffle-gap 仅 +3.90%，而 vision-gap 是 +50.54%，所以只要像素直方图保留，π0.5 在 libero_spatial 上即便空间结构被打乱也几乎不掉分。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-limit" id="c7">
+        <div class="claim-head"><span class="cn">7</span><span class="kicker">局限</span><h3 class="claim-title">offline MSE / 仅两 backbone / 架构混淆</h3></div>
+        <p class="claim-body">只报 offline action MSE（无 closed-loop 成功率，因本体不匹配归零）；每格仅 2–3 seed；只测两个 released backbone，它们差的远不止参数量——"scale 相关但架构混淆"，不能归因于 scale 本身；统一 224×224 预处理可能压低 DINOv2（原生 518×518）。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是最重的保留：offline MSE 不等于部署就绪，compounding error / 分布漂移 / 多模态动作歧义都可能让离线与闭环脱钩。作者自己反复声明"不做任何 closed-loop 部署主张"。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.21 · §5.5 Limitations <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">zero-shot closed-loop success is therefore <mark>near zero for both native and grafted variants</mark> and would provide essentially no signal. Offline action MSE is the right proxy under this mismatch ... but it is <mark>not a substitute for embodied success</mark></blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">因此零样本闭环成功率对 native 和 grafted 变体都近乎为零、几乎无信号。离线动作 MSE 在这种不匹配下是合适的代理……但它不是具身成功率的替代品。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>标题"across VLA backbone scale"要打折看：只有 SmolVLA-450M 与 π0.5-3.3B 两点，语言骨干/动作专家/hidden size/token 数/native tower/预训练数据全都不同，是"scale 相关但架构混淆"的观察，而非纯 scale 效应。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.21 · §5.5 Limitations <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">We therefore describe the native-vs-grafted sign difference as occurring across the two released backbones we test, <mark>not as caused by backbone scale</mark>; the comparison is <mark>scale-correlated but architecture-confounded</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">因此我们把 native-vs-grafted 的符号差异描述为"发生在我们测的两个 released backbone 之间"，而非"由 backbone scale 导致"；这个比较是 scale 相关、但架构混淆的。</div></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态（必须实时联网核查，标注核查日期） ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06-17）</h2>
+      <dl class="os-grid">
+        <dt>代码 / harness</dt><dd><span class="os-tag os-part">声明开源 · 链接待核</span> 论文多处声明放出 grafting harness / 训练脚本 / 评估代码 / 原始 JSONL 日志 / 数据集哈希，但正文、arXiv abstract 均<strong>未给出 URL</strong>，WebSearch/WebFetch 也未找到对应 GitHub/项目页（2026-06-17）。</dd>
+        <dt>模型权重</dt><dd><span class="os-tag os-no">无新权重</span> 本文不训练新模型——grafts 到已公开的 SmolVLA-450M / π0.5-3.3B checkpoint 上，唯一可训练部分是 0.37–1.58M 的 linear projector。</dd>
+        <dt>数据</dt><dd><span class="os-tag os-yes">公开</span> 用 LeRobot 格式的 libero_spatial / libero_object（公开 benchmark）。</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-gloss"><span class="ev-tag">核查</span><div>arXiv:2606.14153v1（2026-06-12 提交）abstract 与 comments 无 code 链接；按标题/作者全网检索未命中可用仓库。归类 partial（代码承诺已发布但无可发现链接，无新权重）。</div></div>
+        <details class="ev-fold">
+          <summary>📍 p.11 · §4.5 Reproducibility <span class="ev-hint">— 查逐字证据</span></summary>
+          <blockquote class="ev-quote">The grafting harness, training scripts, evaluation code, raw JSON-Lines result logs and exact dataset hashes are <mark>released alongside this paper</mark>.</blockquote>
+          <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">grafting harness、训练脚本、评估代码、原始 JSONL 结果日志与精确数据集哈希随本文一并发布。</div></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>给一个被工程界默认却从未受控检验的假设（"照搬上游 encoder"）一记诚实的警告：encoder 赢家不跨 backbone scale 迁移，且 grafting wrapper 本身非中性、符号相反——后者是真正有价值的方法论陷阱，提醒所有"换 encoder benchmark"必须控制 swap interface。zero/shuffled-image 双控制是低成本高信息的好工具。全文对自己结论的边界（descriptive、conditional、不是 scaling law、不是 rank inversion）极其克制。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>范围窄：只两个 backbone（架构混淆，标题里的"scale"要打折）、只 offline MSE（无 closed-loop，<a href="#c7">局限7</a>）、每格 2–3 seed、π0.5-object 近似平局且 π0.5-spatial shuffle-tolerant（最弱支撑 cell）。LIBERO 桌面 sim、SO-100/Franka 本体不匹配。Preprint 未经同行评审；开源链接目前不可发现。</p></div>
+      <p><strong>评级：</strong><span class="badge">Valuable</span> &nbsp;非新模型/新策略，而是一篇严谨的诊断/分析——结论是"负面+警示"型但工程上有用：做 VLA encoder 选型前先在 target backbone 上跑一遍便宜的 grafting sweep，别照搬别人结论。范围与证据强度限制其上限。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#snap">⏱ 30 秒速读</a></li>
+      <li><a href="#gist">⚡ 速记层</a></li>
+      <li><a href="#core">◆ 核心观点</a>
+        <ul class="toc-claims">
+          <li><a href="#c1">1 问题 · encoder 能否跨 scale</a></li>
+          <li><a href="#c2">2 方法 · frozen-backbone grafting</a></li>
+          <li><a href="#c3">3 结果 · 赢家不可靠迁移 ★</a></li>
+          <li><a href="#c4">4 洞察 · wrapper 非中性符号反 ★</a></li>
+          <li><a href="#c5">5 洞察 · metadata 选不出 top-1</a></li>
+          <li><a href="#c6">6 结果 · vision 贡献依赖 cell</a></li>
+          <li><a href="#c7">7 局限 · offline MSE/架构混淆</a></li>
+        </ul>
+      </li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 三层阅读架构（30s 分诊 / 90s 速记 / 按需深读）· 阅读笔记</footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('ev-toggle-all');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.dataset.open !== '1';
+      btn.dataset.open = open ? '1' : '0';
+      document.querySelectorAll('details.ev-fold').forEach(function (d) { d.open = open; });
+      btn.textContent = open ? '收起全部证据' : '展开全部证据';
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var links = [].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) {
+            a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id);
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('section.card[id], .claim[id]').forEach(function (t) { spy.observe(t); });
+  }
+})();
+</script>
+
+</body>
+</html>

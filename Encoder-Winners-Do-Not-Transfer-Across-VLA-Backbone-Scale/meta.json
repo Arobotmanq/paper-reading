@@ -1,0 +1,47 @@
+{
+  "title": "Encoder Winners Do Not Reliably Transfer Across VLA Backbone Scale: A Frozen-Backbone Grafting Diagnostic",
+  "title_cn": "VLA 的 encoder 赢家不能可靠跨 backbone 规模迁移：一个 frozen-backbone grafting 诊断",
+  "field": "vla",
+  "venue": "arXiv preprint (未同行评审)",
+  "date": "2026",
+  "one_liner": "诊断/分析论文（非新模型）：提出 frozen-backbone grafting 诊断——换掉已发布 VLA 的 vision tower、冻结 LM 与 action expert、只训一个线性 projector，用 offline action MSE 评分；跨 4 encoder × 2 LIBERO suite × 2 backbone（SmolVLA-450M / π0.5-3.3B）证明小 backbone 的 encoder 赢家不能可靠预测大 backbone 的最优，且 grafting wrapper 本身非中性、两 backbone 符号相反。",
+  "framework": "idea-first",
+  "idea": "像给汽车换轮胎做单变量台架测试：把已发布 VLA 的 vision tower 拔掉换上候选 encoder，其余全部锁死、只拧一颗螺丝（线性 projector），测出的差异只能归因于 encoder 本身——结果发现小车上最好的轮胎换到大车上未必最好。",
+  "logic_chain": [
+    "把问题立成可证伪的一句：小 backbone 选出的 top-1 encoder，换到更大的 released backbone 上还是 top-1 吗？",
+    "设计受控诊断：固定 grafting 协议（adaptive avg pool + LayerNorm + 单层线性 projector），冻结 LM 与 action expert，只训 projector，隔离 encoder 单一变量。",
+    "跑 4 encoder × 2 LIBERO suite × 2 backbone × 2–3 seed = 40 格主网格，全用 offline action MSE 评分（closed-loop 因 SO-100/Franka 本体不匹配归零）。",
+    "观察排名：SmolVLA 两 suite 都选 SigLIP；π0.5-spatial 翻成 DINOv2-small；π0.5-object 近似平局。3/4 backbone-suite 支持 backbone-dependent；但 Spearman 仍正（最差 RepViT 恒最差，池底迁移、池顶不迁移）。",
+    "加 native-through-interface 控制，发现 grafting wrapper 本身非中性、两 backbone 符号相反——所谓换 encoder 的增益有一块其实是 wrapper 假象。",
+    "结论：encoder 排名不能跨 backbone scale 照搬；部署到新 backbone 前先跑一遍便宜的 grafting sweep（每格 <6 GPU-小时）来确认或推翻。"
+  ],
+  "method_skeleton": [
+    "monkey-patch 单一视觉入口替换 vision tower，下游 LM/action expert 看到与原模型相同的 token 数与 hidden dim（SmolVLA 64×960，π0.5 256×2048）。",
+    "只训 0.37–1.58M 的 linear projector（encoder/LM/action expert 全冻结），2,000 步、lr 1e-4、AdamW、BF16，每格 <6 GPU-小时（单台 GB10）。",
+    "只报 offline action MSE（episode-split 留出集），因本体不匹配导致 closed-loop 成功率≈0；配 native / LoRA(P2) / pooling / zero-image / shuffled-image 一系列控制。"
+  ],
+  "core_points": [
+    "真问题：VLA 普遍直接继承上游 VLM 的 vision encoder 从不消融，小 VLA 验证过的选择 scale 一个数量级后是否还成立，无人做受控验证。",
+    "frozen-backbone grafting 协议：换 vision tower + 固定 pool/LN/projector + 冻结其余 + 只训 projector，把 encoder 质量从 backbone co-adaptation 里隔离出来。",
+    "核心发现：小 backbone 赢家不可靠预测大 backbone 顶档——SmolVLA 选 SigLIP，π0.5-spatial 选 DINOv2，π0.5-object 是 seed 敏感近似平局；3/4 backbone-suite 支持 backbone-dependent ranking。",
+    "方法论陷阱：grafting wrapper 本身非中性，且两 backbone 符号相反（+45–56% on SmolVLA / −50–52% on π0.5）；所谓 π0.5 grafted 比 native 低 42–43% 是 interface 假象，不是 encoder 优劣。",
+    "现成 metadata 列（ImageNet 准确率/参数量/延迟）没有任何一列能跨两 backbone 选出同一 top-1，必须真去 graft+训 projector+量 MSE。",
+    "zero/shuffled-image 控制：vision 贡献 13–25%(SmolVLA) → 50–95%(π0.5)，且 vision 用法是 (backbone,suite) 性质；π0.5-spatial shuffle-tolerant，可能用低频统计而非真空间结构（最弱支撑 cell）。"
+  ],
+  "effects": [
+    "π0.5-spatial top-1 翻转：DINOv2 0.0256 < SigLIP 0.0267（SmolVLA 两 suite 均 SigLIP 最优：spatial 0.0706、object 0.0628）",
+    "跨 backbone Spearman ρ 仍为正（spatial +0.80 / object +1.00），因最差 RepViT 恒最差——池底排序迁移、top-1 不迁移",
+    "wrapper 非中性符号相反：native 过 wrapper 后 SmolVLA +45–56% MSE / π0.5 −50–52% MSE",
+    "vision 贡献（去掉视觉流的 MSE 涨幅）：SmolVLA 13–25% vs π0.5 50–95%；π0.5-spatial shuffle-gap 仅 +3.9%",
+    "诊断成本：每格 <6 GPU-小时（SmolVLA ~9min/run、π0.5 ~5h/run），单台 GB10"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "中等相关：是 VLA 架构选型的方法论警示（别照搬别人 encoder 结论；frozen-backbone grafting 可作换 encoder 前的低成本 target-backbone 诊断），但实验全在 LIBERO 桌面 sim、offline action MSE、SO-100/Franka 本体不匹配，非移动/人形真机；落地需自建 embodiment-matched 数据并改成 closed-loop。",
+    "track_B_legged": "不命中：无 locomotion / 全身控制 / sim2real / 状态估计任何内容。"
+  },
+  "open_source": "partial",
+  "open_source_detail": "论文 §4.5 多处声明随文发布 grafting harness / 训练脚本 / 评估代码 / 原始 JSONL 日志 / 数据集哈希（commit hash + freeze tag），但正文与 arXiv:2606.14153 abstract/comments 均未给出 URL，按标题/作者 WebSearch+WebFetch 全网检索未命中可用 GitHub/项目页（核查于 2026-06-17）。无新模型权重——grafts 到已公开的 SmolVLA-450M 与 π0.5-3.3B checkpoint，唯一可训练部分是 0.37–1.58M linear projector；数据用公开的 LeRobot LIBERO（libero_spatial / libero_object）。",
+  "open_source_checked": "2026-06-17",
+  "rating": "Valuable",
+  "summary": "summary.html"
+}

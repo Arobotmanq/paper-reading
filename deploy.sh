@@ -4,6 +4,9 @@
 # "方法论" tab always mirrors the current skill.
 set -e
 SKILL="$HOME/.claude/skills/paper-reading/scripts"
+# figures -> webp (keeps the live site light); needs conda base for Pillow
+source "$HOME/anaconda3/etc/profile.d/conda.sh" 2>/dev/null && conda activate base 2>/dev/null
+python3 "$SKILL/optimize_images.py" "$HOME/Paper_reading" || true
 /usr/bin/python3 "$SKILL/build_index.py"
 /usr/bin/python3 "$SKILL/build_site.py"
 cd "$HOME/Paper_reading"

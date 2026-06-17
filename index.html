@@ -82,10 +82,10 @@
     <h1>VLA 论文画廊</h1>
     <p>移动操作 / 人形 VLA 全景库。搜索 + 按评级 / 开源 / Track / 年份筛选，点卡片进入「思想优先」证据综述。</p>
     <div class="stats">
-      <div class="stat"><b>38</b><span>论文总数</span></div>
+      <div class="stat"><b>39</b><span>论文总数</span></div>
       <div class="stat gd"><b>3</b><span>★ 突破</span></div>
       <div class="stat go"><b>13</b><span>🟢 代码+权重</span></div>
-      <div class="stat gp"><b>30</b><span>Track A 相关</span></div>
+      <div class="stat gp"><b>31</b><span>Track A 相关</span></div>
     </div>
     <div class="hero-actions">
       <a class="hbtn primary" href="./recommendations-curated.html"><span class="ic">🎯</span> 策展推荐<small>精选 · 按主线分组</small></a>
@@ -582,6 +582,22 @@
           <div class="c-one">用 Mamba (deep SSM) 替换 Transformer backbone，O(L²)→O(L) 复杂度，在真实移动操作机器人上比 π0.5 成功率高 21 分、推理快 3 倍</div>
           <div class="c-tags">
             <span class="os os-part" title="项目页有代码/视频, license 未明">🟡 部分</span>
+            <span class="trk trk-A">Track A</span>
+            <span class="yr">2026</span>
+          </div>
+        </div>
+      </a>
+      <a class="card tier-val" href="./Encoder-Winners-Do-Not-Transfer-Across-VLA-Backbone-Scale/summary.html"
+         data-rating="Valuable" data-os="partial" data-track="A"
+         data-year="2026" data-tier="val" data-text="encoder winners do not reliably transfer across vla backbone scale: a frozen-backbone grafting diagnostic vla 的 encoder 赢家不能可靠跨 backbone 规模迁移：一个 frozen-backbone grafting 诊断 诊断/分析论文（非新模型）：提出 frozen-backbone grafting 诊断——换掉已发布 vla 的 vision tower、冻结 lm 与 action expert、只训一个线性 projector，用 offline action mse 评分；跨 4 encoder × 2 libero suite × 2 backbone（smolvla-450m / π0.5-3.3b）证明小 backbone 的 encoder 赢家不能可靠预测大 backbone 的最优，且 grafting wrapper 本身非中性、两 backbone 符号相反。 encoder-winners-do-not-transfer-across-vla-backbone-scale arxiv preprint (未同行评审)">
+        <div class="cov"><img loading="lazy" src="./Encoder-Winners-Do-Not-Transfer-Across-VLA-Backbone-Scale/images/figure_1_grafting_architecture.webp" alt=""></div>
+        <span class="ribbon r-val">有价值</span>
+        <div class="c-body">
+          <div class="c-title">Encoder Winners Do Not Reliably Transfer Across VLA Backbone Scale: A Frozen-Backbone Grafting Diagnostic</div>
+          <div class="c-cn">VLA 的 encoder 赢家不能可靠跨 backbone 规模迁移：一个 frozen-backbone grafting 诊断</div>
+          <div class="c-one">诊断/分析论文（非新模型）：提出 frozen-backbone grafting 诊断——换掉已发布 VLA 的 vision tower、冻结 LM 与 action expert、只训一个线性 projector，用 offline action MSE 评分；跨 4 encoder × 2 LIBERO suite × 2 backbone（SmolVLA-450M / π0.5-3.3B）证明小 backbone 的 encoder 赢家不能可靠预测大 backbone 的最优，且 grafting wrapper 本身非中性、两 backbone 符号相反。</div>
+          <div class="c-tags">
+            <span class="os os-part" title="论文 §4.5 多处声明随文发布 grafting harness / 训练脚本 / 评估代码 / 原始 JSONL 日志 / 数据集哈希（commit hash + freeze tag），但正文与 arXiv:2606.14153 abstract/comments 均未给出 URL，按标题/作者 WebSearch+WebFetch 全网检索未命中可用 GitHub/项目页（核查于 2026-06-17）。无新模型权重——grafts 到已公开的 SmolVLA-450M 与 π0.5-3.3B checkpoint，唯一可训练部分是 0.37–1.58M linear projector；数据用公开的 LeRobot LIBERO（libero_spatial / libero_object）。">🟡 部分</span>
             <span class="trk trk-A">Track A</span>
             <span class="yr">2026</span>
           </div>
