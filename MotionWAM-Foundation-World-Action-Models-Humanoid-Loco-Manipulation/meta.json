@@ -1,0 +1,48 @@
+{
+  "title": "MotionWAM: Towards Foundation World Action Models for Real-Time Humanoid Loco-Manipulation",
+  "title_cn": "MotionWAM：面向实时人形 Loco-Manipulation 的基础世界动作模型",
+  "field": "vla",
+  "venue": "arXiv preprint",
+  "date": "2026",
+  "one_liner": "读取视频世界模型(Video DiT)的「中间去噪特征」单次前向当条件，驱动统一全身 motion token，做成首个实时全身人形 WAM，反超 SOTA VLA 30+ 点。",
+  "framework": "idea-first",
+  "idea": "别等世界模型把未来画面画完——只偷看它画到一半的中间去噪特征(单次前向)就够了，于是世界模型的动力学先验第一次能在实时闭环人形上用起来。",
+  "logic_chain": [
+    "立问题：world model 的动力学先验能否(a)实时、(b)在统一全身动作空间里驱动人形 loco-manip",
+    "实时关键：Video DiT 固定在纯噪声端(τ≈1)一次想象，forward hook 截单个 block 的中间激活当条件，从不去噪未来帧→单次前向→实时",
+    "统一动作：SONIC + FSQ 把全身意图压成 64 维离散 motion token + 手部连续通道，一个动作空间覆盖移动/躯干/升降/脚部/手操作",
+    "训练：dual-DiT(Video DiT⟷Motion DiT) 三阶段——第一视角视频预训练→跨本体动作后训练→全身遥操微调",
+    "洞察：阶段1瓶颈是第一视角视觉动力学、非动作多样性，用便宜无动作视频(2136h)扩规模",
+    "验证：9 真机任务 43.9%→76.1% 反超 SOTA VLA，4.9Hz 实时、比 Cosmos Policy 快 7×，三阶段缺一不可"
+  ],
+  "method_skeleton": [
+    "管线：单目第一视角图像+语言 → Video DiT 一次前向(τ≈1)出中间去噪特征 → Motion DiT(交错自/交叉注意力+本体感觉) → 统一全身 motion token → SONIC 解码成关节命令",
+    "核心技巧：forward hook 读单个 transformer block 在固定 flow 时刻的中间激活，而非完整去噪结果——保实时",
+    "统一 whole-body motion latent：SONIC + FSQ 离散 token(64 维)覆盖 locomotion/torso/height/foot，连续通道驱动手；腿获得任务性动作词表",
+    "三阶段训练：视频与动作分支轮流专精；阶段2保留视频损失当正则防动力学先验被覆盖(L=L_motion+L_video)；VAE 与文本编码器全程冻结"
+  ],
+  "core_points": [
+    "痛点叠加：分层控制把腿降格成保平衡(任务性脚动作做不了)，而 WAM 迭代去噪太慢上不了实时",
+    "核心方法：读 Video DiT 中间去噪特征单次前向当条件——保留动力学先验又省迭代去噪，实时性命门",
+    "统一 whole-body motion token(SONIC+FSQ 64 维)替代上下身解耦，解锁踢球/踩踏板等任务性脚动作",
+    "dual-DiT + 三阶段视频→本体递进训练；阶段1洞察：瓶颈是第一视角视觉动力学非动作多样性",
+    "9 任务平均 43.9%→76.1% 每任务全胜，脚部/全身协同任务领先最多(+40~45%)；π0.5<20% 证明语义先验≠物理可执行",
+    "4.9Hz 实时、比同类 world-model 策略 Cosmos Policy(0.7Hz)快 7×；三阶段消融去 Stage1/2 分别掉 11%/28%"
+  ],
+  "effects": [
+    "9 真机全身任务平均成功率：MotionWAM 76.1% vs GR00T-N1.7 43.9%（+32pp，每任务全胜）",
+    "π0.5 <20%；Qwen3DiT(VLM-only)在 locomotion-heavy 任务近乎 0",
+    "实时频率(A100 chunk-wise)：MotionWAM 4.9Hz(2.5B) vs Cosmos Policy 0.7Hz(2.0B) → 快 7×；GR00T-N1.7 6.5Hz / Qwen3DiT 9.0Hz",
+    "三阶段消融(5 任务均值)：Full 70.0 / w/o Stage1 59.0(−11) / w/o Stage2 42.0(−28)",
+    "第一视角视频预训练 ~2,136 小时(人类+人形机器人视频，无动作标注)；Stage3 每任务 200 episodes"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "强命中——VLA 之外的第二条技术路线(视频世界模型驱动)；'读中间去噪特征单次前向'把生成式世界模型做到实时的技巧、统一 whole-body motion token + SONIC 解码接口可借鉴",
+    "track_B_legged": "部分命中——底层复用 SONIC motion tracker；'让腿做任务性动作'的统一动作空间对全身控制有启发"
+  },
+  "open_source": "none",
+  "open_source_detail": "截至 2026-06-24 未检索到官方代码仓库、checkpoint、project page 或数据集；仅有 arXiv abs/html (2606.09215)。纯技术报告/方法论文，复现需自建 Cosmos-Predict2.5 量级视频 DiT + 2136h 第一视角视频 + SONIC 管线。平台 Unitree G1 + dual ALOHA2 + RealSense D435i + PICO VR。",
+  "open_source_checked": "2026-06-24",
+  "rating": "Important",
+  "summary": "summary.html"
+}

@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MotionWAM 概念解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+  :root {
+    --nv-green: #76b900;
+    --nv-green-dark: #5a8e00;
+    --accent: #6366f1;
+    --accent-dark: #4f46e5;
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --info: #0ea5e9;
+    --info-bg: #f0f9ff;
+    --gold: #ca8a04;
+    --gold-bg: #fef9c3;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ---------- HERO (variant: 紫蓝调) ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 4em 1.5em 3.5em;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px; left: -80px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+  }
+  .hero h1 {
+    font-size: 2.6em;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0.5em 0 0.3em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #cbd5e1;
+    max-width: 720px;
+    margin: 0 0 1.5em;
+    line-height: 1.6;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55em;
+    margin-top: 1.2em;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    padding: 0.4em 0.9em;
+    border-radius: 8px;
+    font-size: 0.85em;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pill:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.3); }
+  .pill.back { background: rgba(118, 185, 0, 0.18); border-color: rgba(118, 185, 0, 0.45); color: #d9f99d; }
+  .pill.back:hover { background: rgba(118, 185, 0, 0.28); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout {
+    max-width: 1100px;
+    margin: 3em auto 5em;
+    padding: 0 1.5em;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+  }
+  @media (min-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr 220px;
+      gap: 2.5em;
+    }
+  }
+  .content { min-width: 0; }
+  .toc {
+    display: none;
+    position: sticky;
+    top: 1.5em;
+    align-self: start;
+    font-size: 0.9em;
+    border-left: 1px solid var(--border);
+    padding: 0.5em 0 0.5em 1.2em;
+    max-height: calc(100vh - 3em);
+    overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8em;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a {
+    color: var(--text-soft);
+    text-decoration: none;
+    line-height: 1.4;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.6em;
+    margin-left: -0.6em;
+    transition: all 0.15s ease;
+  }
+  .toc a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc .toc-sep {
+    margin: 1em 0;
+    border-top: 1px dashed var(--border);
+  }
+  .toc .back-link a {
+    color: var(--nv-green-dark);
+    font-weight: 600;
+  }
+  .toc .back-link a:hover {
+    border-left-color: var(--nv-green-dark);
+  }
+
+  /* ---------- CARDS ---------- */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2em 2.2em;
+    margin-bottom: 1.5em;
+    box-shadow: var(--shadow-sm);
+  }
+  section.card h2 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.3em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  section.card h2 .tag {
+    font-family: "JetBrains Mono", monospace;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff;
+    padding: 0.15em 0.55em;
+    border-radius: 6px;
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  section.card .full-name {
+    color: var(--muted);
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 1.4em;
+    font-style: italic;
+  }
+  section.card h3 {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin: 1.6em 0 0.6em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  section.card h3 .num {
+    background: var(--code-bg);
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 0.05em 0.55em;
+    border-radius: 6px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.3em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) {
+    section.card { padding: 1.4em 1.2em; }
+    section.card h2 { font-size: 1.4em; }
+  }
+
+  /* ---------- CALLOUT ---------- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.1em 1.3em;
+    margin: 1.2em 0;
+    border-left: 4px solid;
+    background: var(--info-bg);
+    border-color: var(--info);
+  }
+  .callout .callout-head {
+    font-weight: 700;
+    margin-bottom: 0.35em;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    color: var(--info);
+  }
+  .callout.tldr {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.07), rgba(168, 85, 247, 0.04));
+    border-color: var(--accent);
+  }
+  .callout.tldr .callout-head { color: var(--accent-dark); }
+  .callout.note {
+    background: var(--gold-bg);
+    border-color: var(--gold);
+  }
+  .callout.note .callout-head { color: var(--gold); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .callout strong { color: inherit; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- TABLE ---------- */
+  .table-wrap { overflow-x: auto; margin: 1.2em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    font-size: 0.93em;
+  }
+  thead { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+  th {
+    text-align: left;
+    padding: 0.8em 1em;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #f8fafc; }
+
+  /* ---------- CODE / PRE ---------- */
+  code:not(pre code) {
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #be123c;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.2em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+    line-height: 1.55;
+    font-size: 0.88em;
+    box-shadow: var(--shadow-sm);
+  }
+  pre code {
+    background: none; color: inherit; padding: 0; border: 0;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .pre-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -1px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #1e293b;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.2em;
+    font-size: 0.78em;
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pre-label + pre {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+  }
+
+  /* ---------- MATH ---------- */
+  mjx-container { font-size: 1.05em !important; }
+  .math-display {
+    background: var(--code-bg);
+    padding: 0.9em 1.4em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+    padding: 2em 1em 3em;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Reading Notes · 概念解读</span>
+    <h1>MotionWAM 配套笔记<br>核心概念详解</h1>
+    <p class="subtitle">
+      论文里反复出现、但需要一定背景才好理解的四个关键概念：World Action Model、读中间去噪特征(本文核心技巧)、DiT + flow matching、FSQ + SONIC 全身 token。每个给出定义 / 原理 / 在 MotionWAM 中的用法 / 与相关概念的关系。
+    </p>
+    <div class="meta-pills">
+      <a class="pill back" href="./summary.html">← 返回 MotionWAM 综述</a>
+      <span class="pill">📚 当前 4 个概念</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2606.09215" style="color:#93c5fd;text-decoration:none;">arXiv:2606.09215</a></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ WAM ============ -->
+    <section class="card" id="wam">
+      <h2>World Action Model <span class="tag">WAM</span></h2>
+      <p class="full-name">World Action Model · 世界动作模型</p>
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>把<strong>视频生成器(世界模型)的动力学先验</strong>耦合进机器人策略：模型先"想象"未来会看到什么画面，再据此预测动作。比纯"图像-文本"的 VLA 多了一层对<strong>时间演化与接触物理</strong>的内在建模，行为更连贯、更物理可行。</p>
+      </div>
+      <h3><span class="num">1</span>和 VLA 的区别</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>VLA</th><th>WAM</th></tr></thead>
+          <tbody>
+            <tr><td>底座</td><td>静态图像-文本 VLM</td><td>视频世界模型(视频生成器)</td></tr>
+            <tr><td>先验</td><td>语义先验（认物体、懂指令）</td><td>动力学先验（场景接下来怎么动）</td></tr>
+            <tr><td>动作怎么来</td><td>直接回归 \(\pi(a|o,l)\)</td><td>先 roll out 未来视觉状态，再反推动作</td></tr>
+            <tr><td>软肋</td><td>缺时间/接触物理建模</td><td>迭代去噪太慢，难实时</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3><span class="num">2</span>在 MotionWAM 里</h3>
+      <p>MotionWAM 是 WAM 的人形全身版：用 Video DiT 当世界模型、Motion DiT 当动作头。它解决了 WAM 长期的实时痛点——见 <a href="#intermediate-features">读中间去噪特征</a>。综述 <a href="./summary.html#c1">问题1</a> 给出 WAM 慢的背景，<a href="./summary.html#c6">结果6</a> 证明它反超纯语义先验的 VLA。</p>
+      <div class="callout note">
+        <div class="callout-head">🔗 关系</div>
+        <p>对比基线 <strong>Cosmos Policy</strong> 也是 WAM，但要迭代去噪完整未来视频（0.7Hz）；MotionWAM 只读中间特征（4.9Hz，快 7×）。WAM 范式全景见已读库 <a href="../World-Model-for-Robot-Learning-A-Comprehensive-Survey/summary.html">World Model 综述</a>。</p>
+      </div>
+    </section>
+
+    <!-- ============ intermediate denoising features ============ -->
+    <section class="card" id="intermediate-features">
+      <h2>读中间去噪特征 <span class="tag">本文核心</span></h2>
+      <p class="full-name">Intermediate Denoising Features · 单次前向读取生成过程的隐藏激活（DiT4DiT 思路）</p>
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p>世界模型要把未来帧"画清楚"需多步迭代去噪（慢）。MotionWAM 不要画完的成品，只要它<strong>画到一半时某层的隐藏激活</strong>——把 Video DiT 固定在<strong>纯噪声端(τ≈1)</strong>跑"一次想象"，用 forward hook 截取单个 transformer block 的激活当条件。<strong>单次前向 = 实时</strong>。</p>
+      </div>
+      <h3><span class="num">1</span>为什么这样能行</h3>
+      <p>flow matching 生成是沿 \(\tau:1\to0\) 从噪声积分到清晰帧。关键观察：即使在 \(\tau\approx1\)（几乎全是噪声、还没开始去噪），网络为了预测速度场，其隐藏层已经<strong>编码了"场景接下来要往哪走"</strong>的语义+动力学信息。所以不必真的把帧去噪出来，读那一层激活就够给动作头当条件。</p>
+      <div class="pre-label"><span>单次前向条件提取</span><span>Eq.(2) 简化</span></div>
+<pre><code>z0_t        = VAE(当前第一视角帧)         # 干净条件
+z_future    ~ N(0, I)                     # 未来帧 = 纯噪声 (τf ≈ 1)
+h_t         = Hook[ v_video( z_future, τf | z0_t, l ) ]   # 单次前向, 读某 block 激活
+# 从不迭代去噪 z_future —— h_t 直接喂给 Motion DiT 当条件</code></pre>
+      <h3><span class="num">2</span>效果</h3>
+      <p>这单次前向是 MotionWAM 实时(4.9Hz)的命门：比同样基于世界模型、但要迭代去噪的 Cosmos Policy 快 <strong>7×</strong>（0.7Hz）。证据见综述 <a href="./summary.html#c2">方法2</a> 与 <a href="./summary.html#c7">结果7</a>。</p>
+      <div class="callout note">
+        <div class="callout-head">🔗 关系</div>
+        <p>思路源自作者自家 <strong>DiT4DiT</strong>（联合建模视频动力学与动作）。它是 <a href="#wam">WAM</a> 实时化的关键，依赖 <a href="#dit-flow">DiT + flow matching</a> 的生成机制。</p>
+      </div>
+    </section>
+
+    <!-- ============ DiT + flow matching ============ -->
+    <section class="card" id="dit-flow">
+      <h2>DiT + Flow Matching <span class="tag">生成骨架</span></h2>
+      <p class="full-name">Diffusion Transformer + Flow Matching · 视频与动作的统一生成机制</p>
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p><strong>DiT</strong> = 用 Transformer 做骨干的扩散/流模型；<strong>flow matching</strong> = 训练它回归一个"噪声→数据"的连续速度场，推理时积分该场生成样本。MotionWAM 的 Video DiT 与 Motion DiT 都用这套，统一在一个 flow-matching 目标下训练。</p>
+      </div>
+      <h3><span class="num">1</span>flow matching 一句话</h3>
+      <p>给定干净样本 \(x_1\) 与噪声 \(\epsilon\)，沿直线 \(x_\tau=(1-\tau)x_1+\tau\epsilon\) 插值，网络回归速度场 \(v_\theta(x_\tau,\tau)\approx \epsilon-x_1\)。推理时从噪声解 ODE 积回 \(x_1\)。与 diffusion 同源，但目标更直接（回归速度而非逐步去噪分布）。</p>
+      <h3><span class="num">2</span>MotionWAM 的两个 DiT</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Video DiT</th><th>Motion DiT</th></tr></thead>
+          <tbody>
+            <tr><td>初始化</td><td>Cosmos-Predict2.5-2B</td><td>新挂，随机+每本体投影器</td></tr>
+            <tr><td>生成什么</td><td>未来帧 latent 的速度场</td><td>全身 motion latent 的速度场</td></tr>
+            <tr><td>损失</td><td>\(L_\text{video}\)（式3）</td><td>\(L_\text{motion}\)（式4，条件于 Video DiT 隐藏状态）</td></tr>
+            <tr><td>推理用法</td><td>只跑一次前向取中间激活（不积分到底）</td><td>正常积分出动作 token</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout note">
+        <div class="callout-head">🔗 关系</div>
+        <p>正因为生成是 flow-matching 的"沿 τ 积分"，才有 <a href="#intermediate-features">读中间特征</a>的操作空间（在 τ≈1 截激活）。同款 flow-matching 动作头也用于 π0 系/OpenHLM——参见 <a href="../OpenHLM-Empirical-Recipe-Whole-Body-Humanoid-Loco-Manipulation/notes.html#flow-matching">OpenHLM 笔记的 flow matching 卡</a>。</p>
+      </div>
+    </section>
+
+    <!-- ============ FSQ + SONIC ============ -->
+    <section class="card" id="fsq-sonic">
+      <h2>FSQ + SONIC 全身 token <span class="tag">动作接口</span></h2>
+      <p class="full-name">Finite Scalar Quantization + SONIC · 统一 whole-body motion latent</p>
+      <div class="callout tldr">
+        <div class="callout-head">📌 TL;DR</div>
+        <p><strong>SONIC</strong> 是个通用全身 motion-tracking 控制器，用单一共享 latent 融合各种运动目标。MotionWAM 用 <strong>FSQ</strong> 把这个共享 latent 压成 <strong>64 维离散 token</strong>（2 token × 32 级），概括移动/躯干/升降/脚部意图；再加手部连续通道。一个动作空间，腿和手平权。</p>
+      </div>
+      <h3><span class="num">1</span>FSQ 是什么</h3>
+      <p>Finite Scalar Quantization：VQ 的轻量替代——不学码本，而是把每个 latent 维直接<strong>四舍五入到固定的几个标量级别</strong>（如 32 级）。这里 2 个 token、每个 32 级，组合出 64 维离散向量 \(k_t\in\{-1,\dots,1\}^{64}\)。好处：无码本坍塌、实现简单、离散化稳定。</p>
+      <h3><span class="num">2</span>为什么"解放了腿"</h3>
+      <p>传统分层：上身收关节目标、下身只收 base 速度/高度/朝向 → 腿被锁成保平衡。MotionWAM 让<strong>全身共用同一套 motion token</strong>，腿因此拿到"任务性动作词表"，能踩踏板、踢球。推理时把连续标量 slot 最近邻取整成离散 index，交 SONIC 解码成关节命令 \(a_t\)。</p>
+      <div class="pre-label"><span>动作解码链</span><span>Eq.(6)</span></div>
+<pre><code>m_t = (m_cont, k̃)           # Motion DiT 输出: 连续末端通道 + 标量 token slot
+   ──flow matching──►  m̂_t = (m̂_cont, k̂̃)
+   ──k̂ = round(k̂̃)──►  (m̂_cont, k̂)
+   ──SONIC 解码──►     a_t   # 全身关节命令</code></pre>
+      <div class="callout note">
+        <div class="callout-head">🔗 关系</div>
+        <p>SONIC 同样是 <a href="../OpenHLM-Empirical-Recipe-Whole-Body-Humanoid-Loco-Manipulation/notes.html#motion-tracking">OpenHLM</a> 用的低层控制器——两篇都把 SONIC 当全身执行底座，区别在高层（OpenHLM=VLA，MotionWAM=世界模型）。这套统一 token 由 <a href="#dit-flow">Motion DiT</a> 生成。</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer style="text-align:center;color:#64748b;font-size:0.85em;padding:2em 1em 3em;">Reading Notes · 概念按需生长 · MotionWAM</footer>
+</body>
+</html>

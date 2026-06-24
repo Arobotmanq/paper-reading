@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MotionWAM 综述</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #6366f1;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --c-problem: #dc2626; --c-insight: #d97706; --c-method: #6366f1; --c-result: #16a34a; --c-limit: #64748b;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #312e81 100%); color: #fff; padding: 3em 1.5em 3.4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 480px; height: 480px; background: radial-gradient(circle, color-mix(in srgb, var(--brand) 30%, transparent), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(255,255,255,0.08); color: #c7d2fe; border: 1px solid rgba(255,255,255,0.25); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 12px var(--brand); }
+  .hero h1 { font-size: clamp(1.7em, 4vw + 1em, 2.8em); font-weight: 800; line-height: 1.18; margin: 0.5em 0 0.3em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.1em; color: #e2e8f0; max-width: 720px; margin: 0 0 1.3em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.1em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rating { background: rgba(202, 138, 4, 0.22); border-color: rgba(250, 204, 21, 0.5); color: #fde68a; font-weight: 700; }
+  .pill.rating a { color: inherit; }
+  .kpi-strip { max-width: 1020px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { display: block; color: inherit; text-decoration: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  a.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi .status { margin: 0.45em 0; font-size: 0.95em; }
+  .kpi.green .value { color: var(--success); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.blue .value { color: var(--info); }
+  .layout { max-width: 1020px; margin: 2.6em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: minmax(0, 720px) 230px; gap: 2.5em; justify-content: center; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc ul.toc-claims { margin: 0.3em 0 0.3em 0.5em; padding-left: 0.7em; border-left: 1px dashed var(--border); font-size: 0.9em; }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.8em 2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 0.65em; flex: 0 0 30px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.95em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+  section.card[id], .claim[id] { scroll-margin-top: 1.2em; }
+  .snap { padding: 1.2em 1.6em; }
+  .snap-row { display: flex; gap: 1em; padding: 0.45em 0; border-bottom: 1px dashed var(--border); align-items: baseline; }
+  .snap-row:last-child { border-bottom: 0; }
+  .snap-k { flex: 0 0 3.2em; text-align: center; font-size: 0.78em; font-weight: 700; border-radius: 6px; padding: 0.15em 0; }
+  .snap-k.kp { background: var(--danger-bg); color: var(--c-problem); }
+  .snap-k.km { background: #eef2ff; color: var(--c-method); }
+  .snap-k.kr { background: var(--success-bg); color: var(--c-result); }
+  .snap-k.kh { background: var(--gold-bg); color: var(--gold); }
+  .snap-row > div { color: var(--text-soft); }
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.18em 0.7em; border-radius: 999px; font-weight: 700; font-size: 0.85em; background: var(--gold-bg); color: #92400e; border: 1px solid #f59e0b; }
+  .gist-card { border-left: 5px solid var(--accent); }
+  .gist-block { margin: 1.1em 0; }
+  .gb-label { font-size: 0.82em; font-weight: 700; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.12em; font-weight: 600; color: var(--text); background: #eef2ff; border-radius: var(--radius); padding: 0.9em 1.1em; line-height: 1.7; }
+  ol.chain { counter-reset: ch; list-style: none; padding-left: 0; }
+  ol.chain li { counter-increment: ch; position: relative; padding-left: 2.2em; margin: 0.55em 0; }
+  ol.chain li::before { content: counter(ch); position: absolute; left: 0; top: 0.15em; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--code-bg); border: 1px solid var(--border-strong); color: var(--accent-dark); font-size: 0.8em; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pipeline-line { font-size: 0.98em; background: var(--code-bg); border-radius: 8px; padding: 0.6em 1em; color: var(--text); }
+  ul.rel-list { padding-left: 1.2em; }
+  ul.rel-list b { color: var(--text); }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2em 0 1.2em; color: var(--muted); font-size: 0.88em; font-weight: 600; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim-group { display: flex; align-items: center; gap: 0.7em; margin: 1.8em 0 0.2em; font-size: 0.8em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .claim-group::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--k, var(--accent)); border-radius: var(--radius); padding: 1.05em 1.3em; margin: 1.1em 0; background: var(--card); }
+  .claim.k-problem { --k: var(--c-problem); } .claim.k-insight { --k: var(--c-insight); }
+  .claim.k-method  { --k: var(--c-method); }  .claim.k-result  { --k: var(--c-result); }
+  .claim.k-limit   { --k: var(--c-limit); }
+  .claim-head { display: flex; align-items: baseline; gap: 0.55em; flex-wrap: wrap; }
+  .claim-head .cn { font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 700; color: var(--k, var(--accent)); }
+  .kicker { font-size: 0.7em; font-weight: 700; padding: 0.1em 0.6em; border-radius: 999px; background: color-mix(in srgb, var(--k, var(--accent)) 12%, #fff); color: var(--k, var(--accent)); flex: 0 0 auto; }
+  .claim-title { font-size: 1.08em; font-weight: 700; color: var(--text); margin: 0; line-height: 1.5; }
+  .claim-body { font-weight: 400; color: var(--text-soft); margin: 0.4em 0 0; line-height: 1.7; }
+  .claim-how { margin-top: 0.5em; font-size: 0.88em; color: var(--muted); padding-left: 0.7em; border-left: 2px solid var(--border); }
+  .claim.key { border-left-color: var(--gold); }
+  .claim.key .cn::after { content: " ★"; color: var(--gold); }
+  .evidence { margin-top: 0.75em; }
+  .evidence + .evidence { padding-top: 0.75em; border-top: 1px dashed var(--border); }
+  .ev-gloss { font-size: 0.95em; color: var(--text); background: #fafaf9; border-radius: 6px; padding: 0.35em 0.7em; margin: 0.4em 0; display: flex; gap: 0.6em; }
+  .ev-tag { flex: 0 0 auto; font-size: 0.72em; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 0 0.45em; height: fit-content; margin-top: 0.35em; background: var(--card); }
+  details.ev-fold { margin: 0.45em 0 0; }
+  details.ev-fold > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 0.5em; list-style: none; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.18em 0.7em; }
+  details.ev-fold > summary::-webkit-details-marker { display: none; }
+  details.ev-fold > summary .ev-hint { color: var(--muted); font-weight: 400; }
+  details.ev-fold[open] > summary { margin-bottom: 0.45em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "Source Serif 4", Georgia, "Noto Serif SC", serif; font-style: italic; font-size: 0.97em; line-height: 1.6; color: #1e293b; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-quote mark { background: #fef3c7; color: inherit; font-style: normal; padding: 0 0.1em; border-radius: 3px; }
+  .ev-row { display: flex; gap: 0.6em; margin: 0.4em 0; }
+  .ev-trans { font-size: 0.95em; color: var(--text-soft); }
+  #ev-toggle-all { float: right; font: 600 0.78em "JetBrains Mono", monospace; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.3em 0.8em; cursor: pointer; }
+  #ev-toggle-all:hover { border-color: var(--accent); }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.45em; margin: 0.55em 0; }
+  .stat { font: 600 0.82em "JetBrains Mono", monospace; padding: 0.18em 0.7em; border-radius: 999px; border: 1px solid var(--border); background: var(--code-bg); color: var(--text-soft); }
+  .stat.win { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+  .stat.dim { opacity: 0.65; }
+  .term, .note-link { position: relative; cursor: help; }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; cursor: pointer; }
+  .term { border-bottom: 1px dotted var(--muted); }
+  .term[data-gloss]:hover::after, .term[data-gloss]:focus::after,
+  .note-link[data-gloss]:hover::after {
+    content: attr(data-gloss); position: absolute; left: 0; bottom: 1.7em; z-index: 20;
+    width: max-content; max-width: min(46ch, 80vw); background: #0f172a; color: #e2e8f0;
+    font-size: 0.78em; font-weight: 400; font-style: normal; line-height: 1.5;
+    padding: 0.5em 0.8em; border-radius: 8px; box-shadow: var(--shadow-lg);
+  }
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.1em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .table-wrap { overflow-x: auto; margin: 1.1em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: #f8fafc; }
+  th { text-align: left; padding: 0.7em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65em 1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.loc { font-family: "JetBrains Mono", monospace; font-size: 0.82em; color: var(--muted); white-space: nowrap; }
+  tr.winner { background: var(--success-bg); }
+  tr.winner td { font-weight: 700; color: var(--success); }
+  tr.winner td:first-child::before { content: "\2605 "; }
+  figure { margin: 1.2em 0 0.5em; text-align: center; }
+  figure a { border: none !important; }
+  figure img { max-width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); cursor: zoom-in; }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Mondo Robotics · HKUST(GZ) · World Action Model</span>
+    <h1>MotionWAM<br>把视频世界模型做成实时全身人形策略</h1>
+    <p class="subtitle">单目第一视角 + 读取视频 DiT「中间去噪特征」单次前向，驱动统一全身动作，反超 VLA 30+ 个点。</p>
+    <div class="meta-pills">
+      <span class="pill rating"><a href="#verdict">⚖ Important</a></span>
+      <span class="pill">📄 Method / Real-Robot</span>
+      <span class="pill">📅 2026</span>
+      <span class="pill">🏢 Mondo Robotics / HKUST</span>
+      <span class="pill">🤖 Unitree G1</span>
+      <span class="pill">🔗 <a href="https://arxiv.org/abs/2606.09215">arXiv:2606.09215</a></span>
+      <span class="pill">⏱ 速记 ~90s · 全文 ~7min</span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <a class="kpi green" href="#c6"><div class="label">9 任务平均成功率</div><div class="value">76.1<span class="unit">%</span></div><div class="desc">vs GR00T-N1.7 43.9%（+32pp），每任务全胜 ↗结果6</div></a>
+  <a class="kpi blue" href="#c7"><div class="label">闭环实时频率</div><div class="value">4.9<span class="unit">Hz</span></div><div class="desc">比同类 world-model 策略 Cosmos Policy 快 7× ↗结果7</div></a>
+  <a class="kpi purple" href="#c5"><div class="label">第一视角视频预训练</div><div class="value">2,136<span class="unit">h</span></div><div class="desc">人类+人形机器人视频，无动作标注 ↗洞察5</div></a>
+  <div class="kpi"><div class="label">开源</div><div class="status"><span class="os-tag os-no">未见</span></div><div class="desc">无项目页/代码（核查 2026-06）</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ① 30 秒分诊条 -->
+    <section class="card snap" id="snap">
+      <div class="snap-row"><span class="snap-k kp">痛点</span><div>人形 loco-manip 主流走「上身精控关节、下身只收粗略 base 命令」的分层方案——上下身动作空间不一致，腿被降格成"保平衡"，踩踏板/踢球这类<b>任务性脚动作做不了</b>；而能注入动力学先验的世界模型(WAM)又因迭代去噪太慢，上不了实时。</div></div>
+      <div class="snap-row"><span class="snap-k km">做法</span><div>把视频世界模型(Video DiT)的<b>中间去噪特征</b>单次前向读出来当条件（不跑完整去噪→实时），喂给 Motion DiT 预测<b>统一全身 motion token</b>（基于 SONIC），三阶段训练从第一视角视频→跨本体动作→全身遥操微调。</div></div>
+      <div class="snap-row"><span class="snap-k kr">结果</span><div>9 个真机全身任务平均 76.1%，反超最强 VLA 基线 GR00T-N1.7（43.9%）32 个点、每任务全胜；4.9Hz 实时、比同类 world-model 策略快 7×；能做解耦策略做不到的踢球/踩踏板。</div></div>
+      <div class="snap-row"><span class="snap-k kh">读法</span><div><span class="badge">Important</span> 关注 world-model 做策略 → 精读 <a href="#c2">方法2</a>（单次前向读中间特征的实时技巧）；关注全身控制接口 → <a href="#c3">方法3</a>（统一 motion token）。⚡ 最短精读路径：Fig.3（三阶段架构）→ Fig.5/§4.2（反超 SOTA）→ Table 2（实时频率）。</div></div>
+    </section>
+
+    <!-- ② 速记层 -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">⚡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲思想、逻辑、方法；效果只作验证。要核对原文再进下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">🧭 背景 · 为什么重要（不熟此子方向先读我）</div>
+        <p>人形要在人类尺度环境里边走边操作。两条主流路线各有短板：① 纯 <span class="term" tabindex="0" data-gloss="Vision-Language-Action：用视觉语言大模型骨干输出机器人动作，继承语义先验，但缺时间演化/接触物理的内在模型">VLA</span> 靠静态「图像-文本」底座，缺对时间演化与接触物理的建模；② <a class="note-link" href="./notes.html#wam" data-gloss="World Action Model：把视频生成器的动力学先验耦合进策略，先想象未来画面再反推动作">世界动作模型(WAM)</a> 能注入动力学先验、行为更连贯，但<b>高维视频-动作迭代去噪太慢</b>，至今只在桌面机械臂上跑、上不了实时人形。再加上分层控制把腿降格成保平衡，<b>任务性脚动作根本无法表达</b>。</p>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">别等世界模型把未来画面"画完"再行动——只<b>偷看它画到一半的草稿</b>（中间去噪特征）就够了：一次前向就读出"场景接下来要往哪走"的隐藏激活，省掉迭代去噪，于是世界模型的动力学先验第一次能在实时闭环人形上用起来。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么成立</div>
+        <ol class="chain">
+          <li>立两个问题：world model 的动力学先验能否(a)实时、(b)在统一全身动作空间里，驱动人形 loco-manip？</li>
+          <li>实时关键：把 Video DiT 固定在<b>纯噪声端(τ≈1)</b>跑"一次想象"，用 forward hook 截取某个 transformer block 的中间激活当条件，<b>从不真的去噪那些未来帧</b>——单次前向 → 实时。</li>
+          <li>统一动作：在 <a class="note-link" href="./notes.html#fsq-sonic" data-gloss="SONIC：一个被超大规模训练的通用全身 motion-tracking 控制器，用单一共享 latent 融合不同运动目标">SONIC</a> 之上用 <a class="note-link" href="./notes.html#fsq-sonic" data-gloss="Finite Scalar Quantization：把连续 latent 压成少量离散标量级别；这里 2 token × 32 级 = 64 维离散向量">FSQ</a> 把全身意图压成 64 维离散 motion token，加上手部连续通道，一个动作空间覆盖移动/躯干/升降/脚部/手操作。</li>
+          <li>怎么训：dual-DiT(Video DiT⟷Motion DiT) 三阶段——①第一视角视频预训练(只更 Video DiT) ②跨本体动作后训练(挂上 Motion DiT 联合训) ③全身遥操微调。</li>
+          <li>关键洞察：阶段1 的瓶颈是<b>第一视角视觉动力学、不是动作多样性</b>——所以用便宜的无动作视频(2136h)扩规模，不被小量动作数据卡住。</li>
+          <li>验证：9 真机任务 43.9%→76.1% 反超 SOTA VLA，脚部/全身协同任务领先最多；4.9Hz 实时、比 Cosmos Policy 快 7×；三阶段缺一不可。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 管线一句话 + 三个设计决策</div>
+        <p class="pipeline-line">单目第一视角图像+语言 → Video DiT 一次前向(τ≈1)出"中间去噪特征" → Motion DiT 交错自/交叉注意力 + 本体感觉 → 统一全身 motion token → SONIC 解码成关节命令</p>
+        <ul>
+          <li><b>① 读中间特征而非去噪结果</b>：forward hook 截单个 block 在固定 flow 时刻的激活，单次前向保实时（全文实时性的命门）。</li>
+          <li><b>② 统一 whole-body motion latent</b>：SONIC + FSQ 离散 token（64 维）覆盖 locomotion/torso/height/foot，连续通道驱动手；腿获得"任务性动作词表"。</li>
+          <li><b>③ 三阶段"视频→本体"递进训练</b>：视频与动作分支轮流专精，而非从头联合优化；阶段2保留视频损失当正则防动力学先验被覆盖。</li>
+        </ul>
+        <figure>
+          <a href="./images/figure_3_overview.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_3_overview.webp" alt="Figure 3: MotionWAM dual-DiT 三阶段总览" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 3 (p.5)：</strong>dual-DiT 视频-动作模型三阶段训练——Stage1 单独预训 Video DiT；Stage2 挂上 Motion DiT、用 embodiment tag 跨 G1 异构数据联合训，由 Video DiT 隐藏状态条件出离散 motion-token+连续末端值；Stage3 在 SMPL-24→G1 重定向的全身遥操数据上微调。<strong>看点：</strong>Video DiT → Motion DiT 之间那根"hidden states"箭头，就是"读中间特征"的核心连接。</figcaption>
+        </figure>
+        <figure>
+          <a href="./images/figure_2_decoupled_vs_unified.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_2_decoupled_vs_unified.webp" alt="Figure 2: 解耦 vs 统一动作空间" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 2 (p.2)：</strong>左=分层管线把控制拆成"上身关节目标+下身 base 命令"，腿只保平衡；右=MotionWAM 统一 motion token 覆盖全身，解锁踩踏板/踢球等任务性脚动作。<strong>看点：</strong>右图脚踩垃圾桶踏板/踢球——这是左图"结构上做不到"的动作。</figcaption>
+        </figure>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p>耦合视频世界模型确实带来真机优势：统一动作空间让腿主动参与任务，脚部协同任务领先最多。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>9 任务平均成功率（20 trials/任务）</th><th class="num">成功率</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr class="winner"><td>MotionWAM</td><td class="num">76.1%</td><td class="loc">p.7 · Fig.5</td></tr>
+              <tr><td>GR00T-N1.7（最强基线）</td><td class="num">43.9%</td><td class="loc">p.7 · Fig.5</td></tr>
+              <tr><td>π0.5</td><td class="num">&lt;20%</td><td class="loc">p.7 · Fig.5</td></tr>
+              <tr><td>Qwen3DiT（VLM-only 等参对照）</td><td class="num">≈0（locomotion 任务）</td><td class="loc">p.7 · Fig.5</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🗺 放进你的知识图谱（已读库定位）</div>
+        <ul class="rel-list">
+          <li><b>对立 / 竞争路线</b>：<a href="../OpenHLM-Empirical-Recipe-Whole-Body-Humanoid-Loco-Manipulation/summary.html">OpenHLM</a> 解同一个问题（G1 全身 loco-manip、同用 SONIC、同要统一全身），但走 <b>VLA-菜谱</b>路线（π0.5 初始化 + 遥操配方）；MotionWAM 走 <b>视频世界模型</b>路线——两篇正好是同一战场的两种范式。</li>
+          <li><b>被反超的竞品</b>：<a href="../GR00T-N1-Open-Foundation-Model-Humanoid-Robots/summary.html">GR00T N1</a>（这里用 N1.7，43.9%）与 <a href="../pi05-Vision-Language-Action-Model-Open-World-Generalization/summary.html">π0.5</a>（&lt;20%）作为 SOTA VLA 基线，在同样 Stage3 数据上被反超 30+ 点。</li>
+          <li><b>背景 / 同议题</b>：<a href="../World-Model-for-Robot-Learning-A-Comprehensive-Survey/summary.html">World Model 综述</a> 给出 WAM 范式全景；<a href="../WholeBodyVLA-Unified-Latent-VLA-Loco-Manipulation/summary.html">WholeBodyVLA</a> 同追"统一全身 latent"但用 VLA 而非视频世界模型。</li>
+        </ul>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🎯 与你项目的相关性</div>
+        <p><b>Track A（人形 VLA / 移动操作）强命中</b>：是 VLA 之外的第二条技术路线（视频世界模型驱动），"读中间去噪特征单次前向"是把生成式世界模型做到实时的可借鉴技巧；统一 whole-body motion token + SONIC 解码接口可参考。<b>落地门槛</b>：需 Cosmos-Predict2.5 量级视频 DiT + 2136h 第一视角视频 + SONIC + A100/4090，未开源需自实现。<br><b>Track B（足式控制）部分命中</b>：底层复用 SONIC motion tracker，"让腿做任务性动作"的统一动作空间对全身控制有启发。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ③ 深读层 -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据 <button id="ev-toggle-all" type="button">展开全部证据</button></h2>
+      <p class="lead">每条 = 分型论点（常驻）+ 解读（常驻）+ 折叠的逐字原文/译文（📍真实页码，Ctrl-F 锚点）。8 观点 · 10 证据。</p>
+
+      <h3 class="claim-group" id="g-problem">问题与动机</h3>
+
+      <div class="claim k-problem" id="c1">
+        <div class="claim-head"><span class="cn">1</span><span class="kicker">问题</span><h3 class="claim-title">分层把腿降格、WAM 又太慢</h3></div>
+        <p class="claim-body">两个叠加的痛点：分层控制让上下身处于不一致动作空间、腿只保平衡做不了任务性脚动作；而能注入动力学先验的世界模型因迭代去噪太慢，连桌面臂都难实时。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>本文同时打这两点：既要统一全身动作空间(解放腿)，又要让世界模型跑进实时——后者是技术命门。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">This forces the two halves into inconsistent action spaces and <mark>restricts the legs to balance-preserving locomotion</mark>, ruling out task-driven foot interaction such as stepping on a pedal or kicking an object</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">这把两半身体逼进不一致的动作空间、把腿限制在保平衡的行走上，排除了踩踏板、踢物体这类任务性脚部交互。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>WAM 的实时性是公认难题——这正是本文"读中间特征"要解决的。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">iterative denoising over high-dimensional video-action latents is costly, and existing WAMs <mark>struggle to reach real-time rates even on tabletop arms</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">在高维视频-动作 latent 上迭代去噪代价高昂，现有 WAM 连在桌面机械臂上都难以达到实时速率。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-method">方法</h3>
+
+      <div class="claim k-method key" id="c2">
+        <div class="claim-head"><span class="cn">2</span><span class="kicker">方法</span><h3 class="claim-title">读"中间去噪特征"单次前向 → 实时</h3></div>
+        <p class="claim-body">把 Video DiT 固定在纯噪声端(τ≈1)的"一次想象"模式，用 forward hook 截取单个 transformer block 的中间激活当条件，从不真的去噪未来帧——这单次前向就是 MotionWAM 能实时闭环的原因。</p>
+        <div class="claim-how">条件 = H[v_θ^video] 读取速度网络隐藏状态；Motion DiT 经交错自/交叉注意力消费它，再 flow-matching 积分出 motion latent。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>关键反直觉：不要世界模型"画完"的未来帧，只要它"画到一半"的隐藏激活——既保留动力学先验、又省掉迭代去噪的算力。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">one pass yields activations that en-code where the scene is about to go, never denoising those frames. <mark>This single pass is what keeps MotionWAM real time</mark> on a closed-loop humanoid.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">一次前向就产出编码"场景接下来要往哪走"的激活，从不去噪那些帧。正是这单次前向让 MotionWAM 在闭环人形上保持实时。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method" id="c3">
+        <div class="claim-head"><span class="cn">3</span><span class="kicker">方法</span><h3 class="claim-title">统一 whole-body motion token（SONIC+FSQ）</h3></div>
+        <p class="claim-body">不再拆成"上身关节+下身 base 命令"，而是在 SONIC 通用全身控制器之上用 FSQ 把全身意图压成 64 维离散 token（加手部连续通道），一个动作空间覆盖移动/躯干/升降/脚部交互/手操作。</p>
+        <div class="claim-how">SONIC token k_t ∈ {−1,…,1}^64（2 token×32 级 FSQ）概括 locomotion/torso/height/foot-interaction；连续部分 m^cont 驱动夹爪/灵巧手。推理时对离散 slot 最近邻取整再交 SONIC 解码成关节命令。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是"解放腿"的机制：腿不再只收 base 速度，而是拿到与上身同一套 token 的"任务性动作词表"。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.4 · §3.1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">on top of SONIC [4], a universal whole-body controller that <mark>fuses different motion targets through a single shared latent</mark>. The shared latent is bottlenecked by <mark>Finite Scalar Quantization</mark> [38] with 2 tokens of 32 levels each</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">建在 SONIC 之上——一个用单一共享 latent 融合不同运动目标的通用全身控制器；该共享 latent 用 FSQ 瓶颈化（2 个 token、每个 32 级）。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method" id="c4">
+        <div class="claim-head"><span class="cn">4</span><span class="kicker">方法</span><h3 class="claim-title">dual-DiT + 三阶段"视频→本体"训练</h3></div>
+        <p class="claim-body">Video DiT(由 Cosmos-Predict2.5-2B 初始化)与 Motion DiT 耦合，分三阶段递进训练：①只预训视频分支(2136h 第一视角视频) ②挂上动作分支跨本体联合训 ③全身遥操微调；VAE 与文本编码器全程冻结。</p>
+        <div class="claim-how">阶段2 保留视频损失 L_video 当表征正则，防动力学先验被动作信号覆盖（L = L_motion + L_video）；共享 trunk + 每本体投影器，部署时只挂 G1 投影器。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>"轮流专精"而非从头联合优化——先让视频分支吃饱便宜视频，再接动作，避免小量动作数据拖累大规模视觉学习。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.3 · §1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">to our knowledge, <mark>the first closed-loop end-to-end WAM-driven policy</mark> that performs whole-body humanoid loco-manipulation in real time, including task-driven foot behaviors such as ball kicking and pedal stepping</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">据我们所知，这是首个实时执行全身人形 loco-manip 的闭环端到端 WAM 驱动策略，含踢球、踩踏板等任务性脚部行为。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight" id="c5">
+        <div class="claim-head"><span class="cn">5</span><span class="kicker">洞察</span><h3 class="claim-title">瓶颈是第一视角视觉动力学，不是动作多样性</h3></div>
+        <p class="claim-body">阶段1的关键判断：限制性能的是"第一视角视觉动力学"而非动作多样性——所以用便宜的无动作视频单独把 Video DiT 喂饱，trunk 吸收规模而不被小量带动作标注的演示卡住。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这条决定了数据策略：动作标注贵且少，但第一视角视频便宜且海量——先用后者建动力学先验，是整套配方能 scale 的前提。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.5 · §3.3 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Our key insight is that egocentric <mark>visual dynamics, not action diversity, is the bottleneck at this stage</mark>: by training the Video DiT alone on cheap, action-free video, the trunk absorbs scale</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">我们的关键洞察是：此阶段的瓶颈是第一视角视觉动力学、而非动作多样性——单独在便宜的无动作视频上训 Video DiT，trunk 就能吸收规模。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-result">结果与边界</h3>
+
+      <div class="claim k-result key" id="c6">
+        <div class="claim-head"><span class="cn">6</span><span class="kicker">结果</span><h3 class="claim-title">9 任务 43.9%→76.1% 反超 SOTA VLA</h3></div>
+        <p class="claim-body">同样 Stage3 数据、同样 SONIC 接口下，唯一变量是"条件来自视频世界模型中间特征还是 VLM 图文特征"：MotionWAM 每任务全胜、平均 76.1%，比最强 VLA 基线 GR00T-N1.7(43.9%) 高 32 个点；脚部/全身协同任务领先最多(+40~45%)。</p>
+        <div class="stat-row">
+          <span class="stat win">MotionWAM 76.1%</span>
+          <span class="stat">GR00T-N1.7 43.9%</span>
+          <span class="stat dim">π0.5 &lt;20%</span>
+          <span class="stat dim">Kick/Load/Retrieve +40%</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>控制变量很干净：所有基线吃同样观测、同样动作空间、同样数据——差距只来自"视频世界模型 vs 静态 VLM 先验"。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.7 · §4.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">MotionWAM wins on every task and <mark>lifts the overall success rate from 43.9% (the strongest baseline, GR00T-N1.7) to 76.1%</mark>, an over 32% absolute gain.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">MotionWAM 在每个任务上都获胜，把总体成功率从 43.9%（最强基线 GR00T-N1.7）提到 76.1%，绝对提升超 32%。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>反面证据：纯语义先验(π0.5/Qwen3DiT)在 locomotion-heavy 任务近乎崩盘——semantic prior 不等于物理可执行。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.7 · §4.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">even <mark>π0.5 stays under 20% overall</mark>, indicating that strong semantic priors alone do not transfer to the closed-loop physics humanoid loco-manipulation demands.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">连 π0.5 总体也低于 20%，说明仅靠强语义先验无法迁移到人形 loco-manip 所需的闭环物理。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-result" id="c7">
+        <div class="claim-head"><span class="cn">7</span><span class="kicker">结果</span><h3 class="claim-title">4.9Hz 实时、比 Cosmos Policy 快 7×；三阶段缺一不可</h3></div>
+        <p class="claim-body">A100 上 4.9Hz，与同规模 VLA 基线相当，而比同样基于世界模型的 Cosmos Policy(0.7Hz) 快 7 倍——因为后者要迭代去噪未来视频，MotionWAM 只读一次中间特征。消融显示去掉 Stage1/Stage2 分别掉 11%/28%。</p>
+        <div class="claim-how">Table 2（A100 chunk-wise Hz）：MotionWAM 4.9（2.5B）/ GR00T-N1.7 6.5（1.6B）/ Qwen3DiT 9.0（2.3B）/ Cosmos Policy 0.7（2.0B）。Table 1 消融（5 任务均值）：Full 70.0 / w/o Stage1 59.0 / w/o Stage2 42.0。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>7× 提速直接归因于"读中间特征 vs 完整去噪"——这条把方法2 的设计与实时性闭环对上了。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.8 · §4.4 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">MotionWAM is <mark>seven times faster (4.9 Hz vs. 0.7 Hz)</mark>, because Cosmos Policy must iteratively denoise the future video before producing actions whereas MotionWAM reads off intermediate denoising features in a single pass.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">MotionWAM 快 7 倍（4.9Hz vs 0.7Hz），因为 Cosmos Policy 必须先迭代去噪未来视频再产动作，而 MotionWAM 单次前向读取中间去噪特征。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>Stage2(跨本体动作 grounding) 比 Stage1 更关键(−28% vs −11%)：没有它动作信号无处锚定、全任务崩。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.7 · §4.3 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">removing Stage 1 and Stage 2 leads to <mark>11% and 28% absolute performance drop respectively</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">去掉 Stage 1 和 Stage 2 分别导致 11% 和 28% 的绝对性能下降。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-limit" id="c8">
+        <div class="claim-head"><span class="cn">8</span><span class="kicker">局限</span><h3 class="claim-title">单 G1、无 OOD 物体测试、出视野即失败</h3></div>
+        <p class="claim-body">三阶段仅在 Unitree G1 单本体验证、跨硬件未知；无受控的新物体泛化测试(训练/测试物体视觉相近)；单目第一视角是软肋——物体出视野或头相机视角偏离训练分布时会失去视觉锚定而卡住。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>单相机依赖是最现实的部署风险；跨本体可迁移性也还没证——和 OpenHLM 一样困在单一 G1。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.8 · §6 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">the Stage 3 fine-tune has been <mark>validated only on the Unitree G1</mark> embodiment ... MotionWAM <mark>falters when the manipulated object leaves the field of view</mark> or the head-camera viewpoint drifts</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">Stage 3 微调仅在 Unitree G1 本体上验证……当被操作物体离开视野、或头相机视角偏离训练分布时，MotionWAM 会失灵。</div></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 开源状态 -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06）</h2>
+      <dl class="os-grid">
+        <dt>代码</dt><dd><span class="os-tag os-no">未见</span> 未检索到官方代码仓库</dd>
+        <dt>权重</dt><dd><span class="os-tag os-no">未见</span> 无发布的 checkpoint</dd>
+        <dt>项目页</dt><dd><span class="os-tag os-no">未见</span> 未检索到 Mondo Robotics 官方 project page；仅有 arXiv abs/html</dd>
+        <dt>数据</dt><dd><span class="os-tag os-no">未见</span> 2136h 视频混合 + 9 任务遥操数据均未公开</dd>
+        <dt>平台</dt><dd>Unitree G1 + dual ALOHA2 夹爪 + RealSense D435i 头相机 + PICO VR 三点遥操 + SONIC</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-gloss"><span class="ev-tag">解读</span><div>截至核查日(2026-06-24)未见任何开源物料——这是一篇纯技术报告/方法论文，复现需自建 Cosmos-Predict 量级管线。若日后发布项目页应更新本节。</div></div>
+      </div>
+    </section>
+
+    <!-- 批判 + 评级 -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>"读中间去噪特征单次前向"是把生成式视频世界模型做到实时闭环的真增量，配 7× 提速与干净的控制变量对照(同数据/同接口/同动作空间)；统一全身 motion token 真解锁了解耦策略做不到的任务性脚动作；首个实时全身人形 WAM。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>仅 Unitree G1 单本体、无 OOD 物体泛化测试、单相机出视野即失败(见<a href="#c8">局限8</a>)；完全未开源、复现门槛高(Cosmos 量级 + 2136h 视频)；9 任务、20 trials 规模有限；非同行评审。</p></div>
+      <p><strong>评级：</strong><span class="badge">Important</span> &nbsp;非 Breakthrough（重度建在 Cosmos-Predict / SONIC / DiT4DiT 之上，单平台、闭源），但"中间特征单次前向→实时 WAM"的机制 + 反超 SOTA VLA 30+ 点，给"世界模型做人形策略"开了条可行路线。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#snap">⏱ 30 秒速读</a></li>
+      <li><a href="#gist">⚡ 速记层</a></li>
+      <li><a href="#core">◆ 核心观点</a>
+        <ul class="toc-claims">
+          <li><a href="#c1">1 问题 · 分层+WAM慢</a></li>
+          <li><a href="#c2">2 方法 · 读中间特征实时 ★</a></li>
+          <li><a href="#c3">3 方法 · 统一 motion token</a></li>
+          <li><a href="#c4">4 方法 · dual-DiT 三阶段</a></li>
+          <li><a href="#c5">5 洞察 · 视觉动力学瓶颈</a></li>
+          <li><a href="#c6">6 结果 · 反超 SOTA ★</a></li>
+          <li><a href="#c7">7 结果 · 实时+消融</a></li>
+          <li><a href="#c8">8 局限 · 单平台/单相机</a></li>
+        </ul>
+      </li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 三层阅读架构（30s 分诊 / 90s 速记 / 按需深读）· MotionWAM</footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('ev-toggle-all');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.dataset.open !== '1';
+      btn.dataset.open = open ? '1' : '0';
+      document.querySelectorAll('details.ev-fold').forEach(function (d) { d.open = open; });
+      btn.textContent = open ? '收起全部证据' : '展开全部证据';
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var links = [].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) {
+            a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id);
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('section.card[id], .claim[id]').forEach(function (t) { spy.observe(t); });
+  }
+})();
+</script>
+
+</body>
+</html>
