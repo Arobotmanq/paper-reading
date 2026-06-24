@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenHLM 综述</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #6366f1;
+    --accent: #6366f1; --accent-dark: #4f46e5;
+    --c-problem: #dc2626; --c-insight: #d97706; --c-method: #6366f1; --c-result: #16a34a; --c-limit: #64748b;
+    --success: #16a34a; --success-bg: #f0fdf4;
+    --danger: #dc2626; --danger-bg: #fef2f2;
+    --warning: #d97706; --warning-bg: #fffbeb;
+    --info: #0ea5e9; --info-bg: #f0f9ff;
+    --gold: #ca8a04; --gold-bg: #fef9c3;
+    --bg: #fafafa; --card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+    --code-bg: #f1f5f9;
+    --quote-bg: #f8fafc;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.1);
+    --radius: 12px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px; line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+  .hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #312e81 100%); color: #fff; padding: 3em 1.5em 3.4em; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; top: -150px; right: -150px; width: 480px; height: 480px; background: radial-gradient(circle, color-mix(in srgb, var(--brand) 30%, transparent), transparent 70%); pointer-events: none; }
+  .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5em; background: rgba(255,255,255,0.08); color: #c7d2fe; border: 1px solid rgba(255,255,255,0.25); padding: 0.35em 0.9em; border-radius: 999px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 12px var(--brand); }
+  .hero h1 { font-size: clamp(1.7em, 4vw + 1em, 2.8em); font-weight: 800; line-height: 1.18; margin: 0.5em 0 0.3em; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.1em; color: #e2e8f0; max-width: 720px; margin: 0 0 1.3em; line-height: 1.6; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: 1.1em; }
+  .pill { display: inline-flex; align-items: center; gap: 0.45em; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0; padding: 0.4em 0.9em; border-radius: 8px; font-size: 0.85em; backdrop-filter: blur(8px); }
+  .pill a { color: #93c5fd; text-decoration: none; }
+  .pill a:hover { color: #bfdbfe; }
+  .pill.rating { background: rgba(202, 138, 4, 0.22); border-color: rgba(250, 204, 21, 0.5); color: #fde68a; font-weight: 700; }
+  .pill.rating a { color: inherit; }
+  .kpi-strip { max-width: 1020px; margin: -2em auto 0; padding: 0 1.5em; position: relative; z-index: 2; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1em; }
+  .kpi { display: block; color: inherit; text-decoration: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1em 1.2em; box-shadow: var(--shadow); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  a.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi .label { font-size: 0.78em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .kpi .value { font-size: 2em; font-weight: 800; color: var(--text); line-height: 1.1; margin: 0.1em 0; letter-spacing: -0.02em; }
+  .kpi .value .unit { font-size: 0.55em; color: var(--muted); font-weight: 600; margin-left: 0.2em; }
+  .kpi .desc { font-size: 0.85em; color: var(--text-soft); }
+  .kpi .status { margin: 0.45em 0; font-size: 0.95em; }
+  .kpi.green .value { color: var(--success); }
+  .kpi.purple .value { color: var(--accent); }
+  .kpi.blue .value { color: var(--info); }
+  .layout { max-width: 1020px; margin: 2.6em auto 5em; padding: 0 1.5em; display: grid; grid-template-columns: 1fr; gap: 2em; }
+  @media (min-width: 1024px) { .layout { grid-template-columns: minmax(0, 720px) 230px; gap: 2.5em; justify-content: center; } }
+  .content { min-width: 0; }
+  .toc { display: none; position: sticky; top: 1.5em; align-self: start; font-size: 0.9em; border-left: 1px solid var(--border); padding: 0.5em 0 0.5em 1.2em; max-height: calc(100vh - 3em); overflow-y: auto; }
+  @media (min-width: 1024px) { .toc { display: block; } }
+  .toc-title { font-size: 0.75em; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.8em; }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.45em 0; }
+  .toc a { color: var(--text-soft); text-decoration: none; line-height: 1.4; display: block; border-left: 2px solid transparent; padding-left: 0.6em; margin-left: -0.6em; transition: all 0.15s ease; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc ul.toc-claims { margin: 0.3em 0 0.3em 0.5em; padding-left: 0.7em; border-left: 1px dashed var(--border); font-size: 0.9em; }
+  .toc-sep { margin: 1em 0; border-top: 1px dashed var(--border); }
+  .toc .notes-link a { color: var(--accent-dark); font-weight: 600; }
+  section.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.8em 2em; margin-bottom: 1.5em; box-shadow: var(--shadow-sm); }
+  section.card h2 { font-size: 1.55em; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.4em; display: flex; align-items: center; gap: 0.55em; }
+  section.card h2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 8px; font-size: 0.65em; flex: 0 0 30px; }
+  section.card > .lead { color: var(--muted); margin: 0 0 0.6em; font-size: 0.95em; }
+  section.card p { margin: 0.7em 0; color: var(--text-soft); }
+  section.card ul, section.card ol { padding-left: 1.4em; color: var(--text-soft); }
+  section.card li { margin: 0.35em 0; }
+  section.card strong { color: var(--text); font-weight: 600; }
+  section.card a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  section.card a:hover { border-bottom-color: var(--accent); }
+  @media (max-width: 600px) { section.card { padding: 1.4em 1.2em; } }
+  section.card[id], .claim[id] { scroll-margin-top: 1.2em; }
+  .snap { padding: 1.2em 1.6em; }
+  .snap-row { display: flex; gap: 1em; padding: 0.45em 0; border-bottom: 1px dashed var(--border); align-items: baseline; }
+  .snap-row:last-child { border-bottom: 0; }
+  .snap-k { flex: 0 0 3.2em; text-align: center; font-size: 0.78em; font-weight: 700; border-radius: 6px; padding: 0.15em 0; }
+  .snap-k.kp { background: var(--danger-bg); color: var(--c-problem); }
+  .snap-k.km { background: #eef2ff; color: var(--c-method); }
+  .snap-k.kr { background: var(--success-bg); color: var(--c-result); }
+  .snap-k.kh { background: var(--gold-bg); color: var(--gold); }
+  .snap-row > div { color: var(--text-soft); }
+  .badge { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.18em 0.7em; border-radius: 999px; font-weight: 700; font-size: 0.85em; background: var(--gold-bg); color: #92400e; border: 1px solid #f59e0b; }
+  .gist-card { border-left: 5px solid var(--accent); }
+  .gist-block { margin: 1.1em 0; }
+  .gb-label { font-size: 0.82em; font-weight: 700; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35em; }
+  .gist-idea { font-size: 1.12em; font-weight: 600; color: var(--text); background: #eef2ff; border-radius: var(--radius); padding: 0.9em 1.1em; line-height: 1.7; }
+  ol.chain { counter-reset: ch; list-style: none; padding-left: 0; }
+  ol.chain li { counter-increment: ch; position: relative; padding-left: 2.2em; margin: 0.55em 0; }
+  ol.chain li::before { content: counter(ch); position: absolute; left: 0; top: 0.15em; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--code-bg); border: 1px solid var(--border-strong); color: var(--accent-dark); font-size: 0.8em; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pipeline-line { font-size: 0.98em; background: var(--code-bg); border-radius: 8px; padding: 0.6em 1em; color: var(--text); }
+  ul.rel-list { padding-left: 1.2em; }
+  ul.rel-list b { color: var(--text); }
+  .layer-divider { display: flex; align-items: center; gap: 0.8em; margin: 2em 0 1.2em; color: var(--muted); font-size: 0.88em; font-weight: 600; }
+  .layer-divider::before, .layer-divider::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim-group { display: flex; align-items: center; gap: 0.7em; margin: 1.8em 0 0.2em; font-size: 0.8em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .claim-group::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+  .claim { border: 1px solid var(--border); border-left: 4px solid var(--k, var(--accent)); border-radius: var(--radius); padding: 1.05em 1.3em; margin: 1.1em 0; background: var(--card); }
+  .claim.k-problem { --k: var(--c-problem); } .claim.k-insight { --k: var(--c-insight); }
+  .claim.k-method  { --k: var(--c-method); }  .claim.k-result  { --k: var(--c-result); }
+  .claim.k-limit   { --k: var(--c-limit); }
+  .claim-head { display: flex; align-items: baseline; gap: 0.55em; flex-wrap: wrap; }
+  .claim-head .cn { font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 700; color: var(--k, var(--accent)); }
+  .kicker { font-size: 0.7em; font-weight: 700; padding: 0.1em 0.6em; border-radius: 999px; background: color-mix(in srgb, var(--k, var(--accent)) 12%, #fff); color: var(--k, var(--accent)); flex: 0 0 auto; }
+  .claim-title { font-size: 1.08em; font-weight: 700; color: var(--text); margin: 0; line-height: 1.5; }
+  .claim-body { font-weight: 400; color: var(--text-soft); margin: 0.4em 0 0; line-height: 1.7; }
+  .claim-how { margin-top: 0.5em; font-size: 0.88em; color: var(--muted); padding-left: 0.7em; border-left: 2px solid var(--border); }
+  .claim.key { border-left-color: var(--gold); }
+  .claim.key .cn::after { content: " ★"; color: var(--gold); }
+  .evidence { margin-top: 0.75em; }
+  .evidence + .evidence { padding-top: 0.75em; border-top: 1px dashed var(--border); }
+  .ev-gloss { font-size: 0.95em; color: var(--text); background: #fafaf9; border-radius: 6px; padding: 0.35em 0.7em; margin: 0.4em 0; display: flex; gap: 0.6em; }
+  .ev-tag { flex: 0 0 auto; font-size: 0.72em; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 0 0.45em; height: fit-content; margin-top: 0.35em; background: var(--card); }
+  details.ev-fold { margin: 0.45em 0 0; }
+  details.ev-fold > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 0.5em; list-style: none; font-family: "JetBrains Mono", monospace; font-size: 0.78em; font-weight: 600; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.18em 0.7em; }
+  details.ev-fold > summary::-webkit-details-marker { display: none; }
+  details.ev-fold > summary .ev-hint { color: var(--muted); font-weight: 400; }
+  details.ev-fold[open] > summary { margin-bottom: 0.45em; }
+  .ev-quote { margin: 0.3em 0; padding: 0.7em 1em; background: var(--quote-bg); border-left: 3px solid var(--border-strong); border-radius: 0 8px 8px 0; font-family: "Source Serif 4", Georgia, "Noto Serif SC", serif; font-style: italic; font-size: 0.97em; line-height: 1.6; color: #1e293b; }
+  .ev-quote::before { content: "\201C"; color: var(--muted); font-weight: 700; }
+  .ev-quote::after { content: "\201D"; color: var(--muted); font-weight: 700; }
+  .ev-quote mark { background: #fef3c7; color: inherit; font-style: normal; padding: 0 0.1em; border-radius: 3px; }
+  .ev-row { display: flex; gap: 0.6em; margin: 0.4em 0; }
+  .ev-trans { font-size: 0.95em; color: var(--text-soft); }
+  #ev-toggle-all { float: right; font: 600 0.78em "JetBrains Mono", monospace; color: var(--accent-dark); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.3em 0.8em; cursor: pointer; }
+  #ev-toggle-all:hover { border-color: var(--accent); }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.45em; margin: 0.55em 0; }
+  .stat { font: 600 0.82em "JetBrains Mono", monospace; padding: 0.18em 0.7em; border-radius: 999px; border: 1px solid var(--border); background: var(--code-bg); color: var(--text-soft); }
+  .stat.win { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+  .stat.dim { opacity: 0.65; }
+  .term, .note-link { position: relative; cursor: help; }
+  .note-link { text-decoration: none; color: var(--accent-dark) !important; border-bottom: 1px dashed var(--accent-dark) !important; cursor: pointer; }
+  .term { border-bottom: 1px dotted var(--muted); }
+  .term[data-gloss]:hover::after, .term[data-gloss]:focus::after,
+  .note-link[data-gloss]:hover::after {
+    content: attr(data-gloss); position: absolute; left: 0; bottom: 1.7em; z-index: 20;
+    width: max-content; max-width: min(46ch, 80vw); background: #0f172a; color: #e2e8f0;
+    font-size: 0.78em; font-weight: 400; font-style: normal; line-height: 1.5;
+    padding: 0.5em 0.8em; border-radius: 8px; box-shadow: var(--shadow-lg);
+  }
+  .callout { border-radius: var(--radius); padding: 1.1em 1.3em; margin: 1.1em 0; border-left: 4px solid; background: var(--info-bg); border-color: var(--info); }
+  .callout .callout-head { font-weight: 700; margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.45em; color: var(--info); }
+  .callout.success { background: var(--success-bg); border-color: var(--success); }
+  .callout.success .callout-head { color: var(--success); }
+  .callout.warn { background: var(--warning-bg); border-color: var(--warning); }
+  .callout.warn .callout-head { color: var(--warning); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.danger .callout-head { color: var(--danger); }
+  .callout p { margin: 0.3em 0; color: var(--text); }
+  .table-wrap { overflow-x: auto; margin: 1.1em 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.93em; }
+  thead { background: #f8fafc; }
+  th { text-align: left; padding: 0.7em 1em; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+  td { padding: 0.65em 1em; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.loc { font-family: "JetBrains Mono", monospace; font-size: 0.82em; color: var(--muted); white-space: nowrap; }
+  tr.winner { background: var(--success-bg); }
+  tr.winner td { font-weight: 700; color: var(--success); }
+  tr.winner td:first-child::before { content: "\2605 "; }
+  figure { margin: 1.2em 0 0.5em; text-align: center; }
+  figure a { border: none !important; }
+  figure img { max-width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); cursor: zoom-in; }
+  figcaption { margin-top: 0.7em; font-size: 0.88em; color: var(--muted); text-align: left; padding: 0 0.5em; }
+  figcaption strong { color: var(--text-soft); }
+  .os-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55em 1.1em; margin: 0.8em 0; align-items: center; }
+  .os-grid dt { font-weight: 600; color: var(--muted); font-size: 0.9em; }
+  .os-grid dd { margin: 0; }
+  .os-tag { font-size: 0.8em; font-weight: 700; padding: 0.12em 0.6em; border-radius: 999px; }
+  .os-yes { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+  .os-no  { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+  .os-part{ background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+  code:not(pre code) { background: var(--code-bg); padding: 0.12em 0.45em; border-radius: 5px; font-size: 0.88em; color: #be123c; border: 1px solid var(--border); }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 2em 1em 3em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Tsinghua · Spirit AI · Humanoid Loco-Manipulation</span>
+    <h1>OpenHLM<br>全身人形 Loco-Manipulation 的实证菜谱</h1>
+    <p class="subtitle">一条受控实验路线图，逐个变量敲定「全身原生」人形 VLA 配方，反超 GR00T N1.6 与 Ψ0。</p>
+    <div class="meta-pills">
+      <span class="pill rating"><a href="#verdict">⚖ Important</a></span>
+      <span class="pill">📄 Empirical Study / Recipe</span>
+      <span class="pill">📅 2026</span>
+      <span class="pill">🏢 清华 / 上海期智 / Spirit AI</span>
+      <span class="pill">🤖 Unitree G1</span>
+      <span class="pill">🔗 <a href="https://openhlm-project.github.io/">Project</a></span>
+      <span class="pill">⏱ 速记 ~90s · 全文 ~7min</span>
+    </div>
+  </div>
+</header>
+
+<div class="kpi-strip">
+  <a class="kpi green" href="#c4"><div class="label">8 训练任务平均</div><div class="value">89<span class="unit">%</span></div><div class="desc">task progress（4 任务配方泛化到 8 任务）↗方法4</div></a>
+  <a class="kpi purple" href="#c6"><div class="label">Held-out 廉价数据扩展</div><div class="value">33→87<span class="unit">%</span></div><div class="desc">co-training 接近 12-任务 oracle 94% ↗方法6</div></a>
+  <a class="kpi blue" href="#c7"><div class="label">长 horizon vs GR00T N1.6</div><div class="value">87.5<span class="unit">%</span></div><div class="desc">vs 57.5% / Ψ0 48.8%，用不到一半数据 ↗结果7</div></a>
+  <div class="kpi"><div class="label">开源</div><div class="status"><span class="os-tag os-yes">数据+权重</span> <span class="os-tag os-part">代码待发</span></div><div class="desc">HuggingFace OpenHLM（核查 2026-06）</div></div>
+</div>
+
+<div class="layout">
+  <main class="content">
+
+    <!-- ============ ① 30 秒分诊条 ============ -->
+    <section class="card snap" id="snap">
+      <div class="snap-row"><span class="snap-k kp">痛点</span><div>人形 loco-manip 普遍把上下身拆成两个控制器（上身 IK、下身 RL），下身只当移动底盘——退化成「轮式双臂」，用不上腿/脚/下蹲来做操作。</div></div>
+      <div class="snap-row"><span class="snap-k km">做法</span><div>不发明新模型，而是一条受控实验<b>路线图</b>：遥操接口 → VLA 适配 → 异构 co-training，每次只改一个变量、用真机 task progress 验味，敲定可复刻配方 OpenHLM。</div></div>
+      <div class="snap-row"><span class="snap-k kr">结果</span><div>8 训练任务 89%；held-out 任务靠廉价数据 33%→87%；长 horizon 87.5% 反超 GR00T N1.6（57.5%）/ Ψ0（48.8%），且只用不到一半演示时间。</div></div>
+      <div class="snap-row"><span class="snap-k kh">读法</span><div><span class="badge">Important</span> 做人形 VLA / 遥操数据 → 精读 <a href="#c2">洞察2</a>（遥操对比）+ <a href="#c6">方法6</a>（co-training 数据策略）；关注训练诊断 → <a href="#c5">洞察5</a>（action MSE 是坏代理）。⚡ 最短精读路径：Fig.1（路线图）→ Table 1（遥操对比）→ Table 2（系统级反超）。</div></div>
+    </section>
+
+    <!-- ============ ② 速记层 ============ -->
+    <section class="card gist-card" id="gist">
+      <h2><span class="icon">⚡</span>速记层 · 思想 / 逻辑 / 方法</h2>
+      <p class="lead">默认读完就走的一层——只讲思想、逻辑、方法；效果只作验证。要核对原文再进下面的「深读层」。</p>
+
+      <div class="gist-block">
+        <div class="gb-label">🧭 背景 · 为什么重要（不熟此子方向先读我）</div>
+        <p>人类做 <span class="term" tabindex="0" data-gloss="loco-manipulation：移动与操作一体——边走边抓放、下蹲取物，下身参与操作而非只负责移动">loco-manipulation</span> 靠整条运动链协同（脚踩踏板、下蹲够低处）。人形机器人运动链相似，本应同样。但主流系统（AMO / Ψ0 / GR00T）把<span class="term" tabindex="0" data-gloss="decoupled control：上身用逆运动学、下身用单独 RL 控制器，再用导航命令+根高信号拼接，两半各管各的">上下身解耦控制</span>——arm 走 IK、leg 走 RL，再用导航命令+根高拼接，下身只是移动底盘，行为像轮式双臂。<b>「全身原生」stack 刚被认作前进方向，但它的设计空间几乎还是空白。</b></p>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">💡 一句话思想</div>
+        <div class="gist-idea">不造新模型，而是给「怎么造全身人形 VLA」写一本受控实验<b>菜谱</b>：像调一锅汤，一次只改一味料（遥操接口 / 预训练来源 / 动作生成 / 数据源），每改一味都上真机尝味（task progress），尝过再决定留哪味——最后端出可复刻的配方 OpenHLM。</div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🔗 逻辑链 · 为什么成立</div>
+        <ol class="chain">
+          <li>先定标准：一个策略直接命令人形<b>全部</b>关节（whole-body native），真机 task progress 评分，立下 G1 全身原生 / G2 语言可驱动·数据高效 / G3 廉价数据可扩展 三个目标。</li>
+          <li>阶段 I「数据从哪来」：对比 3 种遥操，发现 <a class="note-link" href="./notes.html#teleop" data-gloss="joint-based teleop：动捕采人全身动作，实时重定向到机器人每个关节做遥操，暴露全部自由度">joint-based 全身遥操</a>是唯一能完成全部任务（踩踏板、下蹲）的接口 → 敲定它 + 在线 retarget 到机器人关节空间 + 0.2s 预览延迟。</li>
+          <li>阶段 II「策略怎么搭」：把操作 VLA（π0.5）适配到人形 34 维动作；惊人发现——非人形（静止 / 轮式）预训练迁移极好，而接口适配细节（投影初始化 / 排序 / 相对动作）<b>都不是瓶颈</b>。</li>
+          <li>一记警示：<span class="term" tabindex="0" data-gloss="action MSE：策略预测动作与演示动作的均方误差，常被当成离线验证指标">action MSE</span> 在 held-out 上几乎一样、真机表现却天差地别——MSE 是坏代理（单步动作生成也栽在这个坑里）。</li>
+          <li>阶段 III「怎么省钱扩展」：廉价数据 co-training——静止遥操给「运动+语义」，<a class="note-link" href="./notes.html#humi" data-gloss="HuMI：UMI 的人形版，手持夹爪+体态 tracker 采机器人无关全身演示，IK 抬到全身关节，作者自家工作">HuMI</a>（机器人无关）只给「语义」、给不了运动。</li>
+          <li>验证：长 horizon 任务 87.5% 反超两个把 G1 数据塞进预训练的 SOTA，且只用不到一半遥操时间。</li>
+        </ol>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🧩 方法骨架 · 管线一句话 + 三个设计决策</div>
+        <p class="pipeline-line">图像+语言指令 → 高层 VLA（π0.5 初始化，10Hz）输出 32+2 维全身参考命令 → 低层 motion-tracking 控制器（SONIC，50Hz）→ PD 跟踪到关节</p>
+        <ul>
+          <li><b>① 数据接口</b>：joint-based 全身遥操（PICO 动捕 → GMR 重定向到每个关节）采数据，在线 retarget 到机器人关节空间，<a class="note-link" href="./notes.html#motion-tracking" data-gloss="preview latency：低层控制器提前看到多远的未来参考动作再跟踪；0.2s 在响应与平滑之间最优">预览延迟</a> 0.2s。</li>
+          <li><b>② VLA 适配</b>：π0.5 骨干内部原样不动，只改接口——<span class="term" tabindex="0" data-gloss="weight surgery：扩动作投影到 34 维时保留前 32 维的预训练权重，只随机初始化新增维度">weight surgery</span> 扩动作投影、保留双臂排序、绝对关节目标、本体感觉输入、多步 flow matching。</li>
+          <li><b>③ 异构 co-training</b>：混入静止遥操 / HuMI 廉价数据，把策略扩到新物体与新指令，无需额外全身遥操。</li>
+        </ul>
+        <figure>
+          <a href="./images/figure_1_overview.webp" target="_blank" title="点击看原图">
+            <img src="./images/figure_1_overview.webp" alt="Figure 1: OpenHLM 三阶段路线图总览" loading="lazy">
+          </a>
+          <figcaption><strong>Figure 1 (p.2)：</strong>OpenHLM 三阶段受控实验路线图——(I) 低层控制器&遥操接口 → (II) VLA 设计三问（输入&动作格式 / 机器人数据预训练 / 更快动作生成）→ (III) 异构 co-training。<strong>看点：</strong>三块的箭头是一条「数据 → 策略 → 扩展」流水线，每块就是一组对照实验。</figcaption>
+        </figure>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">✓ 效果 = 验证（不是重点）</div>
+        <p>系统级结论成立：长 horizon 语言条件任务上，OpenHLM 用 HuMI co-training 在<b>不到一半</b>演示时间内反超两个把 Unitree G1 数据塞进预训练的人形 VLA SOTA。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>长 horizon 任务</th><th class="num">Task Progress</th><th class="num">演示总时长</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr class="winner"><td>OpenHLM（HuMI co-train）</td><td class="num">87.5%</td><td class="num">1.14 h</td><td class="loc">p.10 · Tab.2</td></tr>
+              <tr><td>GR00T N1.6</td><td class="num">57.5%</td><td class="num">2.70 h</td><td class="loc">p.10 · Tab.2</td></tr>
+              <tr><td>Ψ0</td><td class="num">48.8%</td><td class="num">2.70 h</td><td class="loc">p.10 · Tab.2</td></tr>
+              <tr><td>OpenHLM（teleop oracle）</td><td class="num">97.5%</td><td class="num">2.73 h</td><td class="loc">p.10 · Tab.2</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🗺 放进你的知识图谱（已读库定位）</div>
+        <ul class="rel-list">
+          <li><b>构建于</b>：<a href="../pi05-Vision-Language-Action-Model-Open-World-Generalization/summary.html">π0.5</a> 作为骨干初始化——本文最反直觉的发现就是它在静止/轮式数据上的预训练竟能迁移到人形全身动作空间。</li>
+          <li><b>对立 / 竞品</b>：<a href="../Psi0-Open-Foundation-Humanoid-Loco-Manipulation/summary.html">Ψ0</a> 与 <a href="../GR00T-N1-Open-Foundation-Model-Humanoid-Robots/summary.html">GR00T N1</a>（这里用 N1.6）——两个被它在长 horizon 上反超的人形 VLA SOTA；二者都把 G1 数据塞进预训练却仍输，作者据此论证「光塞人形数据不够、设计细节才是瓶颈」。</li>
+          <li><b>互补 / 同方向</b>：<a href="../WholeBodyVLA-Unified-Latent-VLA-Loco-Manipulation/summary.html">WholeBodyVLA</a> 同样追求统一全身 loco-manip VLA，但走 latent action 架构创新路线，与本文「实证配方」视角互补。</li>
+        </ul>
+      </div>
+
+      <div class="gist-block">
+        <div class="gb-label">🎯 与你项目的相关性</div>
+        <p><b>Track A（人形 VLA / 移动操作）强命中</b>：整条配方 + 遥操接口对比方法学 + co-training 数据策略可直接借鉴；§3.1 遥操对比、§3.3 co-training 设置都能照抄。<b>落地门槛</b>：依赖 Unitree G1 + SONIC motion tracker + PICO 动捕 rig。<br><b>Track B（足式控制）部分命中</b>：低层用 motion-tracking 控制器，0.2s 预览延迟调参与 joint-space 在线 retarget 对全身控制数据采集有参考价值。</p>
+      </div>
+    </section>
+
+    <div class="layer-divider">↓ 深读层 · 逐字证据核对（项目相关才需要）</div>
+
+    <!-- ============ ③ 深读层 ============ -->
+    <section class="card" id="core">
+      <h2><span class="icon">◆</span>核心观点 · 证据 <button id="ev-toggle-all" type="button">展开全部证据</button></h2>
+      <p class="lead">每条 = 分型论点（常驻）+ 解读（常驻）+ 折叠的逐字原文/译文（📍真实页码，Ctrl-F 锚点）。8 观点 · 10 证据。</p>
+
+      <h3 class="claim-group" id="g-problem">问题与洞察</h3>
+
+      <div class="claim k-problem" id="c1">
+        <div class="claim-head"><span class="cn">1</span><span class="kicker">问题</span><h3 class="claim-title">解耦控制让人形退化成「轮式双臂」</h3></div>
+        <p class="claim-body">上下身分开控制时，下身只当移动底盘，凡是要用腿、脚、下蹲参与的操作都落在控制器表达不出的空间外。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是全文动机：要让一个策略把臂/腰/膝/脚都当成潜在「执行器」，而非把腿锁死成轮子。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.2 · §1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Functionally, the lower body serves only as a mobile base, rather than an active participant in manipulation, leaving the humanoid <mark>closely akin to a wheeled dual-arm platform</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">功能上，下身只充当移动底盘、而非操作的主动参与者，使人形机器人非常接近一个轮式双臂平台。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight" id="c2">
+        <div class="claim-head"><span class="cn">2</span><span class="kicker">洞察</span><h3 class="claim-title">joint-based 全身遥操是唯一全通的接口</h3></div>
+        <p class="claim-body">遥操接口决定能采到什么演示：只暴露部分自由度的 VR 3-point / 解耦控制有些任务「结构上做不到」，而 joint-based 全身遥操是唯一三任务全完成的。</p>
+        <div class="claim-how">三种接口动作维度：解耦 21 维 / VR 3-point 24 维 / joint-based 32 维；每任务各采 40 条匹配演示再各训一个 VLA 对比。</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>遥操方式</th><th class="num">Cola 放置</th><th class="num">货架取杯</th><th class="num">瓶子丢弃</th><th>📍</th></tr></thead>
+            <tbody>
+              <tr class="winner"><td>Joint-based 全身</td><td class="num">86.7%</td><td class="num">80.0%</td><td class="num">85.0%</td><td class="loc">p.5 · Tab.1</td></tr>
+              <tr><td>Decoupled 解耦</td><td class="num">66.7%</td><td class="num">93.3%</td><td class="num">✗ 做不到</td><td class="loc">p.5 · Tab.1</td></tr>
+              <tr><td>VR 3-point</td><td class="num">40.0%</td><td class="num">✗ 做不到</td><td class="num">✗ 做不到</td><td class="loc">p.5 · Tab.1</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>✗ 不是「分低」而是「结构上无法表达」：取杯要下蹲、丢瓶要脚踩踏板，部分自由度接口根本碰不到这些动作。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.5 · §3.1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">Joint-based whole-body teleoperation is the <mark>only interface that completes all three tasks</mark>, reaching 80%–87% task progress at 10–12 footsteps per rollout.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">joint-based 全身遥操是唯一完成全部三项任务的接口，达到 80%–87% task progress、每次 rollout 仅 10–12 步。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-method">方法（三阶段配方）</h3>
+
+      <div class="claim k-method" id="c3">
+        <div class="claim-head"><span class="cn">3</span><span class="kicker">方法</span><h3 class="claim-title">数据管线：在线 joint-space retarget + 0.2s 预览</h3></div>
+        <p class="claim-body">两级层级控制（高层 10Hz、低层 50Hz）下，把全身演示在线重定向到机器人关节空间、预览延迟设 0.2s，是后续所有阶段共用的采数据底座。</p>
+        <div class="claim-how">两个对照敲定：(a) joint-space 在线 retarget 击败原生 SMPL 记录（88% vs 75%，81 维冗余更难学）；(b) 预览延迟扫 {0,0.2,0.4,0.6}s，0.2s 兼顾响应与平滑、0.6s 直接崩到 13%。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是「菜谱」最底层的两味料——先把高质量数据怎么采定死，后面 VLA 实验才有干净输入。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.6 · §3.1 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The data-collection pipeline that all later phases build on is now settled: <mark>joint-based whole-body teleoperation, retargeted to robot joint space online, with 0.2 s preview latency</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">后续所有阶段所依赖的数据采集管线就此定型：joint-based 全身遥操、在线重定向到机器人关节空间、0.2s 预览延迟。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight key" id="c4">
+        <div class="claim-head"><span class="cn">4</span><span class="kicker">洞察</span><h3 class="claim-title">非人形预训练惊人迁移；适配细节都不是瓶颈</h3></div>
+        <p class="claim-body">用 π0.5（静止/轮式双臂预训练）初始化，迁移到人形全身效果远超无机器人预训练；而接口适配的四个选择（投影初始化/排序/相对动作/本体感觉）单改任何一个都只小幅波动。</p>
+        <div class="claim-how">三种初始化对比：π0.5 91% / PaliGemma（同架构无机器人数据）60% / 随机 42%。embodiment gap 真实存在，但远小于「有无任何机器人预训练」的差距。</div>
+        <div class="stat-row">
+          <span class="stat win">π0.5 91%</span>
+          <span class="stat">PaliGemma 60%</span>
+          <span class="stat dim">随机初始化 42%</span>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>实操含义：做人形 VLA 不必非要人形预训练数据，直接拿成熟操作 VLA 当底座即可——π0.5 隐含的「抓失败→重试」闭环行为也一并迁移过来。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.6 · §3.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">The gap is stark: <mark>π0.5 reaches 91% average task progress, PaliGemma drops to 60%, and random initialization collapses to 42%</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">差距非常明显：π0.5 达到 91% 平均 task progress，PaliGemma 掉到 60%，随机初始化崩到 42%。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-insight key" id="c5">
+        <div class="claim-head"><span class="cn">5</span><span class="kicker">洞察</span><h3 class="claim-title">action MSE 是真机表现的坏代理</h3></div>
+        <p class="claim-body">两处都踩到同一坑：held-out 验证 action MSE 几乎相同甚至更低的模型，上真机却可能差一大截——离线 MSE 不能预测真机 task progress。</p>
+        <div class="claim-how">证据 A：π0.5 与 PaliGemma 初始化的模型 MSE 整个微调过程几乎无法区分，真机却分道扬镳。证据 B：单步动作生成 MSE 更低（≈0.007 vs 10 步 ≈0.009），真机却低约 20 个 progress 点。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>给做训练诊断的人的警告：别用离线 action MSE 选 checkpoint/配置，它会系统性误导——必须上真机评。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.7 · §3.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">action MSE is a <mark>poor proxy for the value of robot pretraining</mark>: two models with matching action MSE can behave very differently on-robot.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">action MSE 是衡量机器人预训练价值的糟糕代理：两个 action MSE 相当的模型在真机上可能表现迥异。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>单步动作生成本想把推理从 ~90ms 降到 ~60ms，但牺牲真机表现——作者保留多步 flow matching。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.8 · §3.2 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">validation action MSE is lower for both one-step alternatives (∼0.007) than for the 10-step baseline (∼0.009). However, on the robot ... both <mark>underperform the baseline by roughly 20 task-progress points</mark>.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">两种单步方案的验证 action MSE（≈0.007）都低于 10 步基线（≈0.009）；但在真机上二者都比基线低约 20 个 task-progress 点。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-method key" id="c6">
+        <div class="claim-head"><span class="cn">6</span><span class="kicker">方法</span><h3 class="claim-title">异构 co-training：静止遥操给运动+语义，HuMI 只给语义</h3></div>
+        <p class="claim-body">用更便宜的数据 co-training 把策略扩到全身遥操从未覆盖的新物体/指令：静止遥操（脚不动只操作）同时供运动与语义，HuMI（机器人无关）只供语义、给不了新运动。</p>
+        <div class="claim-how">held-out 4 任务：8-任务 baseline 33% → 静止 co-train 87%（接近 12-任务 oracle 94%）。采集成本：每任务 40 条，静止 13min / HuMI 7min / 全身遥操 21min。HuMI 因相机/夹爪/「本质是人体动作」的域差，当前数据量下只当语义监督。</div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>给数据团队的配方：扩新物体/指令可大量用便宜的静止或 HuMI 数据；但要教全新运动（如 Pouring 倒水的倾杯），HuMI 还不行、得靠同体静止遥操或全身遥操。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.9 · §3.3 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">HuMI co-training delivers <mark>new semantic understanding but not new motions</mark>, at roughly half the operator-time cost of stationary same-embodiment teleop.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">HuMI co-training 带来新的语义理解、但带不来新运动，其操作员时间成本约为同体静止遥操的一半。</div></div>
+          </details>
+        </div>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>33%→87% 是「廉价数据可扩展」(G3) 的承重证据：不再为每个新物体做昂贵全身遥操。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.9 · §3.3 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">on the 4 held-out tasks, it <mark>lifts average progress from 33% (8-task baseline) to 87%</mark>, closing much of the gap to the oracle.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">在 4 个 held-out 任务上，它把平均 progress 从 33%（8-任务 baseline）提到 87%，补上了与 oracle 的大部分差距。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <h3 class="claim-group" id="g-result">结果与边界</h3>
+
+      <div class="claim k-result key" id="c7">
+        <div class="claim-head"><span class="cn">7</span><span class="kicker">结果</span><h3 class="claim-title">长 horizon 反超 SOTA，且证明「光塞人形数据不够」</h3></div>
+        <p class="claim-body">跨大垂直工作空间的长 horizon 语言任务上 87.5%，远超 GR00T N1.6（57.5%）与 Ψ0（48.8%）、逼近 oracle（97.5%），用不到一半操作时间；而两个 baseline 预训练里都含 G1 数据、OpenHLM 的 π0.5 没有。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>这是全文最有力的论点闭环：人形 VLA 的瓶颈不在「有没有把人形数据塞进预训练」，而在遥操格式、骨干适配、廉价数据混法这些设计细节——正是 §3 逐一敲定的东西。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.10 · §4 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">GR00T N1.6 and Ψ0 both include Unitree G1 demonstrations in their pretraining data, while OpenHLM’s π0.5 initialization does not. This suggests that <mark>mixing humanoid data into pretraining is not enough on its own</mark>; building a strong humanoid VLA is a question of design details</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">GR00T N1.6 与 Ψ0 的预训练数据都含 Unitree G1 演示，而 OpenHLM 的 π0.5 初始化没有。这说明把人形数据混进预训练本身并不够；造出强人形 VLA 是个设计细节问题。</div></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="claim k-limit" id="c8">
+        <div class="claim-head"><span class="cn">8</span><span class="kicker">局限</span><h3 class="claim-title">单平台 G1、HuMI 传不了运动、机制未解释</h3></div>
+        <p class="claim-body">结论只在 Unitree G1 单一平台上验证，换机器人/更杂场景是否成立未知；廉价机器人无关数据（HuMI）当前还教不了新运动；且若干现象（MSE 不能预测真机、单步生成更差）仍缺机制解释。</p>
+        <div class="evidence">
+          <div class="ev-gloss"><span class="ev-tag">解读</span><div>作者自陈三条短板，正好对应未来工作方向：跨平台泛化、更好用廉价数据、为 loco-manip 专门设计 VLA 架构。</div></div>
+          <details class="ev-fold">
+            <summary>📍 p.11 · §6 <span class="ev-hint">— 查逐字证据</span></summary>
+            <blockquote class="ev-quote">it is still confined to our limited experiment resources (e.g., we only use <mark>Unitree G1 as the humanoid platform</mark>). Whether our conclusions hold in more general settings ... remains uncertain.</blockquote>
+            <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">它仍受限于我们有限的实验资源（例如只用 Unitree G1 作为人形平台）。结论在更一般的设置下是否成立仍不确定。</div></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 开源状态 ============ -->
+    <section class="card" id="opensource">
+      <h2><span class="icon">⎘</span>开源状态 · 实时核查（截至 2026-06）</h2>
+      <dl class="os-grid">
+        <dt>训练数据</dt><dd><span class="os-tag os-yes">开放</span> <a href="https://huggingface.co/datasets/OpenHLM/OpenHLM-data">huggingface.co/datasets/OpenHLM/OpenHLM-data</a></dd>
+        <dt>模型权重</dt><dd><span class="os-tag os-yes">开放</span> <a href="https://huggingface.co/OpenHLM/OpenHLM-ckpts">huggingface.co/OpenHLM/OpenHLM-ckpts</a></dd>
+        <dt>代码</dt><dd><span class="os-tag os-part">待发布</span> Project Page 上 GitHub 入口仍为占位（# 链接），论文承诺将释出遥操/数据采集/训练/部署全栈</dd>
+        <dt>平台</dt><dd>Unitree G1 人形 + SONIC motion tracker + PICO 4 Ultra 动捕 rig（GMR 重定向）</dd>
+      </dl>
+      <div class="evidence">
+        <div class="ev-gloss"><span class="ev-tag">解读</span><div>数据+权重已可下载、代码尚未到位——介于「全开源」与「部分」之间，核查日 2026-06。</div></div>
+        <details class="ev-fold">
+          <summary>📍 p.2 · §1 (Contributions) <span class="ev-hint">— 查逐字证据</span></summary>
+          <blockquote class="ev-quote">We will release the full stack: <mark>teleoperation and data-collection code, VLA training and deployment code, model checkpoints, and demonstration data</mark>.</blockquote>
+          <div class="ev-row"><span class="ev-tag">译</span><div class="ev-trans">我们将释出完整栈：遥操与数据采集代码、VLA 训练与部署代码、模型 checkpoint，以及演示数据。</div></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============ 批判 + 评级 ============ -->
+    <section class="card" id="verdict">
+      <h2><span class="icon">⚖</span>批判 · 评级</h2>
+      <div class="callout success"><div class="callout-head">✅ 值得读的理由</div><p>少见的「全身人形 VLA 怎么造」系统性受控研究，每个设计选择配真机对照；三个反直觉发现（遥操接口决定上限、非人形预训练惊人迁移、action MSE 是坏代理）对做人形 VLA 的团队有直接工程价值；数据+权重开源、可复刻。</p></div>
+      <div class="callout danger"><div class="callout-head">🔍 主要保留</div><p>结论只在 Unitree G1 单平台验证（见<a href="#c8">局限8</a>），跨平台未知；评测多为 5 rollouts、规模有限；几个关键现象（MSE 不预测真机、单步更差）仅给假设、缺机制解释；代码尚未释出。</p></div>
+      <p><strong>评级：</strong><span class="badge">Important</span> &nbsp;非 Breakthrough（重度建立在 π0.5 / SONIC / HuMI 之上，方法上是「配方」而非新模型），但作为开源、可复刻、反超两个 SOTA 的人形全身 VLA 实证菜谱，社区杠杆很大。</p>
+    </section>
+
+  </main>
+
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <ul>
+      <li><a href="#snap">⏱ 30 秒速读</a></li>
+      <li><a href="#gist">⚡ 速记层</a></li>
+      <li><a href="#core">◆ 核心观点</a>
+        <ul class="toc-claims">
+          <li><a href="#c1">1 问题 · 退化成轮式双臂</a></li>
+          <li><a href="#c2">2 洞察 · joint 遥操全通</a></li>
+          <li><a href="#c3">3 方法 · 数据管线底座</a></li>
+          <li><a href="#c4">4 洞察 · 非人形预训练迁移 ★</a></li>
+          <li><a href="#c5">5 洞察 · MSE 是坏代理 ★</a></li>
+          <li><a href="#c6">6 方法 · 异构 co-training ★</a></li>
+          <li><a href="#c7">7 结果 · 反超 SOTA ★</a></li>
+          <li><a href="#c8">8 局限 · 单平台/机制</a></li>
+        </ul>
+      </li>
+      <li><a href="#opensource">⎘ 开源状态</a></li>
+      <li><a href="#verdict">⚖ 批判 · 评级</a></li>
+    </ul>
+    <div class="toc-sep"></div>
+    <ul class="notes-link"><li><a href="./notes.html">📝 概念解读 →</a></li></ul>
+  </aside>
+</div>
+
+<footer>Paper Summary · 三层阅读架构（30s 分诊 / 90s 速记 / 按需深读）· OpenHLM</footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('ev-toggle-all');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var open = btn.dataset.open !== '1';
+      btn.dataset.open = open ? '1' : '0';
+      document.querySelectorAll('details.ev-fold').forEach(function (d) { d.open = open; });
+      btn.textContent = open ? '收起全部证据' : '展开全部证据';
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var links = [].slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) {
+            a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id);
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    document.querySelectorAll('section.card[id], .claim[id]').forEach(function (t) { spy.observe(t); });
+  }
+})();
+</script>
+
+</body>
+</html>

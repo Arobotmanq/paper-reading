@@ -1,0 +1,49 @@
+{
+  "title": "OpenHLM: An Empirical Recipe for Whole-Body Humanoid Loco-Manipulation",
+  "title_cn": "OpenHLM：全身人形 Loco-Manipulation 的实证菜谱",
+  "field": "vla",
+  "venue": "arXiv preprint",
+  "date": "2026",
+  "one_liner": "用一条受控实验路线图（遥操→VLA适配→异构co-training）逐变量敲定「全身原生」人形 VLA 配方，反超 GR00T N1.6 与 Ψ0。",
+  "framework": "idea-first",
+  "idea": "不造新模型，而是给「怎么造全身人形 VLA」写一本受控实验菜谱——一次只改一味料、上真机尝味、留下可复刻配方 OpenHLM。",
+  "logic_chain": [
+    "定标准：一个策略命令人形全部关节（whole-body native），真机 task progress 评分，立 G1/G2/G3 三目标",
+    "阶段I 数据从哪来：对比 3 种遥操，joint-based 全身遥操是唯一全通的（踩踏板/下蹲），+在线 joint-space retarget +0.2s 预览延迟",
+    "阶段II 策略怎么搭：π0.5 适配到人形 34 维动作；非人形预训练惊人迁移，而接口适配细节都不是瓶颈",
+    "警示：action MSE 在 held-out 上几乎一样、真机却天差地别——MSE 是坏代理（单步动作生成也栽这坑）",
+    "阶段III 怎么省钱扩展：静止遥操给运动+语义，HuMI（机器人无关）只给语义不给运动",
+    "验证：长 horizon 87.5% 反超两个含 G1 数据预训练的 SOTA，用不到一半遥操时间"
+  ],
+  "method_skeleton": [
+    "两级层级控制：高层 VLA（π0.5 初始化，10Hz）输出 32+2 维全身参考命令 → 低层 motion-tracking 控制器（SONIC，50Hz）→ PD 跟踪",
+    "数据接口：joint-based 全身遥操（PICO 动捕→GMR 重定向到每个关节），在线 retarget 到机器人关节空间，0.2s 预览延迟",
+    "VLA 适配：π0.5 骨干原样不动，只改接口——weight surgery 扩动作投影到 34 维、保留双臂排序、绝对关节目标、本体感觉输入、多步 flow matching",
+    "异构 co-training：混入静止遥操/HuMI 廉价数据扩 object 与指令，无需额外全身遥操"
+  ],
+  "core_points": [
+    "解耦控制让人形退化成轮式双臂——下身只当移动底盘，腿/脚/下蹲参与的操作落在控制器表达空间外",
+    "joint-based 全身遥操是唯一三任务全完成的接口（VR 3-point/解耦有些任务结构上做不到）",
+    "数据管线底座：在线 joint-space retarget（88% vs SMPL 75%）+ 0.2s 预览延迟",
+    "非人形（静止/轮式）预训练惊人迁移：π0.5 91% / PaliGemma 60% / 随机 42%；接口适配四选择单改都不是瓶颈",
+    "action MSE 是真机表现的坏代理：MSE 相同甚至更低的模型真机可差一大截（单步生成 MSE 更低但真机低约 20 点）",
+    "异构 co-training：静止遥操供运动+语义，HuMI 只供语义；held-out 33%→87%（oracle 94%）",
+    "长 horizon 反超 SOTA 并证明「光把人形数据塞进预训练不够、设计细节才是瓶颈」"
+  ],
+  "effects": [
+    "8 训练任务平均 89% task progress",
+    "held-out 4 任务：8-任务 baseline 33% → 廉价数据 co-train 87%（12-任务 oracle 94%）",
+    "长 horizon：OpenHLM 87.5% vs GR00T N1.6 57.5% / Ψ0 48.8% / oracle 97.5%，演示时长 1.14h vs 2.70–2.73h",
+    "预训练初始化：π0.5 91% vs PaliGemma 60% vs 随机 42%",
+    "采集成本：每任务 40 条，静止遥操 13min / HuMI 7min / 全身遥操 21min"
+  ],
+  "relevance": {
+    "track_A_mobile_vla": "强命中——全身人形 loco-manip VLA 的完整实证配方；遥操接口对比方法学、co-training 数据策略、π0.5 适配技巧可直接借鉴",
+    "track_B_legged": "部分命中——低层用 motion-tracking 控制器（SONIC），0.2s 预览延迟调参与 joint-space 在线 retarget 对全身控制数据采集有参考"
+  },
+  "open_source": "partial",
+  "open_source_detail": "数据集与模型权重已开放于 HuggingFace（datasets/OpenHLM/OpenHLM-data、OpenHLM/OpenHLM-ckpts）；代码 Project Page 入口仍为占位（#），论文承诺将释出遥操/数据采集/VLA 训练/部署全栈。平台 Unitree G1 + SONIC + PICO 4 Ultra。Project: https://openhlm-project.github.io/",
+  "open_source_checked": "2026-06-24",
+  "rating": "Important",
+  "summary": "summary.html"
+}
